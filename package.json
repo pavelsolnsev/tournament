@@ -1,0 +1,33 @@
+{
+  "name": "footboal-admin",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "test": "vitest",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "@tanstack/vue-query": "latest",
+    "mysql2": "latest",
+    "nuxt": "latest"
+  },
+  "devDependencies": {
+    "@nuxtjs/tailwindcss": "latest",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/vue": "^8.1.0",
+    "@types/node": "latest",
+    "@vitejs/plugin-vue": "^6.0.4",
+    "@vue/test-utils": "^2.4.6",
+    "autoprefixer": "latest",
+    "jsdom": "^28.1.0",
+    "postcss": "latest",
+    "tailwindcss": "latest",
+    "typescript": "latest",
+    "vitest": "^4.0.18"
+  }
+}

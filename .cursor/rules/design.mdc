@@ -1,0 +1,42 @@
+---
+description: Design and layout rules — responsive, viewport, modern standards, professional look
+globs: "**/*.vue"
+alwaysApply: false
+---
+
+# Design Agent Rules
+
+This agent is responsible for layout and visual design. Enforce these rules whenever editing Vue components or layouts.
+
+---
+
+## Responsive layout
+
+Layout must adapt to all screen sizes from the start (mobile-first).
+
+- Use Tailwind responsive prefixes: `sm:`, `md:`, `lg:`, `xl:` for spacing, font sizes, grids, and visibility.
+- Verify display on narrow screens (320px and up), tablets, and desktop.
+- Avoid fixed widths without `max-w-*` and without considering mobile breakpoints.
+
+---
+
+## Fit content on screen
+
+When there is little content, the page should fit on the **visible viewport without scrolling**. Use flex/grid with `min-h-screen`, `flex-1`, or `h-screen` where appropriate so that short content does not leave empty space that pushes key elements below the fold. Prefer compact layouts for sparse pages.
+
+---
+
+## Modern standards
+
+- **Typography**: Use a clear hierarchy (`text-sm` / `text-base` / `text-lg` / `text-xl`). Prefer system fonts or one well-chosen font family; avoid mixing more than two fonts. Line height: `leading-tight` for headings, `leading-normal` or `leading-relaxed` for body.
+- **Spacing**: Stick to Tailwind’s scale (`p-4`, `gap-4`, `space-y-4`). Use consistent step (e.g. 4/6/8) within a section; avoid one-off values like `p-7` unless needed for alignment.
+- **Contrast and accessibility**: Ensure sufficient contrast (e.g. `text-slate-100` on `bg-slate-900`). Use focus states (`focus:ring-2`, `focus:ring-offset-2`) for interactive elements. Prefer semantic colours for states (e.g. success/danger) rather than decorative only.
+- **Motion**: Prefer subtle transitions (`transition-colors`, `duration-200`) for hover/focus; avoid long or distracting animations.
+
+---
+
+## Professional look
+
+- **Consistency**: Reuse the same border radius (`rounded-lg` vs `rounded-xl`), shadow level, and border style across related components. Define a small set of “tokens” (e.g. card = `rounded-xl border border-slate-800`) and stick to it.
+- **Hierarchy**: Make the primary action obvious (size/weight/colour). Use clear section headings and enough whitespace so blocks don’t look cramped.
+- **Restraint**: Avoid decorative clutter. Prefer a clean layout with purposeful spacing and alignment over extra borders, icons, or gradients unless they add clarity.

@@ -1,0 +1,72 @@
+---
+description: Project rules — English only, explain briefly, question tasks, small tasks, small files, template-first SFC, composables, atomic design
+alwaysApply: true
+---
+
+# Project Rules
+
+## Rules in this file: English only
+
+All rules in this file must be written in **English**. When adding or editing rules here, keep the content in English.
+
+---
+
+## Explain briefly and clearly
+
+When making changes or answering, **always give a short, clear explanation** of what you are doing and why. Avoid long walls of text; focus on the essential so the user quickly understands the action and the reason behind it.
+
+---
+
+## Question tasks and suggest alternatives
+
+**Always critically consider the user’s requests.** If an approach seems questionable, suboptimal, or risky:
+
+- Say so clearly and explain why.
+- Propose one or more **alternative solutions** with pros/cons.
+- Prefer patterns and solutions that are maintainable, scalable, and aligned with the stack (e.g. Vue/Nuxt, Tailwind).
+
+The user is still learning; help steer toward **sound decisions** rather than blindly implementing. It’s fine to suggest a simpler or different approach when it leads to better outcomes.
+
+---
+
+## Work in small tasks
+
+Break work into **small, incremental tasks**. Avoid writing large amounts of code at once. Prefer small, reviewable steps.
+
+---
+
+## Keep files small; split by logic
+
+Do not keep large files. If a file grows big (e.g. hundreds of lines), split it into **smaller modules by responsibility**:
+
+- Extract reusable logic into composables, utils, or services.
+- Split a large component into smaller subcomponents or separate files.
+- Group related types/constants in dedicated modules.
+
+Aim for files that do one thing well and stay easy to navigate and test.
+
+---
+
+## Vue SFC block order
+
+In `.vue` single-file components, **always put `<template>` above `<script>`** (and `<script setup>`). Optional: `<script>` then `<style>` at the bottom. This order keeps the visible UI at the top and logic below.
+
+---
+
+## Composables and shared logic
+
+- **Composables** (`composables/`): Put all **shared, reusable logic** of the project here — data fetching, form state, validation, domain helpers. Keep composables synchronous (no async); use them from components or pages that call `suspense()` where needed.
+- Do not duplicate the same logic in multiple components; extract it into a composable (or a util in `utils/`) and reuse.
+
+---
+
+## Component structure: atoms, molecules, organisms
+
+Organise UI components by **Atomic Design** so that structure stays clear and reusable:
+
+- **Atoms** (`components/atoms/`): Small, presentational building blocks — buttons, inputs, labels, icons. No business logic; only props and slots.
+- **Molecules** (`components/molecules/`): Groups of atoms that form one UI unit — e.g. search field with button, form row with label and input. Minimal logic (local state for the unit).
+- **Organisms** (`components/organisms/`): Larger sections that combine molecules/atoms — header, card list, full form. Can use composables and contain more logic.
+
+Place each component in the correct folder so that atoms stay generic and organisms stay feature-specific.
+
