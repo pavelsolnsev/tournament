@@ -14,6 +14,36 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
   const assignment = ref<Record<number, string>>({})
   const newTeamInputForPlayer = ref<number | null>(null)
   const newTeamName = ref('')
+  /** Team names that are confirmed to participate in the tournament */
+  const confirmedTeamNames = ref<Set<string>>(new Set())
+  /** Team name -> color index 0–3 (🔴 🟢 🔵 🟡) */
+  const teamColors = ref<Record<string, number>>({})
+
+  function setTeamColor(teamName: string, colorIndex: number) {
+    if (colorIndex < 0 || colorIndex > 3) return
+    teamColors.value = { ...teamColors.value, [teamName]: colorIndex }
+  }
+
+  function getTeamColor(teamName: string): number {
+    return teamColors.value[teamName] ?? 0
+  }
+
+  function confirmTeam(teamName: string) {
+    if (!teamName.trim()) return
+    const next = new Set(confirmedTeamNames.value)
+    next.add(teamName.trim())
+    confirmedTeamNames.value = next
+  }
+
+  function unconfirmTeam(teamName: string) {
+    const next = new Set(confirmedTeamNames.value)
+    next.delete(teamName)
+    confirmedTeamNames.value = next
+  }
+
+  function isTeamConfirmed(teamName: string) {
+    return confirmedTeamNames.value.has(teamName)
+  }
 
   function openNewTeamInput(playerId: number) {
     newTeamInputForPlayer.value = playerId
@@ -48,10 +78,25 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
     return assignment.value[playerId] ?? ''
   }
 
+  function addNewTeam(name: string) {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    if (teamOptions.value.includes(trimmed)) return
+    newTeamNames.value = [...newTeamNames.value, trimmed]
+  }
+
+  function removeFromTeam(playerId: number) {
+    const next = { ...assignment.value }
+    delete next[playerId]
+    assignment.value = next
+  }
+
   return {
     newTeamNames,
     teamOptions,
     assignment,
+    confirmedTeamNames,
+    teamColors,
     newTeamInputForPlayer,
     newTeamName,
     openNewTeamInput,
@@ -59,5 +104,12 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
     confirmNewTeam,
     setTeam,
     getTeam,
+    addNewTeam,
+    removeFromTeam,
+    confirmTeam,
+    unconfirmTeam,
+    isTeamConfirmed,
+    setTeamColor,
+    getTeamColor,
   }
 }

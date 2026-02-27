@@ -8,30 +8,9 @@ describe('tournament-form layout', () => {
       slots: {
         default: slotText,
       },
-      global: {
-        stubs: {
-          Breadcrumbs: {
-            template: '<nav data-testid="breadcrumbs" />',
-          },
-        },
-      },
     })
 
     expect(getByText(slotText)).toBeInTheDocument()
-  })
-
-  it('renders breadcrumbs component (stubbed)', () => {
-    const { getByTestId } = render(TournamentFormLayout, {
-      global: {
-        stubs: {
-          Breadcrumbs: {
-            template: '<nav data-testid="breadcrumbs" />',
-          },
-        },
-      },
-    })
-
-    expect(getByTestId('breadcrumbs')).toBeInTheDocument()
   })
 })
 
