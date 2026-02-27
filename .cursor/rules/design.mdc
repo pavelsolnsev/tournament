@@ -40,3 +40,14 @@ When there is little content, the page should fit on the **visible viewport with
 - **Consistency**: Reuse the same border radius (`rounded-lg` vs `rounded-xl`), shadow level, and border style across related components. Define a small set of “tokens” (e.g. card = `rounded-xl border border-slate-800`) and stick to it.
 - **Hierarchy**: Make the primary action obvious (size/weight/colour). Use clear section headings and enough whitespace so blocks don’t look cramped.
 - **Restraint**: Avoid decorative clutter. Prefer a clean layout with purposeful spacing and alignment over extra borders, icons, or gradients unless they add clarity.
+
+
+## cross-browser compatibility
+
+The project must be developed with cross-browser compatibility and full responsive behavior as a core, non-negotiable requirement.
+
+At all stages of development, the interface must display correctly and consistently across all modern browsers and on all device types. On mobile devices, the layout must remain stable and fixed: no shifting, breaking, unexpected scrolling, or layout jumps are acceptable.
+
+The UI must be designed and implemented with a mobile-first mindset and should visually and functionally feel comparable to a high-quality native mobile application. Content, spacing, typography, and interactive elements must adapt smoothly to different screen sizes while remaining clear, usable, and visually consistent.
+
+This rule must be considered by default during design and development to ensure a reliable, polished, and user-friendly experience on every device.

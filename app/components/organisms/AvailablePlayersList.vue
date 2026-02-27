@@ -29,7 +29,7 @@
       </p>
       <ul
         v-else
-        class="max-h-72 space-y-2 overflow-x-hidden overflow-y-auto rounded-lg bg-slate-800/30 p-1"
+        class="max-h-64 sm:max-h-72 space-y-2 overflow-x-hidden overflow-y-auto rounded-lg bg-slate-800/30 p-1"
         role="list"
       >
         <li

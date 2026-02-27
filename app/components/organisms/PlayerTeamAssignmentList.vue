@@ -22,7 +22,7 @@
               </span>
               <button
                 type="button"
-                class="rounded px-1.5 py-0.5 text-xs text-slate-400 transition hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                class="rounded px-2 py-1 text-xs sm:text-sm text-slate-400 transition hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
                 @click="emit('unconfirmTeam', teamName)"
               >
                 Вернуть
@@ -123,7 +123,7 @@
             </div>
             <button
               type="button"
-              class="shrink-0 text-xs text-slate-400 transition hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+              class="shrink-0 rounded px-2 py-1 text-xs sm:text-sm text-slate-400 transition hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
               title="Убрать из команды"
               @click="emit('removeFromTeam', p.id)"
             >

@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-full overflow-hidden rounded-lg border border-slate-600">
+  <div class="w-full overflow-x-auto overflow-y-hidden rounded-lg border border-slate-600">
     <table class="standings-table w-full min-w-0 table-fixed border-collapse text-left text-xs sm:text-sm">
       <colgroup>
         <col :style="{ width: colMWidth }">

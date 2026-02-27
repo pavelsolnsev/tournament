@@ -30,7 +30,7 @@
       <button
         type="submit"
         :disabled="creating"
-        class="shrink-0 rounded-lg bg-emerald-500 px-4 py-2 font-medium text-slate-900 transition hover:bg-emerald-400 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+        class="shrink-0 rounded-lg bg-emerald-500 px-5 py-2.5 text-sm sm:text-base font-semibold text-slate-900 transition hover:bg-emerald-400 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
       >
         {{ creating ? 'Добавляем…' : 'Добавить игрока' }}
       </button>

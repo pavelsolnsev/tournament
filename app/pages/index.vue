@@ -1,11 +1,8 @@
 <template>
-  <div
-    class="flex flex-col bg-slate-900 text-slate-100"
-    :class="step === 0 ? 'h-screen overflow-hidden' : 'min-h-screen'"
-  >
+  <div class="flex min-h-screen flex-col bg-slate-900 text-slate-100 overflow-x-hidden">
     <!-- Этап 0: приветствие -->
     <template v-if="step === 0">
-      <div class="flex flex-1 min-h-0 flex-col items-center justify-center px-2 sm:px-4 py-8 bg-gradient-to-b from-slate-900 via-slate-800/50 to-slate-900">
+      <div class="relative flex flex-1 min-h-0 flex-col items-center justify-center px-2 sm:px-4 py-8 bg-gradient-to-b from-slate-900 via-slate-800/50 to-slate-900">
         <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(16,185,129,0.15),transparent)] pointer-events-none" />
         <main class="relative z-10 text-center max-w-xl mx-auto">
           <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white mb-3">
