@@ -16,11 +16,15 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
   const newTeamName = ref('')
   /** Team names that are confirmed to participate in the tournament */
   const confirmedTeamNames = ref<Set<string>>(new Set())
-  /** Team name -> color index 0–3 (🔴 🟢 🔵 🟡) */
+  /** Team name -> color index 0–5 (🔴 🟢 🔵 🟡 ⚪ ⚫) */
   const teamColors = ref<Record<string, number>>({})
 
+  function normalizeTeamName(name: string) {
+    return name.trim().replace(/\s+/g, ' ')
+  }
+
   function setTeamColor(teamName: string, colorIndex: number) {
-    if (colorIndex < 0 || colorIndex > 3) return
+    if (colorIndex < 0 || colorIndex > 5) return
     teamColors.value = { ...teamColors.value, [teamName]: colorIndex }
   }
 
@@ -56,8 +60,8 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
   }
 
   function confirmNewTeam(playerId: number) {
-    const name = newTeamName.value.trim()
-    if (!name) return
+    const name = normalizeTeamName(newTeamName.value)
+    if (name.length < 2) return
     if (!newTeamNames.value.includes(name)) {
       newTeamNames.value = [...newTeamNames.value, name]
     }
@@ -79,8 +83,8 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
   }
 
   function addNewTeam(name: string) {
-    const trimmed = name.trim()
-    if (!trimmed) return
+    const trimmed = normalizeTeamName(name)
+    if (trimmed.length < 2) return
     if (teamOptions.value.includes(trimmed)) return
     newTeamNames.value = [...newTeamNames.value, trimmed]
   }
@@ -89,6 +93,34 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
     const next = { ...assignment.value }
     delete next[playerId]
     assignment.value = next
+  }
+
+  function removeTeam(teamName: string) {
+    const normalized = normalizeTeamName(teamName)
+    if (!normalized) return
+
+    // Удаляем только пользовательские команды (не из базы)
+    if (newTeamNames.value.includes(normalized)) {
+      newTeamNames.value = newTeamNames.value.filter((n) => n !== normalized)
+    }
+
+    // Сбрасываем назначения игроков
+    const nextAssignment: Record<number, string> = { ...assignment.value }
+    for (const [playerIdStr, name] of Object.entries(nextAssignment)) {
+      if (name === normalized) {
+        delete nextAssignment[Number(playerIdStr)]
+      }
+    }
+    assignment.value = nextAssignment
+
+    // Убираем участие и цвет
+    const nextConfirmed = new Set(confirmedTeamNames.value)
+    nextConfirmed.delete(normalized)
+    confirmedTeamNames.value = nextConfirmed
+
+    const nextColors = { ...teamColors.value }
+    delete nextColors[normalized]
+    teamColors.value = nextColors
   }
 
   return {
@@ -106,6 +138,7 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
     getTeam,
     addNewTeam,
     removeFromTeam,
+    removeTeam,
     confirmTeam,
     unconfirmTeam,
     isTeamConfirmed,

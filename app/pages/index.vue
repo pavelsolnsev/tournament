@@ -13,7 +13,7 @@
           </p>
           <button
             type="button"
-            class="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-2xl bg-emerald-500 text-slate-900 font-semibold text-lg shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+            class="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-2xl bg-emerald-500 text-slate-900 font-semibold text-lg shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-400 focus:outline-none"
             @click="step = 1"
           >
             Создать турнир
@@ -31,7 +31,7 @@
           <div class="flex justify-start">
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 rounded text-sm text-slate-400 transition hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+              class="inline-flex items-center gap-1.5 rounded text-sm text-slate-400 transition hover:text-slate-200 focus:outline-none"
               @click="step = (Math.max(0, step - 1) as 0 | 1 | 2 | 3 | 4)"
             >
               <span aria-hidden="true">←</span>
@@ -60,7 +60,6 @@
               <span v-if="tournamentName && tournamentDate"> · </span>
               <span v-if="tournamentDate">{{ tournamentDate }}</span>
               <span v-if="!tournamentName && !tournamentDate && step === 2">Название и дата не указаны</span>
-              <span v-if="!tournamentName && !tournamentDate && step === 3">Назначьте игроков командам</span>
             </p>
 
             <!-- Подэтап: распределение по командам -->
@@ -80,6 +79,7 @@
                 @remove-from-team="assignment.removeFromTeam"
                 @confirm-team="assignment.confirmTeam"
                 @unconfirm-team="assignment.unconfirmTeam"
+                @remove-team="assignment.removeTeam"
                 @back-to-players="step = 2"
                 @go-to-standings="step = 4"
               />
@@ -212,6 +212,21 @@ if (contextCookie.value) {
   assignment.assignment.value = ctx.assignmentByPlayerId ?? {}
   assignment.confirmedTeamNames.value = new Set(ctx.confirmedTeamNames ?? [])
   assignment.teamColors.value = ctx.teamColors ?? {}
+
+  // Восстанавливаем пользовательские команды, созданные ранее,
+  // чтобы они снова появились в выпадающем списке и были доступны
+  // для выбора и изменения цветов.
+  const namesFromAssignments = Object.values(ctx.assignmentByPlayerId ?? {})
+  const namesFromConfirmed = ctx.confirmedTeamNames ?? []
+  const namesFromColors = Object.keys(ctx.teamColors ?? {})
+  const allNames = new Set<string>([
+    ...namesFromAssignments,
+    ...namesFromConfirmed,
+    ...namesFromColors,
+  ].filter((name) => !!name && typeof name === 'string'))
+
+  const existingNames = new Set(existingTeamNames.value ?? [])
+  assignment.newTeamNames.value = Array.from(allNames).filter((name) => !existingNames.has(name))
 }
 
 const savedContext = computed<SavedTournamentContext>(() => ({

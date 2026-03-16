@@ -7,7 +7,7 @@
       Нет выбранных игроков.
       <button
         type="button"
-        class="text-emerald-400 underline transition hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900 rounded"
+        class="text-emerald-400 underline transition hover:text-emerald-300 focus:outline-none rounded"
         @click="emit('backToPlayers')"
       >
         Вернуться к выбору игроков
@@ -25,21 +25,27 @@
         :new-team-name="newTeamName"
         :confirmed-team-names="confirmedTeamNames"
         @update:new-team-name="(v) => emit('update:newTeamName', v)"
-        @set-team="emit('setTeam', $event[0], $event[1])"
-        @set-team-color="emit('setTeamColor', $event[0], $event[1])"
+        @set-team="(playerId, teamName) => emit('setTeam', playerId, teamName)"
+        @set-team-color="(teamName, colorIndex) => emit('setTeamColor', teamName, colorIndex)"
         @add-new-team="emit('addNewTeam')"
         @remove-from-team="emit('removeFromTeam', $event)"
         @confirm-team="emit('confirmTeam', $event)"
         @unconfirm-team="emit('unconfirmTeam', $event)"
+        @remove-team="emit('removeTeam', $event)"
       />
-      <div v-if="confirmedTeamsCount >= 2" class="pt-2">
+      <div class="pt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
-          class="w-full rounded-xl bg-emerald-500 px-4 py-3 font-semibold text-slate-900 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900 sm:w-auto sm:min-w-[220px]"
+          class="w-full rounded-xl px-4 py-3 font-semibold text-slate-900 transition sm:w-auto sm:min-w-[220px]"
+          :class="confirmedTeamsCount >= 2 ? 'bg-emerald-500 hover:bg-emerald-400 focus:outline-none' : 'bg-slate-700 text-slate-400 cursor-not-allowed focus:outline-none'"
+          :disabled="confirmedTeamsCount < 2"
           @click="emit('goToStandings')"
         >
           Турнирная таблица →
         </button>
+        <p v-if="confirmedTeamsCount < 2" class="text-xs text-slate-500">
+          Нужно минимум две команды-участника.
+        </p>
       </div>
     </template>
   </div>
@@ -67,6 +73,7 @@ const emit = defineEmits<{
   removeFromTeam: [playerId: number]
   confirmTeam: [teamName: string]
   unconfirmTeam: [teamName: string]
+  removeTeam: [teamName: string]
   backToPlayers: []
   goToStandings: []
 }>()

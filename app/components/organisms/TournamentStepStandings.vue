@@ -31,7 +31,7 @@
           <select
             id="home-team"
             v-model="homeTeam"
-            class="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm text-slate-100 ring-0 transition focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/60"
+            class="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm text-slate-100 ring-0 transition focus:border-emerald-500 focus:outline-none"
           >
             <option value="">
               — Выберите команду —
@@ -51,7 +51,7 @@
           <select
             id="away-team"
             v-model="awayTeam"
-            class="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm text-slate-100 ring-0 transition focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+            class="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm text-slate-100 ring-0 transition focus:border-sky-500 focus:outline-none"
           >
             <option value="">
               — Выберите команду —
@@ -227,14 +227,14 @@
         <div class="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
-            class="rounded-lg bg-slate-700 px-3 py-2 text-xs font-medium text-slate-100 transition hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+            class="rounded-lg bg-slate-700 px-3 py-2 text-xs font-medium text-slate-100 transition hover:bg-slate-600 focus:outline-none"
             @click="resetMatchStats"
           >
             Сбросить матч
           </button>
           <button
             type="button"
-            class="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-900 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+            class="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-900 transition hover:bg-emerald-400 focus:outline-none"
             :disabled="!canFinishMatch"
             @click="finishMatch"
           >
@@ -259,7 +259,7 @@ const props = defineProps<{
   assignmentByPlayerId: Record<number, string>
 }>()
 
-const markers: string[] = ['🔴', '🟢', '🔵', '🟡']
+const markers: string[] = ['🔴', '🟢', '🔵', '🟡', '⚪', '⚫']
 
 // Единый источник правды: карта команда -> индекс цвета.
 // Если цвет не задан, назначаем последовательно 0..3 по списку teams.

@@ -14,7 +14,7 @@
           v-model="newName"
           type="text"
           placeholder="Имя игрока"
-          class="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          class="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
         >
       </div>
       <div class="flex-1 min-w-0">
@@ -24,13 +24,13 @@
           v-model="newUsername"
           type="text"
           placeholder="@username"
-          class="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          class="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
         >
       </div>
       <button
         type="submit"
         :disabled="creating"
-        class="shrink-0 rounded-lg bg-emerald-500 px-5 py-2.5 text-sm sm:text-base font-semibold text-slate-900 transition hover:bg-emerald-400 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+        class="shrink-0 rounded-lg bg-emerald-500 px-5 py-2.5 text-sm sm:text-base font-semibold text-slate-900 transition hover:bg-emerald-400 disabled:opacity-50 focus:outline-none"
       >
         {{ creating ? 'Добавляем…' : 'Добавить игрока' }}
       </button>
