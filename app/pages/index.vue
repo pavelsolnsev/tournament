@@ -65,84 +65,39 @@
 
             <!-- Подэтап: распределение по командам -->
             <template v-if="step === 3">
-              <p
-                v-if="selectedPlayers.length === 0"
-                class="rounded-xl bg-slate-800/50 p-4 text-slate-500 text-sm"
-              >
-                Нет выбранных игроков.
-                <button
-                  type="button"
-                  class="text-emerald-400 underline transition hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900 rounded"
-                  @click="step = 2"
-                >
-                  Вернуться к выбору игроков
-                </button>.
-              </p>
-              <template v-else>
-                <p class="text-slate-400 text-sm mb-2">
-                  Создайте команды и добавляйте в них игроков.
-                </p>
-                <OrganismsPlayerTeamAssignmentList
-                  :players="selectedPlayers"
-                  :team-options="assignment.teamOptions"
-                  :get-team="assignment.getTeam"
-                  :get-team-color="assignment.getTeamColor"
-                  :new-team-name="assignment.newTeamName"
-                  :confirmed-team-names="assignment.confirmedTeamNames"
-                  @update:new-team-name="(v) => { assignment.newTeamName.value = v }"
-                  @set-team="assignment.setTeam"
-                  @set-team-color="assignment.setTeamColor"
-                  @add-new-team="onAddNewTeam"
-                  @remove-from-team="assignment.removeFromTeam"
-                  @confirm-team="assignment.confirmTeam"
-                  @unconfirm-team="assignment.unconfirmTeam"
-                />
-                <div v-if="confirmedTeamsList.length >= 2" class="pt-2">
-                  <button
-                    type="button"
-                    class="w-full rounded-xl bg-emerald-500 px-4 py-3 font-semibold text-slate-900 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900 sm:w-auto sm:min-w-[220px]"
-                    @click="step = 4"
-                  >
-                    Турнирная таблица →
-                  </button>
-                </div>
-              </template>
+              <OrganismsTournamentStepTeams
+                :selected-players="selectedPlayers"
+                :team-options="assignment.teamOptions"
+                :get-team="assignment.getTeam"
+                :get-team-color="assignment.getTeamColor"
+                :new-team-name="assignment.newTeamName"
+                :confirmed-team-names="assignment.confirmedTeamNames"
+                :confirmed-teams-count="confirmedTeamsList.length"
+                @update:new-team-name="(v) => { assignment.newTeamName.value = v }"
+                @set-team="assignment.setTeam"
+                @set-team-color="assignment.setTeamColor"
+                @add-new-team="onAddNewTeam"
+                @remove-from-team="assignment.removeFromTeam"
+                @confirm-team="assignment.confirmTeam"
+                @unconfirm-team="assignment.unconfirmTeam"
+                @back-to-players="step = 2"
+                @go-to-standings="step = 4"
+              />
             </template>
 
             <!-- Подэтап: выбор игроков -->
             <template v-else>
-              <section class="mb-6 rounded-xl bg-slate-800/50 p-2 sm:p-4 sm:p-5">
-                <h2 class="text-sm font-semibold text-slate-400 mb-2">
-                  Выбранные игроки (клик — убрать)
-                </h2>
-                <div
-                  v-if="selectedPlayers.length === 0"
-                  class="rounded-lg bg-slate-800/30 px-3 py-4 sm:px-4 sm:py-6 text-center text-slate-500 text-sm"
-                >
-                  Выберите игроков из списка ниже — клик по игроку добавит его сюда
-                </div>
-                <template v-else>
-                  <MoleculesSelectedPlayersChips :players="selectedPlayers" @remove="removePlayer" />
-                  <div class="mt-4">
-                    <button
-                      type="button"
-                      class="w-full rounded-xl bg-emerald-500 px-4 py-3 font-semibold text-slate-900 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900 sm:w-auto sm:min-w-[220px]"
-                      @click="step = 3"
-                    >
-                      Распределить по командам →
-                    </button>
-                  </div>
-                </template>
-              </section>
-
-              <OrganismsPlayerCreateForm @created="refreshPlayers()" />
-
-              <OrganismsAvailablePlayersList
+              <OrganismsTournamentStepPlayers
                 :players="players ?? []"
-                :filtered-players="filteredAvailablePlayers"
-                v-model:search-query="playerSearch"
-                :all-selected="availablePlayers.length === 0"
-                @select="selectPlayer"
+                :selected-players="selectedPlayers"
+                :available-players="availablePlayers"
+                :filtered-available-players="filteredAvailablePlayers"
+                :player-search="playerSearch"
+                @select-player="selectPlayer"
+                @remove-player="removePlayer"
+                @update:player-search="(v) => { playerSearch = v }"
+                @refresh-players="refreshPlayers()"
+                @go-to-teams="step = 3"
               />
             </template>
           </template>
@@ -154,6 +109,8 @@
               :tournament-date="tournamentDate"
               :teams="confirmedTeamsList"
               :team-colors="assignment.teamColors.value"
+              :players="players ?? []"
+              :assignment-by-player-id="assignment.assignment.value"
             />
           </template>
         </section>

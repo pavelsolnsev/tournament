@@ -5,8 +5,7 @@
       :key="p.id"
     >
       <AtomsChip
-        :label="p.name"
-        :secondary="p.username ?? undefined"
+        :label="p.username || p.name"
         @click="emit('remove', p.id)"
       />
     </li>

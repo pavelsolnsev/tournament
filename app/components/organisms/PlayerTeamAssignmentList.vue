@@ -30,8 +30,12 @@
             </div>
           </div>
           <ul class="space-y-0.5 pl-1 text-xs text-slate-400" role="list">
-            <li v-for="p in playersInTeamByName(teamName)" :key="p.id" class="truncate">
-              {{ p.name }}<span v-if="p.username" class="text-slate-500"> · {{ p.username }}</span>
+            <li
+              v-for="p in playersInTeamByName(teamName)"
+              :key="p.id"
+              class="truncate"
+            >
+              {{ p.username || p.name }}
             </li>
           </ul>
         </li>
@@ -118,8 +122,9 @@
             class="flex min-w-0 items-center justify-between gap-2 rounded bg-slate-800/50 px-2 py-1"
           >
             <div class="min-w-0 truncate">
-              <span class="text-sm text-slate-100">{{ p.name }}</span>
-              <span v-if="p.username" class="ml-1 text-xs text-slate-500">{{ p.username }}</span>
+              <span class="text-sm text-slate-100">
+                {{ p.username || p.name }}
+              </span>
             </div>
             <button
               type="button"
@@ -165,8 +170,9 @@
             @click="emit('setTeam', p.id, selectedTeamName)"
             @keydown.enter.space.prevent="emit('setTeam', p.id, selectedTeamName)"
           >
-            <span class="truncate text-sm text-slate-100">{{ p.name }}</span>
-            <span v-if="p.username" class="truncate text-xs text-slate-500">{{ p.username }}</span>
+            <span class="truncate text-sm text-slate-100">
+              {{ p.username || p.name }}
+            </span>
             <span class="shrink-0 text-xs text-emerald-400">+</span>
           </li>
         </ul>

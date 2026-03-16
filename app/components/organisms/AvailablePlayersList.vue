@@ -41,9 +41,9 @@
           @click="emit('select', p.id)"
           @keydown.enter.space.prevent="emit('select', p.id)"
         >
-          <span class="min-w-0 flex-1 truncate font-medium text-slate-100">{{ p.name }}</span>
-          <span v-if="p.username" class="min-w-0 max-w-[40%] truncate text-slate-500 text-sm">{{ p.username }}</span>
-          <span v-else class="shrink-0 text-slate-600 text-sm">—</span>
+          <span class="min-w-0 flex-1 truncate font-medium text-slate-100">
+            {{ p.username || p.name }}
+          </span>
           <span class="shrink-0 text-emerald-400 text-sm">+ в турнир</span>
         </li>
       </ul>
