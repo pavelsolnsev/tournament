@@ -118,7 +118,7 @@
                 <div class="flex min-w-0 items-center justify-between gap-2">
                   <div class="min-w-0 truncate">
                     <span class="text-xs font-medium text-slate-100">
-                      {{ p.username || p.name }}
+                      {{ displayPlayerLabel(p) }}
                     </span>
                   </div>
                   <div class="flex shrink-0 items-center gap-2 text-[11px] text-slate-300">
@@ -182,7 +182,7 @@
                 <div class="flex min-w-0 items-center justify-between gap-2">
                   <div class="min-w-0 truncate">
                     <span class="text-xs font-medium text-slate-100">
-                      {{ p.username || p.name }}
+                      {{ displayPlayerLabel(p) }}
                     </span>
                   </div>
                   <div class="flex shrink-0 items-center gap-2 text-[11px] text-slate-300">
@@ -432,6 +432,14 @@ function finishMatch() {
   updateStandingsForTeam(awayTeam.value, ag, hg)
   resortStandings()
   resetMatchStats()
+}
+
+function displayPlayerLabel(p: Player) {
+  const cleaned = p.username?.replace(/^@+/, '').trim()
+  if (!cleaned || cleaned.toLowerCase() === 'unknown') {
+    return p.name
+  }
+  return cleaned
 }
 </script>
 

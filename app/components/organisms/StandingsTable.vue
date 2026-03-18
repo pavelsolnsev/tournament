@@ -65,13 +65,13 @@ export interface StandingsRow {
 
 const props = defineProps<{
   teams: string[]
-  /** Team name -> color index 0–3 (🔴 🟢 🔵 🟡) */
+  /** Team name -> color index 0–5 (🔴 🟢 🔵 🟡 ⚪ ⚫) */
   teamColors?: Record<string, number>
   /** Optional: precomputed rows (e.g. from API). If not provided, rows are built with zeros. */
   rows?: StandingsRow[]
 }>()
 
-const teamMarkers = ['🔴', '🟢', '🔵', '🟡']
+const teamMarkers = ['🔴', '🟢', '🔵', '🟡', '⚪', '⚫']
 
 const colMWidth = '3%'
 const colKomWidth = '22%'
@@ -96,7 +96,9 @@ const rows = computed<StandingsRow[]>(() => {
 })
 
 function markerForTeam(teamName: string, rowIndex: number): string {
-  const index = props.teamColors?.[teamName] ?? rowIndex % 4
-  return teamMarkers[Math.max(0, Math.min(index, 3))]
+  const raw = props.teamColors?.[teamName]
+  const index = typeof raw === 'number' ? raw : (rowIndex % teamMarkers.length)
+  const clampedIndex = Math.max(0, Math.min(index, teamMarkers.length - 1))
+  return (teamMarkers[clampedIndex] ?? teamMarkers[0]) as string
 }
 </script>
