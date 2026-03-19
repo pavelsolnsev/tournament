@@ -55,6 +55,7 @@
 import type { Player } from '~/types/tournament'
 import type { MaybeRef, ComputedRef, Ref } from 'vue'
 
+// Этот шаг распределяет игроков по командам.
 const props = defineProps<{
   selectedPlayers: Player[]
   teamOptions: MaybeRef<string[]> | ComputedRef<string[]>

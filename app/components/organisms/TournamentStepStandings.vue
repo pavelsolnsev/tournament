@@ -68,6 +68,21 @@
         </div>
       </div>
 
+      <!-- Автоматический выбор следующего матча -->
+      <div class="mt-1.5 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          class="rounded-lg bg-sky-500 px-3 py-2 text-xs font-semibold text-slate-900 transition hover:bg-sky-400 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+          :disabled="!hasNextMatch"
+          @click="goToNextMatch"
+        >
+          Следующий матч
+        </button>
+        <p v-if="!hasNextMatch" class="text-[11px] text-slate-500">
+          Все пары команд уже сыграли между собой.
+        </p>
+      </div>
+
       <!-- Информация о матче -->
       <div
         v-if="homeTeam && awayTeam"
@@ -248,8 +263,9 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
-import type { StandingsRow } from '~/components/organisms/StandingsTable.vue'
+import { useTournamentStandings } from '~/composables/useTournamentStandings'
 
+// Этот шаг показывает матчи и турнирную таблицу.
 const props = defineProps<{
   tournamentName: string
   tournamentDate: string
@@ -259,187 +275,32 @@ const props = defineProps<{
   assignmentByPlayerId: Record<number, string>
 }>()
 
-const markers: string[] = ['🔴', '🟢', '🔵', '🟡', '⚪', '⚫']
-
-// Единый источник правды: карта команда -> индекс цвета.
-// Если цвет не задан, назначаем последовательно 0..3 по списку teams.
-const effectiveTeamColors = computed<Record<string, number>>(() => {
-  const map: Record<string, number> = { ...props.teamColors }
-  let next = 0
-  for (const name of props.teams) {
-    if (map[name] === undefined) {
-      map[name] = next % markers.length
-      next += 1
-    }
-  }
-  return map
+const {
+  teamMarkers,
+  effectiveTeamColors,
+  teamMarker,
+  standingsRows,
+  hasNextMatch,
+  homeTeam,
+  awayTeam,
+  homeGoals,
+  awayGoals,
+  canFinishMatch,
+  playersByTeam,
+  activeSelection,
+  selectPlayerForMark,
+  isActivePlayer,
+  playerStat,
+  onSelectAction,
+  resetMatchStats,
+  finishMatch,
+  goToNextMatch,
+  displayPlayerLabel,
+} = useTournamentStandings({
+  teams: props.teams,
+  teamColors: props.teamColors,
+  players: props.players,
+  assignmentByPlayerId: props.assignmentByPlayerId,
 })
-
-function teamMarker(teamName: string): string {
-  const colorIndex = effectiveTeamColors.value[teamName] ?? 0
-  const idx = Math.max(0, Math.min(colorIndex, markers.length - 1))
-  return markers[idx] ?? '🔴'
-}
-
-type PlayerMatchStats = {
-  goals: number
-  assists: number
-  saves: number
-  yellows: number
-}
-
-type Side = 'home' | 'away'
-type StatKey = keyof PlayerMatchStats
-
-const standingsRows = ref<StandingsRow[]>(props.teams.map((name, index) => ({
-  place: index + 1,
-  teamName: name,
-  played: 0,
-  wins: 0,
-  draws: 0,
-  losses: 0,
-  goalsFor: 0,
-  goalsAgainst: 0,
-  goalDiff: 0,
-  points: 0,
-})))
-
-const homeTeam = ref('')
-const awayTeam = ref('')
-
-const homeStats = ref<Record<number, PlayerMatchStats>>({})
-const awayStats = ref<Record<number, PlayerMatchStats>>({})
-
-const homeGoals = computed(() =>
-  Object.values(homeStats.value).reduce((sum, s) => sum + s.goals, 0),
-)
-const awayGoals = computed(() =>
-  Object.values(awayStats.value).reduce((sum, s) => sum + s.goals, 0),
-)
-
-const canFinishMatch = computed(() => !!homeTeam.value && !!awayTeam.value && (homeGoals.value > 0 || awayGoals.value > 0))
-
-const playersByTeamMap = computed<Record<string, Player[]>>(() => {
-  const map: Record<string, Player[]> = {}
-  for (const p of props.players) {
-    const teamName = props.assignmentByPlayerId[p.id]
-    if (!teamName) continue
-    if (!map[teamName]) map[teamName] = []
-    map[teamName].push(p)
-  }
-  return map
-})
-
-function playersByTeam(teamName: string): Player[] {
-  return playersByTeamMap.value[teamName] ?? []
-}
-
-const activeSelection = ref<{ side: Side; playerId: number } | null>(null)
-
-const activePlayer = computed<Player | null>(() => {
-  if (!activeSelection.value) return null
-  return props.players.find(p => p.id === activeSelection.value?.playerId) ?? null
-})
-
-function selectPlayerForMark(side: Side, playerId: number) {
-  if (activeSelection.value && activeSelection.value.side === side && activeSelection.value.playerId === playerId) {
-    activeSelection.value = null
-  } else {
-    activeSelection.value = { side, playerId }
-  }
-}
-
-function isActivePlayer(side: Side, playerId: number) {
-  return !!activeSelection.value &&
-    activeSelection.value.side === side &&
-    activeSelection.value.playerId === playerId
-}
-
-function onSelectAction(side: Side, playerId: number, evt: Event) {
-  const select = evt.target as HTMLSelectElement
-  const value = select.value as StatKey | ''
-  if (!value) return
-  incrementStat(side, playerId, value)
-  // сбрасываем обратно плейсхолдер
-  select.value = ''
-}
-
-function ensureStats(container: Side, playerId: number): PlayerMatchStats {
-  const target = container === 'home' ? homeStats.value : awayStats.value
-  if (!target[playerId]) {
-    target[playerId] = { goals: 0, assists: 0, saves: 0, yellows: 0 }
-  }
-  return target[playerId]
-}
-
-function playerStat(side: Side, playerId: number): PlayerMatchStats {
-  return ensureStats(side, playerId)
-}
-
-function incrementStat(side: Side, playerId: number, key: StatKey) {
-  const st = ensureStats(side, playerId)
-  st[key] += 1
-}
-
-function resetMatchStats() {
-  homeStats.value = {}
-  awayStats.value = {}
-}
-
-function updateStandingsForTeam(teamName: string, goalsFor: number, goalsAgainst: number) {
-  const rows = standingsRows.value
-  const row = rows.find(r => r.teamName === teamName)
-  if (!row) return
-
-  row.played += 1
-  row.goalsFor += goalsFor
-  row.goalsAgainst += goalsAgainst
-
-  if (goalsFor > goalsAgainst) {
-    row.wins += 1
-    row.points += 3
-  } else if (goalsFor < goalsAgainst) {
-    row.losses += 1
-  } else {
-    row.draws += 1
-    row.points += 1
-  }
-
-  row.goalDiff = row.goalsFor - row.goalsAgainst
-}
-
-function resortStandings() {
-  standingsRows.value = [...standingsRows.value]
-    .sort((a, b) => {
-      if (b.points !== a.points) return b.points - a.points
-      if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff
-      if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor
-      return a.teamName.localeCompare(b.teamName)
-    })
-    .map((row, index) => ({
-      ...row,
-      place: index + 1,
-    }))
-}
-
-function finishMatch() {
-  if (!homeTeam.value || !awayTeam.value) return
-
-  const hg = homeGoals.value
-  const ag = awayGoals.value
-
-  updateStandingsForTeam(homeTeam.value, hg, ag)
-  updateStandingsForTeam(awayTeam.value, ag, hg)
-  resortStandings()
-  resetMatchStats()
-}
-
-function displayPlayerLabel(p: Player) {
-  const cleaned = p.username?.replace(/^@+/, '').trim()
-  if (!cleaned || cleaned.toLowerCase() === 'unknown') {
-    return p.name
-  }
-  return cleaned
-}
 </script>
 

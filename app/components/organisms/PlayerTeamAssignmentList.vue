@@ -200,7 +200,10 @@
 import type { Player } from '~/types/tournament'
 import type { MaybeRef, ComputedRef, Ref } from 'vue'
 import { unref } from 'vue'
+import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
+import { useTeamColors } from '@/composables/useTeamColors'
 
+// Здесь создаём команды и распределяем игроков по командам.
 const props = defineProps<{
   players: Player[]
   teamOptions: MaybeRef<string[]> | ComputedRef<string[]>
@@ -221,14 +224,14 @@ const emit = defineEmits<{
   removeTeam: [teamName: string]
 }>()
 
-const teamMarkers: string[] = ['🔴', '🟢', '🔵', '🟡', '⚪', '⚫']
+const { teamMarkers, getMarkerByIndex } = useTeamColors()
+const { displayPlayerLabel } = usePlayerDisplay()
 
 function teamMarker(teamName: string): string {
   const colorIndex = Number.isFinite(props.getTeamColor(teamName))
     ? props.getTeamColor(teamName)
     : 0
-  const idx = Math.max(0, Math.min(colorIndex, teamMarkers.length - 1))
-  return teamMarkers[idx] ?? '🔴'
+  return getMarkerByIndex(colorIndex)
 }
 
 const teamOptionsList = computed(() => unref(props.teamOptions))
@@ -275,12 +278,4 @@ const filteredUnassignedPlayers = computed(() => {
     return name.includes(term) || (!!username && username.includes(normalized))
   })
 })
-
-function displayPlayerLabel(p: Player) {
-  const cleaned = p.username?.replace(/^@+/, '').trim()
-  if (!cleaned || cleaned.toLowerCase() === 'unknown') {
-    return p.name
-  }
-  return cleaned
-}
 </script>

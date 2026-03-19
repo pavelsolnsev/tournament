@@ -119,7 +119,9 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
+import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
 
+// Этот шаг показывает игроков и даёт добавить новых.
 defineProps<{
   players: Player[] | null
   selectedPlayers: Player[]
@@ -141,13 +143,7 @@ const newUsername = ref('')
 const creating = ref(false)
 const createError = ref('')
 
-function displayPlayerLabel(p: Player) {
-  const cleaned = p.username?.replace(/^@+/, '').trim()
-  if (!cleaned || cleaned.toLowerCase() === 'unknown') {
-    return p.name
-  }
-  return cleaned
-}
+const { displayPlayerLabel } = usePlayerDisplay()
 
 async function onCreatePlayer() {
   const name = newName.value.trim()

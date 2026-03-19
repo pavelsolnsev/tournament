@@ -124,6 +124,7 @@ import type { Player, Team } from '~/types/tournament'
 
 definePageMeta({ layout: 'landing' })
 
+// Здесь храним всё состояние турнира для cookie.
 type SavedTournamentContext = {
   step: number
   tournamentName: string
@@ -134,10 +135,12 @@ type SavedTournamentContext = {
   teamColors: Record<string, number>
 }
 
+// Номер шага мастера создания турнира (0–4).
 const step = ref<0 | 1 | 2 | 3 | 4>(0)
 const tournamentName = ref('')
 const tournamentDate = ref('')
 
+// Меняем layout в зависимости от шага.
 watch(step, (s) => {
   setPageLayout(s === 0 ? 'landing' : 'default')
 }, { immediate: true })
@@ -146,16 +149,22 @@ function goToPlayers() {
   step.value = 2
 }
 
+// Загружаем игроков из API.
 const { data: players, refresh: refreshPlayers } = await useFetch<Player[]>('/api/players', {
   default: () => [],
 })
+// Загружаем существующие команды из API.
 const { data: teamsFromApi } = await useFetch<Team[]>('/api/teams', { default: () => [] })
 
+// Имена команд из базы.
 const existingTeamNames = computed(() => (teamsFromApi.value ?? []).map((t) => t.name))
+// Логика назначения игроков в команды.
 const assignment = useTeamAssignment(existingTeamNames)
 
+// Список команд, которые точно играют в турнире.
 const confirmedTeamsList = computed(() => Array.from(assignment.confirmedTeamNames.value))
 
+// ID игроков, добавленных в турнир.
 const selectedIds = ref<Set<number>>(new Set())
 const selectedPlayers = computed(() => {
   const list = players.value ?? []
@@ -166,6 +175,7 @@ const availablePlayers = computed(() => {
   return list.filter(p => !selectedIds.value.has(p.id))
 })
 
+// Строка поиска по доступным игрокам.
 const playerSearch = ref('')
 const filteredAvailablePlayers = computed(() => {
   const list = availablePlayers.value
@@ -179,12 +189,14 @@ const filteredAvailablePlayers = computed(() => {
   })
 })
 
+// Добавить игрока в турнир.
 function selectPlayer(id: number) {
   const next = new Set(selectedIds.value)
   next.add(id)
   selectedIds.value = next
 }
 
+// Убрать игрока из турнира.
 function removePlayer(id: number) {
   const next = new Set(selectedIds.value)
   next.delete(id)
@@ -196,12 +208,14 @@ function onAddNewTeam() {
   assignment.newTeamName.value = ''
 }
 
+// Cookie для сохранения состояния турнира.
 const contextCookie = useCookie<SavedTournamentContext | null>('tournament-context', {
   default: () => null,
   // Храним состояние турнира 30 дней
   maxAge: 60 * 60 * 24 * 30,
 })
 
+// Пытаемся восстановить турнир из cookie.
 if (contextCookie.value) {
   const ctx = contextCookie.value
   const restoredStep = Math.min(4, Math.max(0, ctx.step))
@@ -229,6 +243,7 @@ if (contextCookie.value) {
   assignment.newTeamNames.value = Array.from(allNames).filter((name) => !existingNames.has(name))
 }
 
+// Актуальное состояние турнира для записи в cookie.
 const savedContext = computed<SavedTournamentContext>(() => ({
   step: step.value,
   tournamentName: tournamentName.value,
@@ -239,6 +254,7 @@ const savedContext = computed<SavedTournamentContext>(() => ({
   teamColors: assignment.teamColors.value,
 }))
 
+// При изменении состояния обновляем cookie.
 watch(savedContext, (val) => {
   contextCookie.value = val
 }, { deep: true })

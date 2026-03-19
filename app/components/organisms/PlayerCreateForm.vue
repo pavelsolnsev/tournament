@@ -42,6 +42,7 @@
 </template>
 
 <script setup lang="ts">
+// Форма для создания нового игрока.
 const newName = ref('')
 const newUsername = ref('')
 const creating = ref(false)

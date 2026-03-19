@@ -15,6 +15,8 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 
+// Молекула, отображающая выбранных игроков в виде набора кликаемых чипов.
+// По клику по чипу удаляем игрока.
 defineProps<{
   players: Player[]
 }>()

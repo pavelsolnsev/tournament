@@ -50,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+import { useTeamColors } from '~/composables/useTeamColors'
 export interface StandingsRow {
   place: number
   teamName: string
@@ -63,6 +64,7 @@ export interface StandingsRow {
   points: number
 }
 
+// Эта таблица показывает места и очки команд.
 const props = defineProps<{
   teams: string[]
   /** Team name -> color index 0–5 (🔴 🟢 🔵 🟡 ⚪ ⚫) */
@@ -71,7 +73,7 @@ const props = defineProps<{
   rows?: StandingsRow[]
 }>()
 
-const teamMarkers = ['🔴', '🟢', '🔵', '🟡', '⚪', '⚫']
+const { teamMarkers, getMarkerByIndex } = useTeamColors()
 
 const colMWidth = '3%'
 const colKomWidth = '22%'
@@ -98,7 +100,6 @@ const rows = computed<StandingsRow[]>(() => {
 function markerForTeam(teamName: string, rowIndex: number): string {
   const raw = props.teamColors?.[teamName]
   const index = typeof raw === 'number' ? raw : (rowIndex % teamMarkers.length)
-  const clampedIndex = Math.max(0, Math.min(index, teamMarkers.length - 1))
-  return (teamMarkers[clampedIndex] ?? teamMarkers[0]) as string
+  return getMarkerByIndex(index)
 }
 </script>

@@ -70,3 +70,11 @@ Organise UI components by **Atomic Design** so that structure stays clear and re
 
 Place each component in the correct folder so that atoms stay generic and organisms stay feature-specific.
 
+
+“Please add a comment in simple language (simple10 level) after each piece of logic you add, so it is clear what is happening here and why it is needed.”
+
+## Add Simple Explanatory Comments After Each Logic Block
+“Explain Every Logic Step with Simple Comments (Simple10)”
+“Add Clear Simple10 Comments After Each Logic Section”
+“Write Simple Explanations for Every Added Logic Block”
+“Developer Prompt: Simple10 Comments for Each Logic Step”

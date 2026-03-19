@@ -1,22 +1,24 @@
 import type { Ref, ComputedRef } from 'vue'
 import { unref } from 'vue'
 
-/**
- * Shared logic for assigning players to teams (existing or new).
- * Composable is sync; parent provides existing team names (e.g. from API).
- */
+// Логика назначения игроков в команды и работы с командами.
 export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef<string[]>) {
+  // Имена новых команд, созданных пользователем.
   const newTeamNames = ref<string[]>([])
+  // Все команды: из API и новые.
   const teamOptions = computed(() => [
     ...(unref(existingTeamNames) ?? []),
     ...newTeamNames.value,
   ])
+  // Какой игрок в какой команде.
   const assignment = ref<Record<number, string>>({})
+  // ID игрока, для которого сейчас создаём новую команду.
   const newTeamInputForPlayer = ref<number | null>(null)
+  // Текст для имени новой команды.
   const newTeamName = ref('')
-  /** Team names that are confirmed to participate in the tournament */
+  /** Команды, которые участвуют в турнире. */
   const confirmedTeamNames = ref<Set<string>>(new Set())
-  /** Team name -> color index 0–5 (🔴 🟢 🔵 🟡 ⚪ ⚫) */
+  /** Цвета команд по имени (индекс 0–5). */
   const teamColors = ref<Record<string, number>>({})
 
   function normalizeTeamName(name: string) {
@@ -99,7 +101,7 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
     const normalized = normalizeTeamName(teamName)
     if (!normalized) return
 
-    // Удаляем только пользовательские команды (не из базы)
+    // Удаляем только команды, созданные пользователем.
     if (newTeamNames.value.includes(normalized)) {
       newTeamNames.value = newTeamNames.value.filter((n) => n !== normalized)
     }

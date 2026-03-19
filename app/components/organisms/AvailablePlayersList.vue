@@ -56,7 +56,9 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
+import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
 
+// Здесь показываем список игроков с поиском.
 defineProps<{
   players: Player[]
   filteredPlayers: Player[]
@@ -70,11 +72,5 @@ const emit = defineEmits<{
   select: [id: number]
 }>()
 
-function displayPlayerLabel(p: Player) {
-  const cleaned = p.username?.replace(/^@+/, '').trim()
-  if (!cleaned || cleaned.toLowerCase() === 'unknown') {
-    return p.name
-  }
-  return cleaned
-}
+const { displayPlayerLabel } = usePlayerDisplay()
 </script>
