@@ -1,3 +1,5 @@
+// Этот файл: util/composable для красивого отображения игрока в UI.
+// Он приводит username к нормальному виду, чтобы список выглядел единообразно.
 import type { Player } from '~/types/tournament'
 
 export function usePlayerDisplay() {

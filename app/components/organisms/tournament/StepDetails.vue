@@ -1,3 +1,4 @@
+<!-- Компонент StepDetails: шаг ввода названия и даты турнира. -->
 <template>
   <div>
     <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-50 text-center">

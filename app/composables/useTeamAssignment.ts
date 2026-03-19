@@ -1,3 +1,5 @@
+// Этот файл: composable для назначения игроков в команды.
+// Он держит выбранные команды, подтверждения и распределение игроков.
 import type { Ref, ComputedRef } from 'vue'
 import { unref } from 'vue'
 

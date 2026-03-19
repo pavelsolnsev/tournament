@@ -2,6 +2,10 @@ export default defineNuxtConfig({
   srcDir: 'app',
   modules: ['@nuxtjs/tailwindcss'],
   css: ['~/assets/css/tailwind.css'],
+  devtools: {
+    // Отключаем Nuxt DevTools, чтобы убрать предупреждения про non-props attrs из оверлеев.
+    enabled: false,
+  },
   typescript: {
     strict: true,
     typeCheck: false,

@@ -67,6 +67,7 @@ Organise UI components by **Atomic Design** so that structure stays clear and re
 - **Atoms** (`components/atoms/`): Small, presentational building blocks — buttons, inputs, labels, icons. No business logic; only props and slots.
 - **Molecules** (`components/molecules/`): Groups of atoms that form one UI unit — e.g. search field with button, form row with label and input. Minimal logic (local state for the unit).
 - **Organisms** (`components/organisms/`): Larger sections that combine molecules/atoms — header, card list, full form. Can use composables and contain more logic.
+- **Organism subfolders**: Group organisms by feature/domain under `components/organisms/<area>/` (e.g. `tournament/`, `standings/`, `player-team-assignment/`). Name files so Nuxt auto-import names stay stable (path segments + filename build the component name).
 
 Place each component in the correct folder so that atoms stay generic and organisms stay feature-specific.
 

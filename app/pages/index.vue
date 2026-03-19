@@ -1,7 +1,7 @@
 <template>
   <div class="flex min-h-screen flex-col bg-slate-900 text-slate-100 overflow-x-hidden">
     <!-- Этап 0: приветствие -->
-    <template v-if="step === 0">
+    <template v-if="wizard.step.value === 0">
       <div class="relative flex flex-1 min-h-0 flex-col items-center justify-center px-2 sm:px-4 py-8 bg-gradient-to-b from-slate-900 via-slate-800/50 to-slate-900">
         <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(16,185,129,0.15),transparent)] pointer-events-none" />
         <main class="relative z-10 text-center max-w-xl mx-auto">
@@ -14,7 +14,7 @@
           <button
             type="button"
             class="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-2xl bg-emerald-500 text-slate-900 font-semibold text-lg shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-400 focus:outline-none"
-            @click="step = 1"
+            @click="wizard.step.value = 1"
           >
             Создать турнир
             <span class="text-xl" aria-hidden="true">→</span>
@@ -23,7 +23,7 @@
       </div>
     </template>
 
-    <!-- Этапы 1–3: форма -->
+    <!-- Этапы 1–4: мастер создания турнира -->
     <template v-else>
       <main class="mx-auto flex w-full max-w-4xl flex-col gap-4 px-2 py-4 sm:px-4 sm:py-8">
         <section class="rounded-xl bg-slate-900/70 py-2 sm:py-4 space-y-6">
@@ -32,7 +32,7 @@
             <button
               type="button"
               class="inline-flex items-center gap-1.5 rounded text-sm text-slate-400 transition hover:text-slate-200 focus:outline-none"
-              @click="step = (Math.max(0, step - 1) as 0 | 1 | 2 | 3 | 4)"
+              @click="wizard.step.value = (Math.max(0, wizard.step.value - 1) as 0 | 1 | 2 | 3 | 4)"
             >
               <span aria-hidden="true">←</span>
               Назад
@@ -40,77 +40,77 @@
           </div>
 
           <!-- Этап 1: название и дата -->
-          <template v-if="step === 1">
+          <template v-if="wizard.step.value === 1">
             <OrganismsTournamentStepDetails
-              :tournament-name="tournamentName"
-              :tournament-date="tournamentDate"
-              @update:tournament-name="(v) => { tournamentName = v }"
-              @update:tournament-date="(v) => { tournamentDate = v }"
-              @next="goToPlayers"
+              :tournament-name="wizard.tournamentName.value"
+              :tournament-date="wizard.tournamentDate.value"
+              @update:tournament-name="(v) => { wizard.tournamentName.value = v }"
+              @update:tournament-date="(v) => { wizard.tournamentDate.value = v }"
+              @next="wizard.goToPlayers"
             />
           </template>
 
           <!-- Этап 2: выбор игроков и этап 3: распределение по командам -->
-          <template v-if="step === 2 || step === 3">
+          <template v-if="wizard.step.value === 2 || wizard.step.value === 3">
             <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-50">
-              {{ step === 2 ? 'Игроки на турнир' : 'Команды' }}
+              {{ wizard.step.value === 2 ? 'Игроки на турнир' : 'Команды' }}
             </h1>
             <p class="text-slate-400 text-sm">
-              <span v-if="tournamentName" class="truncate">{{ tournamentName }}</span>
-              <span v-if="tournamentName && tournamentDate"> · </span>
-              <span v-if="tournamentDate">{{ tournamentDate }}</span>
-              <span v-if="!tournamentName && !tournamentDate && step === 2">Название и дата не указаны</span>
+              <span v-if="wizard.tournamentName.value" class="truncate">{{ wizard.tournamentName.value }}</span>
+              <span v-if="wizard.tournamentName.value && wizard.tournamentDate.value"> · </span>
+              <span v-if="wizard.tournamentDate.value">{{ wizard.tournamentDate.value }}</span>
+              <span v-if="!wizard.tournamentName.value && !wizard.tournamentDate.value && wizard.step.value === 2">Название и дата не указаны</span>
             </p>
 
             <!-- Подэтап: распределение по командам -->
-            <template v-if="step === 3">
+            <template v-if="wizard.step.value === 3">
               <OrganismsTournamentStepTeams
-                :selected-players="selectedPlayers"
-                :team-options="assignment.teamOptions"
-                :get-team="assignment.getTeam"
-                :get-team-color="assignment.getTeamColor"
-                :new-team-name="assignment.newTeamName"
-                :confirmed-team-names="assignment.confirmedTeamNames"
-                :confirmed-teams-count="confirmedTeamsList.length"
-                @update:new-team-name="(v) => { assignment.newTeamName.value = v }"
-                @set-team="assignment.setTeam"
-                @set-team-color="assignment.setTeamColor"
-                @add-new-team="onAddNewTeam"
-                @remove-from-team="assignment.removeFromTeam"
-                @confirm-team="assignment.confirmTeam"
-                @unconfirm-team="assignment.unconfirmTeam"
-                @remove-team="assignment.removeTeam"
-                @back-to-players="step = 2"
-                @go-to-standings="step = 4"
+                :selected-players="wizard.selectedPlayers.value"
+                :team-options="wizard.assignment.teamOptions"
+                :get-team="wizard.assignment.getTeam"
+                :get-team-color="wizard.assignment.getTeamColor"
+                :new-team-name="wizard.assignment.newTeamName"
+                :confirmed-team-names="wizard.assignment.confirmedTeamNames"
+                :confirmed-teams-count="wizard.confirmedTeamsList.value.length"
+                @update:new-team-name="(v) => { wizard.assignment.newTeamName.value = v }"
+                @set-team="wizard.assignment.setTeam"
+                @set-team-color="wizard.assignment.setTeamColor"
+                @add-new-team="wizard.onAddNewTeam"
+                @remove-from-team="wizard.assignment.removeFromTeam"
+                @confirm-team="wizard.assignment.confirmTeam"
+                @unconfirm-team="wizard.assignment.unconfirmTeam"
+                @remove-team="wizard.assignment.removeTeam"
+                @back-to-players="wizard.step.value = 2"
+                @go-to-standings="wizard.step.value = 4"
               />
             </template>
 
             <!-- Подэтап: выбор игроков -->
             <template v-else>
               <OrganismsTournamentStepPlayers
-                :players="players ?? []"
-                :selected-players="selectedPlayers"
-                :available-players="availablePlayers"
-                :filtered-available-players="filteredAvailablePlayers"
-                :player-search="playerSearch"
-                @select-player="selectPlayer"
-                @remove-player="removePlayer"
-                @update:player-search="(v) => { playerSearch = v }"
-                @refresh-players="refreshPlayers()"
-                @go-to-teams="step = 3"
+                :players="wizard.players.value ?? []"
+                :selected-players="wizard.selectedPlayers.value"
+                :available-players="wizard.availablePlayers.value"
+                :filtered-available-players="wizard.filteredAvailablePlayers.value"
+                :player-search="wizard.playerSearch.value"
+                @select-player="wizard.selectPlayer"
+                @remove-player="wizard.removePlayer"
+                @update:player-search="(v) => { wizard.playerSearch.value = v }"
+                @refresh-players="wizard.refreshPlayers()"
+                @go-to-teams="wizard.step.value = 3"
               />
             </template>
           </template>
 
           <!-- Этап 4: турнирная таблица -->
-          <template v-if="step === 4">
+          <template v-if="wizard.step.value === 4">
             <OrganismsTournamentStepStandings
-              :tournament-name="tournamentName"
-              :tournament-date="tournamentDate"
-              :teams="confirmedTeamsList"
-              :team-colors="assignment.teamColors.value"
-              :players="players ?? []"
-              :assignment-by-player-id="assignment.assignment.value"
+              :tournament-name="wizard.tournamentName.value"
+              :tournament-date="wizard.tournamentDate.value"
+              :teams="wizard.confirmedTeamsList.value"
+              :team-colors="wizard.assignment.teamColors.value"
+              :players="wizard.players.value ?? []"
+              :assignment-by-player-id="wizard.assignment.assignment.value"
             />
           </template>
         </section>
@@ -120,142 +120,11 @@
 </template>
 
 <script setup lang="ts">
-import type { Player, Team } from '~/types/tournament'
+import { useTournamentWizard } from '~/composables/useTournamentWizard'
 
 definePageMeta({ layout: 'landing' })
 
-// Здесь храним всё состояние турнира для cookie.
-type SavedTournamentContext = {
-  step: number
-  tournamentName: string
-  tournamentDate: string
-  selectedIds: number[]
-  assignmentByPlayerId: Record<number, string>
-  confirmedTeamNames: string[]
-  teamColors: Record<string, number>
-}
-
-// Номер шага мастера создания турнира (0–4).
-const step = ref<0 | 1 | 2 | 3 | 4>(0)
-const tournamentName = ref('')
-const tournamentDate = ref('')
-
-// Меняем layout в зависимости от шага.
-watch(step, (s) => {
-  setPageLayout(s === 0 ? 'landing' : 'default')
-}, { immediate: true })
-
-function goToPlayers() {
-  step.value = 2
-}
-
-// Загружаем игроков из API.
-const { data: players, refresh: refreshPlayers } = await useFetch<Player[]>('/api/players', {
-  default: () => [],
-})
-// Загружаем существующие команды из API.
-const { data: teamsFromApi } = await useFetch<Team[]>('/api/teams', { default: () => [] })
-
-// Имена команд из базы.
-const existingTeamNames = computed(() => (teamsFromApi.value ?? []).map((t) => t.name))
-// Логика назначения игроков в команды.
-const assignment = useTeamAssignment(existingTeamNames)
-
-// Список команд, которые точно играют в турнире.
-const confirmedTeamsList = computed(() => Array.from(assignment.confirmedTeamNames.value))
-
-// ID игроков, добавленных в турнир.
-const selectedIds = ref<Set<number>>(new Set())
-const selectedPlayers = computed(() => {
-  const list = players.value ?? []
-  return list.filter(p => selectedIds.value.has(p.id))
-})
-const availablePlayers = computed(() => {
-  const list = players.value ?? []
-  return list.filter(p => !selectedIds.value.has(p.id))
-})
-
-// Строка поиска по доступным игрокам.
-const playerSearch = ref('')
-const filteredAvailablePlayers = computed(() => {
-  const list = availablePlayers.value
-  const term = playerSearch.value.trim().toLowerCase()
-  if (term.length < 3) return list
-  const normalized = term.replace(/^@/, '')
-  return list.filter((p) => {
-    const name = p.name.toLowerCase()
-    const username = (p.username || '').replace(/^@/, '').toLowerCase()
-    return name.includes(term) || (!!username && username.includes(normalized))
-  })
-})
-
-// Добавить игрока в турнир.
-function selectPlayer(id: number) {
-  const next = new Set(selectedIds.value)
-  next.add(id)
-  selectedIds.value = next
-}
-
-// Убрать игрока из турнира.
-function removePlayer(id: number) {
-  const next = new Set(selectedIds.value)
-  next.delete(id)
-  selectedIds.value = next
-}
-
-function onAddNewTeam() {
-  assignment.addNewTeam(assignment.newTeamName.value)
-  assignment.newTeamName.value = ''
-}
-
-// Cookie для сохранения состояния турнира.
-const contextCookie = useCookie<SavedTournamentContext | null>('tournament-context', {
-  default: () => null,
-  // Храним состояние турнира 30 дней
-  maxAge: 60 * 60 * 24 * 30,
-})
-
-// Пытаемся восстановить турнир из cookie.
-if (contextCookie.value) {
-  const ctx = contextCookie.value
-  const restoredStep = Math.min(4, Math.max(0, ctx.step))
-  step.value = restoredStep as 0 | 1 | 2 | 3 | 4
-  tournamentName.value = ctx.tournamentName ?? ''
-  tournamentDate.value = ctx.tournamentDate ?? ''
-  selectedIds.value = new Set((ctx.selectedIds ?? []).filter((id) => Number.isFinite(id)))
-  assignment.assignment.value = ctx.assignmentByPlayerId ?? {}
-  assignment.confirmedTeamNames.value = new Set(ctx.confirmedTeamNames ?? [])
-  assignment.teamColors.value = ctx.teamColors ?? {}
-
-  // Восстанавливаем пользовательские команды, созданные ранее,
-  // чтобы они снова появились в выпадающем списке и были доступны
-  // для выбора и изменения цветов.
-  const namesFromAssignments = Object.values(ctx.assignmentByPlayerId ?? {})
-  const namesFromConfirmed = ctx.confirmedTeamNames ?? []
-  const namesFromColors = Object.keys(ctx.teamColors ?? {})
-  const allNames = new Set<string>([
-    ...namesFromAssignments,
-    ...namesFromConfirmed,
-    ...namesFromColors,
-  ].filter((name) => !!name && typeof name === 'string'))
-
-  const existingNames = new Set(existingTeamNames.value ?? [])
-  assignment.newTeamNames.value = Array.from(allNames).filter((name) => !existingNames.has(name))
-}
-
-// Актуальное состояние турнира для записи в cookie.
-const savedContext = computed<SavedTournamentContext>(() => ({
-  step: step.value,
-  tournamentName: tournamentName.value,
-  tournamentDate: tournamentDate.value,
-  selectedIds: Array.from(selectedIds.value),
-  assignmentByPlayerId: assignment.assignment.value,
-  confirmedTeamNames: Array.from(assignment.confirmedTeamNames.value),
-  teamColors: assignment.teamColors.value,
-}))
-
-// При изменении состояния обновляем cookie.
-watch(savedContext, (val) => {
-  contextCookie.value = val
-}, { deep: true })
+// Страница только рендерит UI по шагу, а вся логика живёт в composable.
+const wizard = useTournamentWizard()
 </script>
+

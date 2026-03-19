@@ -1,3 +1,4 @@
+<!-- Компонент PlayerCreateForm: форма для добавления нового игрока в базу. -->
 <template>
   <section class="mb-6 rounded-xl bg-slate-800/50 p-2 sm:p-4 sm:p-5">
     <h2 class="text-lg font-semibold text-slate-200 mb-3">

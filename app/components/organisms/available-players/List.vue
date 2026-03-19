@@ -1,3 +1,4 @@
+<!-- Компонент AvailablePlayersList: показывает доступных игроков и позволяет выбрать игрока. -->
 <template>
   <section class="rounded-xl bg-slate-800/50 p-2 sm:p-4 sm:p-5">
     <h2 class="text-lg font-semibold text-slate-200 mb-3">
