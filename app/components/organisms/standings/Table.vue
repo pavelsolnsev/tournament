@@ -28,9 +28,11 @@
           class="border-b border-slate-700/70 hover:bg-slate-800/30"
         >
           <td class="px-0.5 py-0.5 font-medium text-slate-400 sm:px-2 sm:py-1.5">{{ row.place }}</td>
-          <td class="min-w-0 truncate px-0.5 py-0.5 sm:px-2 sm:py-1.5">
-            <span class="mr-0.5 sm:mr-1.5" aria-hidden="true">{{ markerForTeam(row.teamName, i) }}</span>
-            <span class="text-slate-100">{{ row.teamName }}</span>
+          <td class="min-w-0 px-0.5 py-0.5 sm:px-2 sm:py-1.5">
+            <div class="flex min-w-0 items-center gap-0.5 sm:gap-1.5">
+              <span class="shrink-0" aria-hidden="true">{{ markerForTeam(row.teamName, i) }}</span>
+              <span class="min-w-0 truncate text-slate-100">{{ row.teamName }}</span>
+            </div>
           </td>
           <td class="whitespace-nowrap px-0.5 py-0.5 text-center tabular-nums text-slate-300 sm:px-2 sm:py-1.5">{{ row.played }}</td>
           <td class="whitespace-nowrap px-0.5 py-0.5 text-center tabular-nums text-slate-300 sm:px-2 sm:py-1.5">{{ row.wins }}</td>

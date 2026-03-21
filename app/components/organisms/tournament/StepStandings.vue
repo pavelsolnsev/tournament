@@ -1,6 +1,6 @@
 <!-- Компонент StepStandings: шаг, который собирает герой + список матчей + управление матчем. -->
 <template>
-  <div class="space-y-4">
+  <div class="min-w-0 space-y-4">
     <OrganismsTournamentStepStandingsHero
       :tournament-name="tournamentName"
       :tournament-date="tournamentDate"
@@ -9,7 +9,7 @@
       :effective-team-colors="effectiveTeamColors"
     />
 
-    <section class="rounded-2xl bg-slate-900/70 space-y-4">
+    <section class="min-w-0 space-y-4 overflow-x-hidden rounded-2xl bg-slate-900/70">
       <OrganismsTournamentStepStandingsPlayedMatches
         :played-matches-list="playedMatchesList"
         :team-marker="teamMarker"

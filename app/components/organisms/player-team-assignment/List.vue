@@ -1,6 +1,6 @@
 <!-- Компонент PlayerTeamAssignmentList: контейнер, который показывает команды и состав игроков выбранной команды. -->
 <template>
-  <div class="grid gap-4 lg:grid-cols-5">
+  <div class="grid min-w-0 gap-4 lg:grid-cols-5">
     <OrganismsPlayerTeamAssignmentTeamsPanel
       :new-team-name-value="newTeamNameValue"
       :all-teams="allTeams"

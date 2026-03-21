@@ -6,15 +6,16 @@
       <select
         id="home-team"
         :value="homeTeam"
-        class="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm text-slate-100 ring-0 transition focus:border-emerald-500 focus:outline-none"
+        class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none ring-0 ring-offset-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus:ring-offset-0"
         @change="$emit('update:homeTeam', ($event.target as HTMLSelectElement).value)"
       >
-        <option value="">
+        <option class="bg-slate-900 text-slate-100" value="">
           — Выберите команду —
         </option>
         <option
           v-for="name in teams"
           :key="name"
+          class="bg-slate-900 text-slate-100"
           :value="name"
           :disabled="name === awayTeam"
         >
@@ -28,15 +29,16 @@
       <select
         id="away-team"
         :value="awayTeam"
-        class="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm text-slate-100 ring-0 transition focus:border-sky-500 focus:outline-none"
+        class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none ring-0 ring-offset-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus:ring-offset-0"
         @change="$emit('update:awayTeam', ($event.target as HTMLSelectElement).value)"
       >
-        <option value="">
+        <option class="bg-slate-900 text-slate-100" value="">
           — Выберите команду —
         </option>
         <option
           v-for="name in teams"
           :key="name"
+          class="bg-slate-900 text-slate-100"
           :value="name"
           :disabled="name === homeTeam"
         >

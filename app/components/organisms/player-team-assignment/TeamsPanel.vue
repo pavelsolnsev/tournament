@@ -1,58 +1,54 @@
-<!-- Компонент TeamsPanel: панель со списком команд и настройкой/подтверждением выбранных команд. -->
+<!-- Компонент TeamsPanel: команды на тех же панели/полях, что игроки. -->
 <template>
-  <section class="lg:col-span-2 rounded-xl bg-slate-800/30 p-3 sm:p-4 space-y-3">
-    <div>
-      <h3 class="text-sm font-semibold text-slate-100">
-        Команды
-      </h3>
-    </div>
+  <AtomsTournamentPanel as="section" root-class="lg:col-span-2">
+    <AtomsPanelHeading>Команды</AtomsPanelHeading>
 
     <div class="flex items-end gap-2">
-      <div class="min-w-0 flex-1">
-        <label for="new-team-name" class="mb-1 block text-xs font-medium text-slate-400">
-          Новая команда
-        </label>
-        <input
-          id="new-team-name"
-          :value="newTeamNameValue"
-          type="text"
+      <MoleculesFieldBlock
+        id="new-team-name"
+        label="Новая команда"
+        wrapper-class="flex-1"
+      >
+        <AtomsTournamentTextInput
+          :model-value="newTeamNameValue"
+          variant="field"
+          size="sm"
           placeholder="Напр. Леон"
-          class="w-full rounded border border-slate-600 bg-slate-800 px-2 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-          @input="emit('update:newTeamName', ($event.target as HTMLInputElement).value)"
+          id="new-team-name"
+          @update:model-value="emit('update:newTeamName', $event)"
           @keydown.enter.prevent="emit('addNewTeam')"
-        >
-      </div>
+        />
+      </MoleculesFieldBlock>
 
-      <button
-        type="button"
-        class="shrink-0 rounded bg-emerald-500 px-2.5 py-1.5 text-sm font-medium text-slate-900 transition hover:bg-emerald-400 focus:outline-none"
+      <AtomsPrimaryButton
+        size="sm"
         title="Создать команду"
         @click="emit('addNewTeam')"
       >
         +
-      </button>
+      </AtomsPrimaryButton>
     </div>
 
-    <p v-if="allTeams.length === 0" class="rounded-lg bg-slate-900/40 px-3 py-3 text-sm text-slate-500">
+    <AtomsEmptyStateBox v-if="allTeams.length === 0" align="start" size="sm">
       Команд пока нет — создайте первую.
-    </p>
+    </AtomsEmptyStateBox>
 
-    <ul v-else class="max-h-96 overflow-y-auto pr-1 space-y-2" role="list">
+    <ul v-else class="max-h-96 space-y-2 overflow-y-auto pr-1" role="list">
       <li
         v-for="name in allTeams"
         :key="name"
-        class="rounded-xl border p-2 transition"
-        :class="selectedTeamName === name ? 'border-emerald-500/60 bg-emerald-500/5' : 'border-slate-700/60 bg-slate-900/30 hover:bg-slate-900/50'"
+        class="rounded-xl border p-2 transition sm:p-3"
+        :class="selectedTeamName === name ? 'border-emerald-500/60 bg-emerald-500/5' : 'border-slate-800/50 bg-slate-900/30 hover:bg-slate-900/50'"
       >
         <div class="flex items-start justify-between gap-2">
           <button
             type="button"
-            class="min-w-0 flex-1 text-left focus:outline-none rounded"
+            class="min-w-0 flex-1 rounded text-left focus:outline-none"
             @click="emit('selectTeam', name)"
           >
-            <div class="flex items-center gap-2">
-              <span aria-hidden="true" class="text-base">{{ teamMarker(name) }}</span>
-              <span class="truncate text-sm font-medium text-slate-100">{{ name }}</span>
+            <div class="flex min-w-0 items-center gap-2">
+              <span aria-hidden="true" class="shrink-0 text-base">{{ teamMarker(name) }}</span>
+              <span class="min-w-0 truncate text-sm font-medium text-slate-100">{{ name }}</span>
             </div>
 
             <div class="mt-0.5 flex items-center gap-2 text-xs text-slate-400">
@@ -66,11 +62,16 @@
           <div class="flex shrink-0 items-center gap-2">
             <select
               :value="String(getTeamColor(name))"
-              class="rounded bg-slate-900/70 px-1.5 py-1 text-xs text-slate-100 focus:outline-none"
+              class="rounded border border-slate-700 bg-slate-900/70 px-1.5 py-1 text-xs text-slate-100 outline-none ring-0 ring-offset-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus:ring-offset-0"
               title="Цвет команды"
               @change="emit('setTeamColor', name, Number(($event.target as HTMLSelectElement).value))"
             >
-              <option v-for="(m, idx) in teamMarkers" :key="idx" :value="String(idx)">
+              <option
+                v-for="(m, idx) in teamMarkers"
+                :key="idx"
+                class="bg-slate-900 text-slate-100"
+                :value="String(idx)"
+              >
                 {{ m }}
               </option>
             </select>
@@ -78,7 +79,7 @@
             <button
               v-if="(teamPlayerCounts[name] ?? 0) > 0 && !isTeamConfirmed(name)"
               type="button"
-              class="rounded bg-emerald-500/15 px-2 py-1 text-xs font-medium text-emerald-300 transition hover:bg-emerald-500/25 focus:outline-none"
+              class="rounded bg-emerald-500/15 px-2 py-1 text-xs font-medium text-emerald-300 transition hover:bg-emerald-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
               title="Команда участвует в турнире"
               @click="emit('confirmTeam', name)"
             >
@@ -88,7 +89,7 @@
             <button
               v-else-if="isTeamConfirmed(name)"
               type="button"
-              class="rounded bg-slate-700/40 px-2 py-1 text-xs font-medium text-slate-200 transition hover:bg-slate-700/60 focus:outline-none"
+              class="rounded bg-slate-700/40 px-2 py-1 text-xs font-medium text-slate-200 transition hover:bg-slate-700/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
               title="Убрать из участников турнира"
               @click="emit('unconfirmTeam', name)"
             >
@@ -97,7 +98,7 @@
 
             <button
               type="button"
-              class="rounded px-2 py-1 text-xs text-slate-400 transition hover:text-red-400 focus:outline-none"
+              class="rounded px-2 py-1 text-xs text-slate-400 transition hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
               title="Удалить команду"
               @click="emit('removeTeam', name)"
             >
@@ -107,7 +108,7 @@
         </div>
       </li>
     </ul>
-  </section>
+  </AtomsTournamentPanel>
 </template>
 
 <script setup lang="ts">
@@ -133,6 +134,5 @@ const emit = defineEmits<{
   removeTeam: [teamName: string]
 }>()
 
-// Эти маркеры нужны, чтобы показать цвет команды в селекте.
 const { teamMarkers } = useTeamColors()
 </script>

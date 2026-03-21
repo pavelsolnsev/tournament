@@ -61,7 +61,6 @@
           :team-name="homeTeam"
           :players="playersByTeam(homeTeam)"
           active-shadow-class="shadow-inner shadow-emerald-500/30"
-          select-focus-class="focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/70"
           :team-marker="teamMarker"
           :display-player-label="displayPlayerLabel"
           :is-active-player="isActivePlayer"
@@ -75,7 +74,6 @@
           :team-name="awayTeam"
           :players="playersByTeam(awayTeam)"
           active-shadow-class="shadow-inner shadow-sky-500/30"
-          select-focus-class="focus:border-sky-500 focus:ring-1 focus:ring-sky-500/70"
           :team-marker="teamMarker"
           :display-player-label="displayPlayerLabel"
           :is-active-player="isActivePlayer"
@@ -88,41 +86,88 @@
       <div class="mt-3 flex flex-col gap-2">
         <button
           type="button"
-          class="w-full rounded-lg bg-sky-500 px-3 py-2 text-xs font-semibold text-slate-900 transition hover:bg-sky-400 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
+          class="w-full rounded-lg bg-sky-500 px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none active:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           :disabled="!hasNextMatch || !homeTeam || !awayTeam"
           @click="handleGoToNextMatch"
         >
           Следующий матч
         </button>
 
-        <button
-          type="button"
-          class="w-full rounded-lg bg-slate-700 px-3 py-2 text-xs font-medium text-slate-100 transition hover:bg-slate-600 focus:outline-none sm:w-auto"
-          @click="isManagementOpen = !isManagementOpen"
-        >
-          Управление
-        </button>
-
+        <!-- Обертка: визуально кнопка «Управление» и блок действий выглядят как одна раскрывающаяся панель. -->
         <div
-          v-if="isManagementOpen"
-          class="flex flex-col gap-2"
+          class="overflow-hidden rounded-xl sm:w-auto"
+          :class="isManagementOpen
+            && 'border border-slate-600/90 bg-slate-950/60 shadow-inner shadow-black/20'"
         >
           <button
+            id="match-management-toggle"
             type="button"
-            class="w-full rounded-lg bg-slate-700 px-3 py-2 text-xs font-medium text-slate-100 transition hover:bg-slate-600 focus:outline-none sm:w-auto"
-            @click="handleResetMatch"
+            class="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-xs font-medium text-slate-100 focus:outline-none sm:w-auto sm:min-w-[11rem]"
+            :class="isManagementOpen
+              ? 'rounded-t-xl rounded-b-none bg-slate-600 active:bg-slate-700'
+              : 'rounded-xl bg-slate-700 active:bg-slate-800'"
+            :aria-expanded="isManagementOpen"
+            aria-controls="match-management-actions"
+            @click="isManagementOpen = !isManagementOpen"
           >
-            Сбросить матч
+            <span class="flex min-w-0 flex-1 items-center gap-2">
+              <!-- Три точки намекают, что под кнопкой спрятаны дополнительные действия. -->
+              <span
+                aria-hidden="true"
+                class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-800/90 text-[10px] font-bold leading-none tracking-tight text-slate-400"
+                :class="isManagementOpen && 'bg-slate-900/80 text-sky-300'"
+              >
+                •••
+              </span>
+              <span class="truncate">
+                Управление
+              </span>
+            </span>
+            <!-- Стрелка поворачивается: закрыто — вниз, открыто — вверх, как у типичного «раскрыть ещё кнопки». -->
+            <span
+              aria-hidden="true"
+              class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-900/50 text-slate-300"
+            >
+              <svg
+                class="h-4 w-4"
+                :class="isManagementOpen && '-rotate-180'"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </span>
           </button>
 
-          <button
-            type="button"
-            class="w-full rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-900 transition hover:bg-emerald-400 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
-            :disabled="!canFinishMatch"
-            @click="handleFinishMatch"
+          <div
+            v-if="isManagementOpen"
+            id="match-management-actions"
+            role="region"
+            aria-labelledby="match-management-toggle"
+            class="flex flex-col gap-2 border-t border-slate-600/80 px-2 pb-2 pt-2"
           >
-            Завершить матч
-          </button>
+            <button
+              type="button"
+              class="w-full rounded-lg bg-slate-700 px-3 py-2 text-xs font-medium text-slate-100 focus:outline-none active:bg-slate-800 sm:w-auto"
+              @click="handleResetMatch"
+            >
+              Сбросить матч
+            </button>
+
+            <button
+              type="button"
+              class="w-full rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none active:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              :disabled="!canFinishMatch"
+              @click="handleFinishMatch"
+            >
+              Завершить матч
+            </button>
+          </div>
         </div>
 
         <p

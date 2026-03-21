@@ -16,15 +16,10 @@ type SavedTournamentContext = {
 // Управляет мастером создания турнира:
 // шаги, загрузка данных, выбор игроков/команд и сохранение состояния в cookie.
 export function useTournamentWizard() {
-  // Текущий шаг мастера создания турнира (0–4).
-  const step = ref<0 | 1 | 2 | 3 | 4>(0)
+  // Текущий шаг: 0 — игроки, 1 — команды, 2 — турнирная таблица.
+  const step = ref<0 | 1 | 2>(0)
   const tournamentName = ref('')
   const tournamentDate = ref('')
-
-  function goToPlayers() {
-    // Переходим на шаг выбора игроков.
-    step.value = 2
-  }
 
   // Загружаем игроков из API.
   const { data: players, refresh: refreshPlayers } = useFetch<Player[]>('/api/players', {
@@ -110,9 +105,11 @@ export function useTournamentWizard() {
   if (contextCookie.value) {
     const ctx = contextCookie.value
 
-    // Ограничиваем шаг диапазоном 0–4.
-    const restoredStep = Math.min(4, Math.max(0, ctx.step))
-    step.value = restoredStep as 0 | 1 | 2 | 3 | 4
+    // Поддержка старых cookie: раньше было 0–4 (приветствие, детали, игроки, команды, таблица).
+    const raw = Math.min(4, Math.max(0, ctx.step))
+    const migrated: 0 | 1 | 2 =
+      raw <= 1 ? 0 : raw === 2 ? 0 : raw === 3 ? 1 : 2
+    step.value = migrated
 
     tournamentName.value = ctx.tournamentName ?? ''
     tournamentDate.value = ctx.tournamentDate ?? ''
@@ -161,7 +158,6 @@ export function useTournamentWizard() {
     step,
     tournamentName,
     tournamentDate,
-    goToPlayers,
     players,
     refreshPlayers,
     assignment,

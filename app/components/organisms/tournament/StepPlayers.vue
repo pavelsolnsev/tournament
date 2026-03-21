@@ -1,6 +1,6 @@
 <!-- Компонент StepPlayers: мастер-обёртка шага выбора игроков (библиотека + выбранные). -->
 <template>
-  <div class="grid gap-4 lg:grid-cols-5">
+  <div class="grid min-w-0 gap-4 lg:grid-cols-5">
     <OrganismsTournamentStepPlayersLibraryPanel
       :players="players"
       :available-players="availablePlayers"

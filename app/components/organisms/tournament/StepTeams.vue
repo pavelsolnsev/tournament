@@ -1,6 +1,6 @@
 <!-- Компонент StepTeams: шаг распределения выбранных игроков по командам. -->
 <template>
-  <div>
+  <div class="min-w-0">
     <p
       v-if="selectedPlayers.length === 0"
       class="rounded-xl bg-slate-800/50 p-4 text-slate-500 text-sm"

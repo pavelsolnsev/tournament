@@ -16,7 +16,7 @@
       <li
         v-for="m in playedMatchesList"
         :key="m.matchNumber"
-        class="rounded-xl bg-slate-950/50 border border-slate-800/40 px-3 py-2.5"
+        class="min-w-0 rounded-xl border border-slate-800/40 bg-slate-950/50 px-3 py-2.5"
       >
         <p class="mb-1.5 text-[10px] uppercase tracking-wider text-slate-500">
           Матч {{ m.matchNumber }}
@@ -28,57 +28,59 @@
         >
           <div
             v-if="m.homePlayers.length > 0"
-            class=""
+            class="min-w-0"
           >
-            <div class="flex items-center gap-2 mb-2">
+            <div class="mb-2 flex min-w-0 items-center gap-2">
               <span aria-hidden="true" class="shrink-0 text-sm">{{ teamMarker(m.homeTeam) }}</span>
-              <span class="truncate text-xs font-semibold text-slate-200">{{ m.homeTeam }}</span>
+              <span class="min-w-0 truncate text-xs font-semibold text-slate-200">{{ m.homeTeam }}</span>
             </div>
 
-            <div class="flex flex-col gap-2">
+            <div class="flex min-w-0 flex-col gap-2">
               <span
                 v-for="p in m.homePlayers"
                 :key="p.playerId"
-                class="inline-flex items-center gap-1 rounded bg-slate-800/40 px-2 py-1 text-[11px] text-slate-300"
+                class="flex min-w-0 max-w-full items-center gap-1 rounded bg-slate-800/40 px-2 py-1 text-[11px] text-slate-300"
               >
-                <span class="truncate">{{ p.name }}</span>
-                <span v-if="p.eventsLabel" class="text-slate-500">{{ p.eventsLabel }}</span>
+                <span class="min-w-0 flex-1 truncate">{{ p.name }}</span>
+                <span v-if="p.eventsLabel" class="shrink-0 truncate text-slate-500">{{ p.eventsLabel }}</span>
               </span>
             </div>
           </div>
 
           <div
             v-if="m.awayPlayers.length > 0"
-            class=""
+            class="min-w-0"
           >
-            <div class="flex items-center gap-2 mb-2">
+            <div class="mb-2 flex min-w-0 items-center gap-2">
               <span aria-hidden="true" class="shrink-0 text-sm">{{ teamMarker(m.awayTeam) }}</span>
-              <span class="truncate text-xs font-semibold text-slate-200">{{ m.awayTeam }}</span>
+              <span class="min-w-0 truncate text-xs font-semibold text-slate-200">{{ m.awayTeam }}</span>
             </div>
 
-            <div class="flex flex-col gap-2">
+            <div class="flex min-w-0 flex-col gap-2">
               <span
                 v-for="p in m.awayPlayers"
                 :key="p.playerId"
-                class="inline-flex items-center gap-1 rounded bg-slate-800/40 px-2 py-1 text-[11px] text-slate-300"
+                class="flex min-w-0 max-w-full items-center gap-1 rounded bg-slate-800/40 px-2 py-1 text-[11px] text-slate-300"
               >
-                <span class="truncate">{{ p.name }}</span>
-                <span v-if="p.eventsLabel" class="text-slate-500">{{ p.eventsLabel }}</span>
+                <span class="min-w-0 flex-1 truncate">{{ p.name }}</span>
+                <span v-if="p.eventsLabel" class="shrink-0 truncate text-slate-500">{{ p.eventsLabel }}</span>
               </span>
             </div>
           </div>
         </div>
 
-        <div class="flex items-center gap-2">
-          <div class="flex min-w-0 items-center gap-1.5 justify-start">
+        <div class="flex min-w-0 items-center gap-2">
+          <div class="flex min-w-0 flex-1 items-center gap-1.5 justify-start">
             <span aria-hidden="true" class="shrink-0 text-sm">{{ teamMarker(m.homeTeam) }}</span>
+            <span class="min-w-0 truncate text-[11px] font-medium text-slate-300">{{ m.homeTeam }}</span>
           </div>
 
           <div class="shrink-0 rounded-lg bg-slate-800/60 px-2.5 py-1 text-center tabular-nums text-sm font-bold text-slate-100">
             {{ m.homeGoals }}&nbsp;:&nbsp;{{ m.awayGoals }}
           </div>
 
-          <div class="flex min-w-0 items-center gap-1.5 justify-end">
+          <div class="flex min-w-0 flex-1 items-center gap-1.5 justify-end">
+            <span class="min-w-0 truncate text-right text-[11px] font-medium text-slate-300">{{ m.awayTeam }}</span>
             <span aria-hidden="true" class="shrink-0 text-sm">{{ teamMarker(m.awayTeam) }}</span>
           </div>
         </div>

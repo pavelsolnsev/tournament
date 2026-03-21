@@ -1,70 +1,53 @@
-<!-- Компонент AvailablePlayersList: показывает доступных игроков и позволяет выбрать игрока. -->
+<!-- Компонент AvailablePlayersList: тот же набор атомов, что в мастере турнира. -->
 <template>
-  <section class="rounded-xl bg-slate-800/50 p-2 sm:p-4 sm:p-5">
-    <h2 class="text-lg font-semibold text-slate-200 mb-3">
-      Игроки
-    </h2>
-    <p v-if="!players?.length" class="text-slate-500 text-sm">
+  <AtomsTournamentPanel root-class="min-w-0">
+    <AtomsPanelHeading>Игроки</AtomsPanelHeading>
+
+    <p v-if="!players?.length" class="text-slate-500 text-xs">
       Нет игроков в базе. Добавьте выше.
     </p>
-    <p v-else-if="allSelected" class="text-slate-500 text-sm">
+    <p v-else-if="allSelected" class="text-slate-500 text-xs">
       Все игроки уже выбраны.
     </p>
     <div v-else class="space-y-3">
-      <div>
-        <label for="player-search" class="mb-1 block text-sm text-slate-400">
-          Поиск
-        </label>
-        <input
-          id="player-search"
-          :value="searchQuery"
-          type="text"
+      <MoleculesFieldBlock id="player-search" label="Поиск">
+        <AtomsTournamentTextInput
+          :model-value="searchQuery"
+          variant="search"
+          size="xs"
           placeholder="От 3 символов — имя или @username"
-          class="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-          @input="emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
-        >
-      </div>
+          @update:model-value="emit('update:searchQuery', $event)"
+        />
+      </MoleculesFieldBlock>
 
-      <p v-if="filteredPlayers.length === 0" class="text-slate-500 text-sm">
+      <p v-if="filteredPlayers.length === 0" class="text-slate-500 text-xs">
         По этому запросу игроков не найдено.
       </p>
-      <ul
-        v-else
-        class="max-h-64 sm:max-h-72 space-y-2 overflow-x-hidden overflow-y-auto rounded-lg bg-slate-800/30 p-1"
-        role="list"
-      >
-        <li
+      <AtomsPlayerListUl v-else>
+        <MoleculesPlayerListRow
           v-for="p in filteredPlayers"
           :key="p.id"
-          role="button"
-          tabindex="0"
-          class="flex min-w-0 cursor-pointer items-center justify-between gap-3 rounded-xl bg-slate-800/50 px-3 py-3 sm:px-4 sm:py-3.5 text-left transition hover:bg-slate-700/50 focus:outline-none active:scale-[0.99]"
-          @click="emit('select', p.id)"
-          @keydown.enter.space.prevent="emit('select', p.id)"
-        >
-          <span class="min-w-0 flex-1 truncate font-medium text-slate-100">
-            {{ displayPlayerLabel(p) }}
-          </span>
-          <span class="shrink-0 text-emerald-400 text-sm">+ в турнир</span>
-        </li>
-      </ul>
+          :label="displayPlayerLabel(p)"
+          :title="'Добавить в турнир: ' + displayPlayerLabel(p)"
+          action="add"
+          @activate="emit('select', p.id)"
+        />
+      </AtomsPlayerListUl>
       <p class="text-slate-500 text-xs">
-        Клик по игроку добавляет его в турнир.
+        Клик по строке добавляет игрока в турнир.
       </p>
     </div>
-  </section>
+  </AtomsTournamentPanel>
 </template>
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
 
-// Здесь показываем список игроков с поиском.
 defineProps<{
   players: Player[]
   filteredPlayers: Player[]
   searchQuery: string
-  /** When true, "all selected" message is shown instead of search/list */
   allSelected: boolean
 }>()
 

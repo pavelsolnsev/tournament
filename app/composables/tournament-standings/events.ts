@@ -2,6 +2,7 @@
 // Он превращает статистику игрока (голы/пас/сейвы/желтые) в готовые подписи для UI.
 import type { MarkedPlayer, PlayerMatchStats } from './types'
 import type { Player } from '~/types/tournament'
+import { clipLongPlayerLabel } from '~/composables/usePlayerDisplay'
 
 // Этот хелпер делает текст подписи под события игрока (голы/пас/сейвы/желтые).
 export function buildEventsLabel(stats: PlayerMatchStats): string {
@@ -29,7 +30,9 @@ export function extractMarkedPlayers(args: {
     if (!total) continue
 
     const player = playersById[playerId]
-    const name = player ? displayPlayerLabel(player) : `Игрок #${playerId}`
+    const name = player
+      ? displayPlayerLabel(player)
+      : clipLongPlayerLabel(`Игрок #${playerId}`)
 
     res.push({
       playerId,

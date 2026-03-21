@@ -1,49 +1,46 @@
-<!-- Компонент PlayerCreateForm: форма для добавления нового игрока в базу. -->
+<!-- Компонент PlayerCreateForm: те же поля и кнопка, что в турнире, в чуть более крупном блоке. -->
 <template>
-  <section class="mb-6 rounded-xl bg-slate-800/50 p-2 sm:p-4 sm:p-5">
-    <h2 class="text-lg font-semibold text-slate-200 mb-3">
+  <AtomsTournamentPanel as="section" tone="raised" root-class="mb-6">
+    <h2 class="mb-3 text-lg font-semibold text-slate-200">
       Добавить нового игрока
     </h2>
     <form
       class="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4"
       @submit.prevent="createPlayer"
     >
-      <div class="flex-1 min-w-0">
-        <label for="new-name" class="mb-1 block text-sm text-slate-400">Имя</label>
-        <input
+      <MoleculesFieldBlock id="new-name" label="Имя" label-size="sm" wrapper-class="flex-1">
+        <AtomsTournamentTextInput
           id="new-name"
           v-model="newName"
-          type="text"
+          variant="field"
+          size="md"
           placeholder="Имя игрока"
-          class="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-        >
-      </div>
-      <div class="flex-1 min-w-0">
-        <label for="new-username" class="mb-1 block text-sm text-slate-400">Username (необязательно)</label>
-        <input
+        />
+      </MoleculesFieldBlock>
+      <MoleculesFieldBlock id="new-username" label="Username (необязательно)" label-size="sm" wrapper-class="flex-1">
+        <AtomsTournamentTextInput
           id="new-username"
           v-model="newUsername"
-          type="text"
+          variant="field"
+          size="md"
           placeholder="@username"
-          class="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-        >
-      </div>
-      <button
-        type="submit"
+        />
+      </MoleculesFieldBlock>
+      <AtomsPrimaryButton
+        native-type="submit"
+        size="md"
         :disabled="creating"
-        class="shrink-0 rounded-lg bg-emerald-500 px-5 py-2.5 text-sm sm:text-base font-semibold text-slate-900 transition hover:bg-emerald-400 disabled:opacity-50 focus:outline-none"
       >
         {{ creating ? 'Добавляем…' : 'Добавить игрока' }}
-      </button>
+      </AtomsPrimaryButton>
     </form>
     <p v-if="createError" class="mt-2 text-sm text-red-400">
       {{ createError }}
     </p>
-  </section>
+  </AtomsTournamentPanel>
 </template>
 
 <script setup lang="ts">
-// Форма для создания нового игрока.
 const newName = ref('')
 const newUsername = ref('')
 const creating = ref(false)

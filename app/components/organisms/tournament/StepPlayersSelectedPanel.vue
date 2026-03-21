@@ -1,50 +1,36 @@
-<!-- Компонент StepPlayersSelectedPanel: показывает выбранных игроков и кнопку перейти к командам. -->
+<!-- Компонент StepPlayersSelectedPanel: выбранные игроки на тех же атомах, что библиотека. -->
 <template>
-  <section class="lg:col-span-2 space-y-4">
-    <div class="rounded-xl bg-slate-800/30 p-3 sm:p-4 space-y-3">
+  <section class="min-w-0 space-y-4 lg:col-span-2">
+    <AtomsTournamentPanel as="div">
       <div class="flex items-center justify-between gap-2">
-        <h3 class="text-sm font-semibold text-slate-100">
-          В турнире
-        </h3>
+        <AtomsPanelHeading>В турнире</AtomsPanelHeading>
         <span class="text-xs text-slate-400">{{ selectedPlayers.length }}</span>
       </div>
 
-      <div
-        v-if="selectedPlayers.length === 0"
-        class="rounded-lg bg-slate-900/40 px-3 py-4 text-center text-xs text-slate-500"
-      >
+      <AtomsEmptyStateBox v-if="selectedPlayers.length === 0">
         Выберите игроков слева
-      </div>
+      </AtomsEmptyStateBox>
 
-      <ul v-else class="max-h-64 space-y-1 overflow-y-auto pr-1" role="list">
-        <li
+      <AtomsPlayerListUl v-else>
+        <MoleculesPlayerListRow
           v-for="p in selectedPlayers"
           :key="p.id"
-          class="flex min-w-0 items-center justify-between gap-2 rounded bg-slate-800/50 px-2 py-1"
-        >
-          <span class="min-w-0 truncate text-sm text-slate-100">
-            {{ displayPlayerLabel(p) }}
-          </span>
-          <button
-            type="button"
-            class="shrink-0 rounded px-2 py-1 text-xs text-slate-400 transition hover:text-red-400 focus:outline-none"
-            @click="emit('removePlayer', p.id)"
-          >
-            Убрать
-          </button>
-        </li>
-      </ul>
+          :label="displayPlayerLabel(p)"
+          :title="'Убрать из турнира: ' + displayPlayerLabel(p)"
+          action="remove"
+          @activate="emit('removePlayer', p.id)"
+        />
+      </AtomsPlayerListUl>
 
-      <button
-        type="button"
-        class="w-full rounded-xl px-4 py-2.5 text-sm font-semibold transition focus:outline-none"
-        :class="selectedPlayers.length > 0 ? 'bg-emerald-500 text-slate-900 hover:bg-emerald-400' : 'bg-slate-700 text-slate-400 cursor-not-allowed'"
+      <AtomsPrimaryButton
+        size="block"
+        :variant="selectedPlayers.length > 0 ? 'solid' : 'muted'"
         :disabled="selectedPlayers.length === 0"
         @click="emit('goToTeams')"
       >
         Перейти к командам →
-      </button>
-    </div>
+      </AtomsPrimaryButton>
+    </AtomsTournamentPanel>
   </section>
 </template>
 
@@ -55,14 +41,11 @@ import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
 defineProps<{
   selectedPlayers: Player[]
 }>()
-// Это список игроков, которые уже выбраны в турнир.
 
 const emit = defineEmits<{
   removePlayer: [id: number]
   goToTeams: []
 }>()
-// Эти события возвращают действия наверх (убрать игрока или перейти дальше).
 
 const { displayPlayerLabel } = usePlayerDisplay()
-// Это нужно, чтобы показывать одинаковый формат имени, как и в списке слева.
 </script>

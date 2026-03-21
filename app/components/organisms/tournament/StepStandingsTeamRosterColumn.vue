@@ -1,28 +1,29 @@
 <!-- Компонент StepStandingsTeamRosterColumn: колонка списка игроков команды (хозяева/гости) в управлении матчем. -->
 <template>
-  <div class="rounded-xl bg-slate-900/70 p-2">
-    <h3 class="mb-1.5 flex items-center gap-1 text-xs font-semibold text-slate-100">
-      <span v-if="teamName" aria-hidden="true">
+  <div class="rounded-xl border border-slate-800/50 bg-slate-900/70 p-2 sm:p-3">
+    <h3 class="mb-1.5 flex min-w-0 items-center gap-1 text-xs font-semibold text-slate-100">
+      <span v-if="teamName" aria-hidden="true" class="shrink-0">
         {{ teamMarker(teamName) }}
       </span>
-      <span class="truncate">{{ teamName }}</span>
+      <span class="min-w-0 truncate">{{ teamName }}</span>
     </h3>
 
-    <ul class="space-y-1.5" role="list">
+    <ul class="max-h-72 min-h-0 space-y-1 overflow-y-auto pr-1" role="list">
       <li
         v-for="p in players"
         :key="p.id"
-        class="rounded-lg bg-slate-800/60 px-2 py-1.5 text-left transition cursor-pointer"
+        :title="'Клик по строке — отметить события: ' + displayPlayerLabel(p)"
+        class="cursor-pointer rounded-lg border border-transparent bg-slate-800/50 px-3 py-2 text-left transition hover:bg-slate-700/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 active:scale-[0.99]"
         :class="[
           isActivePlayer(side, p.id)
-            ? ['bg-slate-900/80', activeShadowClass]
-            : 'hover:bg-slate-800'
+            ? ['border-emerald-500/40', 'bg-slate-900/85', activeShadowClass]
+            : []
         ]"
         @click="selectPlayerForMark(side, p.id)"
       >
         <div class="flex min-w-0 items-center justify-between gap-2">
-          <div class="min-w-0 truncate">
-            <span class="text-xs font-medium text-slate-100">
+          <div class="min-w-0 flex-1">
+            <span class="block min-w-0 truncate text-sm font-medium text-slate-100">
               {{ displayPlayerLabel(p) }}
             </span>
           </div>
@@ -40,27 +41,24 @@
           class="mt-1 flex items-center gap-2 text-[11px]"
         >
           <select
-            :class="[
-              'w-full max-w-[11rem] rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-100 focus:outline-none',
-              selectFocusClass,
-            ]"
+            class="w-full max-w-[11rem] rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-100 outline-none ring-0 ring-offset-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus:ring-offset-0"
             @click.stop
             @mousedown.stop
             @change="onSelectAction(side, p.id, $event)"
           >
-            <option value="">
+            <option class="bg-slate-900 text-slate-100" value="">
               Добавить событие
             </option>
-            <option value="goals">
+            <option class="bg-slate-900 text-slate-100" value="goals">
               ⚽ Гол
             </option>
-            <option value="assists">
+            <option class="bg-slate-900 text-slate-100" value="assists">
               🎯 Ассист
             </option>
-            <option value="saves">
+            <option class="bg-slate-900 text-slate-100" value="saves">
               🧤 Сейв
             </option>
-            <option value="yellows">
+            <option class="bg-slate-900 text-slate-100" value="yellows">
               🟨 Жёлтая
             </option>
           </select>
@@ -90,7 +88,6 @@ defineProps<{
   teamName: string
   players: Player[]
   activeShadowClass: string
-  selectFocusClass: string
   teamMarker: (teamName: string) => string
   displayPlayerLabel: (player: Player) => string
   isActivePlayer: (side: Side, playerId: number) => boolean
