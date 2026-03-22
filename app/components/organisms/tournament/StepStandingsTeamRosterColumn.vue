@@ -12,14 +12,14 @@
       <li
         v-for="p in players"
         :key="p.id"
-        :title="'Клик по строке — отметить события: ' + displayPlayerLabel(p)"
+        :title="'Клик — сразу выбрать событие для: ' + displayPlayerLabel(p)"
         class="cursor-pointer rounded-lg border border-transparent bg-slate-800/50 px-3 py-2 text-left transition hover:bg-slate-700/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 active:scale-[0.99]"
         :class="[
           isActivePlayer(side, p.id)
             ? ['border-emerald-500/40', 'bg-slate-900/85', activeShadowClass]
             : []
         ]"
-        @click="selectPlayerForMark(side, p.id)"
+        @click="handlePlayerRowClick(side, p.id)"
       >
         <div class="flex min-w-0 items-center justify-between gap-2">
           <div class="min-w-0 flex-1">
@@ -41,6 +41,7 @@
           class="mt-1 flex items-center gap-2 text-[11px]"
         >
           <select
+            :id="eventSelectDomId(side, p.id)"
             class="w-full max-w-[11rem] rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-100 outline-none ring-0 ring-offset-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus:ring-offset-0"
             @click.stop
             @mousedown.stop
@@ -83,7 +84,7 @@ type PlayerMatchStats = {
 // Это маленькие счётчики событий игрока в текущем матче.
 
 // Этот блок показывает список игроков команды и даёт добавить события.
-defineProps<{
+const rosterColumnProps = defineProps<{
   side: Side
   teamName: string
   players: Player[]
@@ -95,4 +96,26 @@ defineProps<{
   playerStat: (side: Side, playerId: number) => PlayerMatchStats
   onSelectAction: (side: Side, playerId: number, event: Event) => void
 }>()
+
+// Стабильный id для <select>, чтобы после клика по строке найти его и открыть список событий.
+function eventSelectDomId(side: Side, playerId: number) {
+  return `match-event-select-${side}-${playerId}`
+}
+
+// Сначала выбираем игрока; после отрисовки селекта сразу открываем выбор события (один жест с экрана).
+function handlePlayerRowClick(side: Side, playerId: number) {
+  rosterColumnProps.selectPlayerForMark(side, playerId)
+  nextTick(() => {
+    if (!rosterColumnProps.isActivePlayer(side, playerId)) return
+    const el = document.getElementById(eventSelectDomId(side, playerId)) as HTMLSelectElement | null
+    if (!el) return
+    el.focus()
+    try {
+      el.showPicker?.()
+    }
+    catch {
+      // В части браузеров showPicker недоступен или бросает — остаётся фокус, пользователь открывает список вручную.
+    }
+  })
+}
 </script>

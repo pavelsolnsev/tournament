@@ -25,6 +25,7 @@ import {
   resetMatchStats as resetMatchStatsFn,
   selectPlayerForMark as selectPlayerForMarkFn,
 } from './tournament-standings/matchStats'
+import { mergeFinishedMatchIntoAggregate } from './tournament-standings/aggregateTournamentPlayerStats'
 
 export function useTournamentStandingsRefactored(params: TournamentStandingsParams) {
   const { teamMarkers, getMarkerByIndex } = useTeamColors()
@@ -109,6 +110,8 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
   const matchFinalized = ref(false)
   const homeStats = ref<Record<number, PlayerMatchStats>>({})
   const awayStats = ref<Record<number, PlayerMatchStats>>({})
+  // Суммарные события по каждому игроку за все завершённые матчи (для блока под таблицей).
+  const aggregatePlayerStats = ref<Record<number, PlayerMatchStats>>({})
 
   const homeGoals = computed(() => Object.values(homeStats.value).reduce((sum, s) => sum + s.goals, 0))
   const awayGoals = computed(() => Object.values(awayStats.value).reduce((sum, s) => sum + s.goals, 0))
@@ -198,6 +201,12 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
       awayPlayers,
     })
 
+    aggregatePlayerStats.value = mergeFinishedMatchIntoAggregate(
+      aggregatePlayerStats.value,
+      homeStats.value,
+      awayStats.value,
+    )
+
     // Сбрасываем то, что относится только к текущему "управлению" матчем:
     // 1) обнуляем результат и статистику игроков;
     // 2) очищаем выбранные команды, чтобы показывался плейсхолдер "— Выберите команду —".
@@ -243,6 +252,7 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     finishMatch,
     goToNextMatch,
     displayPlayerLabel,
+    aggregatePlayerStats,
   }
 }
 
