@@ -1,7 +1,22 @@
 // Этот файл: композабл мастера создания турнира (wizard).
 // Он хранит шаги, данные игроков/команд и связывает всё вместе через composables.
 import type { Player, Team } from '~/types/tournament'
+import type { PlayedMatch, PlayerMatchStats } from '~/composables/tournament-standings/types'
+import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 import { useTeamAssignment } from '~/composables/useTeamAssignment'
+
+// Снапшот состояния турнирной таблицы — сохраняется отдельно при каждом изменении матчей.
+export type SavedStandingsSnapshot = {
+  standingsRows: StandingsRow[]
+  playedMatchesList: PlayedMatch[]
+  aggregatePlayerStats: Record<number, PlayerMatchStats>
+  matchCount: number
+  teamGamesCount: Record<string, number>
+  consecutiveGames: Record<string, number>
+  matchHistory: Record<string, Record<string, number>>
+  lastMatchIndex: Record<string, Record<string, number>>
+  playedSingleMatch: boolean
+}
 
 type SavedTournamentContext = {
   step: number
@@ -11,6 +26,8 @@ type SavedTournamentContext = {
   assignmentByPlayerId: Record<number, string>
   confirmedTeamNames: string[]
   teamColors: Record<string, number>
+  // Снапшот таблицы и матчей — восстанавливается при старте шага "Таблица".
+  standingsSnapshot: SavedStandingsSnapshot | null
 }
 
 // Управляет мастером создания турнира:
@@ -101,14 +118,30 @@ export function useTournamentWizard() {
     maxAge: 60 * 60 * 24 * 30,
   })
 
+  // Снапшот таблицы и матчей — обновляется из компонента StepStandings при каждом изменении.
+  const standingsSnapshot = ref<SavedStandingsSnapshot | null>(
+    contextCookie.value?.standingsSnapshot ?? null,
+  )
+
   // Восстанавливаем контекст, если он есть в cookie.
   if (contextCookie.value) {
     const ctx = contextCookie.value
 
-    // Поддержка старых cookie: раньше было 0–4 (приветствие, детали, игроки, команды, таблица).
-    const raw = Math.min(4, Math.max(0, ctx.step))
-    const migrated: 0 | 1 | 2 =
-      raw <= 1 ? 0 : raw === 2 ? 0 : raw === 3 ? 1 : 2
+    // Читаем шаг из куки. Если это старый формат (0–4), приводим к новому (0–2).
+    // Старые шаги: 0=приветствие, 1=детали, 2=игроки, 3=команды, 4=таблица.
+    // Новые шаги: 0=игроки, 1=команды, 2=таблица.
+    const raw = ctx.step
+    let migrated: 0 | 1 | 2
+    if (raw === 0 || raw === 1 || raw === 2) {
+      // Новый формат — используем как есть.
+      migrated = raw
+    } else if (raw === 3) {
+      // Старый шаг "команды" → новый шаг 1.
+      migrated = 1
+    } else {
+      // Старый шаг "таблица" (4) или любое другое → новый шаг 2.
+      migrated = 2
+    }
     step.value = migrated
 
     tournamentName.value = ctx.tournamentName ?? ''
@@ -147,12 +180,19 @@ export function useTournamentWizard() {
     assignmentByPlayerId: assignment.assignment.value,
     confirmedTeamNames: Array.from(assignment.confirmedTeamNames.value),
     teamColors: assignment.teamColors.value,
+    // Сохраняем последний снапшот таблицы — он обновляется снаружи через saveStandingsSnapshot.
+    standingsSnapshot: standingsSnapshot.value,
   }))
 
   // При изменении состояния обновляем cookie.
   watch(savedContext, (val) => {
     contextCookie.value = val
   }, { deep: true })
+
+  // Вызывается из StepStandings при каждом изменении матчей/таблицы.
+  function saveStandingsSnapshot(snapshot: SavedStandingsSnapshot) {
+    standingsSnapshot.value = snapshot
+  }
 
   return {
     step,
@@ -169,6 +209,8 @@ export function useTournamentWizard() {
     selectPlayer,
     removePlayer,
     onAddNewTeam,
+    standingsSnapshot,
+    saveStandingsSnapshot,
   }
 }
 

@@ -13,19 +13,19 @@
     </div>
 
     <!-- Список игроков -->
-    <ul class="max-h-72 min-h-0 space-y-1.5 overflow-y-auto pr-0.5" role="list">
+    <ul class="min-h-0 space-y-1.5" role="list">
       <li
-        v-for="p in players"
+        v-for="(p, idx) in players"
         :key="p.id"
-        class="min-w-0 overflow-hidden rounded-xl border transition-all duration-150"
+        class="relative min-w-0 overflow-visible rounded-xl border transition-colors duration-150"
         :class="isActivePlayer(side, p.id)
-          ? ['border-slate-600/70', activeShadowClass]
-          : 'border-transparent'"
+          ? ['z-20 border-slate-600/70', activeShadowClass]
+          : 'z-0 border-transparent'"
       >
         <!-- Строка игрока: одна строка — имя слева, бейджи справа -->
         <button
           type="button"
-          class="flex w-full min-w-0 items-center gap-2 px-3 py-3 text-left
+          class="h-12 flex w-full min-w-0 items-center gap-2 px-3 text-left
                  transition-colors active:opacity-80
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
           :class="[playerBg(isActivePlayer(side, p.id)), !isActivePlayer(side, p.id) && 'md:hover:brightness-125']"
@@ -74,16 +74,18 @@
 
         <!-- Панель событий: 4 кнопки для активного игрока -->
         <Transition
-          enter-active-class="transition-all duration-150 ease-out overflow-hidden"
-          enter-from-class="max-h-0 opacity-0"
-          enter-to-class="max-h-24 opacity-100"
-          leave-active-class="transition-all duration-100 ease-in overflow-hidden"
-          leave-from-class="max-h-24 opacity-100"
-          leave-to-class="max-h-0 opacity-0"
+          enter-active-class="transition-all duration-150 ease-out"
+          enter-from-class="opacity-0 -translate-y-1"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition-all duration-100 ease-in"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-1"
         >
           <div
             v-if="isActivePlayer(side, p.id)"
-            class="border-t border-slate-700/40 bg-slate-950/50 px-2.5 py-2.5"
+            class="absolute left-0 right-0 z-30 rounded-xl border border-slate-700/60
+                   bg-slate-950/95 px-2.5 py-2.5 shadow-xl shadow-slate-950/40 backdrop-blur-sm"
+            :class="opensUp(idx, players.length) ? 'bottom-full mb-1.5' : 'top-full mt-1.5'"
           >
             <div class="grid grid-cols-4 gap-2">
               <button
@@ -247,5 +249,10 @@ function fireAndClose(side: Side, playerId: number, key: StatKey) {
 function hasAnyStat(side: Side, playerId: number): boolean {
   const s = rosterColumnProps.playerStat(side, playerId)
   return s.goals > 0 || s.assists > 0 || s.saves > 0 || s.yellows > 0
+}
+
+// Для последних строк открываем панель вверх, чтобы она не обрезалась снизу.
+function opensUp(index: number, total: number): boolean {
+  return index === total - 1
 }
 </script>

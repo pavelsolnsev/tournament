@@ -67,6 +67,8 @@
             :team-colors="wizard.assignment.teamColors.value"
             :players="wizard.players.value ?? []"
             :assignment-by-player-id="wizard.assignment.assignment.value"
+            :initial-snapshot="wizard.standingsSnapshot.value"
+            @update:snapshot="wizard.saveStandingsSnapshot"
           />
         </template>
       </section>

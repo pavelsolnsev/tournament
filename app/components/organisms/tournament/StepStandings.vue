@@ -9,14 +9,20 @@
                focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
         :class="isStandingsBlockOpen
           ? 'bg-slate-800/80'
-          : 'bg-slate-900/70 md:hover:bg-slate-800/60'"
+          : 'bg-transparent'"
         :aria-expanded="isStandingsBlockOpen"
         :aria-controls="standingsPanelId"
         @click="isStandingsBlockOpen = !isStandingsBlockOpen"
       >
         <div class="min-w-0 flex-1">
-          <span class="block text-sm font-semibold text-slate-100">
+          <span class="flex items-center gap-2 text-sm font-semibold text-slate-100">
             Турнирная таблица и составы
+            <span
+              class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+              :class="isStandingsBlockOpen ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800/80 text-slate-500'"
+            >
+              {{ isStandingsBlockOpen ? 'Открыт' : 'Скрыт' }}
+            </span>
           </span>
           <span
             v-if="tournamentName || tournamentDate"
@@ -84,14 +90,20 @@
                      focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
               :class="isRosterTotalsOpen
                 ? 'bg-slate-800/80'
-                : 'bg-slate-900/70 md:hover:bg-slate-800/60'"
+                : 'bg-transparent'"
               :aria-expanded="isRosterTotalsOpen"
               :aria-controls="rosterTotalsPanelId"
               @click="isRosterTotalsOpen = !isRosterTotalsOpen"
             >
               <div class="min-w-0 flex-1">
-                <span class="block text-sm font-semibold text-slate-100">
+                <span class="flex items-center gap-2 text-sm font-semibold text-slate-100">
                   Составы и статистика
+                  <span
+                    class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                    :class="isRosterTotalsOpen ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800/80 text-slate-500'"
+                  >
+                    {{ isRosterTotalsOpen ? 'Открыт' : 'Скрыт' }}
+                  </span>
                 </span>
                 <span class="mt-0.5 block text-xs text-slate-500">
                   События по игрокам и командам
@@ -159,14 +171,20 @@
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
           :class="isPlayedMatchesOpen
             ? 'bg-slate-800/80'
-            : 'bg-slate-900/70 md:hover:bg-slate-800/60'"
+            : 'bg-transparent'"
           :aria-expanded="isPlayedMatchesOpen"
           :aria-controls="playedMatchesPanelId"
           @click="isPlayedMatchesOpen = !isPlayedMatchesOpen"
         >
           <div class="min-w-0 flex-1">
-            <span class="block text-sm font-semibold text-slate-100">
+            <span class="flex items-center gap-2 text-sm font-semibold text-slate-100">
               Сыгранные матчи
+              <span
+                class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                :class="isPlayedMatchesOpen ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800/80 text-slate-500'"
+              >
+                {{ isPlayedMatchesOpen ? 'Открыт' : 'Скрыт' }}
+              </span>
             </span>
             <span class="mt-0.5 block text-xs text-slate-500">
               Завершённые матчи и редактирование событий
@@ -252,6 +270,7 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
+import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { useTournamentStandingsRefactored } from '~/composables/useTournamentStandingsRefactored'
 
 // Этот шаг показывает матчи и турнирную таблицу.
@@ -262,6 +281,13 @@ const props = defineProps<{
   teamColors: Record<string, number>
   players: Player[]
   assignmentByPlayerId: Record<number, string>
+  // Начальный снапшот из куки — восстанавливает матчи и таблицу после обновления страницы.
+  initialSnapshot?: SavedStandingsSnapshot | null
+}>()
+
+const emit = defineEmits<{
+  // Вызывается при каждом изменении матчей/таблицы — родитель сохраняет снапшот в куку.
+  'update:snapshot': [snapshot: SavedStandingsSnapshot]
 }>()
 
 const {
@@ -289,12 +315,20 @@ const {
   goToNextMatch,
   displayPlayerLabel,
   aggregatePlayerStats,
-} = useTournamentStandingsRefactored({
-  teams: props.teams,
-  teamColors: props.teamColors,
-  players: props.players,
-  assignmentByPlayerId: props.assignmentByPlayerId,
-})
+} = useTournamentStandingsRefactored(
+  {
+    teams: props.teams,
+    teamColors: props.teamColors,
+    players: props.players,
+    assignmentByPlayerId: props.assignmentByPlayerId,
+  },
+  {
+    // Передаём сохранённое состояние — composable восстановит таблицу и матчи из него.
+    initialSnapshot: props.initialSnapshot,
+    // Когда что-то меняется — сообщаем родителю, чтобы он сохранил в куку.
+    onSnapshot: (snapshot) => emit('update:snapshot', snapshot),
+  },
+)
 // Здесь подключаем логику турнира и достаём нужные refs/функции для UI.
 
 const standingsUid = useId?.() ?? Math.random().toString(36).slice(2)

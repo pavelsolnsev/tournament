@@ -13,12 +13,19 @@
         type="button"
         class="flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3 text-left
                transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+        :class="isTeamPickersOpen ? 'bg-slate-800/80' : 'bg-transparent'"
         :aria-expanded="isTeamPickersOpen"
         :aria-controls="teamPickersPanelId"
         @click="isTeamPickersOpen = !isTeamPickersOpen"
       >
-        <span class="min-w-0 text-sm font-semibold text-slate-100">
+        <span class="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-100">
           Команды (дом/гость)
+          <span
+            class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+            :class="isTeamPickersOpen ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800/80 text-slate-500'"
+          >
+            {{ isTeamPickersOpen ? 'Открыт' : 'Скрыт' }}
+          </span>
         </span>
         <svg
           class="h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200"
@@ -139,7 +146,7 @@
                  text-slate-300 transition-colors focus:outline-none"
           :class="isMgmtOpen
             ? 'bg-slate-600 ring-1 ring-slate-500/50'
-            : 'bg-slate-700 md:hover:bg-slate-600'"
+            : 'bg-transparent'"
           :aria-expanded="isMgmtOpen"
           :aria-controls="mgmtPanelId"
           @click="isMgmtOpen = !isMgmtOpen"
@@ -151,6 +158,12 @@
             •••
           </span>
           <span>Управление</span>
+          <span
+            class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+            :class="isMgmtOpen ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800/80 text-slate-500'"
+          >
+            {{ isMgmtOpen ? 'Открыт' : 'Скрыт' }}
+          </span>
           <svg
             class="h-3.5 w-3.5 text-slate-400 transition-transform duration-200"
             :class="isMgmtOpen && 'rotate-180'"

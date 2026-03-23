@@ -1,6 +1,7 @@
 // Этот файл: главный composable для турнирной таблицы и матчей.
 // Он собирает логику подбора пар, статистики событий и обновления standings для UI шага турнира.
 import type { Player } from '~/types/tournament'
+import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { useTeamColors } from '~/composables/useTeamColors'
 import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
 
@@ -30,7 +31,13 @@ import {
 } from './tournament-standings/matchStats'
 import { mergeFinishedMatchIntoAggregate, subtractMatchFromAggregate } from './tournament-standings/aggregateTournamentPlayerStats'
 
-export function useTournamentStandingsRefactored(params: TournamentStandingsParams) {
+// Дополнительные параметры composable — начальный снапшот и callback для сохранения.
+type StandingsOptions = {
+  initialSnapshot?: SavedStandingsSnapshot | null
+  onSnapshot?: (snapshot: SavedStandingsSnapshot) => void
+}
+
+export function useTournamentStandingsRefactored(params: TournamentStandingsParams, options: StandingsOptions = {}) {
   const { teamMarkers, getMarkerByIndex } = useTeamColors()
   const { displayPlayerLabel } = usePlayerDisplay()
 
@@ -52,30 +59,34 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     return getMarkerByIndex(colorIndex)
   }
 
-  // Таблица: места и очки.
+  const snap = options.initialSnapshot
+
+  // Таблица: восстанавливаем из снапшота или инициализируем с нуля.
   const standingsRows = ref<StandingsRow[]>(
-    params.teams.map((name, index) => ({
-      place: index + 1,
-      teamName: name,
-      played: 0,
-      wins: 0,
-      draws: 0,
-      losses: 0,
-      goalsFor: 0,
-      goalsAgainst: 0,
-      goalDiff: 0,
-      points: 0,
-    })),
+    snap?.standingsRows?.length
+      ? snap.standingsRows
+      : params.teams.map((name, index) => ({
+          place: index + 1,
+          teamName: name,
+          played: 0,
+          wins: 0,
+          draws: 0,
+          losses: 0,
+          goalsFor: 0,
+          goalsAgainst: 0,
+          goalDiff: 0,
+          points: 0,
+        })),
   )
 
-  // История матчей и счётчики подбора следующей пары.
-  const matchCount = ref(0)
-  const teamGamesCount = ref<Record<string, number>>({})
-  const consecutiveGames = ref<Record<string, number>>({})
-  const playedMatchesList = ref<PlayedMatch[]>([])
-  const matchHistory = ref<Record<string, Record<string, number>>>({})
-  const lastMatchIndex = ref<Record<string, Record<string, number>>>({})
-  const playedSingleMatch = ref(false)
+  // История матчей и счётчики подбора следующей пары — восстанавливаем или начинаем заново.
+  const matchCount = ref(snap?.matchCount ?? 0)
+  const teamGamesCount = ref<Record<string, number>>(snap?.teamGamesCount ?? {})
+  const consecutiveGames = ref<Record<string, number>>(snap?.consecutiveGames ?? {})
+  const playedMatchesList = ref<PlayedMatch[]>(snap?.playedMatchesList ?? [])
+  const matchHistory = ref<Record<string, Record<string, number>>>(snap?.matchHistory ?? {})
+  const lastMatchIndex = ref<Record<string, Record<string, number>>>(snap?.lastMatchIndex ?? {})
+  const playedSingleMatch = ref(snap?.playedSingleMatch ?? false)
 
   const pairingState: PairingState = {
     matchCount,
@@ -113,8 +124,8 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
   const matchFinalized = ref(false)
   const homeStats = ref<Record<number, PlayerMatchStats>>({})
   const awayStats = ref<Record<number, PlayerMatchStats>>({})
-  // Суммарные события по каждому игроку за все завершённые матчи (для блока под таблицей).
-  const aggregatePlayerStats = ref<Record<number, PlayerMatchStats>>({})
+  // Суммарные события по каждому игроку за все завершённые матчи — восстанавливаем из снапшота.
+  const aggregatePlayerStats = ref<Record<number, PlayerMatchStats>>(snap?.aggregatePlayerStats ?? {})
 
   const homeGoals = computed(() => Object.values(homeStats.value).reduce((sum, s) => sum + s.goals, 0))
   const awayGoals = computed(() => Object.values(awayStats.value).reduce((sum, s) => sum + s.goals, 0))
@@ -371,6 +382,27 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     awayTeam.value = next.away
     resetMatchStats()
   }
+
+  // Когда список матчей или таблица меняются — вызываем callback для сохранения в куку.
+  // Это позволяет восстановить состояние после перезагрузки страницы.
+  watch(
+    [playedMatchesList, standingsRows, aggregatePlayerStats],
+    () => {
+      if (!options.onSnapshot) return
+      options.onSnapshot({
+        standingsRows: standingsRows.value,
+        playedMatchesList: playedMatchesList.value,
+        aggregatePlayerStats: aggregatePlayerStats.value,
+        matchCount: matchCount.value,
+        teamGamesCount: teamGamesCount.value,
+        consecutiveGames: consecutiveGames.value,
+        matchHistory: matchHistory.value,
+        lastMatchIndex: lastMatchIndex.value,
+        playedSingleMatch: playedSingleMatch.value,
+      })
+    },
+    { deep: true },
+  )
 
   return {
     teamMarkers,
