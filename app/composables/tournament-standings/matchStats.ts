@@ -67,6 +67,18 @@ export function incrementStat(
   st[key] += 1
 }
 
+export function decrementStat(
+  side: Side,
+  playerId: number,
+  key: StatKey,
+  homeStats: Ref<Record<number, PlayerMatchStats>>,
+  awayStats: Ref<Record<number, PlayerMatchStats>>,
+) {
+  // Уменьшаем счётчик, но не ниже нуля — нельзя уйти в минус.
+  const st = ensureStats(side, playerId, homeStats, awayStats)
+  if (st[key] > 0) st[key] -= 1
+}
+
 export function onSelectAction(
   side: Side,
   playerId: number,

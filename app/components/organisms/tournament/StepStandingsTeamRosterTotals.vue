@@ -1,65 +1,96 @@
-<!-- Составы команд и суммарная статистика игроков за турнир (под таблицей). -->
+<!-- Составы команд и суммарная статистика игроков за весь турнир. -->
 <template>
-  <section class="min-w-0 space-y-3 rounded-2xl border border-slate-800/60 bg-slate-900/50 p-4">
-    <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-100">
-      <span
-        class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-800/60 text-xs text-slate-300"
-        aria-hidden="true"
-      >
-        📊
-      </span>
-      Составы и статистика игроков
-    </h2>
-    <p class="text-[11px] text-slate-500">
-      Голы, ассисты, сейвы и жёлтые — суммарно по всем завершённым матчам.
-    </p>
+  <section class="min-w-0 space-y-3">
 
-    <div class="grid gap-4 sm:grid-cols-2">
+    <div v-if="showHeading">
+      <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-400">
+        Составы и статистика
+      </h3>
+      <p class="mt-0.5 text-xs text-slate-600">
+        Суммарно за все завершённые матчи.
+      </p>
+    </div>
+
+    <!-- Команды — все открыты сразу, без аккордеона -->
+    <div class="space-y-3">
       <div
         v-for="teamName in teams"
         :key="teamName"
-        class="min-w-0 rounded-xl border border-slate-800/50 bg-slate-900/70 p-3"
+        class="rounded-xl border border-slate-700/40 bg-slate-900 overflow-hidden"
       >
-        <h3 class="mb-2 flex min-w-0 items-center gap-1.5 text-xs font-semibold text-slate-100">
-          <span aria-hidden="true" class="shrink-0">{{ teamMarker(teamName) }}</span>
-          <span class="min-w-0 truncate">{{ teamName }}</span>
-        </h3>
+        <!-- Заголовок команды -->
+        <div class="flex items-center gap-2 px-3 py-2.5 border-b border-slate-800/60">
+          <span class="shrink-0 text-base leading-none" aria-hidden="true">
+            {{ teamMarker(teamName) }}
+          </span>
+          <span class="min-w-0 truncate text-sm font-semibold text-slate-100">
+            {{ teamName }}
+          </span>
+          <span class="ml-auto shrink-0 rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-slate-500">
+            {{ playersByTeam(teamName).length }}
+          </span>
+        </div>
 
-        <ul
-          v-if="playersByTeam(teamName).length > 0"
-          class="max-h-64 space-y-1 overflow-y-auto pr-1"
-          role="list"
-        >
-          <li
-            v-for="p in playersByTeam(teamName)"
-            :key="p.id"
-            class="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-800/40 bg-slate-800/40 px-2.5 py-1.5"
-          >
-            <span class="min-w-0 truncate text-sm font-medium text-slate-100">
-              {{ displayPlayerLabel(p) }}
-            </span>
-            <span class="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-300">
-              <span v-if="statsFor(p.id).goals > 0">⚽ {{ statsFor(p.id).goals }}</span>
-              <span v-if="statsFor(p.id).assists > 0">🎯 {{ statsFor(p.id).assists }}</span>
-              <span v-if="statsFor(p.id).saves > 0">🧤 {{ statsFor(p.id).saves }}</span>
-              <span v-if="statsFor(p.id).yellows > 0">🟨 {{ statsFor(p.id).yellows }}</span>
-              <span
-                v-if="totalEvents(p.id) === 0"
-                class="text-slate-500"
-              >
-                нет событий
+        <!-- Список игроков -->
+        <div class="px-2 py-2">
+          <p v-if="playersByTeam(teamName).length === 0" class="px-1 py-1.5 text-xs text-slate-600">
+            В составе нет игроков.
+          </p>
+
+          <ul v-else class="space-y-1" role="list">
+            <li
+              v-for="p in playersByTeam(teamName)"
+              :key="p.id"
+              class="flex min-w-0 items-center gap-2 rounded-lg px-2.5 py-2"
+              :class="playerBg(teamName)"
+            >
+              <!-- Имя — flex-1 забирает всё свободное место, остальное уходит под бейджи -->
+              <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-100">
+                {{ displayPlayerLabel(p) }}
               </span>
-            </span>
-          </li>
-        </ul>
-        <p
-          v-else
-          class="text-xs text-slate-500"
-        >
-          В составе нет игроков.
-        </p>
+
+              <!-- Бейджи событий — в одну строку справа, не переносятся -->
+              <div class="flex shrink-0 items-center gap-1">
+                <template v-if="totalEvents(p.id) > 0">
+                  <span
+                    v-if="statsFor(p.id).goals > 0"
+                    class="inline-flex items-center gap-0.5 rounded-md bg-emerald-500/15 px-1.5 py-0.5
+                           text-[11px] font-semibold tabular-nums text-emerald-300"
+                  >
+                    ⚽{{ statsFor(p.id).goals }}
+                  </span>
+                  <span
+                    v-if="statsFor(p.id).assists > 0"
+                    class="inline-flex items-center gap-0.5 rounded-md bg-sky-500/15 px-1.5 py-0.5
+                           text-[11px] font-semibold tabular-nums text-sky-300"
+                  >
+                    🎯{{ statsFor(p.id).assists }}
+                  </span>
+                  <span
+                    v-if="statsFor(p.id).saves > 0"
+                    class="inline-flex items-center gap-0.5 rounded-md bg-violet-500/15 px-1.5 py-0.5
+                           text-[11px] font-semibold tabular-nums text-violet-300"
+                  >
+                    🧤{{ statsFor(p.id).saves }}
+                  </span>
+                  <span
+                    v-if="statsFor(p.id).yellows > 0"
+                    class="inline-flex items-center gap-0.5 rounded-md bg-yellow-500/15 px-1.5 py-0.5
+                           text-[11px] font-semibold tabular-nums text-yellow-300"
+                  >
+                    🟨{{ statsFor(p.id).yellows }}
+                  </span>
+                </template>
+                <!-- Ничего нет — тихий прочерк -->
+                <span v-else class="text-xs text-slate-700">—</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
       </div>
     </div>
+
   </section>
 </template>
 
@@ -79,16 +110,35 @@ const props = defineProps<{
   teamMarker: (teamName: string) => string
   displayPlayerLabel: (player: Player) => string
   aggregatePlayerStats: Record<number, PlayerMatchStats>
+  /** Если false — заголовок скрыт (когда он вынесен в родительский аккордеон). */
+  showHeading?: boolean
 }>()
 
-// Достаём итоги по id игрока или нули, если матчей ещё не было.
+const showHeading = computed(() => props.showHeading ?? true)
+
+// Статистика игрока или нули если матчей ещё не было.
 function statsFor(playerId: number): PlayerMatchStats {
   return props.aggregatePlayerStats[playerId] ?? { goals: 0, assists: 0, saves: 0, yellows: 0 }
 }
 
-// Считаем, есть ли хоть одно событие — чтобы показать «нет событий».
+// Сумма всех событий игрока — нужно чтобы скрыть пустой блок бейджей.
 function totalEvents(playerId: number): number {
   const s = statsFor(playerId)
   return s.goals + s.assists + s.saves + s.yellows
+}
+
+// Маппинг маркера → лёгкий командный фон строки игрока (тот же принцип что в TeamRosterColumn).
+const MARKER_BG: Record<string, string> = {
+  '🔴': 'bg-red-500/5',
+  '🟢': 'bg-emerald-500/5',
+  '🔵': 'bg-blue-500/5',
+  '🟡': 'bg-yellow-500/5',
+  '⚪': 'bg-slate-300/5',
+  '⚫': 'bg-slate-800/30',
+}
+
+function playerBg(teamName: string): string {
+  const marker = props.teamMarker(teamName)
+  return MARKER_BG[marker] ?? 'bg-slate-800/30'
 }
 </script>

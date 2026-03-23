@@ -6,14 +6,60 @@
       ⚽ Управление матчем
     </h3>
 
-    <!-- Выбор команд -->
-    <OrganismsTournamentStepStandingsTeamPickers
-      :teams="teams"
-      :home-team="homeTeam"
-      :away-team="awayTeam"
-      @update:home-team="$emit('update:homeTeam', $event)"
-      @update:away-team="$emit('update:awayTeam', $event)"
-    />
+    <!-- Выбор команд (дом/гость) — можно скрывать и открывать -->
+    <div>
+      <button
+        :id="teamPickersToggleId"
+        type="button"
+        class="flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3 text-left
+               transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+        :aria-expanded="isTeamPickersOpen"
+        :aria-controls="teamPickersPanelId"
+        @click="isTeamPickersOpen = !isTeamPickersOpen"
+      >
+        <span class="min-w-0 text-sm font-semibold text-slate-100">
+          Команды (дом/гость)
+        </span>
+        <svg
+          class="h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200"
+          :class="isTeamPickersOpen && 'rotate-180'"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
+
+      <Transition
+        enter-active-class="transition-all duration-200 ease-out overflow-hidden"
+        enter-from-class="max-h-0 opacity-0"
+        enter-to-class="max-h-40 opacity-100"
+        leave-active-class="transition-all duration-150 ease-in overflow-hidden"
+        leave-from-class="max-h-40 opacity-100"
+        leave-to-class="max-h-0 opacity-0"
+      >
+        <div
+          v-if="isTeamPickersOpen"
+          :id="teamPickersPanelId"
+          role="region"
+          :aria-labelledby="teamPickersToggleId"
+          class="pt-3"
+        >
+          <OrganismsTournamentStepStandingsTeamPickers
+            :teams="teams"
+            :home-team="homeTeam"
+            :away-team="awayTeam"
+            @update:home-team="$emit('update:homeTeam', $event)"
+            @update:away-team="$emit('update:awayTeam', $event)"
+          />
+        </div>
+      </Transition>
+    </div>
 
     <!-- Карточка матча -->
     <div
@@ -41,31 +87,35 @@
         </p>
       </div>
 
-      <!-- Составы -->
-      <div class="grid grid-cols-2 divide-x divide-slate-700/60">
+      <!-- Составы: на мобайле — друг под другом, на широком — рядом -->
+      <div class="flex flex-col divide-y divide-slate-700/60 sm:grid sm:grid-cols-2 sm:divide-x sm:divide-y-0">
         <OrganismsTournamentStepStandingsTeamRosterColumn
           side="home"
           :team-name="homeTeam"
           :players="playersByTeam(homeTeam)"
           active-shadow-class="bg-sky-500/10 border-sky-500/40"
+          :team-color-index="effectiveTeamColors[homeTeam] ?? 0"
           :team-marker="teamMarker"
           :display-player-label="displayPlayerLabel"
           :is-active-player="isActivePlayer"
           :select-player-for-mark="selectPlayerForMark"
           :player-stat="playerStat"
-          :on-select-action="onSelectAction"
+          :add-player-event="addPlayerEvent"
+          :remove-player-event="removePlayerEvent"
         />
         <OrganismsTournamentStepStandingsTeamRosterColumn
           side="away"
           :team-name="awayTeam"
           :players="playersByTeam(awayTeam)"
           active-shadow-class="bg-emerald-500/10 border-emerald-500/40"
+          :team-color-index="effectiveTeamColors[awayTeam] ?? 0"
           :team-marker="teamMarker"
           :display-player-label="displayPlayerLabel"
           :is-active-player="isActivePlayer"
           :select-player-for-mark="selectPlayerForMark"
           :player-stat="playerStat"
-          :on-select-action="onSelectAction"
+          :add-player-event="addPlayerEvent"
+          :remove-player-event="removePlayerEvent"
         />
       </div>
 
@@ -89,7 +139,7 @@
                  text-slate-300 transition-colors focus:outline-none"
           :class="isMgmtOpen
             ? 'bg-slate-600 ring-1 ring-slate-500/50'
-            : 'bg-slate-700 hover:bg-slate-600'"
+            : 'bg-slate-700 md:hover:bg-slate-600'"
           :aria-expanded="isMgmtOpen"
           :aria-controls="mgmtPanelId"
           @click="isMgmtOpen = !isMgmtOpen"
@@ -135,7 +185,7 @@
           <button
             type="button"
             class="w-full rounded-lg bg-slate-700 px-3 py-2 text-xs font-medium
-                   text-slate-200 transition-colors hover:bg-slate-600 active:bg-slate-800"
+                   text-slate-200 transition-colors md:hover:bg-slate-600 active:bg-slate-800"
             @click="handleMgmtAction(resetMatchStats)"
           >
             Сбросить матч
@@ -167,6 +217,7 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
+import type { StatKey } from '~/composables/tournament-standings/types'
 
 type Side = 'home' | 'away'
 
@@ -187,11 +238,14 @@ const props = defineProps<{
   canFinishMatch: boolean
   playersByTeam: (teamName: string) => Player[]
   teamMarker: (teamName: string) => string
+  effectiveTeamColors: Record<string, number>
   displayPlayerLabel: (player: Player) => string
   isActivePlayer: (side: Side, playerId: number) => boolean
   selectPlayerForMark: (side: Side, playerId: number) => void
   playerStat: (side: Side, playerId: number) => PlayerMatchStats
   onSelectAction: (side: Side, playerId: number, event: Event) => void
+  addPlayerEvent: (side: Side, playerId: number, key: StatKey) => void
+  removePlayerEvent: (side: Side, playerId: number, key: StatKey) => void
   goToNextMatch: () => void
   resetMatchStats: () => void
   finishMatch: () => void
@@ -207,6 +261,11 @@ const mgmtToggleId = `match-mgmt-toggle-${uid}`
 const mgmtPanelId  = `match-mgmt-panel-${uid}`
 
 const isMgmtOpen = ref(false)
+
+// Управляем видимостью select'ов (дом/гость) внутри блока управления матчем.
+const teamPickersToggleId = `match-team-pickers-toggle-${uid}`
+const teamPickersPanelId = `match-team-pickers-panel-${uid}`
+const isTeamPickersOpen = ref(true)
 
 function handleMgmtAction(fn: () => void) {
   isMgmtOpen.value = false

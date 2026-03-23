@@ -26,6 +26,9 @@ export type PlayedMatch = {
   awayGoals: number
   homePlayers: MarkedPlayer[]
   awayPlayers: MarkedPlayer[]
+  // Полная статистика — нужна для inline-редактирования завершённого матча.
+  homeStats: Record<number, PlayerMatchStats>
+  awayStats: Record<number, PlayerMatchStats>
 }
 
 // Входные данные для логики турнира.

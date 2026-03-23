@@ -1,7 +1,7 @@
 <!-- Компонент StepStandings: шаг, который собирает герой + список матчей + управление матчем. -->
 <template>
   <div class="min-w-0 space-y-4">
-    <div class="overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-900/50">
+    <div class="overflow-hidden rounded-2xl bg-slate-900/70">
       <button
         :id="standingsToggleId"
         type="button"
@@ -9,7 +9,7 @@
                focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
         :class="isStandingsBlockOpen
           ? 'bg-slate-800/80'
-          : 'bg-slate-900/70 hover:bg-slate-800/60'"
+          : 'bg-slate-900/70 md:hover:bg-slate-800/60'"
         :aria-expanded="isStandingsBlockOpen"
         :aria-controls="standingsPanelId"
         @click="isStandingsBlockOpen = !isStandingsBlockOpen"
@@ -55,33 +55,172 @@
           :id="standingsPanelId"
           role="region"
           :aria-labelledby="standingsToggleId"
-          class="space-y-4 border-t border-slate-800/60 px-4 pb-4 pt-4"
+          class="space-y-4 pt-3"
         >
-          <OrganismsTournamentStepStandingsHero
-            :tournament-name="tournamentName"
-            :tournament-date="tournamentDate"
-            :teams="teams"
-            :standings-rows="standingsRows"
-            :effective-team-colors="effectiveTeamColors"
-            :show-heading="false"
-          />
+          <!-- Подзаголовок таблицы -->
+          <div>
+            <h2 class="mb-2.5 text-xs font-semibold uppercase tracking-widest text-slate-500">
+              Турнирная таблица
+            </h2>
+            <OrganismsTournamentStepStandingsHero
+              :tournament-name="tournamentName"
+              :tournament-date="tournamentDate"
+              :teams="teams"
+              :standings-rows="standingsRows"
+              :effective-team-colors="effectiveTeamColors"
+              :show-heading="false"
+            />
+          </div>
 
-          <OrganismsTournamentStepStandingsTeamRosterTotals
-            :teams="teams"
-            :players-by-team="playersByTeam"
-            :team-marker="teamMarker"
-            :display-player-label="displayPlayerLabel"
-            :aggregate-player-stats="aggregatePlayerStats"
-          />
+          <!-- Разделитель -->
+          <div class="border-t border-slate-800/60" />
+
+          <!-- Аккордеон: составы и статистика -->
+          <div class="overflow-hidden rounded-2xl bg-slate-900/70">
+            <button
+              :id="rosterTotalsToggleId"
+              type="button"
+              class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+              :class="isRosterTotalsOpen
+                ? 'bg-slate-800/80'
+                : 'bg-slate-900/70 md:hover:bg-slate-800/60'"
+              :aria-expanded="isRosterTotalsOpen"
+              :aria-controls="rosterTotalsPanelId"
+              @click="isRosterTotalsOpen = !isRosterTotalsOpen"
+            >
+              <div class="min-w-0 flex-1">
+                <span class="block text-sm font-semibold text-slate-100">
+                  Составы и статистика
+                </span>
+                <span class="mt-0.5 block text-xs text-slate-500">
+                  События по игрокам и командам
+                </span>
+              </div>
+              <div class="flex shrink-0 items-center gap-2">
+                <span
+                  v-if="rosterTotalsPlayersCount > 0"
+                  class="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-400"
+                >
+                  {{ rosterTotalsPlayersCount }}
+                </span>
+                <svg
+                  class="h-5 w-5 text-slate-400 transition-transform duration-200"
+                  :class="isRosterTotalsOpen && 'rotate-180'"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+            </button>
+
+            <Transition
+              enter-active-class="transition-all duration-200 ease-out overflow-hidden"
+              enter-from-class="max-h-0 opacity-0"
+              enter-to-class="max-h-[120rem] opacity-100"
+              leave-active-class="transition-all duration-150 ease-in overflow-hidden"
+              leave-from-class="max-h-[120rem] opacity-100"
+              leave-to-class="max-h-0 opacity-0"
+            >
+              <div
+                v-if="isRosterTotalsOpen"
+                :id="rosterTotalsPanelId"
+                role="region"
+                :aria-labelledby="rosterTotalsToggleId"
+                class="border-t border-slate-800/60 pb-4 pt-3"
+              >
+                <OrganismsTournamentStepStandingsTeamRosterTotals
+                  :teams="teams"
+                  :players-by-team="playersByTeam"
+                  :team-marker="teamMarker"
+                  :display-player-label="displayPlayerLabel"
+                  :aggregate-player-stats="aggregatePlayerStats"
+                  :show-heading="false"
+                />
+              </div>
+            </Transition>
+          </div>
         </div>
       </Transition>
     </div>
 
     <section class="min-w-0 space-y-4 overflow-x-hidden rounded-2xl bg-slate-900/70">
-      <OrganismsTournamentStepStandingsPlayedMatches
-        :played-matches-list="playedMatchesList"
-        :team-marker="teamMarker"
-      />
+      <div class="overflow-hidden rounded-2xl bg-slate-900/70">
+        <button
+          :id="playedMatchesToggleId"
+          type="button"
+          class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          :class="isPlayedMatchesOpen
+            ? 'bg-slate-800/80'
+            : 'bg-slate-900/70 md:hover:bg-slate-800/60'"
+          :aria-expanded="isPlayedMatchesOpen"
+          :aria-controls="playedMatchesPanelId"
+          @click="isPlayedMatchesOpen = !isPlayedMatchesOpen"
+        >
+          <div class="min-w-0 flex-1">
+            <span class="block text-sm font-semibold text-slate-100">
+              Сыгранные матчи
+            </span>
+            <span class="mt-0.5 block text-xs text-slate-500">
+              Завершённые матчи и редактирование событий
+            </span>
+          </div>
+          <div class="flex shrink-0 items-center gap-2">
+            <span
+              v-if="playedMatchesList.length > 0"
+              class="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-400"
+            >
+              {{ playedMatchesList.length }}
+            </span>
+            <svg
+              class="h-5 w-5 text-slate-400 transition-transform duration-200"
+              :class="isPlayedMatchesOpen && 'rotate-180'"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+        </button>
+
+        <Transition
+          enter-active-class="transition-all duration-200 ease-out overflow-hidden"
+          enter-from-class="max-h-0 opacity-0"
+          enter-to-class="max-h-[120rem] opacity-100"
+          leave-active-class="transition-all duration-150 ease-in overflow-hidden"
+          leave-from-class="max-h-[120rem] opacity-100"
+          leave-to-class="max-h-0 opacity-0"
+        >
+          <div
+            v-if="isPlayedMatchesOpen"
+            :id="playedMatchesPanelId"
+            role="region"
+            :aria-labelledby="playedMatchesToggleId"
+          >
+            <OrganismsTournamentStepStandingsPlayedMatches
+              :played-matches-list="playedMatchesList"
+              :team-marker="teamMarker"
+              :players-by-team="playersByTeam"
+              :display-player-label="displayPlayerLabel"
+              :update-played-match="updatePlayedMatch"
+              :delete-played-match="deletePlayedMatch"
+              :show-heading="false"
+            />
+          </div>
+        </Transition>
+      </div>
 
       <OrganismsTournamentStepStandingsMatchManagement
         :teams="teams"
@@ -93,11 +232,14 @@
         :can-finish-match="canFinishMatch"
         :players-by-team="playersByTeam"
         :team-marker="teamMarker"
+        :effective-team-colors="effectiveTeamColors"
         :display-player-label="displayPlayerLabel"
         :is-active-player="isActivePlayer"
         :select-player-for-mark="selectPlayerForMark"
         :player-stat="playerStat"
         :on-select-action="onSelectAction"
+        :add-player-event="addPlayerEvent"
+        :remove-player-event="removePlayerEvent"
         :go-to-next-match="goToNextMatch"
         :reset-match-stats="resetMatchStats"
         :finish-match="finishMatch"
@@ -138,6 +280,10 @@ const {
   isActivePlayer,
   playerStat,
   onSelectAction,
+  addPlayerEvent,
+  removePlayerEvent,
+  updatePlayedMatch,
+  deletePlayedMatch,
   resetMatchStats,
   finishMatch,
   goToNextMatch,
@@ -154,9 +300,20 @@ const {
 const standingsUid = useId?.() ?? Math.random().toString(36).slice(2)
 const standingsToggleId = `standings-block-toggle-${standingsUid}`
 const standingsPanelId = `standings-block-panel-${standingsUid}`
+const rosterTotalsToggleId = `roster-totals-toggle-${standingsUid}`
+const rosterTotalsPanelId = `roster-totals-panel-${standingsUid}`
+const playedMatchesToggleId = `played-matches-toggle-${standingsUid}`
+const playedMatchesPanelId = `played-matches-panel-${standingsUid}`
 
 // Таблица и составы скрыты по умолчанию — открываются кнопкой, когда нужно посмотреть.
 const isStandingsBlockOpen = ref(false)
+const isRosterTotalsOpen = ref(true)
+const isPlayedMatchesOpen = ref(false)
+
+// Сколько игроков в турнире — для бейджа в заголовке аккордеона.
+const rosterTotalsPlayersCount = computed(() => {
+  return props.teams.reduce((sum, t) => sum + playersByTeam(t).length, 0)
+})
 
 function handleUpdateHomeTeam(next: string) {
   homeTeam.value = next

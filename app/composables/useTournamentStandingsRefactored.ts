@@ -9,6 +9,7 @@ import type {
   PlayerMatchStats,
   PlayedMatch,
   Side,
+  StatKey,
   TournamentStandingsParams,
 } from './tournament-standings/types'
 import type { ActiveSelection } from './tournament-standings/matchStats'
@@ -16,16 +17,18 @@ import type { PairingState } from './tournament-standings/pairing'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 
 import { extractMarkedPlayers } from './tournament-standings/events'
-import { pickNextMatchPair, recordFinishedMatch, resetMatchHistoryIfBalanced } from './tournament-standings/pairing'
+import { pickNextMatchPair, recordFinishedMatch, resetMatchHistoryIfBalanced, unrecordFinishedMatch } from './tournament-standings/pairing'
 import { resortStandings, updateStandingsForTeam } from './tournament-standings/standings'
 import {
   isActivePlayer as isActivePlayerFn,
+  incrementStat,
+  decrementStat,
   onSelectAction as onSelectActionFn,
   playerStat as playerStatFn,
   resetMatchStats as resetMatchStatsFn,
   selectPlayerForMark as selectPlayerForMarkFn,
 } from './tournament-standings/matchStats'
-import { mergeFinishedMatchIntoAggregate } from './tournament-standings/aggregateTournamentPlayerStats'
+import { mergeFinishedMatchIntoAggregate, subtractMatchFromAggregate } from './tournament-standings/aggregateTournamentPlayerStats'
 
 export function useTournamentStandingsRefactored(params: TournamentStandingsParams) {
   const { teamMarkers, getMarkerByIndex } = useTeamColors()
@@ -165,6 +168,16 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     onSelectActionFn(side, playerId, evt, homeStats, awayStats)
   }
 
+  function addPlayerEvent(side: Side, playerId: number, key: StatKey) {
+    // Прямой вызов без Event-хаков — для кастомных кнопок событий.
+    incrementStat(side, playerId, key, homeStats, awayStats)
+  }
+
+  function removePlayerEvent(side: Side, playerId: number, key: StatKey) {
+    // Отменяет последнее добавленное событие — нельзя уйти ниже нуля.
+    decrementStat(side, playerId, key, homeStats, awayStats)
+  }
+
   function resetMatchStats() {
     resetMatchStatsFn(homeStats, awayStats, activeSelection, matchFinalized)
   }
@@ -191,6 +204,7 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     resortStandings(standingsRows)
 
     // Записываем матч в историю для отображения UI.
+    // homeStats/awayStats сохраняются для возможности inline-редактирования.
     playedMatchesList.value.push({
       matchNumber,
       homeTeam: homeTeam.value,
@@ -199,6 +213,8 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
       awayGoals: ag,
       homePlayers,
       awayPlayers,
+      homeStats: { ...homeStats.value },
+      awayStats: { ...awayStats.value },
     })
 
     aggregatePlayerStats.value = mergeFinishedMatchIntoAggregate(
@@ -213,6 +229,134 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     resetMatchStats()
     homeTeam.value = ''
     awayTeam.value = ''
+  }
+
+  function updatePlayedMatch(
+    matchNumber: number,
+    newHomeGoals: number,
+    newAwayGoals: number,
+    newHomeStats: Record<number, PlayerMatchStats>,
+    newAwayStats: Record<number, PlayerMatchStats>,
+  ) {
+    const idx = playedMatchesList.value.findIndex((m) => m.matchNumber === matchNumber)
+    if (idx === -1) return
+
+    const old = playedMatchesList.value[idx]
+    if (!old) return
+
+    // Откатываем старый результат из таблицы: вычитаем то что добавляли при finishMatch.
+    const homeRow = standingsRows.value.find((r) => r.teamName === old.homeTeam)
+    const awayRow = standingsRows.value.find((r) => r.teamName === old.awayTeam)
+
+    if (homeRow && awayRow) {
+      // Убираем старый матч из статистики обеих команд.
+      homeRow.played -= 1
+      homeRow.goalsFor -= old.homeGoals
+      homeRow.goalsAgainst -= old.awayGoals
+      awayRow.played -= 1
+      awayRow.goalsFor -= old.awayGoals
+      awayRow.goalsAgainst -= old.homeGoals
+
+      if (old.homeGoals > old.awayGoals) { homeRow.wins -= 1; homeRow.points -= 3 }
+      else if (old.homeGoals < old.awayGoals) { homeRow.losses -= 1 }
+      else { homeRow.draws -= 1; homeRow.points -= 1 }
+
+      if (old.awayGoals > old.homeGoals) { awayRow.wins -= 1; awayRow.points -= 3 }
+      else if (old.awayGoals < old.homeGoals) { awayRow.losses -= 1 }
+      else { awayRow.draws -= 1; awayRow.points -= 1 }
+
+      homeRow.goalDiff = homeRow.goalsFor - homeRow.goalsAgainst
+      awayRow.goalDiff = awayRow.goalsFor - awayRow.goalsAgainst
+    }
+
+    // Применяем новый результат в таблицу.
+    updateStandingsForTeam(standingsRows, old.homeTeam, newHomeGoals, newAwayGoals)
+    updateStandingsForTeam(standingsRows, old.awayTeam, newAwayGoals, newHomeGoals)
+    resortStandings(standingsRows)
+
+    // Пересчитываем подписи игроков из новой статистики.
+    const playersById: Record<number, Player> = {}
+    for (const p of params.players) playersById[p.id] = p
+
+    const newHomePlayers = extractMarkedPlayers({
+      statsRecord: newHomeStats,
+      playersById,
+      displayPlayerLabel,
+    })
+    const newAwayPlayers = extractMarkedPlayers({
+      statsRecord: newAwayStats,
+      playersById,
+      displayPlayerLabel,
+    })
+
+    // Обновляем запись матча в истории.
+    playedMatchesList.value[idx] = {
+      ...old,
+      homeGoals: newHomeGoals,
+      awayGoals: newAwayGoals,
+      homeStats: { ...newHomeStats },
+      awayStats: { ...newAwayStats },
+      homePlayers: newHomePlayers,
+      awayPlayers: newAwayPlayers,
+    }
+  }
+
+  function deletePlayedMatch(matchNumber: number) {
+    const idx = playedMatchesList.value.findIndex((m) => m.matchNumber === matchNumber)
+    if (idx === -1) return
+
+    const old = playedMatchesList.value[idx]
+    if (!old) return
+
+    // Откатываем результат из турнирной таблицы — те же шаги что в updatePlayedMatch.
+    const homeRow = standingsRows.value.find((r) => r.teamName === old.homeTeam)
+    const awayRow = standingsRows.value.find((r) => r.teamName === old.awayTeam)
+
+    if (homeRow && awayRow) {
+      homeRow.played -= 1
+      homeRow.goalsFor -= old.homeGoals
+      homeRow.goalsAgainst -= old.awayGoals
+      awayRow.played -= 1
+      awayRow.goalsFor -= old.awayGoals
+      awayRow.goalsAgainst -= old.homeGoals
+
+      if (old.homeGoals > old.awayGoals) { homeRow.wins -= 1; homeRow.points -= 3 }
+      else if (old.homeGoals < old.awayGoals) { homeRow.losses -= 1 }
+      else { homeRow.draws -= 1; homeRow.points -= 1 }
+
+      if (old.awayGoals > old.homeGoals) { awayRow.wins -= 1; awayRow.points -= 3 }
+      else if (old.awayGoals < old.homeGoals) { awayRow.losses -= 1 }
+      else { awayRow.draws -= 1; awayRow.points -= 1 }
+
+      homeRow.goalDiff = homeRow.goalsFor - homeRow.goalsAgainst
+      awayRow.goalDiff = awayRow.goalsFor - awayRow.goalsAgainst
+    }
+
+    resortStandings(standingsRows)
+
+    // Убираем матч из списка.
+    playedMatchesList.value.splice(idx, 1)
+
+    // Пересчитываем aggregate-статистику игроков без этого матча.
+    aggregatePlayerStats.value = subtractMatchFromAggregate(
+      aggregatePlayerStats.value,
+      old.homeStats,
+      old.awayStats,
+    )
+
+    // Восстанавливаем состояние подбора пар по оставшимся матчам — "следующий матч" снова работает корректно.
+    unrecordFinishedMatch(
+      pairingState,
+      old.homeTeam,
+      old.awayTeam,
+      matchNumber,
+      params.teams,
+      playedMatchesList.value.map((m) => ({
+        homeTeam: m.homeTeam,
+        awayTeam: m.awayTeam,
+        matchNumber: m.matchNumber,
+      })),
+    )
   }
 
   function goToNextMatch() {
@@ -248,6 +392,10 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     isActivePlayer,
     playerStat,
     onSelectAction,
+    addPlayerEvent,
+    removePlayerEvent,
+    updatePlayedMatch,
+    deletePlayedMatch,
     resetMatchStats,
     finishMatch,
     goToNextMatch,

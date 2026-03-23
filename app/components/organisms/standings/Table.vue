@@ -1,51 +1,110 @@
-<!-- Компонент StandingsTable: таблица рейтинга/очков команд турнира. -->
+<!-- Компонент StandingsTable: турнирная таблица мест и очков команд. -->
 <template>
-  <div class="w-full overflow-x-auto overflow-y-hidden rounded-lg border border-slate-600">
-    <table class="standings-table w-full min-w-0 table-fixed border-collapse text-left text-xs sm:text-sm">
+  <!-- Без overflow-x-auto — таблица должна помещаться в любой ширине экрана -->
+  <div class="w-full rounded-xl border border-slate-700/60 overflow-hidden">
+    <table class="w-full table-fixed border-collapse text-left">
       <colgroup>
-        <col :style="{ width: colMWidth }">
-        <col :style="{ width: colKomWidth }">
-        <col v-for="n in 8" :key="n" :style="{ width: colNumWidth }">
+        <!-- Фиксированные пропорции: таблица выглядит ровно и без скролла -->
+        <col style="width:7%">
+        <!-- Название команды может сокращаться, чтобы влезали все цифры -->
+        <col style="width:33%">
+        <col style="width:7%">
+        <col style="width:7%">
+        <col style="width:7%">
+        <col style="width:7%">
+        <col style="width:7%">
+        <col style="width:7%">
+        <col style="width:7%">
+        <col style="width:11%">
       </colgroup>
+
       <thead>
-        <tr class="border-b border-slate-600 bg-slate-800/70">
-          <th class="px-0.5 py-1 font-semibold text-slate-300 sm:px-2 sm:py-2">М</th>
-          <th class="min-w-0 px-0.5 py-1 text-left font-semibold text-slate-300 sm:px-2 sm:py-2">Ком</th>
-          <th class="px-0.5 py-1 text-center font-semibold text-slate-300 sm:px-2 sm:py-2">И</th>
-          <th class="px-0.5 py-1 text-center font-semibold text-slate-300 sm:px-2 sm:py-2">В</th>
-          <th class="px-0.5 py-1 text-center font-semibold text-slate-300 sm:px-2 sm:py-2">Н</th>
-          <th class="px-0.5 py-1 text-center font-semibold text-slate-300 sm:px-2 sm:py-2">П</th>
-          <th class="px-0.5 py-1 text-center font-semibold text-slate-300 sm:px-2 sm:py-2">ЗМ</th>
-          <th class="px-0.5 py-1 text-center font-semibold text-slate-300 sm:px-2 sm:py-2">ПМ</th>
-          <th class="px-0.5 py-1 text-center font-semibold text-slate-300 sm:px-2 sm:py-2">РМ</th>
-          <th class="px-0.5 py-1 text-center font-semibold text-slate-300 sm:px-2 sm:py-2">О</th>
+        <tr class="border-b border-slate-700/60 bg-slate-800/80">
+          <th class="whitespace-nowrap px-1 py-2 text-[11px] font-semibold text-slate-500 sm:px-1.5 md:text-sm">М</th>
+          <th class="px-1 py-2 text-left text-[11px] font-semibold text-slate-500 sm:px-1.5 md:text-sm">Команда</th>
+          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-semibold text-slate-500 md:text-sm">И</th>
+          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-semibold text-slate-500 md:text-sm">В</th>
+          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-semibold text-slate-500 md:text-sm">Н</th>
+          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-semibold text-slate-500 md:text-sm">П</th>
+          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-semibold text-slate-500 md:text-sm">ЗМ</th>
+          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-semibold text-slate-500 md:text-sm">ПМ</th>
+          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-semibold text-slate-500 md:text-sm">РМ</th>
+          <!-- Очки выделены цветом -->
+          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-bold text-slate-300 md:text-sm">О</th>
         </tr>
       </thead>
+
       <tbody>
         <tr
-          v-for="(row, i) in rows"
+          v-for="(row, i) in computedRows"
           :key="row.teamName"
-          class="border-b border-slate-700/70 hover:bg-slate-800/30"
+          class="border-b border-slate-800/50 transition-colors last:border-0 md:hover:bg-slate-800/30"
         >
-          <td class="px-0.5 py-0.5 font-medium text-slate-400 sm:px-2 sm:py-1.5">{{ row.place }}</td>
-          <td class="min-w-0 px-0.5 py-0.5 sm:px-2 sm:py-1.5">
-            <div class="flex min-w-0 items-center gap-0.5 sm:gap-1.5">
-              <span class="shrink-0" aria-hidden="true">{{ markerForTeam(row.teamName, i) }}</span>
-              <span class="min-w-0 truncate text-slate-100">{{ row.teamName }}</span>
+          <!-- Место -->
+          <td class="whitespace-nowrap px-1 py-2.5 text-xs font-medium tabular-nums text-slate-400 sm:px-1.5 md:text-sm">
+            {{ row.place }}
+          </td>
+
+          <!-- Команда: маркер + имя — truncate не даёт ломать соседние ячейки -->
+          <td class="min-w-0 px-1 py-2.5 sm:px-1.5">
+            <div class="flex min-w-0 items-center gap-1 md:gap-1.5">
+              <span class="shrink-0 text-sm leading-none md:text-base" aria-hidden="true">
+                {{ markerForTeam(row.teamName, i) }}
+              </span>
+              <span class="min-w-0 truncate text-xs font-semibold text-slate-100 sm:text-sm md:text-base">
+                {{ row.teamName }}
+              </span>
             </div>
           </td>
-          <td class="whitespace-nowrap px-0.5 py-0.5 text-center tabular-nums text-slate-300 sm:px-2 sm:py-1.5">{{ row.played }}</td>
-          <td class="whitespace-nowrap px-0.5 py-0.5 text-center tabular-nums text-slate-300 sm:px-2 sm:py-1.5">{{ row.wins }}</td>
-          <td class="whitespace-nowrap px-0.5 py-0.5 text-center tabular-nums text-slate-300 sm:px-2 sm:py-1.5">{{ row.draws }}</td>
-          <td class="whitespace-nowrap px-0.5 py-0.5 text-center tabular-nums text-slate-300 sm:px-2 sm:py-1.5">{{ row.losses }}</td>
-          <td class="whitespace-nowrap px-0.5 py-0.5 text-center tabular-nums text-slate-300 sm:px-2 sm:py-1.5">{{ row.goalsFor }}</td>
-          <td class="whitespace-nowrap px-0.5 py-0.5 text-center tabular-nums text-slate-300 sm:px-2 sm:py-1.5">{{ row.goalsAgainst }}</td>
-          <td class="whitespace-nowrap px-0.5 py-0.5 text-center tabular-nums text-slate-300 sm:px-2 sm:py-1.5">
-            <span :class="row.goalDiff > 0 ? 'text-emerald-400' : row.goalDiff < 0 ? 'text-red-400' : ''">
-              {{ row.goalDiff >= 0 ? ` ${row.goalDiff}` : row.goalDiff }}
-            </span>
+
+          <!-- И -->
+          <td class="whitespace-nowrap px-1 py-2.5 text-center text-xs tabular-nums text-slate-400 md:text-sm">
+            {{ row.played }}
           </td>
-          <td class="whitespace-nowrap px-0.5 py-0.5 text-center tabular-nums font-medium text-slate-100 sm:px-2 sm:py-1.5">{{ row.points }}</td>
+
+          <!-- В — зелёный если есть победы -->
+          <td
+            class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-medium tabular-nums md:text-sm"
+            :class="row.wins > 0 ? 'text-emerald-400' : 'text-slate-500'"
+          >
+            {{ row.wins }}
+          </td>
+
+          <!-- Н -->
+          <td class="whitespace-nowrap px-1 py-2.5 text-center text-xs tabular-nums text-slate-500 md:text-sm">
+            {{ row.draws }}
+          </td>
+
+          <!-- П — красный если есть поражения -->
+          <td
+            class="whitespace-nowrap px-1 py-2.5 text-center text-xs tabular-nums md:text-sm"
+            :class="row.losses > 0 ? 'text-red-400/80' : 'text-slate-500'"
+          >
+            {{ row.losses }}
+          </td>
+
+          <!-- ЗМ -->
+          <td class="whitespace-nowrap px-1 py-2.5 text-center text-xs tabular-nums text-slate-400 md:text-sm">
+            {{ row.goalsFor }}
+          </td>
+
+          <!-- ПМ -->
+          <td class="whitespace-nowrap px-1 py-2.5 text-center text-xs tabular-nums text-slate-400 md:text-sm">
+            {{ row.goalsAgainst }}
+          </td>
+
+          <!-- РМ — цвет по знаку -->
+          <td
+            class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-medium tabular-nums md:text-sm"
+            :class="goalDiffClass(row.goalDiff)"
+          >
+            {{ row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff }}
+          </td>
+
+          <!-- Очки — жирные, самые заметные -->
+          <td class="whitespace-nowrap px-1 py-2.5 text-center text-sm font-bold tabular-nums text-slate-100 md:text-base">
+            {{ row.points }}
+          </td>
         </tr>
       </tbody>
     </table>
@@ -54,6 +113,7 @@
 
 <script setup lang="ts">
 import { useTeamColors } from '~/composables/useTeamColors'
+
 export interface StandingsRow {
   place: number
   teamName: string
@@ -67,25 +127,19 @@ export interface StandingsRow {
   points: number
 }
 
-// Эта таблица показывает места и очки команд.
 const props = defineProps<{
   teams: string[]
-  /** Team name -> color index 0–5 (🔴 🟢 🔵 🟡 ⚪ ⚫) */
+  /** Цвет команды: индекс 0–5 (🔴 🟢 🔵 🟡 ⚪ ⚫) */
   teamColors?: Record<string, number>
-  /** Optional: precomputed rows (e.g. from API). If not provided, rows are built with zeros. */
+  /** Готовые строки. Если нет — строим нули. */
   rows?: StandingsRow[]
 }>()
 
 const { teamMarkers, getMarkerByIndex } = useTeamColors()
 
-const colMWidth = '3%'
-const colKomWidth = '22%'
-const colNumWidth = '9.375%'
-
-const rows = computed<StandingsRow[]>(() => {
-  if (props.rows && props.rows.length > 0) {
-    return props.rows
-  }
+// Берём переданные строки или строим заглушку с нулями.
+const computedRows = computed<StandingsRow[]>(() => {
+  if (props.rows && props.rows.length > 0) return props.rows
   return props.teams.map((name, index) => ({
     place: index + 1,
     teamName: name,
@@ -100,9 +154,17 @@ const rows = computed<StandingsRow[]>(() => {
   }))
 })
 
+// Маркер команды по цветовому индексу.
 function markerForTeam(teamName: string, rowIndex: number): string {
   const raw = props.teamColors?.[teamName]
   const index = typeof raw === 'number' ? raw : (rowIndex % teamMarkers.length)
   return getMarkerByIndex(index)
+}
+
+// Цвет ячейки разницы мячей по знаку числа.
+function goalDiffClass(diff: number): string {
+  if (diff > 0) return 'text-emerald-400'
+  if (diff < 0) return 'text-red-400/80'
+  return 'text-slate-500'
 }
 </script>

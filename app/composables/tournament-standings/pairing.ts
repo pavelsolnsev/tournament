@@ -147,6 +147,80 @@ export function pickNextMatchPair(
   return { home, away }
 }
 
+// Откатываем запись о матче из pairingState при его удалении.
+// Восстанавливаем счётчики так, чтобы "следующий матч" продолжал работать корректно.
+export function unrecordFinishedMatch(
+  state: PairingState,
+  home: string,
+  away: string,
+  matchNumber: number,
+  teams: string[],
+  allRemainingMatches: { homeTeam: string; awayTeam: string; matchNumber: number }[],
+) {
+  // Уменьшаем общий счётчик матчей.
+  state.matchCount.value = Math.max(0, state.matchCount.value - 1)
+
+  // Уменьшаем счётчики игр команд.
+  if (state.teamGamesCount.value[home] !== undefined)
+    state.teamGamesCount.value[home] = Math.max(0, state.teamGamesCount.value[home] - 1)
+  if (state.teamGamesCount.value[away] !== undefined)
+    state.teamGamesCount.value[away] = Math.max(0, state.teamGamesCount.value[away] - 1)
+
+  // Пересчитываем matchHistory и lastMatchIndex по оставшимся матчам с нуля.
+  // Это самый надёжный способ — гарантирует корректное состояние после любого удаления.
+  const newHistory: Record<string, Record<string, number>> = {}
+  const newLastMatchIndex: Record<string, Record<string, number>> = {}
+
+  for (const m of allRemainingMatches) {
+    const h = m.homeTeam
+    const a = m.awayTeam
+    const mn = m.matchNumber
+
+    if (!newHistory[h]) newHistory[h] = {}
+    if (!newHistory[a]) newHistory[a] = {}
+    newHistory[h][a] = (newHistory[h][a] ?? 0) + 1
+    newHistory[a][h] = (newHistory[a][h] ?? 0) + 1
+
+    if (!newLastMatchIndex[h]) newLastMatchIndex[h] = {}
+    if (!newLastMatchIndex[a]) newLastMatchIndex[a] = {}
+    newLastMatchIndex[h][a] = mn
+    newLastMatchIndex[a][h] = mn
+  }
+
+  state.matchHistory.value = newHistory
+  state.lastMatchIndex.value = newLastMatchIndex
+
+  // Пересчитываем consecutiveGames — сколько матчей подряд сыграла каждая команда
+  // в конце текущей последовательности (считаем с конца оставшегося списка).
+  const newConsecutive: Record<string, number> = {}
+  for (const t of teams) newConsecutive[t] = 0
+
+  // Идём с конца оставшихся матчей и считаем непрерывную серию для каждой команды.
+  const sorted = [...allRemainingMatches].sort((a, b) => a.matchNumber - b.matchNumber)
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const m = sorted[i]
+    const playedTeams = new Set([m.homeTeam, m.awayTeam])
+    // Если команда уже получила ненулевую серию — её серия прервана остальными.
+    let anyBroke = false
+    for (const t of teams) {
+      if (!playedTeams.has(t) && newConsecutive[t] !== undefined && newConsecutive[t] > 0) {
+        // Команда отдыхала в этом матче — серия должна была прерваться.
+        anyBroke = true
+      }
+    }
+    if (anyBroke) break
+    for (const t of [m.homeTeam, m.awayTeam]) {
+      newConsecutive[t] = (newConsecutive[t] ?? 0) + 1
+    }
+  }
+  state.consecutiveGames.value = newConsecutive
+
+  // Для 2 команд: если матчей не осталось — сбрасываем флаг, чтобы можно было сыграть снова.
+  if (teams.length === 2) {
+    state.playedSingleMatch.value = allRemainingMatches.length > 0
+  }
+}
+
 export function recordFinishedMatch(
   state: PairingState,
   home: string,

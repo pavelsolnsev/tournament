@@ -8,7 +8,7 @@
       Нет выбранных игроков.
       <button
         type="button"
-        class="text-emerald-400 underline transition hover:text-emerald-300 focus:outline-none rounded"
+        class="text-emerald-400 underline transition md:hover:text-emerald-300 focus:outline-none rounded"
         @click="emit('backToPlayers')"
       >
         Вернуться к выбору игроков
@@ -38,7 +38,7 @@
         <button
           type="button"
           class="w-full rounded-xl px-4 py-3 font-semibold text-slate-900 transition sm:w-auto sm:min-w-[220px]"
-          :class="confirmedTeamsCount >= 2 ? 'bg-emerald-500 hover:bg-emerald-400 focus:outline-none' : 'bg-slate-700 text-slate-400 cursor-not-allowed focus:outline-none'"
+          :class="confirmedTeamsCount >= 2 ? 'bg-emerald-500 md:hover:bg-emerald-400 focus:outline-none' : 'bg-slate-700 text-slate-400 cursor-not-allowed focus:outline-none'"
           :disabled="confirmedTeamsCount < 2"
           @click="emit('goToStandings')"
         >
