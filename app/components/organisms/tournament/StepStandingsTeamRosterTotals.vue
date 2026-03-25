@@ -83,6 +83,16 @@
                 </template>
                 <!-- Ничего нет — тихий прочерк -->
                 <span v-else class="text-xs text-slate-700">—</span>
+
+                <!-- Прогресс рейтинга за турнир — показываем только если есть дельта -->
+                <span
+                  v-if="ratingDelta(p.id)"
+                  class="inline-flex items-center rounded-md px-1.5 py-0.5
+                         text-[11px] font-semibold tabular-nums"
+                  :class="ratingDeltaClass(p.id)"
+                >
+                  {{ ratingDelta(p.id) }}
+                </span>
               </div>
             </li>
           </ul>
@@ -110,6 +120,8 @@ const props = defineProps<{
   teamMarker: (teamName: string) => string
   displayPlayerLabel: (player: Player) => string
   aggregatePlayerStats: Record<number, PlayerMatchStats>
+  // Накопленные дельты рейтинга за весь турнир — для каждого игрока по id.
+  playerRatingDeltas: Record<number, number>
   /** Если false — заголовок скрыт (когда он вынесен в родительский аккордеон). */
   showHeading?: boolean
 }>()
@@ -125,6 +137,22 @@ function statsFor(playerId: number): PlayerMatchStats {
 function totalEvents(playerId: number): number {
   const s = statsFor(playerId)
   return s.goals + s.assists + s.saves + s.yellows
+}
+
+// Возвращает форматированную строку дельты рейтинга (+1.5 / -0.8) или null если 0.
+function ratingDelta(playerId: number): string | null {
+  const delta = props.playerRatingDeltas[playerId]
+  if (!delta) return null
+  return delta > 0 ? `+${delta}` : String(delta)
+}
+
+// Цвет бейджа дельты: зелёный для роста, красный для падения.
+function ratingDeltaClass(playerId: number): string {
+  const delta = props.playerRatingDeltas[playerId]
+  if (!delta || delta === 0) return ''
+  return delta > 0
+    ? 'text-emerald-400 bg-emerald-500/10'
+    : 'text-red-400 bg-red-500/10'
 }
 
 // Маппинг маркера → лёгкий командный фон строки игрока (тот же принцип что в TeamRosterColumn).

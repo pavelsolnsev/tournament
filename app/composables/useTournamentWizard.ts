@@ -16,6 +16,8 @@ export type SavedStandingsSnapshot = {
   matchHistory: Record<string, Record<string, number>>
   lastMatchIndex: Record<string, Record<string, number>>
   playedSingleMatch: boolean
+  // Накопленные дельты рейтинга за все матчи турнира — нужны для UI и восстановления после перезагрузки.
+  playerRatingDeltas: Record<number, number>
 }
 
 type SavedTournamentContext = {

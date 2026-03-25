@@ -153,6 +153,7 @@
                   :team-marker="teamMarker"
                   :display-player-label="displayPlayerLabel"
                   :aggregate-player-stats="aggregatePlayerStats"
+                  :player-rating-deltas="playerRatingDeltas"
                   :show-heading="false"
                 />
               </div>
@@ -315,6 +316,7 @@ const {
   goToNextMatch,
   displayPlayerLabel,
   aggregatePlayerStats,
+  playerRatingDeltas,
 } = useTournamentStandingsRefactored(
   {
     teams: props.teams,

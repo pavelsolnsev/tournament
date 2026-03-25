@@ -103,7 +103,7 @@
           active-shadow-class="bg-sky-500/10 border-sky-500/40"
           :team-color-index="effectiveTeamColors[homeTeam] ?? 0"
           :team-marker="teamMarker"
-          :display-player-label="displayPlayerLabel"
+          :display-player-label="displayPlayerLabelWithoutRating"
           :is-active-player="isActivePlayer"
           :select-player-for-mark="selectPlayerForMark"
           :player-stat="playerStat"
@@ -117,7 +117,7 @@
           active-shadow-class="bg-emerald-500/10 border-emerald-500/40"
           :team-color-index="effectiveTeamColors[awayTeam] ?? 0"
           :team-marker="teamMarker"
-          :display-player-label="displayPlayerLabel"
+          :display-player-label="displayPlayerLabelWithoutRating"
           :is-active-player="isActivePlayer"
           :select-player-for-mark="selectPlayerForMark"
           :player-stat="playerStat"
@@ -231,6 +231,7 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import type { StatKey } from '~/composables/tournament-standings/types'
+import { clipLongPlayerLabel } from '~/composables/usePlayerDisplay'
 
 type Side = 'home' | 'away'
 
@@ -279,6 +280,17 @@ const isMgmtOpen = ref(false)
 const teamPickersToggleId = `match-team-pickers-toggle-${uid}`
 const teamPickersPanelId = `match-team-pickers-panel-${uid}`
 const isTeamPickersOpen = ref(true)
+
+function displayPlayerLabelWithoutRating(player: Player): string {
+  // Берём ник без @, чтобы в управлении матчем был аккуратный короткий текст.
+  const cleanedUsername = player.username?.replace(/^@+/, '').trim()
+  // Если ника нет или он "unknown", показываем имя игрока.
+  const baseLabel = !cleanedUsername || cleanedUsername.toLowerCase() === 'unknown'
+    ? (player.name || '').trim()
+    : cleanedUsername
+  // Обрезаем только текст ника/имени, без добавления рейтинга в этом блоке.
+  return clipLongPlayerLabel(baseLabel)
+}
 
 function handleMgmtAction(fn: () => void) {
   isMgmtOpen.value = false
