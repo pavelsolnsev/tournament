@@ -142,58 +142,11 @@
           leave-from-class="max-h-96 opacity-100"
           leave-to-class="max-h-0 opacity-0"
         >
-          <div
+          <OrganismsTournamentPlayedMatchesPlayedMatchDetails
             v-if="openMatch === m.matchNumber && editMatch !== m.matchNumber"
-            class="border-t border-slate-800/60 bg-slate-950/40 px-3 pb-3 pt-2.5"
-          >
-            <!-- Нет ни одного игрока с событиями -->
-            <p
-              v-if="m.homePlayers.length === 0 && m.awayPlayers.length === 0"
-              class="text-center text-xs text-slate-600"
-            >
-              Нет отмеченных игроков.
-            </p>
-
-            <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-x-4">
-
-              <!-- Домашняя команда -->
-              <div v-if="m.homePlayers.length > 0" class="min-w-0">
-                <div class="mb-2 flex min-w-0 items-center gap-1.5">
-                  <span aria-hidden="true" class="shrink-0 text-sm">{{ teamMarker(m.homeTeam) }}</span>
-                  <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">{{ m.homeTeam }}</span>
-                </div>
-                <div class="flex flex-col gap-1.5">
-                  <div
-                    v-for="p in m.homePlayers"
-                    :key="p.playerId"
-                    class="flex min-w-0 items-center justify-between gap-2 rounded-lg bg-slate-800/40 px-2.5 py-2"
-                  >
-                    <span class="min-w-0 flex-1 truncate text-sm text-slate-300">{{ p.name }}</span>
-                    <span v-if="p.eventsLabel" class="shrink-0 text-xs text-slate-500">{{ p.eventsLabel }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Гостевая команда -->
-              <div v-if="m.awayPlayers.length > 0" class="min-w-0">
-                <div class="mb-2 flex min-w-0 items-center gap-1.5">
-                  <span aria-hidden="true" class="shrink-0 text-sm">{{ teamMarker(m.awayTeam) }}</span>
-                  <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">{{ m.awayTeam }}</span>
-                </div>
-                <div class="flex flex-col gap-1.5">
-                  <div
-                    v-for="p in m.awayPlayers"
-                    :key="p.playerId"
-                    class="flex min-w-0 items-center justify-between gap-2 rounded-lg bg-slate-800/40 px-2.5 py-2"
-                  >
-                    <span class="min-w-0 flex-1 truncate text-sm text-slate-300">{{ p.name }}</span>
-                    <span v-if="p.eventsLabel" class="shrink-0 text-xs text-slate-500">{{ p.eventsLabel }}</span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
+            :match="m"
+            :team-marker="teamMarker"
+          />
         </Transition>
 
         <!-- ───── Inline-редактор ───── -->
@@ -205,169 +158,15 @@
           leave-from-class="max-h-[800px] opacity-100"
           leave-to-class="max-h-0 opacity-0"
         >
-          <div
-            v-if="editMatch === m.matchNumber && draft"
-            class="border-t border-slate-700/60 bg-slate-950/60"
-          >
-
-            <!-- Авто-счёт: голы считаются из статистики игроков -->
-            <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-3">
-              <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-500">
-                {{ m.homeTeam }}
-              </span>
-              <div class="flex shrink-0 flex-col items-center gap-0.5">
-                <span class="text-[10px] uppercase tracking-widest text-slate-600">Счёт</span>
-                <span class="font-mono text-lg font-bold tabular-nums text-slate-100">
-                  {{ draftHomeGoals }}&nbsp;:&nbsp;{{ draftAwayGoals }}
-                </span>
-              </div>
-              <span class="min-w-0 truncate text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
-                {{ m.awayTeam }}
-              </span>
-            </div>
-
-            <!-- Статистика по командам -->
-            <div class="grid grid-cols-1 gap-0 divide-y divide-slate-800/60 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-
-              <!-- Домашняя команда -->
-              <div class="px-3 pb-3 pt-2">
-                <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  {{ teamMarker(m.homeTeam) }} {{ m.homeTeam }}
-                </p>
-                <div class="space-y-1.5">
-                  <div v-for="p in homePlayers(m)" :key="p.id" class="min-w-0">
-                    <!-- Строка игрока: клик раскрывает контролы -->
-                    <button
-                      type="button"
-                      class="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl px-3 py-2.5
-                             text-left transition-colors md:hover:bg-slate-800/60 focus:outline-none"
-                      :class="openEditPlayer === editPlayerKey('home', p.id) ? 'bg-slate-800/70' : 'bg-slate-800/40'"
-                      @click="toggleEditPlayer('home', p.id)"
-                    >
-                      <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-200">{{ displayPlayerLabel(p) }}</span>
-                      <span v-if="hasAnyStat(draft.homeStats, p.id)" class="shrink-0 text-xs text-slate-500">
-                        {{ buildLabel(draft.homeStats, p.id) }}
-                      </span>
-                      <svg
-                        class="h-4 w-4 shrink-0 transition-transform duration-150"
-                        :class="openEditPlayer === editPlayerKey('home', p.id) ? 'rotate-180 text-slate-400' : 'text-slate-600'"
-                        viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
-                      >
-                        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                      </svg>
-                    </button>
-
-                    <!-- Контролы: 4 события с кнопками − и + -->
-                    <div v-if="openEditPlayer === editPlayerKey('home', p.id)" class="mt-1.5 flex flex-wrap gap-1.5 px-1">
-                      <template v-for="stat in STAT_DEFS" :key="stat.key">
-                        <div class="flex items-stretch rounded-xl border text-sm" :class="stat.bgClass">
-                          <span class="flex items-center px-2.5 py-1.5 font-semibold tabular-nums" :class="stat.textClass">
-                            {{ stat.icon }} {{ getEditStat(draft.homeStats, p.id, stat.key) }}
-                          </span>
-                          <button
-                            type="button"
-                            class="flex items-center px-2 py-1.5 transition-colors active:scale-95"
-                            :class="stat.removeClass"
-                            :title="'Убрать ' + stat.label"
-                            @click="changeStat(draft.homeStats, p.id, stat.key, -1)"
-                          >
-                            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" clip-rule="evenodd" /></svg>
-                          </button>
-                          <button
-                            type="button"
-                            class="flex items-center rounded-r-xl px-2 py-1.5 transition-colors active:scale-95"
-                            :class="stat.addingClass"
-                            :title="'Добавить ' + stat.label"
-                            @click="changeStat(draft.homeStats, p.id, stat.key, +1)"
-                          >
-                            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v5.5h5.5a.75.75 0 010 1.5h-5.5v5.5a.75.75 0 01-1.5 0v-5.5H3.75a.75.75 0 010-1.5h5.5V3.75A.75.75 0 0110 3z" clip-rule="evenodd" /></svg>
-                          </button>
-                        </div>
-                      </template>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Гостевая команда -->
-              <div class="px-3 pb-3 pt-2">
-                <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  {{ teamMarker(m.awayTeam) }} {{ m.awayTeam }}
-                </p>
-                <div class="space-y-1.5">
-                  <div v-for="p in awayPlayers(m)" :key="p.id" class="min-w-0">
-                    <button
-                      type="button"
-                      class="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl px-3 py-2.5
-                             text-left transition-colors md:hover:bg-slate-800/60 focus:outline-none"
-                      :class="openEditPlayer === editPlayerKey('away', p.id) ? 'bg-slate-800/70' : 'bg-slate-800/40'"
-                      @click="toggleEditPlayer('away', p.id)"
-                    >
-                      <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-200">{{ displayPlayerLabel(p) }}</span>
-                      <span v-if="hasAnyStat(draft.awayStats, p.id)" class="shrink-0 text-xs text-slate-500">
-                        {{ buildLabel(draft.awayStats, p.id) }}
-                      </span>
-                      <svg
-                        class="h-4 w-4 shrink-0 transition-transform duration-150"
-                        :class="openEditPlayer === editPlayerKey('away', p.id) ? 'rotate-180 text-slate-400' : 'text-slate-600'"
-                        viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
-                      >
-                        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                      </svg>
-                    </button>
-                    <div v-if="openEditPlayer === editPlayerKey('away', p.id)" class="mt-1.5 flex flex-wrap gap-1.5 px-1">
-                      <template v-for="stat in STAT_DEFS" :key="stat.key">
-                        <div class="flex items-stretch rounded-xl border text-sm" :class="stat.bgClass">
-                          <span class="flex items-center px-2.5 py-1.5 font-semibold tabular-nums" :class="stat.textClass">
-                            {{ stat.icon }} {{ getEditStat(draft.awayStats, p.id, stat.key) }}
-                          </span>
-                          <button
-                            type="button"
-                            class="flex items-center px-2 py-1.5 transition-colors active:scale-95"
-                            :class="stat.removeClass"
-                            :title="'Убрать ' + stat.label"
-                            @click="changeStat(draft.awayStats, p.id, stat.key, -1)"
-                          >
-                            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" clip-rule="evenodd" /></svg>
-                          </button>
-                          <button
-                            type="button"
-                            class="flex items-center rounded-r-xl px-2 py-1.5 transition-colors active:scale-95"
-                            :class="stat.addingClass"
-                            :title="'Добавить ' + stat.label"
-                            @click="changeStat(draft.awayStats, p.id, stat.key, +1)"
-                          >
-                            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v5.5h5.5a.75.75 0 010 1.5h-5.5v5.5a.75.75 0 01-1.5 0v-5.5H3.75a.75.75 0 010-1.5h5.5V3.75A.75.75 0 0110 3z" clip-rule="evenodd" /></svg>
-                          </button>
-                        </div>
-                      </template>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Сохранить / Отмена -->
-            <div class="flex items-center gap-2 border-t border-slate-800/60 px-3 py-3">
-              <button
-                type="button"
-                class="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-900
-                       transition-colors md:hover:bg-emerald-400 active:bg-emerald-600 focus:outline-none"
-                @click="saveEdit(m.matchNumber)"
-              >
-                Сохранить
-              </button>
-              <button
-                type="button"
-                class="rounded-xl bg-slate-700 px-5 py-2.5 text-sm font-medium text-slate-300
-                       transition-colors md:hover:bg-slate-600 focus:outline-none"
-                @click="cancelEdit"
-              >
-                Отмена
-              </button>
-            </div>
-
-          </div>
+          <OrganismsTournamentPlayedMatchesPlayedMatchEditor
+            v-if="editMatch === m.matchNumber"
+            :match="m"
+            :team-marker="teamMarker"
+            :players-by-team="playersByTeam"
+            :display-player-label="displayPlayerLabel"
+            :update-played-match="updatePlayedMatch"
+            @cancel="cancelEdit"
+          />
         </Transition>
 
       </li>
@@ -378,7 +177,9 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
-import type { PlayerMatchStats, StatKey } from '~/composables/tournament-standings/types'
+import type { PlayerMatchStats } from '~/composables/tournament-standings/types'
+import OrganismsTournamentPlayedMatchesPlayedMatchDetails from '~/components/organisms/tournament/played-matches/PlayedMatchDetails.vue'
+import OrganismsTournamentPlayedMatchesPlayedMatchEditor from '~/components/organisms/tournament/played-matches/PlayedMatchEditor.vue'
 
 type MarkedPlayer = {
   playerId: number
@@ -397,12 +198,6 @@ type PlayedMatch = {
   homeStats: Record<number, PlayerMatchStats>
   awayStats: Record<number, PlayerMatchStats>
 }
-
-type DraftState = {
-  homeStats: Record<number, PlayerMatchStats>
-  awayStats: Record<number, PlayerMatchStats>
-}
-// Черновик без явных голов — они вычисляются из статистики игроков.
 
 const props = defineProps<{
   playedMatchesList: PlayedMatch[]
@@ -423,46 +218,6 @@ const props = defineProps<{
 
 // По умолчанию заголовок показывается.
 const showHeading = computed(() => props.showHeading ?? true)
-
-// Конфигурация полей статистики.
-const STAT_DEFS = [
-  {
-    key: 'goals' as StatKey,
-    icon: '⚽',
-    label: 'Гол',
-    bgClass: 'bg-emerald-500/15 border-emerald-500/20',
-    textClass: 'text-emerald-300',
-    removeClass: 'text-emerald-500/60 md:hover:bg-emerald-500/20 md:hover:text-emerald-300',
-    addingClass: 'text-emerald-500/60 md:hover:bg-emerald-500/20 md:hover:text-emerald-300',
-  },
-  {
-    key: 'assists' as StatKey,
-    icon: '🎯',
-    label: 'Ассист',
-    bgClass: 'bg-sky-500/15 border-sky-500/20',
-    textClass: 'text-sky-300',
-    removeClass: 'text-sky-500/60 md:hover:bg-sky-500/20 md:hover:text-sky-300',
-    addingClass: 'text-sky-500/60 md:hover:bg-sky-500/20 md:hover:text-sky-300',
-  },
-  {
-    key: 'saves' as StatKey,
-    icon: '🧤',
-    label: 'Сейв',
-    bgClass: 'bg-violet-500/15 border-violet-500/20',
-    textClass: 'text-violet-300',
-    removeClass: 'text-violet-500/60 md:hover:bg-violet-500/20 md:hover:text-violet-300',
-    addingClass: 'text-violet-500/60 md:hover:bg-violet-500/20 md:hover:text-violet-300',
-  },
-  {
-    key: 'yellows' as StatKey,
-    icon: '🟨',
-    label: 'Жёлтая',
-    bgClass: 'bg-yellow-500/15 border-yellow-500/20',
-    textClass: 'text-yellow-300',
-    removeClass: 'text-yellow-500/60 md:hover:bg-yellow-500/20 md:hover:text-yellow-300',
-    addingClass: 'text-yellow-500/60 md:hover:bg-yellow-500/20 md:hover:text-yellow-300',
-  },
-] as const
 
 // Какой матч раскрыт для деталей.
 const openMatch = ref<number | null>(null)
@@ -490,38 +245,12 @@ function cancelDelete() {
   confirmDeleteMatch.value = null
 }
 
-// Какой игрок раскрыт в редакторе (ключ = side-playerId).
-const openEditPlayer = ref<string | null>(null)
-
-// Черновик без явных homeGoals/awayGoals — они вычисляются из статистики.
-const draft = ref<DraftState | null>(null)
-
-// Голы команд считаются автоматически из голов игроков — не нужно вводить вручную.
-const draftHomeGoals = computed(() =>
-  draft.value ? Object.values(draft.value.homeStats).reduce((s, st) => s + st.goals, 0) : 0,
-)
-const draftAwayGoals = computed(() =>
-  draft.value ? Object.values(draft.value.awayStats).reduce((s, st) => s + st.goals, 0) : 0,
-)
-
-// Уникальный ключ для игрока в редакторе.
-function editPlayerKey(side: string, playerId: number): string {
-  return `${side}-${playerId}`
-}
-
 // Переключение детальной панели матча.
 function toggleDetails(matchNumber: number) {
   if (editMatch.value === matchNumber) cancelEdit()
   openMatch.value = openMatch.value === matchNumber ? null : matchNumber
 }
 
-// Переключение раскрытия контролов игрока в редакторе.
-function toggleEditPlayer(side: string, playerId: number) {
-  const key = editPlayerKey(side, playerId)
-  openEditPlayer.value = openEditPlayer.value === key ? null : key
-}
-
-// Открыть редактор — глубокая копия stats без явных голов.
 function toggleEdit(m: PlayedMatch) {
   if (editMatch.value === m.matchNumber) {
     cancelEdit()
@@ -529,73 +258,13 @@ function toggleEdit(m: PlayedMatch) {
   }
   editMatch.value = m.matchNumber
   openMatch.value = null
-  openEditPlayer.value = null
-  draft.value = {
-    homeStats: deepCopyStats(m.homeStats),
-    awayStats: deepCopyStats(m.awayStats),
-  }
-}
-
-// Сохранить — голы берём из вычисленных computed значений.
-function saveEdit(matchNumber: number) {
-  if (!draft.value) return
-  props.updatePlayedMatch(
-    matchNumber,
-    draftHomeGoals.value,
-    draftAwayGoals.value,
-    draft.value.homeStats,
-    draft.value.awayStats,
-  )
-  cancelEdit()
 }
 
 function cancelEdit() {
   editMatch.value = null
-  draft.value = null
-  openEditPlayer.value = null
 }
 
 // Глубокое копирование stats — черновик не ссылается на оригинал.
-function deepCopyStats(stats: Record<number, PlayerMatchStats>): Record<number, PlayerMatchStats> {
-  const copy: Record<number, PlayerMatchStats> = {}
-  for (const [id, s] of Object.entries(stats)) {
-    copy[Number(id)] = { ...s }
-  }
-  return copy
-}
-
-// Получить значение счётчика (0 если нет записи).
-function getEditStat(statsRecord: Record<number, PlayerMatchStats>, playerId: number, key: StatKey): number {
-  return statsRecord[playerId]?.[key] ?? 0
-}
-
-// Изменить счётчик на delta, не ниже 0.
-function changeStat(statsRecord: Record<number, PlayerMatchStats>, playerId: number, key: StatKey, delta: number) {
-  if (!statsRecord[playerId]) {
-    statsRecord[playerId] = { goals: 0, assists: 0, saves: 0, yellows: 0 }
-  }
-  statsRecord[playerId][key] = Math.max(0, statsRecord[playerId][key] + delta)
-}
-
-// Есть ли хоть одно событие у игрока в переданных stats.
-function hasAnyStat(statsRecord: Record<number, PlayerMatchStats>, playerId: number): boolean {
-  const s = statsRecord[playerId]
-  if (!s) return false
-  return s.goals > 0 || s.assists > 0 || s.saves > 0 || s.yellows > 0
-}
-
-// Строим короткую строку событий для превью в редакторе.
-function buildLabel(statsRecord: Record<number, PlayerMatchStats>, playerId: number): string {
-  const s = statsRecord[playerId]
-  if (!s) return ''
-  const parts: string[] = []
-  if (s.goals > 0) parts.push(`⚽${s.goals}`)
-  if (s.assists > 0) parts.push(`🎯${s.assists}`)
-  if (s.saves > 0) parts.push(`🧤${s.saves}`)
-  if (s.yellows > 0) parts.push(`🟨${s.yellows}`)
-  return parts.join(' ')
-}
-
 function homePlayers(m: PlayedMatch): Player[] {
   return props.playersByTeam(m.homeTeam)
 }

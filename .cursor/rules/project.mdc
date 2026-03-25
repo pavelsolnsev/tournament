@@ -5,30 +5,6 @@ alwaysApply: true
 
 # Project Rules
 
-## Rules in this file: English only
-
-All rules in this file must be written in **English**. When adding or editing rules here, keep the content in English.
-
----
-
-## Explain briefly and clearly
-
-When making changes or answering, **always give a short, clear explanation** of what you are doing and why. Avoid long walls of text; focus on the essential so the user quickly understands the action and the reason behind it.
-
----
-
-## Question tasks and suggest alternatives
-
-**Always critically consider the user’s requests.** If an approach seems questionable, suboptimal, or risky:
-
-- Say so clearly and explain why.
-- Propose one or more **alternative solutions** with pros/cons.
-- Prefer patterns and solutions that are maintainable, scalable, and aligned with the stack (e.g. Vue/Nuxt, Tailwind).
-
-The user is still learning; help steer toward **sound decisions** rather than blindly implementing. It’s fine to suggest a simpler or different approach when it leads to better outcomes.
-
----
-
 ## Work in small tasks
 
 Break work into **small, incremental tasks**. Avoid writing large amounts of code at once. Prefer small, reviewable steps.

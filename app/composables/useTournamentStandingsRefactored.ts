@@ -30,7 +30,7 @@ import {
   selectPlayerForMark as selectPlayerForMarkFn,
 } from './tournament-standings/matchStats'
 import { mergeFinishedMatchIntoAggregate, subtractMatchFromAggregate } from './tournament-standings/aggregateTournamentPlayerStats'
-import { calculateMatchRatingDelta, round1 } from './tournament-standings/ratingCalc'
+import { applyRatingDeltas, computeTeamRatingDeltas, revertRatingDeltas } from './tournament-standings/ratings'
 
 // Дополнительные параметры composable — начальный снапшот и callback для сохранения.
 type StandingsOptions = {
@@ -197,68 +197,11 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     resetMatchStatsFn(homeStats, awayStats, activeSelection, matchFinalized)
   }
 
-  // Считаем дельты рейтинга для всех игроков одной команды в матче.
-  // isWin/isDraw/isLose — результат с точки зрения этой команды.
-  function computeTeamRatingDeltas(
-    statsRecord: Record<number, PlayerMatchStats>,
-    isWin: boolean,
-    isDraw: boolean,
-    isLose: boolean,
-    teamGoals: number,
-    opponentGoals: number,
-  ): Record<number, number> {
-    const deltas: Record<number, number> = {}
-    for (const [idStr, stats] of Object.entries(statsRecord)) {
-      const playerId = Number(idStr)
-      // Берём текущий рейтинг игрока из переданных данных (либо 0 если нет).
-      const baseRating = Number(playersById.value[playerId]?.rating ?? 0)
-      deltas[playerId] = calculateMatchRatingDelta(
-        stats,
-        baseRating,
-        isWin,
-        isDraw,
-        isLose,
-        teamGoals,
-        opponentGoals,
-      )
-    }
-    return deltas
-  }
-
-  // Применяем дельты рейтинга к накопленному состоянию и отправляем в БД.
-  async function applyRatingDeltas(deltas: Record<number, number>) {
-    // Накапливаем дельту за турнир в памяти.
-    for (const [idStr, delta] of Object.entries(deltas)) {
-      const playerId = Number(idStr)
-      playerRatingDeltas.value[playerId] = round1(
-        (playerRatingDeltas.value[playerId] ?? 0) + delta,
-      )
-    }
-
-    // Отправляем обновление рейтинга в БД.
-    const updates = Object.entries(deltas)
-      .filter(([, d]) => d !== 0)
-      .map(([id, delta]) => ({ id: Number(id), delta }))
-
-    if (updates.length === 0) return
-
-    await $fetch('/api/players/rating', {
-      method: 'PATCH',
-      body: { updates },
-    }).catch((err) => {
-      // Не блокируем UI если запрос упал — рейтинг обновится при следующей загрузке.
-      console.error('Failed to update ratings:', err)
-    })
-  }
-
-  // Откатываем дельты рейтинга (при редактировании или удалении матча).
-  async function revertRatingDeltas(deltas: Record<number, number>) {
-    const invertedDeltas: Record<number, number> = {}
-    for (const [idStr, delta] of Object.entries(deltas)) {
-      invertedDeltas[Number(idStr)] = -delta
-    }
-    await applyRatingDeltas(invertedDeltas)
-  }
+  // Рейтинг: функции вынесены в отдельный модуль, чтобы файл был меньше.
+  const applyRating = (deltas: Record<number, number>) =>
+    applyRatingDeltas({ playerRatingDeltas, deltas })
+  const revertRating = (deltas: Record<number, number>) =>
+    revertRatingDeltas({ playerRatingDeltas, deltas })
 
   function finishMatch() {
     if (!homeTeam.value || !awayTeam.value) return
@@ -304,14 +247,26 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     // Считаем дельты рейтинга для обеих команд и сохраняем в БД.
     const isHomeDraw = hg === ag
     const isHomeWin = hg > ag
-    const homeDeltas = computeTeamRatingDeltas(
-      homeStats.value, isHomeWin, isHomeDraw, !isHomeWin && !isHomeDraw, hg, ag,
-    )
-    const awayDeltas = computeTeamRatingDeltas(
-      awayStats.value, !isHomeWin && !isHomeDraw, isHomeDraw, isHomeWin, ag, hg,
-    )
+    const homeDeltas = computeTeamRatingDeltas({
+      playersById: playersById.value,
+      statsRecord: homeStats.value,
+      isWin: isHomeWin,
+      isDraw: isHomeDraw,
+      isLose: !isHomeWin && !isHomeDraw,
+      teamGoals: hg,
+      opponentGoals: ag,
+    })
+    const awayDeltas = computeTeamRatingDeltas({
+      playersById: playersById.value,
+      statsRecord: awayStats.value,
+      isWin: !isHomeWin && !isHomeDraw,
+      isDraw: isHomeDraw,
+      isLose: isHomeWin,
+      teamGoals: ag,
+      opponentGoals: hg,
+    })
     // applyRatingDeltas — async, не ждём чтобы не блокировать UI.
-    applyRatingDeltas({ ...homeDeltas, ...awayDeltas })
+    applyRating({ ...homeDeltas, ...awayDeltas })
 
     // Сбрасываем то, что относится только к текущему "управлению" матчем:
     // 1) обнуляем результат и статистику игроков;
@@ -402,22 +357,46 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     // Откатываем рейтинг старого матча и применяем новый.
     const oldIsHomeDraw = old.homeGoals === old.awayGoals
     const oldIsHomeWin = old.homeGoals > old.awayGoals
-    const oldHomeDeltas = computeTeamRatingDeltas(
-      old.homeStats, oldIsHomeWin, oldIsHomeDraw, !oldIsHomeWin && !oldIsHomeDraw, old.homeGoals, old.awayGoals,
-    )
-    const oldAwayDeltas = computeTeamRatingDeltas(
-      old.awayStats, !oldIsHomeWin && !oldIsHomeDraw, oldIsHomeDraw, oldIsHomeWin, old.awayGoals, old.homeGoals,
-    )
+    const oldHomeDeltas = computeTeamRatingDeltas({
+      playersById: playersById.value,
+      statsRecord: old.homeStats,
+      isWin: oldIsHomeWin,
+      isDraw: oldIsHomeDraw,
+      isLose: !oldIsHomeWin && !oldIsHomeDraw,
+      teamGoals: old.homeGoals,
+      opponentGoals: old.awayGoals,
+    })
+    const oldAwayDeltas = computeTeamRatingDeltas({
+      playersById: playersById.value,
+      statsRecord: old.awayStats,
+      isWin: !oldIsHomeWin && !oldIsHomeDraw,
+      isDraw: oldIsHomeDraw,
+      isLose: oldIsHomeWin,
+      teamGoals: old.awayGoals,
+      opponentGoals: old.homeGoals,
+    })
     const newIsHomeDraw = newHomeGoals === newAwayGoals
     const newIsHomeWin = newHomeGoals > newAwayGoals
-    const newHomeDeltas = computeTeamRatingDeltas(
-      newHomeStats, newIsHomeWin, newIsHomeDraw, !newIsHomeWin && !newIsHomeDraw, newHomeGoals, newAwayGoals,
-    )
-    const newAwayDeltas = computeTeamRatingDeltas(
-      newAwayStats, !newIsHomeWin && !newIsHomeDraw, newIsHomeDraw, newIsHomeWin, newAwayGoals, newHomeGoals,
-    )
-    revertRatingDeltas({ ...oldHomeDeltas, ...oldAwayDeltas })
-    applyRatingDeltas({ ...newHomeDeltas, ...newAwayDeltas })
+    const newHomeDeltas = computeTeamRatingDeltas({
+      playersById: playersById.value,
+      statsRecord: newHomeStats,
+      isWin: newIsHomeWin,
+      isDraw: newIsHomeDraw,
+      isLose: !newIsHomeWin && !newIsHomeDraw,
+      teamGoals: newHomeGoals,
+      opponentGoals: newAwayGoals,
+    })
+    const newAwayDeltas = computeTeamRatingDeltas({
+      playersById: playersById.value,
+      statsRecord: newAwayStats,
+      isWin: !newIsHomeWin && !newIsHomeDraw,
+      isDraw: newIsHomeDraw,
+      isLose: newIsHomeWin,
+      teamGoals: newAwayGoals,
+      opponentGoals: newHomeGoals,
+    })
+    revertRating({ ...oldHomeDeltas, ...oldAwayDeltas })
+    applyRating({ ...newHomeDeltas, ...newAwayDeltas })
   }
 
   function deletePlayedMatch(matchNumber: number) {
@@ -473,13 +452,25 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     // Откатываем рейтинг удалённого матча в БД и в локальных дельтах.
     const delIsHomeDraw = old.homeGoals === old.awayGoals
     const delIsHomeWin = old.homeGoals > old.awayGoals
-    const delHomeDeltas = computeTeamRatingDeltas(
-      old.homeStats, delIsHomeWin, delIsHomeDraw, !delIsHomeWin && !delIsHomeDraw, old.homeGoals, old.awayGoals,
-    )
-    const delAwayDeltas = computeTeamRatingDeltas(
-      old.awayStats, !delIsHomeWin && !delIsHomeDraw, delIsHomeDraw, delIsHomeWin, old.awayGoals, old.homeGoals,
-    )
-    revertRatingDeltas({ ...delHomeDeltas, ...delAwayDeltas })
+    const delHomeDeltas = computeTeamRatingDeltas({
+      playersById: playersById.value,
+      statsRecord: old.homeStats,
+      isWin: delIsHomeWin,
+      isDraw: delIsHomeDraw,
+      isLose: !delIsHomeWin && !delIsHomeDraw,
+      teamGoals: old.homeGoals,
+      opponentGoals: old.awayGoals,
+    })
+    const delAwayDeltas = computeTeamRatingDeltas({
+      playersById: playersById.value,
+      statsRecord: old.awayStats,
+      isWin: !delIsHomeWin && !delIsHomeDraw,
+      isDraw: delIsHomeDraw,
+      isLose: delIsHomeWin,
+      teamGoals: old.awayGoals,
+      opponentGoals: old.homeGoals,
+    })
+    revertRating({ ...delHomeDeltas, ...delAwayDeltas })
 
     // Полностью пересинхронизируем pairingState по переиндексированному списку.
     // recalibrate надёжнее unrecord: пересчитывает всё с нуля, не зависит от порядка удалений.
