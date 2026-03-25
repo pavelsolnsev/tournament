@@ -69,6 +69,7 @@
             :assignment-by-player-id="wizard.assignment.assignment.value"
             :initial-snapshot="wizard.standingsSnapshot.value"
             @update:snapshot="wizard.saveStandingsSnapshot"
+            @tournament-finished="wizard.resetWizard()"
           />
         </template>
       </section>

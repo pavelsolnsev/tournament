@@ -249,6 +249,7 @@
         :away-goals="awayGoals"
         :has-next-match="hasNextMatch"
         :can-finish-match="canFinishMatch"
+        :has-played-matches="playedMatchesList.length > 0"
         :players-by-team="playersByTeam"
         :team-marker="teamMarker"
         :effective-team-colors="effectiveTeamColors"
@@ -262,9 +263,13 @@
         :go-to-next-match="goToNextMatch"
         :reset-match-stats="resetMatchStats"
         :finish-match="finishMatch"
+        :finish-tournament-status="finishStatus"
+        :finish-tournament-error="finishErrorMessage"
+        :on-finish-tournament="handleFinishTournament"
         @update:home-team="handleUpdateHomeTeam"
         @update:away-team="handleUpdateAwayTeam"
       />
+
     </section>
   </div>
 </template>
@@ -273,6 +278,7 @@
 import type { Player } from '~/types/tournament'
 import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { useTournamentStandingsRefactored } from '~/composables/useTournamentStandingsRefactored'
+import { useFinishTournament } from '~/composables/useFinishTournament'
 
 // Этот шаг показывает матчи и турнирную таблицу.
 const props = defineProps<{
@@ -289,6 +295,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   // Вызывается при каждом изменении матчей/таблицы — родитель сохраняет снапшот в куку.
   'update:snapshot': [snapshot: SavedStandingsSnapshot]
+  // Вызывается после успешного завершения турнира — родитель сбрасывает wizard.
+  'tournament-finished': []
 }>()
 
 const {
@@ -360,5 +368,27 @@ function handleUpdateAwayTeam(next: string) {
   awayTeam.value = next
 }
 // Это обновляет гостевую команду, когда пользователь меняет select в дочернем UI.
+
+// Подключаем логику завершения турнира.
+const {
+  finishTournament,
+  status: finishStatus,
+  errorMessage: finishErrorMessage,
+} = useFinishTournament({
+  players: props.players,
+  assignmentByPlayerId: props.assignmentByPlayerId,
+  standingsRows,
+  aggregatePlayerStats,
+  playerRatingDeltas,
+  playedMatchesList,
+})
+
+async function handleFinishTournament() {
+  await finishTournament()
+  // После успешного завершения сообщаем родителю — он сбросит весь wizard.
+  if (finishStatus.value === 'success') {
+    emit('tournament-finished')
+  }
+}
 </script>
 

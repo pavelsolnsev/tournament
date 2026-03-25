@@ -68,7 +68,7 @@
       </Transition>
     </div>
 
-    <!-- Карточка матча -->
+    <!-- Карточка матча — показывается только когда выбраны обе команды -->
     <div
       v-if="homeTeam && awayTeam"
       class="overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900"
@@ -126,66 +126,86 @@
         />
       </div>
 
-      <!-- Панель кнопок -->
-      <div class="flex flex-wrap items-center gap-2 border-t border-slate-700/60 px-3 py-2.5">
+      <!-- Кнопка "Следующий матч" — только когда выбраны команды -->
+      <div class="border-t border-slate-700/60 px-3 py-2.5">
         <button
           type="button"
           class="rounded-lg bg-sky-500 px-4 py-2 text-xs font-semibold text-slate-900
                  transition-opacity active:opacity-75
                  disabled:cursor-not-allowed disabled:opacity-40"
           :disabled="!hasNextMatch"
-          @click="handleMgmtAction(goToNextMatch)"
+          @click="openActionConfirm('next')"
         >
           Следующий матч →
         </button>
+      </div>
 
-        <button
-          :id="mgmtToggleId"
-          type="button"
-          class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium
-                 text-slate-300 transition-colors focus:outline-none"
-          :class="isMgmtOpen
-            ? 'bg-slate-600 ring-1 ring-slate-500/50'
-            : 'bg-transparent'"
-          :aria-expanded="isMgmtOpen"
-          :aria-controls="mgmtPanelId"
-          @click="isMgmtOpen = !isMgmtOpen"
-        >
-          <span
-            class="text-[10px] font-bold leading-none tracking-tight"
-            :class="isMgmtOpen ? 'text-sky-400' : 'text-slate-400'"
-          >
-            •••
-          </span>
-          <span>Управление</span>
+      <!-- Подтверждение для "Следующий матч" -->
+      <MoleculesConfirmInline
+        class="border-t border-slate-700/60 px-3 py-2.5"
+        :open="isActionConfirmOpen && pendingAction === 'next'"
+        :busy="false"
+        tone="neutral"
+        aria-label="Подтверждение следующего матча"
+        title="Перейти к следующему матчу?"
+        subtitle="Если матч не завершён, он будет завершён автоматически."
+        cancel-text="Отмена"
+        confirm-text="Да, следующий"
+        @cancel="closeActionConfirm"
+        @confirm="confirmPendingAction"
+      />
+
+      <!-- Подсказка когда все пары сыграли -->
+      <p
+        v-if="!hasNextMatch"
+        class="px-4 pb-3 text-[11px] text-slate-500"
+      >
+        Все пары команд уже сыграли между собой.
+      </p>
+    </div>
+
+    <!-- Кнопка "Управление" — всегда видна, вне карточки матча -->
+    <div class="overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900">
+      <button
+        :id="mgmtToggleId"
+        type="button"
+        class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+        :class="isMgmtOpen ? 'bg-slate-800/80' : 'bg-transparent'"
+        :aria-expanded="isMgmtOpen"
+        :aria-controls="mgmtPanelId"
+        @click="isMgmtOpen = !isMgmtOpen"
+      >
+        <span class="flex items-center gap-2 text-sm font-semibold text-slate-100">
+          Управление
           <span
             class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
             :class="isMgmtOpen ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800/80 text-slate-500'"
           >
             {{ isMgmtOpen ? 'Открыт' : 'Скрыт' }}
           </span>
-          <svg
-            class="h-3.5 w-3.5 text-slate-400 transition-transform duration-200"
-            :class="isMgmtOpen && 'rotate-180'"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-              clip-rule="evenodd"
-            />
-          </svg>
-        </button>
-      </div>
+        </span>
+        <svg
+          class="h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200"
+          :class="isMgmtOpen && 'rotate-180'"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
 
-      <!-- Скрытые действия управления -->
       <Transition
         enter-active-class="transition-all duration-200 ease-out overflow-hidden"
         enter-from-class="max-h-0 opacity-0"
-        enter-to-class="max-h-40 opacity-100"
+        enter-to-class="max-h-[32rem] opacity-100"
         leave-active-class="transition-all duration-150 ease-in overflow-hidden"
-        leave-from-class="max-h-40 opacity-100"
+        leave-from-class="max-h-[32rem] opacity-100"
         leave-to-class="max-h-0 opacity-0"
       >
         <div
@@ -193,38 +213,84 @@
           :id="mgmtPanelId"
           role="region"
           :aria-labelledby="mgmtToggleId"
-          class="flex flex-col gap-2 border-t border-slate-700/60 bg-slate-950/40 px-3 py-2.5"
+          class="flex flex-col gap-2 border-t border-slate-700/60 px-3 py-3"
         >
+          <!-- Завершить матч — активна только когда есть текущий матч -->
           <button
             type="button"
-            class="w-full rounded-lg bg-slate-700 px-3 py-2 text-xs font-medium
-                   text-slate-200 transition-colors md:hover:bg-slate-600 active:bg-slate-800"
-            @click="handleMgmtAction(resetMatchStats)"
-          >
-            Сбросить матч
-          </button>
-          <button
-            type="button"
-            class="w-full rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold
-                   text-slate-900 transition-colors active:bg-emerald-600
+            class="w-full rounded-lg bg-emerald-500 px-3 py-2.5 text-xs font-semibold text-slate-900
+                   transition-opacity active:opacity-80
                    disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="!canFinishMatch"
-            @click="handleMgmtAction(finishMatch)"
+            @click="openActionConfirm('finish')"
           >
             Завершить матч
           </button>
+
+          <!-- Подтверждение "Завершить матч" -->
+          <MoleculesConfirmInline
+            :open="isActionConfirmOpen && pendingAction === 'finish'"
+            :busy="false"
+            tone="danger"
+            aria-label="Подтверждение завершения матча"
+            title="Завершить матч?"
+            subtitle="Это зафиксирует результат текущего матча."
+            cancel-text="Отмена"
+            confirm-text="Завершить"
+            @cancel="closeActionConfirm"
+            @confirm="confirmPendingAction"
+          />
+
+          <div class="border-t border-slate-700/60" />
+
+          <!-- Сообщение об успехе / ошибке завершения турнира -->
+          <div
+            v-if="finishTournamentStatus === 'success'"
+            class="flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300"
+          >
+            <span aria-hidden="true">✅</span>
+            <span>Данные сохранены в базу!</span>
+          </div>
+          <div
+            v-else-if="finishTournamentStatus === 'error' && finishTournamentError"
+            class="flex items-start gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300"
+          >
+            <span aria-hidden="true" class="mt-0.5 shrink-0">⚠️</span>
+            <span>{{ finishTournamentError }}</span>
+          </div>
+
+          <!-- Завершить турнир — активна только когда есть сыгранные матчи -->
+          <button
+            type="button"
+            class="flex w-full items-center justify-center gap-2.5 rounded-xl border px-4 py-3
+                   text-sm font-semibold transition-all
+                   disabled:cursor-not-allowed disabled:opacity-40"
+            :class="finishTournamentStatus === 'success'
+              ? 'border-emerald-600/40 bg-emerald-950/60 text-emerald-400'
+              : finishTournamentStatus === 'loading'
+                ? 'border-slate-700 bg-slate-800 text-slate-400'
+                : 'border-amber-500/30 bg-amber-500/10 text-amber-300 md:hover:bg-amber-500/20 md:hover:border-amber-500/50'"
+            :disabled="!hasPlayedMatches || finishTournamentStatus === 'loading' || finishTournamentStatus === 'success'"
+            @click="onFinishTournament"
+          >
+            <span
+              v-if="finishTournamentStatus === 'loading'"
+              class="h-4 w-4 animate-spin rounded-full border-2 border-slate-500 border-t-slate-200"
+              aria-hidden="true"
+            />
+            <span v-else class="text-base leading-none" aria-hidden="true">
+              {{ finishTournamentStatus === 'success' ? '✅' : '🏆' }}
+            </span>
+            <span>{{
+              finishTournamentStatus === 'loading' ? 'Сохранение...'
+              : finishTournamentStatus === 'success' ? 'Турнир завершён'
+              : 'Завершить турнир'
+            }}</span>
+          </button>
         </div>
       </Transition>
-
-      <!-- Подсказка -->
-      <p
-        v-if="!hasNextMatch"
-        class="px-4 pb-3 text-[11px] text-slate-500"
-      >
-        Все пары команд уже сыграли между собой.
-      </p>
-
     </div>
+
   </div>
 </template>
 
@@ -232,6 +298,7 @@
 import type { Player } from '~/types/tournament'
 import type { StatKey } from '~/composables/tournament-standings/types'
 import { clipLongPlayerLabel } from '~/composables/usePlayerDisplay'
+import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
 
 type Side = 'home' | 'away'
 
@@ -250,6 +317,7 @@ const props = defineProps<{
   awayGoals: number
   hasNextMatch: boolean
   canFinishMatch: boolean
+  hasPlayedMatches: boolean
   playersByTeam: (teamName: string) => Player[]
   teamMarker: (teamName: string) => string
   effectiveTeamColors: Record<string, number>
@@ -263,6 +331,9 @@ const props = defineProps<{
   goToNextMatch: () => void
   resetMatchStats: () => void
   finishMatch: () => void
+  finishTournamentStatus: 'idle' | 'loading' | 'success' | 'error'
+  finishTournamentError: string | null
+  onFinishTournament: () => void
 }>()
 
 defineEmits<{
@@ -271,15 +342,16 @@ defineEmits<{
 }>()
 
 const uid = useId?.() ?? Math.random().toString(36).slice(2)
-const mgmtToggleId = `match-mgmt-toggle-${uid}`
-const mgmtPanelId  = `match-mgmt-panel-${uid}`
 
-const isMgmtOpen = ref(false)
-
-// Управляем видимостью select'ов (дом/гость) внутри блока управления матчем.
+// Управление видимостью блока "Команды (дом/гость)".
 const teamPickersToggleId = `match-team-pickers-toggle-${uid}`
 const teamPickersPanelId = `match-team-pickers-panel-${uid}`
 const isTeamPickersOpen = ref(true)
+
+// Управление видимостью блока "Управление" (Завершить матч, Завершить турнир).
+const mgmtToggleId = `match-mgmt-toggle-${uid}`
+const mgmtPanelId = `match-mgmt-panel-${uid}`
+const isMgmtOpen = ref(false)
 
 function displayPlayerLabelWithoutRating(player: Player): string {
   // Берём ник без @, чтобы в управлении матчем был аккуратный короткий текст.
@@ -292,8 +364,30 @@ function displayPlayerLabelWithoutRating(player: Player): string {
   return clipLongPlayerLabel(baseLabel)
 }
 
-function handleMgmtAction(fn: () => void) {
-  isMgmtOpen.value = false
-  fn()
+const pendingAction = ref<'next' | 'finish' | null>(null)
+const isActionConfirmOpen = computed(() => pendingAction.value !== null)
+
+function closeActionConfirm() {
+  // Закрываем подтверждение, чтобы случайный клик не выполнил действие позже.
+  pendingAction.value = null
+}
+
+function openActionConfirm(action: 'next' | 'finish') {
+  // Защита от случайного нажатия: подтверждение активируется через 2 секунды.
+  pendingAction.value = action
+}
+
+function confirmPendingAction() {
+  // Выполняем действие только когда таймер дошёл до нуля.
+  const action = pendingAction.value
+  closeActionConfirm()
+
+  if (action === 'finish') {
+    props.finishMatch()
+    return
+  }
+  if (action === 'next') {
+    props.goToNextMatch()
+  }
 }
 </script>

@@ -15,7 +15,7 @@
           :model-value="searchQuery"
           variant="search"
           size="xs"
-          placeholder="От 3 символов — имя или @username"
+          placeholder="От 3 символов — имя или username"
           @update:model-value="emit('update:searchQuery', $event)"
         />
       </MoleculesFieldBlock>

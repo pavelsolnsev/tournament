@@ -265,7 +265,7 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
       teamGoals: ag,
       opponentGoals: hg,
     })
-    // applyRatingDeltas — async, не ждём чтобы не блокировать UI.
+    // Накапливаем дельты рейтинга в памяти — в БД запишем только при завершении турнира.
     applyRating({ ...homeDeltas, ...awayDeltas })
 
     // Сбрасываем то, что относится только к текущему "управлению" матчем:

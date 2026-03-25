@@ -196,6 +196,31 @@ export function useTournamentWizard() {
     standingsSnapshot.value = snapshot
   }
 
+  // Полный сброс wizard после завершения турнира — начинаем с чистого листа.
+  function resetWizard() {
+    // Сбрасываем шаг в начало (шаг 0 — выбор игроков).
+    step.value = 0
+    tournamentName.value = ''
+    tournamentDate.value = ''
+
+    // Очищаем выбранных игроков.
+    selectedIds.value = new Set()
+    playerSearch.value = ''
+
+    // Очищаем назначение по командам и все списки команд.
+    assignment.assignment.value = {}
+    assignment.confirmedTeamNames.value = new Set()
+    assignment.teamColors.value = {}
+    assignment.newTeamNames.value = []
+    assignment.newTeamName.value = ''
+
+    // Очищаем снапшот матчей и таблицы.
+    standingsSnapshot.value = null
+
+    // Удаляем куку, чтобы при перезагрузке тоже было чисто.
+    contextCookie.value = null
+  }
+
   return {
     step,
     tournamentName,
@@ -213,6 +238,7 @@ export function useTournamentWizard() {
     onAddNewTeam,
     standingsSnapshot,
     saveStandingsSnapshot,
+    resetWizard,
   }
 }
 

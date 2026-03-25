@@ -23,7 +23,7 @@
           v-model="newUsername"
           variant="field"
           size="md"
-          placeholder="@username"
+          placeholder="username"
         />
       </MoleculesFieldBlock>
       <AtomsPrimaryButton
@@ -57,9 +57,11 @@ async function createPlayer() {
   createError.value = ''
   creating.value = true
   try {
+    const cleanedUsername = newUsername.value.trim().replace(/^@+/, '') || undefined
+    // Это убирает ведущую "@" и не отправляет пустое значение в API.
     await $fetch('/api/players', {
       method: 'POST',
-      body: { name, username: newUsername.value.trim() || undefined },
+      body: { name, username: cleanedUsername },
     })
     newName.value = ''
     newUsername.value = ''

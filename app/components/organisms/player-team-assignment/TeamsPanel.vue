@@ -100,12 +100,26 @@
               type="button"
               class="rounded px-2 py-1 text-xs text-slate-400 transition hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
               title="Удалить команду"
-              @click="emit('removeTeam', name)"
+              @click="openRemoveConfirm(name)"
             >
               ✕
             </button>
           </div>
         </div>
+
+        <MoleculesConfirmInline
+          class="mt-2"
+          :open="removeConfirmTeamName === name"
+          :busy="false"
+          tone="danger"
+          aria-label="Подтверждение удаления команды"
+          title="Удалить команду?"
+          :subtitle="`Команда «${name}» будет удалена.`"
+          cancel-text="Отмена"
+          confirm-text="Удалить"
+          @cancel="closeRemoveConfirm"
+          @confirm="confirmRemoveTeam(name)"
+        />
       </li>
     </ul>
   </AtomsTournamentPanel>
@@ -113,6 +127,7 @@
 
 <script setup lang="ts">
 import { useTeamColors } from '~/composables/useTeamColors'
+import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
 
 defineProps<{
   newTeamNameValue: string
@@ -135,4 +150,22 @@ const emit = defineEmits<{
 }>()
 
 const { teamMarkers } = useTeamColors()
+
+const removeConfirmTeamName = ref<string | null>(null)
+
+function closeRemoveConfirm() {
+  // Закрываем подтверждение, чтобы случайный клик не удалил команду позже.
+  removeConfirmTeamName.value = null
+}
+
+function openRemoveConfirm(teamName: string) {
+  // Двухшаговое удаление: сначала предупреждение, потом кнопка активируется через 3 секунды.
+  removeConfirmTeamName.value = teamName
+}
+
+function confirmRemoveTeam(teamName: string) {
+  // Разрешаем удаление только когда таймер дошёл до нуля.
+  emit('removeTeam', teamName)
+  closeRemoveConfirm()
+}
 </script>

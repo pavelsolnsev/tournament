@@ -8,6 +8,12 @@ function removeEmoji(text: string | null | undefined): string {
   return text.replace(EMOJI_REGEX, '').trim() || ''
 }
 
+function normalizeUsername(text: string | null | undefined): string | null {
+  const cleaned = removeEmoji(text).replace(/^@+/, '').trim()
+  return cleaned ? cleaned : null
+}
+// Это убирает ведущую "@" и превращает пустое значение в null.
+
 export default defineEventHandler(async (event) => {
   const body = await readBody<{ name?: string; username?: string }>(event)
   const rawName = body?.name
@@ -21,7 +27,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const username = rawUsername ? `@${removeEmoji(rawUsername).replace(/^@/, '')}` : null
+  const username = normalizeUsername(rawUsername)
+  // В базе username хранится без "@", чтобы везде был один формат.
   const id = Date.now()
 
   try {

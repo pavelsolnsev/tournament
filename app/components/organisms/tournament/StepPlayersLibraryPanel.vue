@@ -11,7 +11,7 @@
       @update:model-value="emit('update:playerSearch', $event)"
     />
 
-    <form class="flex items-end gap-2" @submit.prevent="onCreatePlayer">
+    <form class="flex flex-wrap items-end gap-2" @submit.prevent="onCreatePlayer">
       <AtomsTournamentTextInput
         v-model="newName"
         variant="field"
@@ -23,7 +23,7 @@
         v-model="newUsername"
         variant="field"
         size="xs"
-        placeholder="@username"
+        placeholder="username"
         :block="false"
         input-class="w-28"
       />
@@ -34,10 +34,38 @@
       >
         {{ creating ? '…' : '+' }}
       </AtomsPrimaryButton>
+
+      <button
+        type="button"
+        class="rounded-lg bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-200
+               transition-colors md:hover:bg-slate-700 active:bg-slate-900
+               disabled:cursor-not-allowed disabled:opacity-40"
+        :disabled="resetting"
+        @click="openResetConfirm"
+      >
+        {{ resetting ? 'Reset…' : 'Reset' }}
+      </button>
     </form>
+
+    <MoleculesDangerConfirmInline
+      class="mt-2"
+      :open="isResetConfirmOpen"
+      :seconds-left="resetConfirmSecondsLeft"
+      :busy="resetting"
+      aria-label="Подтверждение reset"
+      title="Reset обнулит статистику у всех игроков."
+      cancel-text="Отмена"
+      confirm-text="Подтвердить reset"
+      busy-text="Reset…"
+      @cancel="closeResetConfirm"
+      @confirm="confirmResetPlayers"
+    />
 
     <p v-if="createError" class="text-[11px] text-red-400">
       {{ createError }}
+    </p>
+    <p v-if="resetError" class="text-[11px] text-red-400">
+      {{ resetError }}
     </p>
 
     <p v-if="!players?.length" class="text-slate-500 text-xs">
@@ -66,6 +94,7 @@
 import type { Player } from '~/types/tournament'
 import { ref } from 'vue'
 import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
+import MoleculesDangerConfirmInline from '~/components/molecules/DangerConfirmInline.vue'
 
 defineProps<{
   players: Player[] | null
@@ -87,6 +116,13 @@ const createError = ref('')
 
 const { displayPlayerLabel } = usePlayerDisplay()
 
+const resetting = ref(false)
+const resetError = ref('')
+
+const isResetConfirmOpen = ref(false)
+const resetConfirmSecondsLeft = ref(0)
+const resetConfirmIntervalId = ref<ReturnType<typeof setInterval> | null>(null)
+
 async function onCreatePlayer() {
   const name = newName.value.trim()
   if (!name) {
@@ -100,6 +136,7 @@ async function onCreatePlayer() {
     const cleanedUsername = rawUsername
       ? rawUsername.replace(/^@+/, '')
       : 'unknown'
+    // Это убирает ведущую "@" перед отправкой в API.
 
     await $fetch('/api/players', {
       method: 'POST',
@@ -112,6 +149,52 @@ async function onCreatePlayer() {
     createError.value = 'Не удалось добавить'
   } finally {
     creating.value = false
+  }
+}
+
+function closeResetConfirm() {
+  // Закрываем подтверждение, чтобы случайно не нажать reset позже.
+  isResetConfirmOpen.value = false
+  resetConfirmSecondsLeft.value = 0
+  if (resetConfirmIntervalId.value) {
+    clearInterval(resetConfirmIntervalId.value)
+    resetConfirmIntervalId.value = null
+  }
+}
+
+function openResetConfirm() {
+  // Для Reset оставляем таймер, чтобы сложнее было нажать случайно.
+  if (resetting.value) return
+  resetError.value = ''
+  isResetConfirmOpen.value = true
+  resetConfirmSecondsLeft.value = 3
+
+  if (resetConfirmIntervalId.value) clearInterval(resetConfirmIntervalId.value)
+  resetConfirmIntervalId.value = setInterval(() => {
+    resetConfirmSecondsLeft.value = Math.max(0, resetConfirmSecondsLeft.value - 1)
+    if (resetConfirmSecondsLeft.value === 0 && resetConfirmIntervalId.value) {
+      clearInterval(resetConfirmIntervalId.value)
+      resetConfirmIntervalId.value = null
+    }
+  }, 1000)
+}
+
+async function confirmResetPlayers() {
+  // Это финальное подтверждение reset — оно появляется только после отдельного шага.
+  // Сбрасываем ошибку и показываем состояние загрузки.
+  resetError.value = ''
+  resetting.value = true
+  try {
+    // Вызываем API reset — оно обнуляет статистику в таблице players.
+    await $fetch('/api/players/reset', { method: 'POST' })
+    // Обновляем список игроков, чтобы UI сразу показал новые значения.
+    emit('refreshPlayers')
+    // Закрываем панель подтверждения после успешного reset.
+    closeResetConfirm()
+  } catch {
+    resetError.value = 'Не удалось сделать reset'
+  } finally {
+    resetting.value = false
   }
 }
 </script>
