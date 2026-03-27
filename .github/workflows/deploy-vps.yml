@@ -6,6 +6,11 @@ on:
     branches:
       - master
 
+# Включаем рантайм Node 24 для JavaScript actions (checkout/setup-node),
+# чтобы убрать предупреждение про deprecated Node 20 на GitHub Actions.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
