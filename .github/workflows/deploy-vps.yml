@@ -36,6 +36,19 @@ jobs:
         run: npm run build
 
       # Копируем .output на VPS по SSH.
+      # Перед загрузкой удаляем только старую .output, чтобы не стереть .env и другие файлы проекта.
+      - name: Prepare VPS target directory
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            mkdir -p "${{ secrets.VPS_APP_PATH }}"
+            rm -rf "${{ secrets.VPS_APP_PATH }}/.output"
+
+      # Копируем только папку .output в проект на VPS.
       - name: Upload .output to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -46,7 +59,7 @@ jobs:
           source: ".output"
           target: "${{ secrets.VPS_APP_PATH }}"
           overwrite: true
-          rm: true
+          rm: false
 
       # После загрузки выполняем команду перезапуска на сервере.
       - name: Restart app on VPS
