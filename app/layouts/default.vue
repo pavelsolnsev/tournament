@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen min-h-[100dvh] overflow-y-auto overflow-x-hidden bg-slate-900 text-slate-100">
+  <div class="min-h-screen overflow-y-auto overflow-x-hidden bg-slate-900 text-slate-100">
     <main class="mx-auto flex max-w-4xl flex-col gap-4 px-2 py-4 sm:px-4 sm:py-8 min-h-full">
       <section class="rounded-xl bg-slate-900/70 py-2 sm:py-4">
         <slot />

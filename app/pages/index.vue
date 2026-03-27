@@ -1,7 +1,7 @@
 <template>
   <!-- Режим администратора: полный интерфейс управления турниром. -->
   <template v-if="isAdmin">
-    <div class="flex min-h-screen min-h-[100dvh] flex-col bg-slate-900 text-slate-100 overflow-x-hidden">
+    <div class="flex min-h-screen flex-col bg-slate-900 text-slate-100 overflow-x-hidden">
       <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-col gap-4 px-2 py-4 sm:px-4 sm:py-8">
 
         <!-- Спиннер пока состояние турнира загружается из базы. -->
