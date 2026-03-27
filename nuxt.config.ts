@@ -14,9 +14,13 @@ export default defineNuxtConfig({
       ],
       // Добавляем мета для iOS, чтобы ярлык на домашнем экране использовал иконку и веб-режим.
       meta: [
+        // Фиксируем viewport на мобильных: без зума и без автоскейла, чтобы интерфейс не "ехал".
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
         { name: 'apple-mobile-web-app-title', content: 'Footboal Admin' },
+        // Не даём Safari самовольно увеличивать текст (особенно в landscape/при accessibility auto-adjust).
+        { name: 'format-detection', content: 'telephone=no' },
       ],
     },
   },
