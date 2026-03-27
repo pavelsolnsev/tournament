@@ -18,11 +18,11 @@ jobs:
     steps:
       # Забираем код репозитория, чтобы собрать проект.
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Ставим Node.js нужной версии для сборки Nuxt.
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
           cache: npm
