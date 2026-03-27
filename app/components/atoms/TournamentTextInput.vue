@@ -13,7 +13,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-// Поле ввода в стиле турнира: поиск без рамки или поле с рамкой, размер xs/sm/md.
 const props = withDefaults(
   defineProps<{
     modelValue: string
@@ -23,7 +22,6 @@ const props = withDefaults(
     id?: string
     disabled?: boolean
     inputClass?: string
-    /** false — узкое поле (поиск в колонке), без w-full. */
     block?: boolean
   }>(),
   { variant: 'field', size: 'xs', disabled: false, block: true },
@@ -32,7 +30,7 @@ const props = withDefaults(
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
 
 const focusRing =
-  'focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 disabled:opacity-50'
+  'focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 disabled:opacity-50 transition-colors'
 
 const mergedClass = computed(() => {
   const bits: string[] = ['text-slate-100', 'placeholder-slate-500', focusRing]
@@ -40,14 +38,14 @@ const mergedClass = computed(() => {
   else bits.push('max-w-full', 'shrink-0')
 
   if (props.variant === 'search') {
-    bits.push('rounded', 'bg-slate-900')
-    if (props.size === 'xs') bits.push('px-2.5', 'py-1.5', 'text-xs')
-    if (props.size === 'sm') bits.push('px-2', 'py-1.5', 'text-sm')
+    bits.push('rounded-lg', 'bg-slate-800/60', 'border', 'border-slate-700/60')
+    // text-base (16px) — iOS Safari не зумит поле при фокусе
+    bits.push('px-3', 'py-2.5', 'text-base', 'sm:text-sm')
   } else {
-    bits.push('border', 'border-slate-600', 'bg-slate-800')
-    if (props.size === 'xs') bits.push('rounded', 'px-2.5', 'py-1.5', 'text-xs')
-    if (props.size === 'sm') bits.push('rounded', 'px-2', 'py-1.5', 'text-sm')
-    if (props.size === 'md') bits.push('rounded-lg', 'px-3', 'py-2', 'text-sm')
+    bits.push('border', 'border-slate-600', 'bg-slate-800', 'focus:border-emerald-500/60')
+    if (props.size === 'xs') bits.push('rounded-lg', 'px-3', 'py-2.5', 'text-base', 'sm:text-sm')
+    if (props.size === 'sm') bits.push('rounded-lg', 'px-3', 'py-2.5', 'text-base', 'sm:text-sm')
+    if (props.size === 'md') bits.push('rounded-xl', 'px-4', 'py-3', 'text-base')
   }
 
   if (props.inputClass) bits.push(props.inputClass)

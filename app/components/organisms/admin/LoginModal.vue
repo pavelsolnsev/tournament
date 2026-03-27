@@ -1,38 +1,38 @@
 <template>
-  <!-- Затемнённый фон модального окна. Нажатие на фон закрывает форму. -->
+  <!-- Затемнённый фон. Нажатие на фон закрывает форму. -->
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+    class="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center"
+    style="padding-bottom: env(safe-area-inset-bottom)"
     @click.self="$emit('close')"
   >
-    <div class="w-full max-w-sm rounded-2xl bg-slate-800 border border-slate-700 shadow-2xl p-6 flex flex-col gap-5">
+    <!-- На мобильных — bottom sheet; на sm+ — центрированный диалог -->
+    <div class="w-full max-w-sm rounded-t-2xl sm:rounded-2xl bg-slate-800 border border-slate-700/60 shadow-2xl p-6 flex flex-col gap-5">
 
-      <!-- Заголовок модального окна. -->
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-bold text-slate-100">Вход для администратора</h2>
-        <!-- Кнопка закрытия крестиком. -->
+        <!-- Кнопка закрытия: 44×44px тач-зона -->
         <button
           type="button"
-          class="text-slate-400 hover:text-slate-200 transition text-xl leading-none focus:outline-none"
+          class="-mr-2 flex h-11 w-11 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-700 hover:text-slate-200 active:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
           aria-label="Закрыть"
           @click="$emit('close')"
         >
-          ×
+          <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+          </svg>
         </button>
       </div>
 
-      <!-- Пояснение для пользователя. -->
-      <p class="text-sm text-slate-400">
-        Введите пароль администратора, чтобы получить доступ к управлению турниром.
-        При первом входе введённый пароль станет мастер-паролем.
+      <p class="text-sm text-slate-400 leading-relaxed">
+        Введите пароль администратора. При первом входе он станет мастер-паролем.
       </p>
 
-      <!-- Форма ввода пароля. -->
       <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
-        <div class="flex flex-col gap-1.5">
-          <label for="admin-password" class="text-xs font-medium text-slate-400 uppercase tracking-wide">
+        <div class="flex flex-col gap-2">
+          <label for="admin-password" class="text-xs font-semibold uppercase tracking-wider text-slate-400">
             Пароль
           </label>
-          <!-- Поле пароля: type=password чтобы символы скрыты. -->
+          <!-- font-size: 16px — предотвращает автозум на iOS Safari при фокусе -->
           <input
             id="admin-password"
             v-model="password"
@@ -40,14 +40,15 @@
             placeholder="Введите пароль..."
             autocomplete="current-password"
             :disabled="isLoading"
-            class="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 disabled:opacity-50"
+            class="w-full rounded-xl border border-slate-600 bg-slate-700/80 px-4 py-3 text-base text-slate-100 placeholder-slate-500 transition-colors focus:border-emerald-500/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 disabled:opacity-50"
           />
         </div>
 
-        <!-- Сообщение об ошибке, если пароль неверный. -->
-        <p v-if="errorMessage" class="text-sm text-red-400">{{ errorMessage }}</p>
+        <p v-if="errorMessage" role="alert" class="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">
+          {{ errorMessage }}
+        </p>
 
-        <!-- Кнопка входа. -->
+        <!-- Кнопка входа: высота 48px — удобно тапать -->
         <AtomsPrimaryButton
           native-type="submit"
           size="block"
@@ -67,11 +68,8 @@ const emit = defineEmits<{ close: [] }>()
 
 const { login } = useAdminAuth()
 
-// Введённый пароль.
 const password = ref('')
-// Флаг загрузки — пока идёт запрос.
 const isLoading = ref(false)
-// Сообщение об ошибке при неверном пароле.
 const errorMessage = ref('')
 
 async function handleSubmit() {
@@ -85,7 +83,6 @@ async function handleSubmit() {
   isLoading.value = false
 
   if (result.ok) {
-    // isAdmin.value = true уже выставлен в useAdminAuth — страница переключится реактивно.
     emit('close')
   } else {
     errorMessage.value = result.error ?? 'Ошибка входа'

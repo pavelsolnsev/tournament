@@ -3,10 +3,9 @@
     :type="nativeType"
     :disabled="disabled"
     :title="title"
-    class="font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 disabled:cursor-not-allowed disabled:opacity-50"
+    class="inline-flex items-center justify-center font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 disabled:cursor-not-allowed disabled:opacity-50"
     :class="mergedClass"
   >
-    <!-- Основная зелёная кнопка турнира: компактная или на всю ширину. -->
     <slot />
   </button>
 </template>
@@ -26,17 +25,18 @@ const props = withDefaults(
 )
 
 const mergedClass = computed(() => {
+  // Минимальная высота 44px (h-11) — стандарт Apple HIG и Google Material для тач-зон
   const size =
     props.size === 'block'
-      ? 'w-full rounded-xl px-4 py-2.5 text-sm'
+      ? 'w-full rounded-xl px-4 h-12 text-sm'
       : props.size === 'md'
-        ? 'rounded-lg px-5 py-2.5 text-sm sm:text-base'
-        : 'rounded px-3 py-1.5 text-xs'
+        ? 'rounded-xl px-5 h-11 text-sm sm:text-base'
+        : 'rounded-lg px-3 h-9 text-xs'
 
   const tone =
     props.variant === 'muted'
-      ? 'bg-slate-700 text-slate-400'
-      : 'bg-emerald-500 text-slate-900 hover:bg-emerald-400'
+      ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+      : 'bg-emerald-500 text-slate-900 hover:bg-emerald-400 active:bg-emerald-600'
 
   return `${size} ${tone}`.trim()
 })
