@@ -2,11 +2,8 @@
   <!-- Режим администратора: полный интерфейс управления турниром. -->
   <template v-if="isAdmin">
     <div class="flex min-h-screen flex-col bg-slate-900 text-slate-100">
-      <!-- Шапка: sticky, safe-area сверху, высота 56px — удобно тапать -->
-      <header
-        class="sticky top-0 z-20 border-b border-slate-800/70 bg-slate-900/95 backdrop-blur-md"
-        style="padding-top: env(safe-area-inset-top)"
-      >
+      <!-- Шапка: absolute + safe-area сверху, не двигает контент -->
+      <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-800/70 bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)]">
         <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6 h-14">
           <span class="flex items-center gap-2 text-sm font-semibold text-emerald-400">
             <span class="inline-block h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
@@ -24,7 +21,7 @@
       </header>
 
       <!-- main всегда в DOM — каркас стабилен при refresh, нет прыжков -->
-      <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6">
+      <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]">
         <!-- Спиннер: занимает то же место, что и контент, чтобы не было layout shift -->
         <div
           v-if="!wizard.stateRestored.value"

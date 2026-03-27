@@ -1,12 +1,10 @@
 <template>
   <!-- Затемнённый фон. Нажатие на фон закрывает форму. -->
   <div
-    class="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center"
-    style="padding-bottom: env(safe-area-inset-bottom)"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4 pb-[env(safe-area-inset-bottom)]"
     @click.self="$emit('close')"
   >
-    <!-- На мобильных — bottom sheet; на sm+ — центрированный диалог -->
-    <div class="w-full max-w-sm rounded-t-2xl sm:rounded-2xl bg-slate-800 border border-slate-700/60 shadow-2xl p-6 flex flex-col gap-5">
+    <div class="w-full max-w-sm rounded-2xl bg-slate-800 border border-slate-700/60 shadow-2xl p-6 flex flex-col gap-5 max-h-[min(80vh,640px)] overflow-auto">
 
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-bold text-slate-100">Вход для администратора</h2>

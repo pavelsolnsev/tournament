@@ -1,10 +1,7 @@
 <template>
   <div class="flex min-h-screen flex-col bg-slate-900 text-slate-100">
-    <!-- Шапка: sticky, safe-area сверху, минимальная высота 56px для удобного тапа -->
-    <header
-      class="sticky top-0 z-20 border-b border-slate-800/70 bg-slate-900/95 backdrop-blur-md"
-      style="padding-top: env(safe-area-inset-top)"
-    >
+    <!-- Шапка: absolute + safe-area сверху, не двигает контент -->
+    <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-800/70 bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)]">
       <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6 h-14">
         <div class="min-w-0 flex-1">
           <h1 class="truncate text-base font-bold text-slate-50 sm:text-lg leading-tight">
@@ -15,10 +12,10 @@
           </p>
         </div>
 
-        <!-- Кнопка «Войти»: минимум 44×44px для удобного тапа на телефоне -->
+        <!-- Кнопка «Войти»: спокойная (для владельца), но с нормальной тач-зоной -->
         <button
           type="button"
-          class="shrink-0 inline-flex h-11 items-center gap-2 rounded-xl border border-slate-600/80 bg-slate-800 px-4 text-sm font-medium text-slate-200 transition-colors hover:border-emerald-500/60 hover:text-emerald-300 active:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          class="shrink-0 inline-flex h-11 items-center gap-2 rounded-xl px-3 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800/60 hover:text-slate-200 active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
           aria-label="Войти как администратор"
           @click="showLoginModal = true"
         >
@@ -29,7 +26,7 @@
     </header>
 
     <!-- main всегда присутствует в DOM — стабильный каркас без прыжков при refresh -->
-    <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6">
+    <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]">
       <div class="flex flex-1 flex-col py-5 sm:py-8">
         <!-- Заглушка «турнир не начался» — центрируется по вертикали в оставшемся пространстве -->
         <div
