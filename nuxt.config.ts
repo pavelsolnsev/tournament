@@ -13,15 +13,13 @@ export default defineNuxtConfig({
   routeRules: {
     // Главная страница — SSR, чтобы сервер мог читать cookie admin_session при каждом запросе.
     '/': { ssr: true },
-    '/tournament': { prerender: true },
-    '/tournament/players': { prerender: true },
-    '/tournament/teams': { prerender: true },
   },
   nitro: {
     preset: 'node-server',
     prerender: {
-      // '/' убран из prerender — она должна рендериться динамически с учётом cookie.
-      routes: ['/tournament', '/tournament/players', '/tournament/teams'],
+      // В проекте сейчас только главная страница index.vue.
+      // Не пререндерим отсутствующие маршруты, чтобы build не падал с 404.
+      routes: [],
     },
   },
 })
