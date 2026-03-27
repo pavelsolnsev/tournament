@@ -60,7 +60,11 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     return getMarkerByIndex(colorIndex)
   }
 
+  // Глубокое клонирование снапшота — данные из API приходят как readonly прокси,
+  // их нельзя мутировать напрямую. JSON round-trip создаёт чистые изменяемые объекты.
   const snap = options.initialSnapshot
+    ? JSON.parse(JSON.stringify(options.initialSnapshot))
+    : null
 
   // Таблица: восстанавливаем из снапшота или инициализируем с нуля.
   const standingsRows = ref<StandingsRow[]>(
@@ -126,6 +130,7 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
   const homeStats = ref<Record<number, PlayerMatchStats>>({})
   const awayStats = ref<Record<number, PlayerMatchStats>>({})
   // Суммарные события по каждому игроку за все завершённые матчи — восстанавливаем из снапшота.
+  // snap уже клонирован выше, поэтому объекты здесь изменяемые.
   const aggregatePlayerStats = ref<Record<number, PlayerMatchStats>>(snap?.aggregatePlayerStats ?? {})
 
   // Накопленные дельты рейтинга за все матчи турнира — восстанавливаем из снапшота.

@@ -76,6 +76,7 @@
             Детали
           </button>
           <button
+            v-if="!props.readonly"
             type="button"
             class="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
@@ -99,7 +100,7 @@
           </span>
 
           <!-- Удаление: двухшаговая защита — сначала иконка, потом "Удалить?" -->
-          <template v-if="confirmDeleteMatch === m.matchNumber">
+          <template v-if="!props.readonly && confirmDeleteMatch === m.matchNumber">
             <button
               type="button"
               class="flex items-center gap-1 rounded-lg bg-red-500/20 px-2.5 py-2 text-xs font-semibold
@@ -120,7 +121,7 @@
             </button>
           </template>
           <button
-            v-else
+            v-else-if="!props.readonly"
             type="button"
             class="rounded-lg p-2 text-slate-600 transition-colors md:hover:bg-slate-800 md:hover:text-red-400
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
@@ -159,7 +160,7 @@
           leave-to-class="max-h-0 opacity-0"
         >
           <OrganismsTournamentPlayedMatchesPlayedMatchEditor
-            v-if="editMatch === m.matchNumber"
+            v-if="!props.readonly && editMatch === m.matchNumber"
             :match="m"
             :team-marker="teamMarker"
             :players-by-team="playersByTeam"
@@ -214,6 +215,8 @@ const props = defineProps<{
   deletePlayedMatch: (matchNumber: number) => void
   /** Если false — заголовок скрыт (например, когда он вынесен в родительский аккордеон). */
   showHeading?: boolean
+  /** true — режим только просмотра, без редактирования и удаления. */
+  readonly?: boolean
 }>()
 
 // По умолчанию заголовок показывается.
@@ -229,11 +232,15 @@ const editMatch = ref<number | null>(null)
 const confirmDeleteMatch = ref<number | null>(null)
 
 function requestDelete(matchNumber: number) {
+  // В режиме просмотра удаление отключено.
+  if (props.readonly) return
   // Первый клик — запрашиваем подтверждение.
   confirmDeleteMatch.value = matchNumber
 }
 
 function confirmDelete(matchNumber: number) {
+  // В режиме просмотра удаление отключено.
+  if (props.readonly) return
   // Второй клик — удаляем и сбрасываем все раскрытые состояния этого матча.
   props.deletePlayedMatch(matchNumber)
   if (openMatch.value === matchNumber) openMatch.value = null
@@ -252,6 +259,8 @@ function toggleDetails(matchNumber: number) {
 }
 
 function toggleEdit(m: PlayedMatch) {
+  // В режиме просмотра редактирование отключено.
+  if (props.readonly) return
   if (editMatch.value === m.matchNumber) {
     cancelEdit()
     return

@@ -11,6 +11,8 @@ export default defineNuxtConfig({
     typeCheck: false,
   },
   routeRules: {
+    // Главная страница — SSR, чтобы сервер мог читать cookie admin_session при каждом запросе.
+    '/': { ssr: true },
     '/tournament': { prerender: true },
     '/tournament/players': { prerender: true },
     '/tournament/teams': { prerender: true },
@@ -18,7 +20,8 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'node-server',
     prerender: {
-      routes: ['/', '/tournament', '/tournament/players', '/tournament/teams'],
+      // '/' убран из prerender — она должна рендериться динамически с учётом cookie.
+      routes: ['/tournament', '/tournament/players', '/tournament/teams'],
     },
   },
 })

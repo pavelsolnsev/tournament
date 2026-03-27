@@ -188,7 +188,7 @@
               </span>
             </span>
             <span class="mt-0.5 block text-xs text-slate-500">
-              Завершённые матчи и редактирование событий
+              {{ props.readonly === true ? 'Завершённые матчи и детали событий' : 'Завершённые матчи и редактирование событий' }}
             </span>
           </div>
           <div class="flex shrink-0 items-center gap-2">
@@ -236,12 +236,14 @@
               :update-played-match="updatePlayedMatch"
               :delete-played-match="deletePlayedMatch"
               :show-heading="false"
+              :readonly="props.readonly === true"
             />
           </div>
         </Transition>
       </div>
 
       <OrganismsTournamentStepStandingsMatchManagement
+        v-if="props.readonly !== true"
         :teams="teams"
         :home-team="homeTeam"
         :away-team="awayTeam"
@@ -290,6 +292,8 @@ const props = defineProps<{
   assignmentByPlayerId: Record<number, string>
   // Начальный снапшот из куки — восстанавливает матчи и таблицу после обновления страницы.
   initialSnapshot?: SavedStandingsSnapshot | null
+  // Режим только чтения: одинаковый UI без действий управления.
+  readonly?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -349,9 +353,10 @@ const rosterTotalsPanelId = `roster-totals-panel-${standingsUid}`
 const playedMatchesToggleId = `played-matches-toggle-${standingsUid}`
 const playedMatchesPanelId = `played-matches-panel-${standingsUid}`
 
-// Таблица и составы скрыты по умолчанию — открываются кнопкой, когда нужно посмотреть.
-const isStandingsBlockOpen = ref(false)
-const isRosterTotalsOpen = ref(true)
+// Для зрителя (readonly) таблица открыта сразу, чтобы важные данные были видны без клика.
+const isStandingsBlockOpen = ref(props.readonly === true)
+// Этот блок всегда стартует закрытым, чтобы экран был компактнее при первом входе.
+const isRosterTotalsOpen = ref(false)
 const isPlayedMatchesOpen = ref(false)
 
 // Сколько игроков в турнире — для бейджа в заголовке аккордеона.

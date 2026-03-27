@@ -1,9 +1,11 @@
 // Этот файл: композабл мастера создания турнира (wizard).
 // Он хранит шаги, данные игроков/команд и связывает всё вместе через composables.
+// Состояние теперь сохраняется в базу данных (не в cookie) для синхронизации между устройствами.
 import type { Player, Team } from '~/types/tournament'
 import type { PlayedMatch, PlayerMatchStats } from '~/composables/tournament-standings/types'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 import { useTeamAssignment } from '~/composables/useTeamAssignment'
+import { useTournamentState } from '~/composables/useTournamentState'
 
 // Снапшот состояния турнирной таблицы — сохраняется отдельно при каждом изменении матчей.
 export type SavedStandingsSnapshot = {
@@ -20,7 +22,7 @@ export type SavedStandingsSnapshot = {
   playerRatingDeltas: Record<number, number>
 }
 
-type SavedTournamentContext = {
+export type SavedTournamentContext = {
   step: number
   tournamentName: string
   tournamentDate: string
@@ -33,7 +35,7 @@ type SavedTournamentContext = {
 }
 
 // Управляет мастером создания турнира:
-// шаги, загрузка данных, выбор игроков/команд и сохранение состояния в cookie.
+// шаги, загрузка данных, выбор игроков/команд и сохранение состояния в базу данных.
 export function useTournamentWizard() {
   // Текущий шаг: 0 — игроки, 1 — команды, 2 — турнирная таблица.
   const step = ref<0 | 1 | 2>(0)
@@ -113,67 +115,75 @@ export function useTournamentWizard() {
     assignment.newTeamName.value = ''
   }
 
-  // Cookie для сохранения состояния турнира.
-  const contextCookie = useCookie<SavedTournamentContext | null>('tournament-context', {
-    default: () => null,
-    // Храним состояние турнира 30 дней.
-    maxAge: 60 * 60 * 24 * 30,
-  })
-
   // Снапшот таблицы и матчей — обновляется из компонента StepStandings при каждом изменении.
-  const standingsSnapshot = ref<SavedStandingsSnapshot | null>(
-    contextCookie.value?.standingsSnapshot ?? null,
+  const standingsSnapshot = ref<SavedStandingsSnapshot | null>(null)
+
+  // Флаг: было ли уже восстановлено состояние из базы.
+  const stateRestored = ref(false)
+
+  // Синхронизация с базой данных через composable.
+  const { serverState, isLoading, saveTournamentState, saveTournamentStateNow } = useTournamentState()
+
+  // Восстанавливаем состояние из базы, когда оно загрузится.
+  // Срабатывает один раз после первой загрузки — даже если state = null (турнир ещё не начат).
+  watch(
+    [serverState, isLoading],
+    ([ctx, loading]) => {
+      // Ждём, пока загрузка завершится (isLoading = false).
+      if (loading || stateRestored.value) return
+
+      // Загрузка завершена. Если состояния нет — просто отмечаем как восстановленное.
+      stateRestored.value = true
+
+      if (!ctx) return
+
+      // Читаем шаг из базы. Если это старый формат (0–4), приводим к новому (0–2).
+      const raw = ctx.step
+      let migrated: 0 | 1 | 2
+      if (raw === 0 || raw === 1 || raw === 2) {
+        migrated = raw
+      } else if (raw === 3) {
+        migrated = 1
+      } else {
+        migrated = 2
+      }
+      step.value = migrated
+
+      tournamentName.value = ctx.tournamentName ?? ''
+      tournamentDate.value = ctx.tournamentDate ?? ''
+
+      // Восстанавливаем набор выбранных игроков.
+      selectedIds.value = new Set(
+        (ctx.selectedIds ?? []).filter((id) => Number.isFinite(id)),
+      )
+
+      // Восстанавливаем назначение игроков по командам.
+      assignment.assignment.value = ctx.assignmentByPlayerId ?? {}
+      assignment.confirmedTeamNames.value = new Set(ctx.confirmedTeamNames ?? [])
+      assignment.teamColors.value = ctx.teamColors ?? {}
+
+      // Восстанавливаем снапшот турнирной таблицы.
+      standingsSnapshot.value = ctx.standingsSnapshot ?? null
+
+      // Восстанавливаем пользовательские команды, чтобы они снова появились в выпадающем списке.
+      const namesFromAssignments = Object.values(ctx.assignmentByPlayerId ?? {})
+      const namesFromConfirmed = ctx.confirmedTeamNames ?? []
+      const namesFromColors = Object.keys(ctx.teamColors ?? {})
+      const allNames = new Set<string>(
+        [...namesFromAssignments, ...namesFromConfirmed, ...namesFromColors].filter(
+          (name) => !!name && typeof name === 'string',
+        ),
+      )
+
+      const existingNames = new Set(existingTeamNames.value ?? [])
+      assignment.newTeamNames.value = Array.from(allNames).filter(
+        (name) => !existingNames.has(name),
+      )
+    },
+    { immediate: true },
   )
 
-  // Восстанавливаем контекст, если он есть в cookie.
-  if (contextCookie.value) {
-    const ctx = contextCookie.value
-
-    // Читаем шаг из куки. Если это старый формат (0–4), приводим к новому (0–2).
-    // Старые шаги: 0=приветствие, 1=детали, 2=игроки, 3=команды, 4=таблица.
-    // Новые шаги: 0=игроки, 1=команды, 2=таблица.
-    const raw = ctx.step
-    let migrated: 0 | 1 | 2
-    if (raw === 0 || raw === 1 || raw === 2) {
-      // Новый формат — используем как есть.
-      migrated = raw
-    } else if (raw === 3) {
-      // Старый шаг "команды" → новый шаг 1.
-      migrated = 1
-    } else {
-      // Старый шаг "таблица" (4) или любое другое → новый шаг 2.
-      migrated = 2
-    }
-    step.value = migrated
-
-    tournamentName.value = ctx.tournamentName ?? ''
-    tournamentDate.value = ctx.tournamentDate ?? ''
-
-    // Восстанавливаем набор выбранных игроков.
-    selectedIds.value = new Set(
-      (ctx.selectedIds ?? []).filter((id) => Number.isFinite(id)),
-    )
-
-    // Восстанавливаем назначение игроков по командам.
-    assignment.assignment.value = ctx.assignmentByPlayerId ?? {}
-    assignment.confirmedTeamNames.value = new Set(ctx.confirmedTeamNames ?? [])
-    assignment.teamColors.value = ctx.teamColors ?? {}
-
-    // Восстанавливаем пользовательские команды, чтобы они снова появились в выпадающем списке.
-    const namesFromAssignments = Object.values(ctx.assignmentByPlayerId ?? {})
-    const namesFromConfirmed = ctx.confirmedTeamNames ?? []
-    const namesFromColors = Object.keys(ctx.teamColors ?? {})
-    const allNames = new Set<string>([
-      ...namesFromAssignments,
-      ...namesFromConfirmed,
-      ...namesFromColors,
-    ].filter((name) => !!name && typeof name === 'string'))
-
-    const existingNames = new Set(existingTeamNames.value ?? [])
-    assignment.newTeamNames.value = Array.from(allNames).filter((name) => !existingNames.has(name))
-  }
-
-  // Текущее состояние для записи в cookie.
+  // Текущее состояние для записи в базу данных.
   const savedContext = computed<SavedTournamentContext>(() => ({
     step: step.value,
     tournamentName: tournamentName.value,
@@ -186,10 +196,16 @@ export function useTournamentWizard() {
     standingsSnapshot: standingsSnapshot.value,
   }))
 
-  // При изменении состояния обновляем cookie.
-  watch(savedContext, (val) => {
-    contextCookie.value = val
-  }, { deep: true })
+  // При изменении состояния сохраняем в базу данных (с debounce).
+  // Не сохраняем до тех пор, пока состояние не восстановлено — иначе затрём данные с сервера.
+  watch(
+    savedContext,
+    (val) => {
+      if (!stateRestored.value) return
+      saveTournamentState(val)
+    },
+    { deep: true },
+  )
 
   // Вызывается из StepStandings при каждом изменении матчей/таблицы.
   function saveStandingsSnapshot(snapshot: SavedStandingsSnapshot) {
@@ -197,7 +213,7 @@ export function useTournamentWizard() {
   }
 
   // Полный сброс wizard после завершения турнира — начинаем с чистого листа.
-  function resetWizard() {
+  async function resetWizard() {
     // Сбрасываем шаг в начало (шаг 0 — выбор игроков).
     step.value = 0
     tournamentName.value = ''
@@ -217,8 +233,17 @@ export function useTournamentWizard() {
     // Очищаем снапшот матчей и таблицы.
     standingsSnapshot.value = null
 
-    // Удаляем куку, чтобы при перезагрузке тоже было чисто.
-    contextCookie.value = null
+    // Сразу сохраняем сброшенное состояние в базу (без debounce — важный момент).
+    await saveTournamentStateNow({
+      step: 0,
+      tournamentName: '',
+      tournamentDate: '',
+      selectedIds: [],
+      assignmentByPlayerId: {},
+      confirmedTeamNames: [],
+      teamColors: {},
+      standingsSnapshot: null,
+    })
   }
 
   return {
@@ -239,6 +264,6 @@ export function useTournamentWizard() {
     standingsSnapshot,
     saveStandingsSnapshot,
     resetWizard,
+    stateRestored,
   }
 }
-
