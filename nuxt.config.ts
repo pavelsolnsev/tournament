@@ -15,6 +15,22 @@ export default defineNuxtConfig({
         { rel: 'shortcut icon', href: '/favicon.ico' },
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
         { rel: 'manifest', href: '/site.webmanifest' },
+
+        // Splash-экраны для iOS — каждый файл соответствует точному разрешению экрана устройства.
+        // iOS выбирает нужный сам по media-запросу и показывает его ДО загрузки WebView.
+        { rel: 'apple-touch-startup-image', href: '/splash/iphone-se.png',         media: '(device-width:320px) and (device-height:568px) and (-webkit-device-pixel-ratio:2)' },
+        { rel: 'apple-touch-startup-image', href: '/splash/iphone-8.png',          media: '(device-width:375px) and (device-height:667px) and (-webkit-device-pixel-ratio:2)' },
+        { rel: 'apple-touch-startup-image', href: '/splash/iphone-8plus.png',      media: '(device-width:414px) and (device-height:736px) and (-webkit-device-pixel-ratio:3)' },
+        { rel: 'apple-touch-startup-image', href: '/splash/iphone-x.png',          media: '(device-width:375px) and (device-height:812px) and (-webkit-device-pixel-ratio:3)' },
+        { rel: 'apple-touch-startup-image', href: '/splash/iphone-xr.png',         media: '(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:2)' },
+        { rel: 'apple-touch-startup-image', href: '/splash/iphone-xs-max.png',     media: '(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:3)' },
+        { rel: 'apple-touch-startup-image', href: '/splash/iphone-12-mini.png',    media: '(device-width:375px) and (device-height:812px) and (-webkit-device-pixel-ratio:3) and (device-width:360px)' },
+        { rel: 'apple-touch-startup-image', href: '/splash/iphone-12.png',         media: '(device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3)' },
+        { rel: 'apple-touch-startup-image', href: '/splash/iphone-12-pro-max.png', media: '(device-width:428px) and (device-height:926px) and (-webkit-device-pixel-ratio:3)' },
+        { rel: 'apple-touch-startup-image', href: '/splash/iphone-14-pro.png',     media: '(device-width:393px) and (device-height:852px) and (-webkit-device-pixel-ratio:3)' },
+        { rel: 'apple-touch-startup-image', href: '/splash/iphone-14-pro-max.png', media: '(device-width:430px) and (device-height:932px) and (-webkit-device-pixel-ratio:3)' },
+        { rel: 'apple-touch-startup-image', href: '/splash/iphone-15.png',         media: '(device-width:393px) and (device-height:852px) and (-webkit-device-pixel-ratio:3)' },
+        { rel: 'apple-touch-startup-image', href: '/splash/iphone-15-plus.png',    media: '(device-width:430px) and (device-height:932px) and (-webkit-device-pixel-ratio:3)' },
       ],
       // Добавляем мета для iOS, чтобы ярлык на домашнем экране использовал иконку и веб-режим.
       meta: [
