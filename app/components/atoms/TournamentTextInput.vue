@@ -38,13 +38,14 @@ const mergedClass = computed(() => {
   else bits.push('max-w-full', 'shrink-0')
 
   if (props.variant === 'search') {
-    bits.push('rounded-lg', 'bg-slate-800/60', 'border', 'border-slate-700/60')
+    bits.push('rounded-xl', 'bg-slate-800/60', 'border', 'border-slate-700/60')
     // text-base (16px) — iOS Safari не зумит поле при фокусе
     bits.push('px-3', 'py-2.5', 'text-base', 'sm:text-sm')
   } else {
-    bits.push('border', 'border-slate-600', 'bg-slate-800', 'focus:border-emerald-500/60')
-    if (props.size === 'xs') bits.push('rounded-lg', 'px-3', 'py-2.5', 'text-base', 'sm:text-sm')
-    if (props.size === 'sm') bits.push('rounded-lg', 'px-3', 'py-2.5', 'text-base', 'sm:text-sm')
+    bits.push('border', 'border-slate-600/80', 'bg-slate-800', 'focus:border-emerald-500/60')
+    // rounded-xl везде — единый радиус с кнопками и карточками
+    if (props.size === 'xs') bits.push('rounded-xl', 'px-3', 'py-2.5', 'text-base', 'sm:text-sm')
+    if (props.size === 'sm') bits.push('rounded-xl', 'px-3', 'py-2.5', 'text-base', 'sm:text-sm')
     if (props.size === 'md') bits.push('rounded-xl', 'px-4', 'py-3', 'text-base')
   }
 

@@ -2,8 +2,9 @@
 <template>
   <div class="flex flex-col gap-4">
 
-    <h3 class="text-xs font-medium uppercase tracking-widest text-slate-400">
-      ⚽ Управление матчем
+    <!-- Заголовок секции — единый стиль с остальными заголовками сайта -->
+    <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-400">
+      Управление матчем
     </h3>
 
     <!-- Выбор команд (дом/гость) — можно скрывать и открывать -->
@@ -130,9 +131,10 @@
       <div class="border-t border-slate-700/60 px-3 py-2.5">
         <button
           type="button"
-          class="rounded-lg bg-sky-500 px-4 py-2 text-xs font-semibold text-slate-900
-                 transition-opacity active:opacity-75
-                 disabled:cursor-not-allowed disabled:opacity-40"
+          class="inline-flex h-11 items-center justify-center rounded-xl bg-sky-500 px-5 text-sm font-semibold text-slate-900
+                 transition-colors md:hover:bg-sky-400 active:bg-sky-600
+                 disabled:cursor-not-allowed disabled:opacity-40
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50"
           :disabled="!hasNextMatch"
           @click="openActionConfirm('next')"
         >
@@ -218,9 +220,10 @@
           <!-- Завершить матч — активна только когда есть текущий матч -->
           <button
             type="button"
-            class="w-full rounded-lg bg-emerald-500 px-3 py-2.5 text-xs font-semibold text-slate-900
-                   transition-opacity active:opacity-80
-                   disabled:cursor-not-allowed disabled:opacity-40"
+            class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-slate-900
+                   transition-colors md:hover:bg-emerald-400 active:bg-emerald-600
+                   disabled:cursor-not-allowed disabled:opacity-40
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
             :disabled="!canFinishMatch"
             @click="openActionConfirm('finish')"
           >
@@ -262,9 +265,10 @@
           <!-- Завершить турнир — активна только когда есть сыгранные матчи -->
           <button
             type="button"
-            class="flex w-full items-center justify-center gap-2.5 rounded-xl border px-4 py-3
+            class="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border px-4
                    text-sm font-semibold transition-all
-                   disabled:cursor-not-allowed disabled:opacity-40"
+                   disabled:cursor-not-allowed disabled:opacity-40
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
             :class="finishTournamentStatus === 'success'
               ? 'border-emerald-600/40 bg-emerald-950/60 text-emerald-400'
               : finishTournamentStatus === 'loading'
@@ -293,10 +297,11 @@
           <!-- Очистить данные — сбрасывает весь турнир без записи в базу -->
           <button
             type="button"
-            class="flex w-full items-center justify-center gap-2.5 rounded-xl border
-                   border-red-500/20 bg-red-500/5 px-4 py-3 text-sm font-semibold
+            class="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border
+                   border-red-500/20 bg-red-500/5 px-4 text-sm font-semibold
                    text-red-400 transition-all
-                   md:hover:border-red-500/40 md:hover:bg-red-500/10"
+                   md:hover:border-red-500/40 md:hover:bg-red-500/10
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
             @click="openClearConfirm"
           >
             <span class="text-base leading-none" aria-hidden="true">🗑</span>

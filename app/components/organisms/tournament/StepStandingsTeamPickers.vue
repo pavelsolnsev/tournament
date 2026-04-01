@@ -6,7 +6,9 @@
       <select
         id="home-team"
         :value="homeTeam"
-        class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none ring-0 ring-offset-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus:ring-offset-0"
+        class="h-11 w-full rounded-xl border border-slate-700/60 bg-slate-900 px-3 text-sm text-slate-100
+               transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40
+               focus-visible:border-emerald-500/50"
         @change="$emit('update:homeTeam', ($event.target as HTMLSelectElement).value)"
       >
         <option class="bg-slate-900 text-slate-100" value="">
@@ -29,7 +31,9 @@
       <select
         id="away-team"
         :value="awayTeam"
-        class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none ring-0 ring-offset-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus:ring-offset-0"
+        class="h-11 w-full rounded-xl border border-slate-700/60 bg-slate-900 px-3 text-sm text-slate-100
+               transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40
+               focus-visible:border-emerald-500/50"
         @change="$emit('update:awayTeam', ($event.target as HTMLSelectElement).value)"
       >
         <option class="bg-slate-900 text-slate-100" value="">

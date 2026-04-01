@@ -36,28 +36,16 @@
             {{ displayPlayerLabel(p) }}
           </span>
 
-          <!-- Бейджи событий — в одну строку справа, каждый с кнопкой «−» -->
+          <!-- Бейджи событий — только показ счётчика, без кнопки «−» на карточке -->
+          <!-- Убираем «−» отсюда, чтобы исключить случайные нажатия вне dropdown -->
           <div class="flex shrink-0 items-center gap-1">
             <template v-for="stat in STAT_BADGES" :key="stat.key">
               <span
                 v-if="playerStat(side, p.id)[stat.key] > 0"
-                class="inline-flex items-center rounded-md text-[11px] font-semibold tabular-nums"
-                :class="stat.bgClass"
+                class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
+                :class="[stat.bgClass, stat.textClass]"
               >
-                <span class="px-1.5 py-0.5" :class="stat.textClass">
-                  {{ stat.icon }}{{ playerStat(side, p.id)[stat.key] }}
-                </span>
-                <button
-                  type="button"
-                  class="flex h-full items-center rounded-r-md px-1 py-0.5 transition-colors"
-                  :class="stat.removeClass"
-                  :title="'Отменить: ' + stat.label"
-                  @click.stop="rosterColumnProps.removePlayerEvent(side, p.id, stat.key)"
-                >
-                  <svg class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" clip-rule="evenodd" />
-                  </svg>
-                </button>
+                {{ stat.icon }}{{ playerStat(side, p.id)[stat.key] }}
               </span>
             </template>
           </div>
@@ -72,7 +60,8 @@
           </svg>
         </button>
 
-        <!-- Панель событий: 4 кнопки для активного игрока -->
+        <!-- Панель событий: для активного игрока — 4 карточки, каждая с «+» и «−» -->
+        <!-- «+» добавляет событие и закрывает панель; «−» убирает одно событие, если оно есть -->
         <Transition
           enter-active-class="transition-all duration-150 ease-out"
           enter-from-class="opacity-0 -translate-y-1"
@@ -87,21 +76,49 @@
                    bg-slate-950/95 px-2.5 py-2.5 shadow-xl shadow-slate-950/40 backdrop-blur-sm"
             :class="opensUp(idx, players.length) ? 'bottom-full mb-1.5' : 'top-full mt-1.5'"
           >
-            <div class="grid grid-cols-4 gap-2">
-              <button
+            <!-- 2 колонки × 2 строки — каждая карточка шире, кнопкам есть куда разместиться -->
+            <div class="grid grid-cols-2 gap-2">
+              <!-- Карточка события: иконка по центру, кнопки «−» и «+» по бокам в одну строку -->
+              <div
                 v-for="action in EVENT_ACTIONS"
                 :key="action.value"
-                type="button"
-                class="flex items-center justify-center rounded-xl py-3
-                       border border-transparent transition-all duration-100
-                       active:scale-95
-                       focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+                class="flex items-center overflow-hidden rounded-xl border border-transparent"
                 :class="action.colorClass"
-                :title="action.label"
-                @click.stop="fireAndClose(side, p.id, action.value)"
               >
-                <span class="text-2xl leading-none">{{ action.icon }}</span>
-              </button>
+                <!-- Кнопка «−»: занимает фиксированную ширину, высота равна всей карточке -->
+                <!-- disabled когда нечего убирать — прозрачная, не кликается -->
+                <button
+                  type="button"
+                  class="flex h-14 w-12 shrink-0 items-center justify-center text-xl font-bold
+                         transition-colors active:scale-95
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40
+                         disabled:opacity-20 disabled:cursor-not-allowed"
+                  :class="action.removeBtnClass"
+                  :disabled="playerStat(side, p.id)[action.value] === 0"
+                  :title="'Отменить: ' + action.label"
+                  @click.stop="removeAndClose(side, p.id, action.value)"
+                >
+                  −
+                </button>
+
+                <!-- Центр карточки: только иконка — информация без счётчика -->
+                <div class="flex min-w-0 flex-1 items-center justify-center py-2">
+                  <span class="text-2xl leading-none">{{ action.icon }}</span>
+                </div>
+
+                <!-- Кнопка «+»: добавить событие и закрыть панель -->
+                <button
+                  type="button"
+                  class="flex h-14 w-12 shrink-0 items-center justify-center text-xl font-bold
+                         transition-colors active:scale-95
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+                  :class="action.addBtnClass"
+                  :title="'Добавить: ' + action.label"
+                  @click.stop="fireAndClose(side, p.id, action.value)"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
         </Transition>
@@ -126,68 +143,56 @@ type PlayerMatchStats = {
 }
 // Счётчики событий игрока в текущем матче.
 
-// Единая конфигурация для кнопок добавления и бейджей с отменой.
+// Конфигурация карточек событий в дропдауне.
+// colorClass — общий фон и рамка карточки.
+// countClass — цвет счётчика текущих очков.
+// addBtnClass — стиль кнопки «+» (добавить).
+// removeBtnClass — стиль кнопки «−» (убрать), когда она активна.
 const EVENT_ACTIONS = [
   {
     value: 'goals' as StatKey,
     icon: '⚽',
     label: 'Гол',
-    colorClass: 'bg-emerald-500/10 border-emerald-500/25 md:hover:bg-emerald-500/20 md:hover:border-emerald-500/50',
+    colorClass: 'bg-emerald-500/10 border-emerald-500/25',
+    countClass: 'text-emerald-300',
+    addBtnClass: 'text-emerald-300 md:hover:bg-emerald-500/20',
+    removeBtnClass: 'text-emerald-500/70 md:hover:bg-emerald-500/20 md:hover:text-emerald-300',
   },
   {
     value: 'assists' as StatKey,
     icon: '🎯',
     label: 'Ассист',
-    colorClass: 'bg-sky-500/10 border-sky-500/25 md:hover:bg-sky-500/20 md:hover:border-sky-500/50',
+    colorClass: 'bg-sky-500/10 border-sky-500/25',
+    countClass: 'text-sky-300',
+    addBtnClass: 'text-sky-300 md:hover:bg-sky-500/20',
+    removeBtnClass: 'text-sky-500/70 md:hover:bg-sky-500/20 md:hover:text-sky-300',
   },
   {
     value: 'saves' as StatKey,
     icon: '🧤',
     label: 'Сейв',
-    colorClass: 'bg-violet-500/10 border-violet-500/25 md:hover:bg-violet-500/20 md:hover:border-violet-500/50',
+    colorClass: 'bg-violet-500/10 border-violet-500/25',
+    countClass: 'text-violet-300',
+    addBtnClass: 'text-violet-300 md:hover:bg-violet-500/20',
+    removeBtnClass: 'text-violet-500/70 md:hover:bg-violet-500/20 md:hover:text-violet-300',
   },
   {
     value: 'yellows' as StatKey,
     icon: '🟨',
     label: 'Жёлтая',
-    colorClass: 'bg-yellow-500/10 border-yellow-500/25 md:hover:bg-yellow-500/20 md:hover:border-yellow-500/50',
+    colorClass: 'bg-yellow-500/10 border-yellow-500/25',
+    countClass: 'text-yellow-300',
+    addBtnClass: 'text-yellow-300 md:hover:bg-yellow-500/20',
+    removeBtnClass: 'text-yellow-500/70 md:hover:bg-yellow-500/20 md:hover:text-yellow-300',
   },
 ] as const
 
-// Конфигурация бейджей статистики — цвета разделены для фона, текста и кнопки «−».
+// Конфигурация бейджей на карточке игрока — только фон и цвет текста (без кнопки «−»).
 const STAT_BADGES = [
-  {
-    key: 'goals' as StatKey,
-    icon: '⚽',
-    label: 'Гол',
-    bgClass: 'bg-emerald-500/15',
-    textClass: 'text-emerald-300',
-    removeClass: 'text-emerald-500/60 md:hover:bg-emerald-500/20 md:hover:text-emerald-300',
-  },
-  {
-    key: 'assists' as StatKey,
-    icon: '🎯',
-    label: 'Ассист',
-    bgClass: 'bg-sky-500/15',
-    textClass: 'text-sky-300',
-    removeClass: 'text-sky-500/60 md:hover:bg-sky-500/20 md:hover:text-sky-300',
-  },
-  {
-    key: 'saves' as StatKey,
-    icon: '🧤',
-    label: 'Сейв',
-    bgClass: 'bg-violet-500/15',
-    textClass: 'text-violet-300',
-    removeClass: 'text-violet-500/60 md:hover:bg-violet-500/20 md:hover:text-violet-300',
-  },
-  {
-    key: 'yellows' as StatKey,
-    icon: '🟨',
-    label: 'Жёлтая',
-    bgClass: 'bg-yellow-500/15',
-    textClass: 'text-yellow-300',
-    removeClass: 'text-yellow-500/60 md:hover:bg-yellow-500/20 md:hover:text-yellow-300',
-  },
+  { key: 'goals' as StatKey,   icon: '⚽', bgClass: 'bg-emerald-500/15', textClass: 'text-emerald-300' },
+  { key: 'assists' as StatKey, icon: '🎯', bgClass: 'bg-sky-500/15',     textClass: 'text-sky-300' },
+  { key: 'saves' as StatKey,   icon: '🧤', bgClass: 'bg-violet-500/15',  textClass: 'text-violet-300' },
+  { key: 'yellows' as StatKey, icon: '🟨', bgClass: 'bg-yellow-500/15',  textClass: 'text-yellow-300' },
 ] as const
 
 const rosterColumnProps = defineProps<{
@@ -245,10 +250,10 @@ function fireAndClose(side: Side, playerId: number, key: StatKey) {
   rosterColumnProps.selectPlayerForMark(side, playerId)
 }
 
-// Есть ли хоть одно событие у игрока — нужно для показа/скрытия бейджей.
-function hasAnyStat(side: Side, playerId: number): boolean {
-  const s = rosterColumnProps.playerStat(side, playerId)
-  return s.goals > 0 || s.assists > 0 || s.saves > 0 || s.yellows > 0
+// Убирает событие и сразу закрывает панель — то же поведение что у «+».
+function removeAndClose(side: Side, playerId: number, key: StatKey) {
+  rosterColumnProps.removePlayerEvent(side, playerId, key)
+  rosterColumnProps.selectPlayerForMark(side, playerId)
 }
 
 // Для последних строк открываем панель вверх, чтобы она не обрезалась снизу.

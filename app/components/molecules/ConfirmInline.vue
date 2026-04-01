@@ -13,12 +13,14 @@
       {{ subtitle }}
     </p>
 
-    <div class="mt-2 flex flex-wrap gap-2">
+    <!-- Кнопки h-9: компактные внутри confirm-панели, но с достаточным tap-target -->
+    <div class="mt-2.5 flex flex-wrap gap-2">
       <button
         type="button"
-        class="rounded-lg bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-200
+        class="inline-flex h-9 items-center rounded-xl bg-slate-800 px-4 text-xs font-semibold text-slate-200
                transition-colors md:hover:bg-slate-700 active:bg-slate-900
-               disabled:cursor-not-allowed disabled:opacity-40"
+               disabled:cursor-not-allowed disabled:opacity-40
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
         :disabled="busy"
         @click="emit('cancel')"
       >
@@ -26,9 +28,10 @@
       </button>
       <button
         type="button"
-        class="rounded-lg px-3 py-2 text-xs font-semibold
-               transition-opacity active:opacity-80
-               disabled:cursor-not-allowed disabled:opacity-40"
+        class="inline-flex h-9 items-center rounded-xl px-4 text-xs font-semibold
+               transition-colors active:opacity-80
+               disabled:cursor-not-allowed disabled:opacity-40
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-current/40"
         :class="toneClasses.confirmBtn"
         :disabled="busy"
         @click="emit('confirm')"

@@ -3,6 +3,7 @@
   <AtomsTournamentPanel as="section" root-class="lg:col-span-2">
     <AtomsPanelHeading>Команды</AtomsPanelHeading>
 
+    <!-- Поле + кнопка: items-end выравнивает кнопку с инпутом, игнорируя лейбл -->
     <div class="flex items-end gap-2">
       <MoleculesFieldBlock
         id="new-team-name"
@@ -20,8 +21,9 @@
         />
       </MoleculesFieldBlock>
 
+      <!-- size="md" даёт h-11 — совпадает с высотой инпута -->
       <AtomsPrimaryButton
-        size="sm"
+        size="md"
         title="Создать команду"
         @click="emit('addNewTeam')"
       >
@@ -60,9 +62,11 @@
           </button>
 
           <div class="flex shrink-0 items-center gap-2">
+            <!-- Select цвета команды — h-9 совпадает с кнопками рядом -->
             <select
               :value="String(getTeamColor(name))"
-              class="rounded border border-slate-700 bg-slate-900/70 px-1.5 py-1 text-xs text-slate-100 outline-none ring-0 ring-offset-0 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus:ring-offset-0"
+              class="h-9 rounded-xl border border-slate-700/60 bg-slate-900/70 px-2 text-sm text-slate-100
+                     transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
               title="Цвет команды"
               @change="emit('setTeamColor', name, Number(($event.target as HTMLSelectElement).value))"
             >
@@ -76,10 +80,13 @@
               </option>
             </select>
 
+            <!-- Кнопки действий — h-9 = одна высота с select цвета рядом -->
             <button
               v-if="(teamPlayerCounts[name] ?? 0) > 0 && !isTeamConfirmed(name)"
               type="button"
-              class="rounded bg-emerald-500/15 px-2 py-1 text-xs font-medium text-emerald-300 transition hover:bg-emerald-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15 text-sm font-medium text-emerald-300
+                     transition-colors md:hover:bg-emerald-500/25
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
               title="Команда участвует в турнире"
               @click="emit('confirmTeam', name)"
             >
@@ -89,7 +96,9 @@
             <button
               v-else-if="isTeamConfirmed(name)"
               type="button"
-              class="rounded bg-slate-700/40 px-2 py-1 text-xs font-medium text-slate-200 transition hover:bg-slate-700/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-700/40 text-sm font-medium text-slate-200
+                     transition-colors md:hover:bg-slate-700/60
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
               title="Убрать из участников турнира"
               @click="emit('unconfirmTeam', name)"
             >
@@ -98,7 +107,9 @@
 
             <button
               type="button"
-              class="rounded px-2 py-1 text-xs text-slate-400 transition hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-sm text-slate-400
+                     transition-colors md:hover:bg-red-500/10 md:hover:text-red-400
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
               title="Удалить команду"
               @click="openRemoveConfirm(name)"
             >

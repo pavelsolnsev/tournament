@@ -63,7 +63,7 @@
         <div class="flex items-center gap-2 border-t border-slate-800/60 px-3 py-2">
           <button
             type="button"
-            class="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors
+            class="inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-medium transition-colors
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
             :class="openMatch === m.matchNumber
               ? 'bg-slate-700 text-slate-200'
@@ -78,7 +78,7 @@
           <button
             v-if="!props.readonly"
             type="button"
-            class="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors
+            class="inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-medium transition-colors
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
             :class="editMatch === m.matchNumber
               ? 'bg-emerald-500/20 text-emerald-300'
@@ -103,7 +103,7 @@
           <template v-if="!props.readonly && confirmDeleteMatch === m.matchNumber">
             <button
               type="button"
-              class="flex items-center gap-1 rounded-lg bg-red-500/20 px-2.5 py-2 text-xs font-semibold
+              class="inline-flex h-9 items-center gap-1 rounded-xl bg-red-500/20 px-2.5 text-xs font-semibold
                      text-red-400 transition-colors md:hover:bg-red-500/30 focus:outline-none"
               @click="confirmDelete(m.matchNumber)"
             >
@@ -114,16 +114,16 @@
             </button>
             <button
               type="button"
-              class="rounded-lg px-2.5 py-2 text-xs text-slate-500 transition-colors md:hover:text-slate-300 focus:outline-none"
+              class="inline-flex h-9 items-center rounded-xl px-2.5 text-xs text-slate-500 transition-colors md:hover:text-slate-300 focus:outline-none"
               @click="cancelDelete"
             >
               Нет
             </button>
           </template>
-          <button
+            <button
             v-else-if="!props.readonly"
             type="button"
-            class="rounded-lg p-2 text-slate-600 transition-colors md:hover:bg-slate-800 md:hover:text-red-400
+            class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 transition-colors md:hover:bg-slate-800 md:hover:text-red-400
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
             title="Удалить матч"
             @click="requestDelete(m.matchNumber)"

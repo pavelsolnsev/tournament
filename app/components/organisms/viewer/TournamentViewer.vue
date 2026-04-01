@@ -29,10 +29,10 @@
     <!-- main всегда присутствует в DOM — стабильный каркас без прыжков при refresh -->
     <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]">
       <div class="flex flex-1 flex-col py-5 sm:py-8">
-        <!-- Заглушка «турнир не начался» — центрируется по вертикали в оставшемся пространстве -->
+        <!-- Заглушка «турнир не начался» — сверху, как обычный контент -->
         <div
           v-if="!hasViewerData"
-          class="flex flex-1 items-center justify-center"
+          class="flex flex-col"
         >
           <div class="flex w-full max-w-sm flex-col items-center gap-4 rounded-2xl border border-dashed border-slate-700/60 px-6 py-16 text-center">
             <svg class="h-10 w-10 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">

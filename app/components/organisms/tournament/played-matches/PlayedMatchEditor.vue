@@ -21,9 +21,11 @@
     <div class="grid grid-cols-1 gap-0 divide-y divide-slate-800/60 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
       <!-- Домашняя команда -->
       <div class="px-3 pb-3 pt-2">
-        <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-          {{ teamMarker(match.homeTeam) }} {{ match.homeTeam }}
-        </p>
+        <!-- Заголовок команды: маркер + название — единый стиль с остальными колонками -->
+        <div class="mb-2 flex min-w-0 items-center gap-1.5 px-0.5">
+          <span aria-hidden="true" class="shrink-0 text-base leading-none">{{ teamMarker(match.homeTeam) }}</span>
+          <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-400">{{ match.homeTeam }}</span>
+        </div>
         <div class="space-y-1.5">
           <div v-for="p in homePlayers" :key="p.id" class="min-w-0">
             <button
@@ -33,10 +35,19 @@
               :class="openEditPlayer === editPlayerKey('home', p.id) ? 'bg-slate-800/70' : 'bg-slate-800/40'"
               @click="toggleEditPlayer('home', p.id)"
             >
-              <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-200">{{ displayPlayerLabel(p) }}</span>
-              <span v-if="hasAnyStat(draft.homeStats, p.id)" class="shrink-0 text-xs text-slate-500">
-                {{ buildLabel(draft.homeStats, p.id) }}
-              </span>
+              <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-100">{{ displayPlayerLabel(p) }}</span>
+              <!-- Бейджи событий в строке превью — такой же стиль как везде -->
+              <div v-if="hasAnyStat(draft.homeStats, p.id)" class="flex shrink-0 items-center gap-1">
+                <template v-for="badge in STAT_BADGES" :key="badge.key">
+                  <span
+                    v-if="getEditStat(draft.homeStats, p.id, badge.key) > 0"
+                    class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
+                    :class="[badge.bgClass, badge.textClass]"
+                  >
+                    {{ badge.icon }}{{ getEditStat(draft.homeStats, p.id, badge.key) }}
+                  </span>
+                </template>
+              </div>
               <svg
                 class="h-4 w-4 shrink-0 transition-transform duration-150"
                 :class="openEditPlayer === editPlayerKey('home', p.id) ? 'rotate-180 text-slate-400' : 'text-slate-600'"
@@ -80,9 +91,11 @@
 
       <!-- Гостевая команда -->
       <div class="px-3 pb-3 pt-2">
-        <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-          {{ teamMarker(match.awayTeam) }} {{ match.awayTeam }}
-        </p>
+        <!-- Заголовок команды: маркер + название — единый стиль с остальными колонками -->
+        <div class="mb-2 flex min-w-0 items-center gap-1.5 px-0.5">
+          <span aria-hidden="true" class="shrink-0 text-base leading-none">{{ teamMarker(match.awayTeam) }}</span>
+          <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-400">{{ match.awayTeam }}</span>
+        </div>
         <div class="space-y-1.5">
           <div v-for="p in awayPlayers" :key="p.id" class="min-w-0">
             <button
@@ -92,10 +105,19 @@
               :class="openEditPlayer === editPlayerKey('away', p.id) ? 'bg-slate-800/70' : 'bg-slate-800/40'"
               @click="toggleEditPlayer('away', p.id)"
             >
-              <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-200">{{ displayPlayerLabel(p) }}</span>
-              <span v-if="hasAnyStat(draft.awayStats, p.id)" class="shrink-0 text-xs text-slate-500">
-                {{ buildLabel(draft.awayStats, p.id) }}
-              </span>
+              <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-100">{{ displayPlayerLabel(p) }}</span>
+              <!-- Бейджи событий в строке превью — такой же стиль как везде -->
+              <div v-if="hasAnyStat(draft.awayStats, p.id)" class="flex shrink-0 items-center gap-1">
+                <template v-for="badge in STAT_BADGES" :key="badge.key">
+                  <span
+                    v-if="getEditStat(draft.awayStats, p.id, badge.key) > 0"
+                    class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
+                    :class="[badge.bgClass, badge.textClass]"
+                  >
+                    {{ badge.icon }}{{ getEditStat(draft.awayStats, p.id, badge.key) }}
+                  </span>
+                </template>
+              </div>
               <svg
                 class="h-4 w-4 shrink-0 transition-transform duration-150"
                 :class="openEditPlayer === editPlayerKey('away', p.id) ? 'rotate-180 text-slate-400' : 'text-slate-600'"
@@ -137,20 +159,22 @@
       </div>
     </div>
 
-    <!-- Сохранить / Отмена -->
-    <div class="flex items-center gap-2 border-t border-slate-800/60 px-3 py-3">
+    <!-- Сохранить / Отмена — h-11 = единая высота с основными кнопками сайта -->
+    <div class="flex items-center gap-2 border-t border-slate-800/60 px-3 py-2.5">
       <button
         type="button"
-        class="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-900
-               transition-colors md:hover:bg-emerald-400 active:bg-emerald-600 focus:outline-none"
+        class="inline-flex h-11 items-center rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-slate-900
+               transition-colors md:hover:bg-emerald-400 active:bg-emerald-600
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
         @click="save"
       >
         Сохранить
       </button>
       <button
         type="button"
-        class="rounded-xl bg-slate-700 px-5 py-2.5 text-sm font-medium text-slate-300
-               transition-colors md:hover:bg-slate-600 focus:outline-none"
+        class="inline-flex h-11 items-center rounded-xl bg-slate-700 px-5 text-sm font-medium text-slate-300
+               transition-colors md:hover:bg-slate-600
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
         @click="emit('cancel')"
       >
         Отмена
@@ -205,6 +229,14 @@ const props = defineProps<{
 const emit = defineEmits<{
   cancel: []
 }>()
+
+// Конфигурация бейджей для превью строки игрока — единый стиль с остальными списками сайта.
+const STAT_BADGES = [
+  { key: 'goals'   as StatKey, icon: '⚽', bgClass: 'bg-emerald-500/15', textClass: 'text-emerald-300' },
+  { key: 'assists' as StatKey, icon: '🎯', bgClass: 'bg-sky-500/15',     textClass: 'text-sky-300' },
+  { key: 'saves'   as StatKey, icon: '🧤', bgClass: 'bg-violet-500/15',  textClass: 'text-violet-300' },
+  { key: 'yellows' as StatKey, icon: '🟨', bgClass: 'bg-yellow-500/15',  textClass: 'text-yellow-300' },
+] as const
 
 // Конфигурация полей статистики.
 const STAT_DEFS = [
@@ -306,17 +338,6 @@ function hasAnyStat(statsRecord: Record<number, PlayerMatchStats>, playerId: num
 }
 // Это проверяет: у игрока есть хоть одно событие.
 
-function buildLabel(statsRecord: Record<number, PlayerMatchStats>, playerId: number): string {
-  const s = statsRecord[playerId]
-  if (!s) return ''
-  const parts: string[] = []
-  if (s.goals > 0) parts.push(`⚽${s.goals}`)
-  if (s.assists > 0) parts.push(`🎯${s.assists}`)
-  if (s.saves > 0) parts.push(`🧤${s.saves}`)
-  if (s.yellows > 0) parts.push(`🟨${s.yellows}`)
-  return parts.join(' ')
-}
-// Это короткая строка событий для превью в списке.
 
 function save() {
   props.updatePlayedMatch(

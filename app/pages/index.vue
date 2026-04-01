@@ -27,12 +27,11 @@
             </div>
           </header>
 
-          <!-- flex-1 растягивает main на всё оставшееся пространство после header.
-               pt компенсирует высоту абсолютного header, чтобы контент не заезжал под него.
-               items-center центрирует содержимое визуально в оставшейся области. -->
-          <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col items-center justify-center px-4 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]">
-            <div v-if="!wizard.stateRestored.value" class="flex items-center justify-center py-16">
-              <div class="h-9 w-9 animate-spin rounded-full border-2 border-slate-700 border-t-emerald-500" />
+          <!-- flex-1 растягивает main; pt — отступ под абсолютный header. Контент идёт сверху. -->
+          <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]">
+            <div v-if="!wizard.stateRestored.value" class="flex items-center gap-3 py-8 text-sm text-slate-400">
+              <div class="h-9 w-9 shrink-0 animate-spin rounded-full border-2 border-slate-700 border-t-emerald-500" />
+              <span>Загружаем…</span>
             </div>
 
             <section v-else class="flex w-full flex-col gap-6 py-5 sm:py-8">

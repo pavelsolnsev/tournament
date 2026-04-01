@@ -31,7 +31,7 @@ const mergedClass = computed(() => {
       ? 'w-full rounded-xl px-4 h-12 text-sm'
       : props.size === 'md'
         ? 'rounded-xl px-5 h-11 text-sm sm:text-base'
-        : 'rounded-lg px-3 h-9 text-xs'
+        : 'rounded-xl px-3 h-9 text-xs'
 
   const tone =
     props.variant === 'muted'

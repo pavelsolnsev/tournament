@@ -41,7 +41,7 @@
             <li
               v-for="p in playersByTeam(teamName)"
               :key="p.id"
-              class="flex min-w-0 items-center gap-2 rounded-lg px-2.5 py-2"
+              class="flex min-w-0 items-center gap-2 rounded-xl px-3 py-2.5"
               :class="playerBg(teamName)"
             >
               <!-- Имя — flex-1 забирает всё свободное место, остальное уходит под бейджи -->
