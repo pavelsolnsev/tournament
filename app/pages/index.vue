@@ -1,14 +1,10 @@
 <template>
   <div class="min-h-screen bg-slate-900 text-slate-100">
-    <!-- SSR/первые миллисекунды: рендерим стабильный каркас, чтобы не было hydration mismatch и прыжков -->
-    <div v-if="!authReady" class="flex min-h-screen items-center justify-center px-4">
-      <div class="flex items-center gap-3 text-sm text-slate-400">
-        <div class="h-5 w-5 animate-spin rounded-full border-2 border-slate-700 border-t-emerald-500" />
-        Загружаем…
-      </div>
-    </div>
+    <!-- clientReady становится true только после монтирования на клиенте.
+         До этого рендерим нейтральный скелетон — он совпадает с SSR и не даёт hydration mismatch. -->
+    <div v-if="!clientReady" class="min-h-screen bg-slate-900" aria-hidden="true" />
 
-    <!-- После монтирования на клиенте — выбираем режим без SSR-расхождений -->
+    <!-- После монтирования на клиенте показываем реальный UI -->
     <template v-else>
       <!-- Режим администратора -->
       <template v-if="isAdmin">
@@ -29,12 +25,15 @@
             </div>
           </header>
 
-          <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]">
-            <div v-if="!wizard.stateRestored.value" class="flex flex-1 items-center justify-center py-16">
+          <!-- flex-1 растягивает main на всё оставшееся пространство после header.
+               pt компенсирует высоту абсолютного header, чтобы контент не заезжал под него.
+               items-center центрирует содержимое визуально в оставшейся области. -->
+          <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col items-center justify-center px-4 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]">
+            <div v-if="!wizard.stateRestored.value" class="flex items-center justify-center py-16">
               <div class="h-9 w-9 animate-spin rounded-full border-2 border-slate-700 border-t-emerald-500" />
             </div>
 
-            <section v-else class="flex flex-col gap-6 py-5 sm:py-8">
+            <section v-else class="flex w-full flex-col gap-6 py-5 sm:py-8">
               <div v-if="wizard.step.value > 0">
                 <button
                   type="button"
@@ -98,6 +97,7 @@
                 :initial-snapshot="wizard.standingsSnapshot.value"
                 @update:snapshot="wizard.saveStandingsSnapshot"
                 @tournament-finished="wizard.resetWizard()"
+                @tournament-cleared="wizard.resetWizard()"
               />
             </section>
           </main>
@@ -125,13 +125,16 @@ definePageMeta({ layout: 'landing' })
 
 const { isAdmin, logout } = useAdminAuth()
 
-const authReady = ref(false)
+// clientReady становится true только после монтирования.
+// До этого рендерим пустой div — он совпадает с SSR и не даёт hydration mismatch.
+const clientReady = ref(false)
 onMounted(() => {
+  // Явно читаем cookie на клиенте: useCookie при гидрации может вернуть undefined
+  // в первый тик, поэтому синхронизируем isAdmin вручную из document.cookie.
   const match = document.cookie.match(/(?:^|; )admin_session=([^;]*)/)
   const cookieValue = match ? decodeURIComponent(match[1] ?? '') : ''
-  // SSR может не увидеть cookie, поэтому перед показом UI синхронизируем isAdmin на клиенте.
   isAdmin.value = cookieValue === 'true'
-  authReady.value = true
+  clientReady.value = true
 })
 
 const { serverState, query: stateQuery } = useTournamentState()

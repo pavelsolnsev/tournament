@@ -163,7 +163,8 @@
       </Transition>
     </div>
 
-    <section class="min-w-0 space-y-4 overflow-x-hidden rounded-2xl bg-slate-900/70">
+    <!-- overflow-x-hidden убран: rounded-2xl сам обрезает углы, а лишний overflow мешает скроллу. -->
+    <section class="min-w-0 space-y-4 rounded-2xl bg-slate-900/70">
       <div class="overflow-hidden rounded-2xl bg-slate-900/70">
         <button
           :id="playedMatchesToggleId"
@@ -268,6 +269,7 @@
         :finish-tournament-status="finishStatus"
         :finish-tournament-error="finishErrorMessage"
         :on-finish-tournament="handleFinishTournament"
+        :on-clear-data="handleClearData"
         @update:home-team="handleUpdateHomeTeam"
         @update:away-team="handleUpdateAwayTeam"
       />
@@ -301,6 +303,8 @@ const emit = defineEmits<{
   'update:snapshot': [snapshot: SavedStandingsSnapshot]
   // Вызывается после успешного завершения турнира — родитель сбрасывает wizard.
   'tournament-finished': []
+  // Вызывается после локальной очистки без записи в базу — родитель сбрасывает wizard.
+  'tournament-cleared': []
 }>()
 
 const {
@@ -394,6 +398,11 @@ async function handleFinishTournament() {
   if (finishStatus.value === 'success') {
     emit('tournament-finished')
   }
+}
+
+function handleClearData() {
+  // Очищаем локально без обращения к базе — просто сбрасываем wizard в родителе.
+  emit('tournament-cleared')
 }
 </script>
 

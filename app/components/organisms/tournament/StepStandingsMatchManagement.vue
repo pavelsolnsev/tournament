@@ -287,6 +287,35 @@
               : 'Завершить турнир'
             }}</span>
           </button>
+
+          <div class="border-t border-slate-700/60" />
+
+          <!-- Очистить данные — сбрасывает весь турнир без записи в базу -->
+          <button
+            type="button"
+            class="flex w-full items-center justify-center gap-2.5 rounded-xl border
+                   border-red-500/20 bg-red-500/5 px-4 py-3 text-sm font-semibold
+                   text-red-400 transition-all
+                   md:hover:border-red-500/40 md:hover:bg-red-500/10"
+            @click="openClearConfirm"
+          >
+            <span class="text-base leading-none" aria-hidden="true">🗑</span>
+            <span>Очистить все данные</span>
+          </button>
+
+          <!-- Подтверждение очистки — предупреждение что действие необратимо -->
+          <MoleculesConfirmInline
+            :open="isClearConfirmOpen"
+            :busy="false"
+            tone="danger"
+            aria-label="Подтверждение очистки данных"
+            title="Очистить все данные?"
+            subtitle="Все матчи и результаты будут удалены. В базу ничего не запишется. Это действие необратимо."
+            cancel-text="Отмена"
+            confirm-text="Очистить"
+            @cancel="closeClearConfirm"
+            @confirm="confirmClearData"
+          />
         </div>
       </Transition>
     </div>
@@ -334,6 +363,8 @@ const props = defineProps<{
   finishTournamentStatus: 'idle' | 'loading' | 'success' | 'error'
   finishTournamentError: string | null
   onFinishTournament: () => void
+  // Сбросить все данные турнира локально без отправки в базу.
+  onClearData: () => void
 }>()
 
 defineEmits<{
@@ -389,5 +420,22 @@ function confirmPendingAction() {
   if (action === 'next') {
     props.goToNextMatch()
   }
+}
+
+// Отдельное подтверждение для "Очистить данные" — опасное действие, требует явного согласия.
+const isClearConfirmOpen = ref(false)
+
+function openClearConfirm() {
+  isClearConfirmOpen.value = true
+}
+
+function closeClearConfirm() {
+  isClearConfirmOpen.value = false
+}
+
+function confirmClearData() {
+  // Вызываем очистку только после подтверждения пользователем.
+  closeClearConfirm()
+  props.onClearData()
 }
 </script>

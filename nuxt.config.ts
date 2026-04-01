@@ -37,8 +37,10 @@ export default defineNuxtConfig({
         // Задаём общий цвет темы, чтобы не было белой подложки во время загрузки.
         { name: 'theme-color', content: '#0f172a' },
         { name: 'color-scheme', content: 'dark' },
-        // Фиксируем viewport на мобильных: отключаем зум/масштабирование.
-        { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover' },
+        // viewport-fit=cover нужен для safe-area на iPhone с чёлкой.
+        // user-scalable и maximum-scale убраны — они блокируют скролл колёсиком на десктопе
+        // и ухудшают доступность (запрет зума).
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
