@@ -49,7 +49,9 @@ export default defineNuxtConfig({
       ],
       // Принудительно задаём тёмный фон сразу, ещё до загрузки Tailwind CSS (убирает "белую вспышку").
       style: [
-        { innerHTML: 'html,body,#__nuxt{background:#0f172a;color:#f8fafc;} body{margin:0;}' },
+        // overscroll-behavior:none — убирает bounce/pull-to-refresh когда контент помещается в экран.
+        // Нативный скролл при этом не блокируется — если контент длиннее экрана, всё работает.
+        { innerHTML: 'html,body,#__nuxt{background:#0f172a;color:#f8fafc;} body{margin:0;overscroll-behavior:none;}' },
       ],
     },
   },
