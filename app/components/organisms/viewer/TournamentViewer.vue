@@ -1,5 +1,6 @@
 <template>
-  <div class="flex min-h-screen flex-col bg-slate-900 text-slate-100">
+  <!-- min-h-full вместо min-h-screen — высота от #scroll-root (fixed контейнера). -->
+  <div class="flex min-h-full flex-col bg-slate-900 text-slate-100">
     <!-- Шапка: absolute + safe-area сверху, не двигает контент -->
     <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-800/70 bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)]">
       <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6 h-14">

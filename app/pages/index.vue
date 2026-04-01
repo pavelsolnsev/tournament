@@ -9,8 +9,8 @@
     <template v-else>
       <!-- Режим администратора -->
       <template v-if="isAdmin">
-        <!-- min-h-screen здесь нужен чтобы header + main занимали весь экран в режиме админа. -->
-        <div class="flex min-h-screen flex-col">
+        <!-- min-h-full растягивает до высоты #scroll-root (= весь экран). -->
+        <div class="flex min-h-full flex-col">
           <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-800/70 bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)]">
             <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6 h-14">
               <span class="flex items-center gap-2 text-sm font-semibold text-emerald-400">

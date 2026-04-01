@@ -49,9 +49,9 @@ export default defineNuxtConfig({
       ],
       // Принудительно задаём тёмный фон сразу, ещё до загрузки Tailwind CSS (убирает "белую вспышку").
       style: [
-        // overscroll-behavior:none — убирает bounce/pull-to-refresh когда контент помещается в экран.
-        // Нативный скролл при этом не блокируется — если контент длиннее экрана, всё работает.
-        { innerHTML: 'html,body,#__nuxt{background:#0f172a;color:#f8fafc;} body{margin:0;overscroll-behavior:none;}' },
+        // position:fixed на body — единственный способ заблокировать rubber-band на iOS и Chrome.
+        // Скролл живёт только в #scroll-root внутри app.vue.
+        { innerHTML: `*{box-sizing:border-box}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#0f172a;color:#f8fafc;}body{position:fixed;}` },
       ],
     },
   },
