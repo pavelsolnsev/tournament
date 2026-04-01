@@ -14,6 +14,8 @@
         <MoleculesPlayerListRow
           v-for="p in selectedPlayers"
           :key="p.id"
+          :photo="p.photo"
+          :avatar-fallback-name="p.name"
           :label="displayPlayerLabel(p)"
           :title="'Убрать из турнира: ' + displayPlayerLabel(p)"
           action="remove"

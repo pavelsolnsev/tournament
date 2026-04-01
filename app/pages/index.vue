@@ -35,16 +35,44 @@
             </div>
 
             <section v-else class="flex w-full flex-col gap-6 py-5 sm:py-8">
-              <div v-if="wizard.step.value > 0">
-                <button
-                  type="button"
-                  class="inline-flex h-11 items-center gap-2 rounded-xl px-1 text-sm font-medium text-slate-400 transition-colors hover:text-slate-200 active:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-                  @click="wizard.step.value = (wizard.step.value - 1) as 0 | 1 | 2"
-                >
-                  <span aria-hidden="true" class="text-base">←</span>
-                  Назад
-                </button>
-              </div>
+              <!-- Хлебная крошка: показывает пройденный путь по шагам -->
+              <nav aria-label="Шаги мастера">
+                <ol class="flex min-w-0 flex-wrap items-center gap-1">
+                  <li
+                    v-for="(crumb, idx) in breadcrumbs.filter(c => c.step <= wizard.step.value)"
+                    :key="crumb.step"
+                    class="flex items-center gap-1"
+                  >
+                    <!-- Разделитель между шагами -->
+                    <span
+                      v-if="idx > 0"
+                      class="select-none text-slate-700"
+                      aria-hidden="true"
+                    >/</span>
+
+                    <!-- Пройденный шаг — кликабельный -->
+                    <button
+                      v-if="crumb.step < wizard.step.value"
+                      type="button"
+                      class="inline-flex items-center rounded-lg px-2 py-1 text-sm font-medium
+                             text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+                      @click="wizard.step.value = crumb.step as 0 | 1 | 2"
+                    >
+                      {{ crumb.label }}
+                    </button>
+
+                    <!-- Текущий шаг — не кликабельный, выделен -->
+                    <span
+                      v-else
+                      class="inline-flex items-center rounded-lg px-2 py-1 text-sm font-semibold text-slate-100"
+                      aria-current="step"
+                    >
+                      {{ crumb.label }}
+                    </span>
+                  </li>
+                </ol>
+              </nav>
 
               <template v-if="wizard.step.value === 0 || wizard.step.value === 1">
                 <h1 class="text-2xl font-bold text-slate-50 sm:text-3xl">
@@ -147,4 +175,11 @@ const wizard = useTournamentWizard()
 const { data: allPlayers } = useFetch<Player[]>('/api/players', {
   default: () => [],
 })
+
+// Шаги мастера для хлебной крошки.
+const breadcrumbs = [
+  { step: 0, label: 'Игроки' },
+  { step: 1, label: 'Команды' },
+  { step: 2, label: 'Таблица' },
+] as const
 </script>

@@ -31,6 +31,12 @@
           :class="[playerBg(isActivePlayer(side, p.id)), !isActivePlayer(side, p.id) && 'md:hover:brightness-125']"
           @click="handlePlayerRowClick(side, p.id)"
         >
+          <AtomsPlayerAvatar
+            class="shrink-0"
+            :photo="p.photo"
+            :fallback-name="p.name"
+            size="md"
+          />
           <!-- Имя: растягивается, обрезается если длинное -->
           <span class="min-w-0 flex-1 truncate text-sm font-medium leading-tight text-slate-100">
             {{ displayPlayerLabel(p) }}

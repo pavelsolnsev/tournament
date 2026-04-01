@@ -3,6 +3,8 @@
     <MoleculesPlayerListRow
       v-for="p in players"
       :key="p.id"
+      :photo="p.photo"
+      :avatar-fallback-name="p.name"
       :label="displayPlayerLabel(p)"
       :title="'Убрать из списка: ' + displayPlayerLabel(p)"
       action="remove"

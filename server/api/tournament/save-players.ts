@@ -1,10 +1,5 @@
 import { getPool } from '../../utils/db'
-
-function normalizeUsername(text: string | null | undefined): string | null {
-  const cleaned = (text ?? '').replace(/^@+/, '').trim()
-  return cleaned ? cleaned : null
-}
-// Это убирает ведущую "@" и превращает пустое значение в null.
+import { normalizePlayerUsername } from '../../utils/normalizePlayerUsername'
 
 // Тип данных игрока, который приходит с клиента при завершении турнира.
 export type PlayerTournamentData = {
@@ -46,7 +41,7 @@ export async function savePlayersToDb(players: PlayerTournamentData[], conn: Awa
     return [
       p.id,
       p.name || 'Unknown',
-      normalizeUsername(p.username),
+      normalizePlayerUsername(p.username),
       p.goals,
       p.assists,
       p.saves,

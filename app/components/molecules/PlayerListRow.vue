@@ -9,7 +9,13 @@
     @keydown.enter.prevent="emit('activate')"
     @keydown.space.prevent="emit('activate')"
   >
-    <!-- Одна строка: подпись игрока слева, подсказка действия справа (+ или ×). -->
+    <!-- Аватар + подпись; имя для инициалов — настоящее name, не строка с рейтингом. -->
+    <AtomsPlayerAvatar
+      class="shrink-0"
+      :photo="photo"
+      :fallback-name="avatarFallbackName ?? label"
+      size="sm"
+    />
     <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-100">{{ label }}</span>
     <span
       v-if="action !== 'none'"
@@ -31,6 +37,10 @@ defineProps<{
   action: 'add' | 'remove' | 'none'
   /** Доп. классы на <li>, например ширина в flex-wrap. */
   rootClass?: string
+  /** Имя файла из players.photo — картинка из /player-photos/. */
+  photo?: string | null
+  /** Имя для инициалов; если не задано — первый символ label (если в label есть рейтинг, лучше передать name). */
+  avatarFallbackName?: string
 }>()
 
 const emit = defineEmits<{ activate: [] }>()

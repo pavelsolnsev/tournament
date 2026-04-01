@@ -25,6 +25,8 @@
         <MoleculesPlayerListRow
           v-for="p in filteredPlayers"
           :key="p.id"
+          :photo="p.photo"
+          :avatar-fallback-name="p.name"
           :label="displayPlayerLabel(p)"
           :title="'Добавить в турнир: ' + displayPlayerLabel(p)"
           action="add"

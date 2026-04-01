@@ -16,23 +16,21 @@
       <div
         v-for="teamName in teams"
         :key="teamName"
-        class="rounded-xl border border-slate-700/40 bg-slate-900 overflow-hidden"
+        class="overflow-hidden rounded-xl"
+        :class="teamCardBg(teamName)"
       >
         <!-- Заголовок команды -->
-        <div class="flex items-center gap-2 px-3 py-2.5 border-b border-slate-800/60">
+        <div class="flex items-center gap-2 px-3 py-2.5">
           <span class="shrink-0 text-base leading-none" aria-hidden="true">
             {{ teamMarker(teamName) }}
           </span>
           <span class="min-w-0 truncate text-sm font-semibold text-slate-100">
             {{ teamName }}
           </span>
-          <span class="ml-auto shrink-0 rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-slate-500">
-            {{ playersByTeam(teamName).length }}
-          </span>
         </div>
 
         <!-- Список игроков -->
-        <div class="px-2 py-2">
+        <div class="px-2 pb-2">
           <p v-if="playersByTeam(teamName).length === 0" class="px-1 py-1.5 text-xs text-slate-600">
             В составе нет игроков.
           </p>
@@ -42,8 +40,14 @@
               v-for="p in playersByTeam(teamName)"
               :key="p.id"
               class="flex min-w-0 items-center gap-2 rounded-xl px-3 py-2.5"
-              :class="playerBg(teamName)"
+              :class="playerRowBg(teamName)"
             >
+              <AtomsPlayerAvatar
+                class="shrink-0"
+                :photo="p.photo"
+                :fallback-name="p.name"
+                size="md"
+              />
               <!-- Имя — flex-1 забирает всё свободное место, остальное уходит под бейджи -->
               <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-100">
                 {{ displayPlayerLabel(p) }}
@@ -155,18 +159,33 @@ function ratingDeltaClass(playerId: number): string {
     : 'text-red-400 bg-red-500/10'
 }
 
-// Маппинг маркера → лёгкий командный фон строки игрока (тот же принцип что в TeamRosterColumn).
-const MARKER_BG: Record<string, string> = {
-  '🔴': 'bg-red-500/5',
-  '🟢': 'bg-emerald-500/5',
-  '🔵': 'bg-blue-500/5',
-  '🟡': 'bg-yellow-500/5',
-  '⚪': 'bg-slate-300/5',
-  '⚫': 'bg-slate-800/30',
+// Лёгкий фон всей карточки команды — самый тихий слой.
+const CARD_BG: Record<string, string> = {
+  '🔴': 'bg-red-500/8',
+  '🟢': 'bg-emerald-500/8',
+  '🔵': 'bg-blue-500/8',
+  '🟡': 'bg-yellow-500/8',
+  '⚪': 'bg-slate-300/6',
+  '⚫': 'bg-slate-800/40',
 }
 
-function playerBg(teamName: string): string {
+// Фон строки игрока — чуть насыщеннее карточки, чтобы строки читались на фоне.
+const PLAYER_ROW_BG: Record<string, string> = {
+  '🔴': 'bg-red-500/10',
+  '🟢': 'bg-emerald-500/10',
+  '🔵': 'bg-blue-500/10',
+  '🟡': 'bg-yellow-500/10',
+  '⚪': 'bg-slate-300/8',
+  '⚫': 'bg-slate-700/40',
+}
+
+function teamCardBg(teamName: string): string {
   const marker = props.teamMarker(teamName)
-  return MARKER_BG[marker] ?? 'bg-slate-800/30'
+  return CARD_BG[marker] ?? 'bg-slate-800/20'
+}
+
+function playerRowBg(teamName: string): string {
+  const marker = props.teamMarker(teamName)
+  return PLAYER_ROW_BG[marker] ?? 'bg-slate-700/20'
 }
 </script>

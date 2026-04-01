@@ -63,6 +63,8 @@
       <MoleculesPlayerListRow
         v-for="p in filteredAvailablePlayers"
         :key="p.id"
+        :photo="p.photo"
+        :avatar-fallback-name="p.name"
         :label="displayPlayerLabel(p)"
         :title="'Добавить в турнир: ' + displayPlayerLabel(p)"
         action="add"
@@ -146,8 +148,8 @@ async function onCreatePlayer() {
     const rawUsername = newUsername.value.trim()
     const cleanedUsername = rawUsername
       ? rawUsername.replace(/^@+/, '')
-      : 'unknown'
-    // Это убирает ведущую "@" перед отправкой в API.
+      : '@unknown'
+    // Пустое поле ника — на сервер уходит @unknown, в БД сохранится так же (normalizePlayerUsername).
 
     await $fetch('/api/players', {
       method: 'POST',

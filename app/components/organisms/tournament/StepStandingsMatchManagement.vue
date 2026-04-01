@@ -7,14 +7,17 @@
       Управление матчем
     </h3>
 
-    <!-- Выбор команд (дом/гость) — можно скрывать и открывать -->
-    <div>
+    <!-- Выбор команд (дом/гость) — overflow-hidden как у остальных аккордеонов; списки рендерятся через Teleport -->
+    <div
+      class="overflow-hidden rounded-2xl border bg-slate-900/60 transition-colors"
+      :class="isTeamPickersOpen ? 'border-slate-700/60' : 'border-slate-800/60 hover:border-slate-700/50'"
+    >
       <button
         :id="teamPickersToggleId"
         type="button"
-        class="flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3 text-left
-               transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
-        :class="isTeamPickersOpen ? 'bg-slate-800/80' : 'bg-transparent'"
+        class="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left
+               transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+        :class="isTeamPickersOpen ? 'bg-slate-800/80' : 'hover:bg-slate-800/30'"
         :aria-expanded="isTeamPickersOpen"
         :aria-controls="teamPickersPanelId"
         @click="isTeamPickersOpen = !isTeamPickersOpen"
@@ -46,9 +49,9 @@
       <Transition
         enter-active-class="transition-all duration-200 ease-out overflow-hidden"
         enter-from-class="max-h-0 opacity-0"
-        enter-to-class="max-h-40 opacity-100"
+        enter-to-class="max-h-[120rem] opacity-100"
         leave-active-class="transition-all duration-150 ease-in overflow-hidden"
-        leave-from-class="max-h-40 opacity-100"
+        leave-from-class="max-h-[120rem] opacity-100"
         leave-to-class="max-h-0 opacity-0"
       >
         <div
@@ -56,12 +59,13 @@
           :id="teamPickersPanelId"
           role="region"
           :aria-labelledby="teamPickersToggleId"
-          class="pt-3"
+          class="pt-1 pb-2"
         >
           <OrganismsTournamentStepStandingsTeamPickers
             :teams="teams"
             :home-team="homeTeam"
             :away-team="awayTeam"
+            :team-marker="teamMarker"
             @update:home-team="$emit('update:homeTeam', $event)"
             @update:away-team="$emit('update:awayTeam', $event)"
           />
@@ -83,7 +87,6 @@
         </p>
 
         <div class="text-center">
-          <p class="mb-0.5 text-[10px] uppercase tracking-widest text-slate-500">Счёт</p>
           <p class="font-mono text-xl font-semibold tabular-nums text-slate-50">
             {{ homeGoals }}&nbsp;:&nbsp;{{ awayGoals }}
           </p>
@@ -331,7 +334,7 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import type { StatKey } from '~/composables/tournament-standings/types'
-import { clipLongPlayerLabel } from '~/composables/usePlayerDisplay'
+import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
 
 type Side = 'home' | 'away'
@@ -388,17 +391,6 @@ const isTeamPickersOpen = ref(true)
 const mgmtToggleId = `match-mgmt-toggle-${uid}`
 const mgmtPanelId = `match-mgmt-panel-${uid}`
 const isMgmtOpen = ref(false)
-
-function displayPlayerLabelWithoutRating(player: Player): string {
-  // Берём ник без @, чтобы в управлении матчем был аккуратный короткий текст.
-  const cleanedUsername = player.username?.replace(/^@+/, '').trim()
-  // Если ника нет или он "unknown", показываем имя игрока.
-  const baseLabel = !cleanedUsername || cleanedUsername.toLowerCase() === 'unknown'
-    ? (player.name || '').trim()
-    : cleanedUsername
-  // Обрезаем только текст ника/имени, без добавления рейтинга в этом блоке.
-  return clipLongPlayerLabel(baseLabel)
-}
 
 const pendingAction = ref<'next' | 'finish' | null>(null)
 const isActionConfirmOpen = computed(() => pendingAction.value !== null)

@@ -32,6 +32,8 @@
             <MoleculesPlayerListRow
               v-for="p in playersInTeam"
               :key="p.id"
+              :photo="p.photo"
+              :avatar-fallback-name="p.name"
               :label="displayPlayerLabel(p)"
               :title="'Убрать из команды: ' + displayPlayerLabel(p)"
               action="remove"
@@ -65,6 +67,8 @@
             <MoleculesPlayerListRow
               v-for="p in filteredUnassignedPlayers"
               :key="p.id"
+              :photo="p.photo"
+              :avatar-fallback-name="p.name"
               :label="displayPlayerLabel(p)"
               :title="'Добавить в команду: ' + displayPlayerLabel(p)"
               action="add"

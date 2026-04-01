@@ -1,4 +1,5 @@
 import { getPool } from '../utils/db'
+import { normalizePlayerUsername } from '../utils/normalizePlayerUsername'
 
 const EMOJI_REGEX =
   /[\u{1F000}-\u{1FFFF}\u{1D400}-\u{1D7FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FEFF}\u{FF00}-\u{FFEF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}]/gu
@@ -7,12 +8,6 @@ function removeEmoji(text: string | null | undefined): string {
   if (!text || typeof text !== 'string') return ''
   return text.replace(EMOJI_REGEX, '').trim() || ''
 }
-
-function normalizeUsername(text: string | null | undefined): string | null {
-  const cleaned = removeEmoji(text).replace(/^@+/, '').trim()
-  return cleaned ? cleaned : null
-}
-// Это убирает ведущую "@" и превращает пустое значение в null.
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<{ name?: string; username?: string }>(event)
@@ -27,8 +22,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const username = normalizeUsername(rawUsername)
-  // В базе username хранится без "@", чтобы везде был один формат.
+  const username = normalizePlayerUsername(removeEmoji(rawUsername))
+  // Обычные ники — без «@»; плейсхолдер без ника — в БД как @unknown (см. normalizePlayerUsername).
   const id = Date.now()
 
   try {

@@ -1,10 +1,5 @@
 import { getPool } from '../../utils/db'
-
-function normalizeUsername(text: string | null | undefined): string | null {
-  const cleaned = (text ?? '').replace(/^@+/, '').trim()
-  return cleaned ? cleaned : null
-}
-// Это убирает ведущую "@" и превращает пустое значение в null.
+import { normalizePlayerUsername } from '../../utils/normalizePlayerUsername'
 
 // Тип одной команды для сохранения.
 export type TeamTournamentData = {
@@ -96,8 +91,8 @@ export async function saveTeamsToDb(
 
     for (const player of team.players) {
       if (!player.id) continue
-      // Сохраняем username без "@", чтобы в базе был один формат.
-      player.username = normalizeUsername(player.username)
+      // Обычные ники без «@»; плейсхолдер unknown — как @unknown в БД.
+      player.username = normalizePlayerUsername(player.username)
       const existing = existingMap.get(player.id)
 
       if (existing) {

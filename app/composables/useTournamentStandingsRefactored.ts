@@ -40,7 +40,7 @@ type StandingsOptions = {
 
 export function useTournamentStandingsRefactored(params: TournamentStandingsParams, options: StandingsOptions = {}) {
   const { teamMarkers, getMarkerByIndex } = useTeamColors()
-  const { displayPlayerLabel } = usePlayerDisplay()
+  const { displayPlayerLabel, displayPlayerLabelWithoutRating } = usePlayerDisplay()
 
   // Цвета команд: если какого-то цвета нет, добавляем его по кругу.
   const effectiveTeamColors = computed<Record<string, number>>(() => {
@@ -112,7 +112,8 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     return extractMarkedPlayers({
       statsRecord,
       playersById: playersById.value,
-      displayPlayerLabel,
+      // В деталях матча рейтинг не показываем — только ник/имя.
+      displayPlayerLabel: displayPlayerLabelWithoutRating,
     })
   }
 
@@ -328,12 +329,12 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     const newHomePlayers = extractMarkedPlayers({
       statsRecord: newHomeStats,
       playersById: playersById.value,
-      displayPlayerLabel,
+      displayPlayerLabel: displayPlayerLabelWithoutRating,
     })
     const newAwayPlayers = extractMarkedPlayers({
       statsRecord: newAwayStats,
       playersById: playersById.value,
-      displayPlayerLabel,
+      displayPlayerLabel: displayPlayerLabelWithoutRating,
     })
 
     // Обновляем запись матча в истории.
@@ -568,6 +569,7 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     resetMatchStats,
     finishMatch,
     goToNextMatch,
+    // Полная подпись с рейтингом — для ростеров и выбора игроков во время матча.
     displayPlayerLabel,
     aggregatePlayerStats,
     // Дельты рейтинга за турнир — нужны для UI в StepStandingsTeamRosterTotals.

@@ -25,17 +25,23 @@
             :key="p.playerId"
             class="flex min-w-0 items-center gap-2 rounded-xl bg-slate-800/40 px-3 py-2.5"
           >
-            <!-- Имя игрока — обрезается если длинное -->
-            <span class="min-w-0 flex-1 truncate text-sm font-medium leading-tight text-slate-100">{{ p.name }}</span>
+            <AtomsPlayerAvatar
+              class="shrink-0"
+              :photo="playerAvatarsById?.[p.playerId]?.photo ?? null"
+              :fallback-name="playerAvatarsById?.[p.playerId]?.name ?? stripRatingFromDisplayLabel(p.name)"
+              size="sm"
+            />
+            <!-- Имя без рейтинга: в старых матчах в name мог остаться суффикс с эмодзи и числом. -->
+            <span class="min-w-0 flex-1 truncate text-sm font-medium leading-tight text-slate-100">{{ stripRatingFromDisplayLabel(p.name) }}</span>
             <!-- Цветные бейджи событий — те же что и в ростере текущего матча -->
             <div class="flex shrink-0 items-center gap-1">
               <template v-for="badge in STAT_BADGES" :key="badge.key">
                 <span
-                  v-if="match.homeStats[p.playerId]?.[badge.key] > 0"
+                  v-if="(match.homeStats[p.playerId]?.[badge.key] ?? 0) > 0"
                   class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
                   :class="[badge.bgClass, badge.textClass]"
                 >
-                  {{ badge.icon }}{{ match.homeStats[p.playerId][badge.key] }}
+                  {{ badge.icon }}{{ match.homeStats[p.playerId]?.[badge.key] ?? 0 }}
                 </span>
               </template>
             </div>
@@ -57,17 +63,23 @@
             :key="p.playerId"
             class="flex min-w-0 items-center gap-2 rounded-xl bg-slate-800/40 px-3 py-2.5"
           >
-            <!-- Имя игрока -->
-            <span class="min-w-0 flex-1 truncate text-sm font-medium leading-tight text-slate-100">{{ p.name }}</span>
+            <AtomsPlayerAvatar
+              class="shrink-0"
+              :photo="playerAvatarsById?.[p.playerId]?.photo ?? null"
+              :fallback-name="playerAvatarsById?.[p.playerId]?.name ?? stripRatingFromDisplayLabel(p.name)"
+              size="sm"
+            />
+            <!-- Имя без рейтинга — см. домашний список выше. -->
+            <span class="min-w-0 flex-1 truncate text-sm font-medium leading-tight text-slate-100">{{ stripRatingFromDisplayLabel(p.name) }}</span>
             <!-- Цветные бейджи событий -->
             <div class="flex shrink-0 items-center gap-1">
               <template v-for="badge in STAT_BADGES" :key="badge.key">
                 <span
-                  v-if="match.awayStats[p.playerId]?.[badge.key] > 0"
+                  v-if="(match.awayStats[p.playerId]?.[badge.key] ?? 0) > 0"
                   class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
                   :class="[badge.bgClass, badge.textClass]"
                 >
-                  {{ badge.icon }}{{ match.awayStats[p.playerId][badge.key] }}
+                  {{ badge.icon }}{{ match.awayStats[p.playerId]?.[badge.key] ?? 0 }}
                 </span>
               </template>
             </div>
@@ -81,10 +93,13 @@
 
 <script setup lang="ts">
 import type { PlayedMatch } from '~/composables/tournament-standings/types'
+import { stripRatingFromDisplayLabel } from '~/composables/usePlayerDisplay'
 
 defineProps<{
   match: PlayedMatch
   teamMarker: (teamName: string) => string
+  /** Из StepStandings: фото и настоящее имя по id — для аватаров в деталях. */
+  playerAvatarsById?: Record<number, { photo: string | null; name: string }>
 }>()
 
 // Конфигурация бейджей — полностью совпадает с StepStandingsTeamRosterColumn,

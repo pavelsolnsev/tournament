@@ -30,7 +30,7 @@
     </div>
 
     <!-- Список матчей -->
-    <ul v-else class="max-h-96 space-y-1.5 overflow-y-auto pr-0.5" role="list">
+    <ul v-else class="max-h-96 space-y-1.5 overflow-y-auto" role="list">
       <li
         v-for="m in playedMatchesList"
         :key="m.matchNumber"
@@ -147,6 +147,7 @@
             v-if="openMatch === m.matchNumber && editMatch !== m.matchNumber"
             :match="m"
             :team-marker="teamMarker"
+            :player-avatars-by-id="playerAvatarsById"
           />
         </Transition>
 
@@ -205,6 +206,8 @@ const props = defineProps<{
   teamMarker: (teamName: string) => string
   playersByTeam: (teamName: string) => Player[]
   displayPlayerLabel: (player: Player) => string
+  /** id игрока → фото и имя для аватаров в блоке «Детали». */
+  playerAvatarsById?: Record<number, { photo: string | null; name: string }>
   updatePlayedMatch: (
     matchNumber: number,
     homeGoals: number,

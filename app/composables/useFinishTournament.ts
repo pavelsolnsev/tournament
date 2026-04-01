@@ -30,9 +30,11 @@ export function useFinishTournament(params: FinishTournamentParams) {
 
   function normalizeUsername(text: string | null | undefined): string | null {
     const cleaned = (text ?? '').replace(/^@+/, '').trim()
-    return cleaned ? cleaned : null
+    if (!cleaned) return null
+    if (cleaned.toLowerCase() === 'unknown') return '@unknown'
+    return cleaned
   }
-  // Это убирает ведущую "@" и делает пустое значение null.
+  // Пустое → null; плейсхолдер без ника — @unknown, как в БД после normalizePlayerUsername на сервере.
 
   // Собираем данные игроков для отправки на сервер.
   // Статистика берётся из aggregatePlayerStats, wins/draws/losses — из списка матчей.

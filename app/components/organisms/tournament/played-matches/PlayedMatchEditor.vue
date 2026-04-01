@@ -35,6 +35,12 @@
               :class="openEditPlayer === editPlayerKey('home', p.id) ? 'bg-slate-800/70' : 'bg-slate-800/40'"
               @click="toggleEditPlayer('home', p.id)"
             >
+              <AtomsPlayerAvatar
+                class="shrink-0"
+                :photo="p.photo"
+                :fallback-name="p.name"
+                size="md"
+              />
               <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-100">{{ displayPlayerLabel(p) }}</span>
               <!-- Бейджи событий в строке превью — такой же стиль как везде -->
               <div v-if="hasAnyStat(draft.homeStats, p.id)" class="flex shrink-0 items-center gap-1">
@@ -105,6 +111,12 @@
               :class="openEditPlayer === editPlayerKey('away', p.id) ? 'bg-slate-800/70' : 'bg-slate-800/40'"
               @click="toggleEditPlayer('away', p.id)"
             >
+              <AtomsPlayerAvatar
+                class="shrink-0"
+                :photo="p.photo"
+                :fallback-name="p.name"
+                size="md"
+              />
               <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-100">{{ displayPlayerLabel(p) }}</span>
               <!-- Бейджи событий в строке превью — такой же стиль как везде -->
               <div v-if="hasAnyStat(draft.awayStats, p.id)" class="flex shrink-0 items-center gap-1">

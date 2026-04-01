@@ -20,17 +20,17 @@
 
       <thead>
         <tr class="border-b border-slate-700/60 bg-slate-800/80">
-          <th class="whitespace-nowrap px-1 py-2 text-[11px] font-semibold text-slate-500 sm:px-1.5 md:text-sm">М</th>
-          <th class="px-1 py-2 text-left text-[11px] font-semibold text-slate-500 sm:px-1.5 md:text-sm">Команда</th>
-          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-semibold text-slate-500 md:text-sm">И</th>
-          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-semibold text-slate-500 md:text-sm">В</th>
-          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-semibold text-slate-500 md:text-sm">Н</th>
-          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-semibold text-slate-500 md:text-sm">П</th>
-          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-semibold text-slate-500 md:text-sm">ЗМ</th>
-          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-semibold text-slate-500 md:text-sm">ПМ</th>
-          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-semibold text-slate-500 md:text-sm">РМ</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-xs font-semibold text-slate-500 sm:px-1.5">М</th>
+          <th class="px-1 py-2.5 text-left text-xs font-semibold text-slate-500 sm:px-1.5">Команда</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">И</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">В</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">Н</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">П</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">ЗМ</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">ПМ</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">РМ</th>
           <!-- Очки выделены цветом -->
-          <th class="whitespace-nowrap px-1 py-2 text-center text-[11px] font-bold text-slate-300 md:text-sm">О</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-bold text-slate-300">О</th>
         </tr>
       </thead>
 
@@ -41,68 +41,68 @@
           class="border-b border-slate-800/50 transition-colors last:border-0 md:hover:bg-slate-800/30"
         >
           <!-- Место -->
-          <td class="whitespace-nowrap px-1 py-2.5 text-xs font-medium tabular-nums text-slate-400 sm:px-1.5 md:text-sm">
+          <td class="whitespace-nowrap px-1 py-3 text-sm font-medium tabular-nums text-slate-400 sm:px-1.5">
             {{ row.place }}
           </td>
 
           <!-- Команда: маркер + имя — truncate не даёт ломать соседние ячейки -->
-          <td class="min-w-0 px-1 py-2.5 sm:px-1.5">
-            <div class="flex min-w-0 items-center gap-1 md:gap-1.5">
-              <span class="shrink-0 text-sm leading-none md:text-base" aria-hidden="true">
+          <td class="min-w-0 px-1 py-3 sm:px-1.5">
+            <div class="flex min-w-0 items-center gap-1">
+              <span class="shrink-0 text-sm leading-none" aria-hidden="true">
                 {{ markerForTeam(row.teamName, i) }}
               </span>
-              <span class="min-w-0 truncate text-xs font-semibold text-slate-100 sm:text-sm md:text-base">
+              <span class="min-w-0 truncate text-sm font-semibold text-slate-100">
                 {{ row.teamName }}
               </span>
             </div>
           </td>
 
           <!-- И -->
-          <td class="whitespace-nowrap px-1 py-2.5 text-center text-xs tabular-nums text-slate-400 md:text-sm">
+          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-400">
             {{ row.played }}
           </td>
 
           <!-- В — зелёный если есть победы -->
           <td
-            class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-medium tabular-nums md:text-sm"
+            class="whitespace-nowrap px-1 py-3 text-center text-sm font-medium tabular-nums"
             :class="row.wins > 0 ? 'text-emerald-400' : 'text-slate-500'"
           >
             {{ row.wins }}
           </td>
 
           <!-- Н -->
-          <td class="whitespace-nowrap px-1 py-2.5 text-center text-xs tabular-nums text-slate-500 md:text-sm">
+          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-500">
             {{ row.draws }}
           </td>
 
           <!-- П — красный если есть поражения -->
           <td
-            class="whitespace-nowrap px-1 py-2.5 text-center text-xs tabular-nums md:text-sm"
+            class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums"
             :class="row.losses > 0 ? 'text-red-400/80' : 'text-slate-500'"
           >
             {{ row.losses }}
           </td>
 
           <!-- ЗМ -->
-          <td class="whitespace-nowrap px-1 py-2.5 text-center text-xs tabular-nums text-slate-400 md:text-sm">
+          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-400">
             {{ row.goalsFor }}
           </td>
 
           <!-- ПМ -->
-          <td class="whitespace-nowrap px-1 py-2.5 text-center text-xs tabular-nums text-slate-400 md:text-sm">
+          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-400">
             {{ row.goalsAgainst }}
           </td>
 
           <!-- РМ — цвет по знаку -->
           <td
-            class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-medium tabular-nums md:text-sm"
+            class="whitespace-nowrap px-1 py-3 text-center text-sm font-medium tabular-nums"
             :class="goalDiffClass(row.goalDiff)"
           >
             {{ row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff }}
           </td>
 
           <!-- Очки — жирные, самые заметные -->
-          <td class="whitespace-nowrap px-1 py-2.5 text-center text-sm font-bold tabular-nums text-slate-100 md:text-base">
+          <td class="whitespace-nowrap px-1 py-3 text-center text-base font-bold tabular-nums text-slate-100">
             {{ row.points }}
           </td>
         </tr>
