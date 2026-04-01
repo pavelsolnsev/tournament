@@ -48,7 +48,7 @@
 
               <template v-if="wizard.step.value === 0 || wizard.step.value === 1">
                 <h1 class="text-2xl font-bold text-slate-50 sm:text-3xl">
-                  {{ wizard.step.value === 0 ? 'Игроки на турнир' : 'Команды' }}
+                  {{ wizard.step.value === 0 ? 'Выберите игроков' : 'Команды' }}
                 </h1>
 
                 <OrganismsTournamentStepTeams

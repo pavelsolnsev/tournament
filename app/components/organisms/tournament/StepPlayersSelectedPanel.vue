@@ -2,8 +2,7 @@
 <template>
   <section class="min-w-0 space-y-4 lg:col-span-2">
     <AtomsTournamentPanel as="div">
-      <div class="flex items-center justify-between gap-2">
-        <AtomsPanelHeading>В турнире</AtomsPanelHeading>
+      <div class="flex items-center justify-end gap-2">
         <span class="text-xs text-slate-400">{{ selectedPlayers.length }}</span>
       </div>
 

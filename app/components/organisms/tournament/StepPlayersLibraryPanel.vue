@@ -1,8 +1,7 @@
 <!-- Компонент StepPlayersLibraryPanel: список игроков, поиск и создание — на общих атомах турнира. -->
 <template>
   <AtomsTournamentPanel as="section" root-class="lg:col-span-3">
-    <AtomsPanelHeading>Игроки</AtomsPanelHeading>
-
+    <!-- Блок поиска — отдельно от формы добавления -->
     <AtomsTournamentTextInput
       :model-value="playerSearch"
       variant="search"
@@ -11,29 +10,37 @@
       @update:model-value="emit('update:playerSearch', $event)"
     />
 
-    <form class="flex flex-wrap items-end gap-2" @submit.prevent="onCreatePlayer">
+    <!-- Разделитель между поиском и формой добавления -->
+    <div class="border-t border-slate-700/40" />
+
+    <!-- Блок добавления нового игрока — три поля в отдельной секции -->
+    <form class="flex flex-col gap-2" @submit.prevent="onCreatePlayer">
+      <p class="text-xs font-medium text-slate-400">Новый игрок</p>
+
+      <!-- Имя -->
       <AtomsTournamentTextInput
         v-model="newName"
         variant="field"
-        size="xs"
-        placeholder="Имя нового игрока"
-        input-class="min-w-0 flex-1"
-      />
-      <AtomsTournamentTextInput
-        v-model="newUsername"
-        variant="field"
-        size="xs"
-        placeholder="username"
-        :block="false"
-        input-class="w-28"
-      />
-      <AtomsPrimaryButton
-        native-type="submit"
         size="sm"
-        :disabled="!newName.trim() || creating"
-      >
-        {{ creating ? '…' : '+' }}
-      </AtomsPrimaryButton>
+        placeholder="Имя"
+      />
+
+      <!-- Username + кнопка «+» в одну строку, одна высота -->
+      <div class="flex items-center gap-2">
+        <AtomsTournamentTextInput
+          v-model="newUsername"
+          variant="field"
+          size="sm"
+          placeholder="@username"
+        />
+        <AtomsPrimaryButton
+          native-type="submit"
+          size="md"
+          :disabled="!newName.trim() || creating"
+        >
+          {{ creating ? '…' : '+' }}
+        </AtomsPrimaryButton>
+      </div>
     </form>
 
     <p v-if="createError" class="text-[11px] text-red-400">
@@ -42,6 +49,9 @@
     <p v-if="resetError" class="text-[11px] text-red-400">
       {{ resetError }}
     </p>
+
+    <!-- Разделитель между формой и списком -->
+    <div class="border-t border-slate-700/40" />
 
     <p v-if="!players?.length" class="text-slate-500 text-xs">
       Нет игроков в базе.

@@ -1,20 +1,17 @@
 <!-- Компонент TeamsPanel: команды на тех же панели/полях, что игроки. -->
 <template>
   <AtomsTournamentPanel as="section" root-class="lg:col-span-2">
-    <AtomsPanelHeading>Команды</AtomsPanelHeading>
-
     <!-- Поле + кнопка: items-end выравнивает кнопку с инпутом, игнорируя лейбл -->
     <div class="flex items-end gap-2">
       <MoleculesFieldBlock
         id="new-team-name"
-        label="Новая команда"
         wrapper-class="flex-1"
       >
         <AtomsTournamentTextInput
           :model-value="newTeamNameValue"
           variant="field"
           size="sm"
-          placeholder="Напр. Леон"
+          placeholder="Название команды"
           id="new-team-name"
           @update:model-value="emit('update:newTeamName', $event)"
           @keydown.enter.prevent="emit('addNewTeam')"

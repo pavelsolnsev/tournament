@@ -1,8 +1,6 @@
 <!-- Компонент AvailablePlayersList: тот же набор атомов, что в мастере турнира. -->
 <template>
   <AtomsTournamentPanel root-class="min-w-0">
-    <AtomsPanelHeading>Игроки</AtomsPanelHeading>
-
     <p v-if="!players?.length" class="text-slate-500 text-xs">
       Нет игроков в базе. Добавьте выше.
     </p>

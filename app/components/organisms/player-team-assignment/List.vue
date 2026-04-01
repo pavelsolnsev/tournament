@@ -34,6 +34,7 @@ import type { Player } from '~/types/tournament'
 import type { MaybeRef, ComputedRef, Ref } from 'vue'
 import { computed, ref, unref } from 'vue'
 import { useTeamColors } from '~/composables/useTeamColors'
+import { dedupeTeamNamesPreservingOrder, normalizeTeamName } from '~/utils/teamNames'
 
 // Здесь создаём команды и распределяем игроков по командам.
 const props = defineProps<{
@@ -75,16 +76,16 @@ const newTeamNameValue = computed(() => unref(props.newTeamName))
 const confirmedSet = computed(() => unref(props.confirmedTeamNames) ?? new Set<string>())
 // Это множество команд, которые уже подтверждены как участники турнира.
 
-const isTeamConfirmed = (name: string) => confirmedSet.value.has(name)
+const isTeamConfirmed = (name: string) => confirmedSet.value.has(normalizeTeamName(name))
 // Это быстрая проверка: команда уже участвует или ещё нет.
 
 const allTeams = computed(() => {
-  const list = teamOptionsList.value
-  const confirmed = list.filter((name) => confirmedSet.value.has(name))
-  const others = list.filter((name) => !confirmedSet.value.has(name))
+  const list = dedupeTeamNamesPreservingOrder(teamOptionsList.value)
+  const confirmed = list.filter((name) => confirmedSet.value.has(normalizeTeamName(name)))
+  const others = list.filter((name) => !confirmedSet.value.has(normalizeTeamName(name)))
   return [...confirmed, ...others]
 })
-// Это сортировка: сначала подтверждённые команды, потом остальные.
+// Это сортировка: сначала подтверждённые команды, потом остальные; дублей в списке нет.
 
 const selectedTeamName = ref('')
 // Это выбранная команда слева — по ней справа показывается состав.

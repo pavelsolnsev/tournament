@@ -6,6 +6,7 @@ import type { PlayedMatch, PlayerMatchStats } from '~/composables/tournament-sta
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 import { useTeamAssignment } from '~/composables/useTeamAssignment'
 import { useTournamentState } from '~/composables/useTournamentState'
+import { dedupeTeamNamesPreservingOrder, normalizeTeamName } from '~/utils/teamNames'
 
 // Снапшот состояния турнирной таблицы — сохраняется отдельно при каждом изменении матчей.
 export type SavedStandingsSnapshot = {
@@ -52,8 +53,10 @@ export function useTournamentWizard() {
     default: () => [],
   })
 
-  // Имена команд, которые уже есть в базе.
-  const existingTeamNames = computed(() => (teamsFromApi.value ?? []).map((t) => t.name))
+  // Имена команд из БД без повторов (дубли строк или отличия только пробелами).
+  const existingTeamNames = computed(() =>
+    dedupeTeamNamesPreservingOrder((teamsFromApi.value ?? []).map((t) => t.name)),
+  )
 
   // Логика назначения игроков по командам + подтверждение команд.
   const assignment = useTeamAssignment(existingTeamNames)
@@ -157,27 +160,36 @@ export function useTournamentWizard() {
         (ctx.selectedIds ?? []).filter((id) => Number.isFinite(id)),
       )
 
-      // Восстанавливаем назначение игроков по командам.
-      assignment.assignment.value = ctx.assignmentByPlayerId ?? {}
-      assignment.confirmedTeamNames.value = new Set(ctx.confirmedTeamNames ?? [])
+      // Восстанавливаем назначение игроков по командам (имена в одном формате, как в списке команд).
+      const rawAssign = ctx.assignmentByPlayerId ?? {}
+      const normalizedAssign: Record<number, string> = {}
+      for (const [idStr, team] of Object.entries(rawAssign)) {
+        const n = normalizeTeamName(String(team))
+        if (n) normalizedAssign[Number(idStr)] = n
+      }
+      assignment.assignment.value = normalizedAssign
+      assignment.confirmedTeamNames.value = new Set(
+        dedupeTeamNamesPreservingOrder(ctx.confirmedTeamNames ?? []),
+      )
       assignment.teamColors.value = ctx.teamColors ?? {}
 
       // Восстанавливаем снапшот турнирной таблицы.
       standingsSnapshot.value = ctx.standingsSnapshot ?? null
 
-      // Восстанавливаем пользовательские команды, чтобы они снова появились в выпадающем списке.
+      // Восстанавливаем пользовательские команды для списка; без дублей и без повторов имён из БД.
       const namesFromAssignments = Object.values(ctx.assignmentByPlayerId ?? {})
       const namesFromConfirmed = ctx.confirmedTeamNames ?? []
       const namesFromColors = Object.keys(ctx.teamColors ?? {})
-      const allNames = new Set<string>(
-        [...namesFromAssignments, ...namesFromConfirmed, ...namesFromColors].filter(
-          (name) => !!name && typeof name === 'string',
-        ),
-      )
+      const mergedFromContext = [
+        ...namesFromAssignments,
+        ...namesFromConfirmed,
+        ...namesFromColors,
+      ].filter((name) => !!name && typeof name === 'string')
+      const uniqueFromContext = dedupeTeamNamesPreservingOrder(mergedFromContext)
 
-      const existingNames = new Set(existingTeamNames.value ?? [])
-      assignment.newTeamNames.value = Array.from(allNames).filter(
-        (name) => !existingNames.has(name),
+      const existingKeys = new Set((existingTeamNames.value ?? []).map((n) => normalizeTeamName(n)))
+      assignment.newTeamNames.value = uniqueFromContext.filter(
+        (name) => !existingKeys.has(normalizeTeamName(name)),
       )
     },
     { immediate: true },
