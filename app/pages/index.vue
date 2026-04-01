@@ -125,6 +125,7 @@
                 :assignment-by-player-id="wizard.assignment.assignment.value"
                 :initial-snapshot="wizard.standingsSnapshot.value"
                 @update:snapshot="wizard.saveStandingsSnapshot"
+                @update:match-status="wizard.updateMatchStatus"
                 @tournament-finished="wizard.resetWizard()"
                 @tournament-cleared="wizard.resetWizard()"
               />

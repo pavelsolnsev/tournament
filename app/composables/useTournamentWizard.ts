@@ -1,7 +1,7 @@
 // Этот файл: композабл мастера создания турнира (wizard).
 // Он хранит шаги, данные игроков/команд и связывает всё вместе через composables.
 // Состояние теперь сохраняется в базу данных (не в cookie) для синхронизации между устройствами.
-import type { Player, Team } from '~/types/tournament'
+import type { Player, Team, MatchStatus } from '~/types/tournament'
 import type { PlayedMatch, PlayerMatchStats } from '~/composables/tournament-standings/types'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 import { useTeamAssignment } from '~/composables/useTeamAssignment'
@@ -33,6 +33,11 @@ export type SavedTournamentContext = {
   teamColors: Record<string, number>
   // Снапшот таблицы и матчей — восстанавливается при старте шага "Таблица".
   standingsSnapshot: SavedStandingsSnapshot | null
+  // Текущий статус матча — транслируется зрителям через polling каждые 5 сек.
+  matchStatus: MatchStatus
+  // Текущие команды матча — показываем зрителям название командд в статусе Live.
+  liveHomeTeam: string
+  liveAwayTeam: string
 }
 
 // Управляет мастером создания турнира:
@@ -121,6 +126,12 @@ export function useTournamentWizard() {
   // Снапшот таблицы и матчей — обновляется из компонента StepStandings при каждом изменении.
   const standingsSnapshot = ref<SavedStandingsSnapshot | null>(null)
 
+  // Текущий статус матча — синхронизируется с БД, зритель видит его через polling.
+  const matchStatus = ref<MatchStatus>('upcoming')
+  // Команды текущего live-матча — передаём зрителю чтобы он видел кто играет.
+  const liveHomeTeam = ref('')
+  const liveAwayTeam = ref('')
+
   // Флаг: было ли уже восстановлено состояние из базы.
   const stateRestored = ref(false)
 
@@ -176,6 +187,11 @@ export function useTournamentWizard() {
       // Восстанавливаем снапшот турнирной таблицы.
       standingsSnapshot.value = ctx.standingsSnapshot ?? null
 
+      // Восстанавливаем статус матча и текущие команды.
+      matchStatus.value = ctx.matchStatus ?? 'upcoming'
+      liveHomeTeam.value = ctx.liveHomeTeam ?? ''
+      liveAwayTeam.value = ctx.liveAwayTeam ?? ''
+
       // Восстанавливаем пользовательские команды для списка; без дублей и без повторов имён из БД.
       const namesFromAssignments = Object.values(ctx.assignmentByPlayerId ?? {})
       const namesFromConfirmed = ctx.confirmedTeamNames ?? []
@@ -206,6 +222,10 @@ export function useTournamentWizard() {
     teamColors: assignment.teamColors.value,
     // Сохраняем последний снапшот таблицы — он обновляется снаружи через saveStandingsSnapshot.
     standingsSnapshot: standingsSnapshot.value,
+    // Сохраняем статус матча — зритель видит Live/Upcoming/Finished через polling.
+    matchStatus: matchStatus.value,
+    liveHomeTeam: liveHomeTeam.value,
+    liveAwayTeam: liveAwayTeam.value,
   }))
 
   // При изменении состояния сохраняем в базу данных (с debounce).
@@ -222,6 +242,13 @@ export function useTournamentWizard() {
   // Вызывается из StepStandings при каждом изменении матчей/таблицы.
   function saveStandingsSnapshot(snapshot: SavedStandingsSnapshot) {
     standingsSnapshot.value = snapshot
+  }
+
+  // Обновляет статус матча — вызывается из StepStandings при смене команд или завершении.
+  function updateMatchStatus(status: MatchStatus, home: string, away: string) {
+    matchStatus.value = status
+    liveHomeTeam.value = home
+    liveAwayTeam.value = away
   }
 
   // Полный сброс wizard после завершения турнира — начинаем с чистого листа.
@@ -245,6 +272,11 @@ export function useTournamentWizard() {
     // Очищаем снапшот матчей и таблицы.
     standingsSnapshot.value = null
 
+    // Сбрасываем статус матча — турнир очищен.
+    matchStatus.value = 'upcoming'
+    liveHomeTeam.value = ''
+    liveAwayTeam.value = ''
+
     // Сразу сохраняем сброшенное состояние в базу (без debounce — важный момент).
     await saveTournamentStateNow({
       step: 0,
@@ -255,6 +287,9 @@ export function useTournamentWizard() {
       confirmedTeamNames: [],
       teamColors: {},
       standingsSnapshot: null,
+      matchStatus: 'upcoming',
+      liveHomeTeam: '',
+      liveAwayTeam: '',
     })
   }
 
@@ -275,6 +310,10 @@ export function useTournamentWizard() {
     onAddNewTeam,
     standingsSnapshot,
     saveStandingsSnapshot,
+    matchStatus,
+    liveHomeTeam,
+    liveAwayTeam,
+    updateMatchStatus,
     resetWizard,
     stateRestored,
   }

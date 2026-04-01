@@ -1,3 +1,9 @@
+// Статусы матча — три состояния жизненного цикла: ожидание → идёт → завершён.
+// upcoming: матч запланирован, команды ещё не выбраны.
+// live: обе команды выбраны, матч идёт прямо сейчас.
+// finished: турнир завершён (нажали «Завершить турнир»).
+export type MatchStatus = 'upcoming' | 'live' | 'finished'
+
 export interface Player {
   id: number
   name: string

@@ -332,7 +332,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Player } from '~/types/tournament'
+import type { Player, MatchStatus } from '~/types/tournament'
 import type { StatKey } from '~/composables/tournament-standings/types'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
@@ -375,10 +375,27 @@ const props = defineProps<{
   onClearData: () => void
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   'update:homeTeam': [value: string]
   'update:awayTeam': [value: string]
+  // Сообщаем родителю об изменении статуса матча — он сохраняет в БД.
+  'update:matchStatus': [status: MatchStatus, homeTeam: string, awayTeam: string]
 }>()
+
+// Когда обе команды выбраны — матч стартует, сообщаем Live наружу.
+// Когда одна команда сбрасывается — матч ещё не начался, статус upcoming.
+watch(
+  () => [props.homeTeam, props.awayTeam] as const,
+  ([home, away]) => {
+    if (home && away) {
+      // Обе команды выбраны — матч идёт прямо сейчас.
+      emit('update:matchStatus', 'live', home, away)
+    } else {
+      // Команда убрана — матч ещё не начался.
+      emit('update:matchStatus', 'upcoming', '', '')
+    }
+  },
+)
 
 const uid = useId?.() ?? Math.random().toString(36).slice(2)
 

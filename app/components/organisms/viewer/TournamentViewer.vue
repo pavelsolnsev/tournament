@@ -4,13 +4,22 @@
     <!-- Шапка: absolute + safe-area сверху, не двигает контент -->
     <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-800/70 bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)]">
       <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6 h-14">
-        <div class="min-w-0 flex-1">
-          <h1 class="truncate text-base font-bold text-slate-50 sm:text-lg leading-tight">
-            {{ tournamentName || 'Турнир' }}
-          </h1>
-          <p v-if="tournamentDate" class="truncate text-xs text-slate-400 leading-tight mt-0.5">
-            {{ tournamentDate }}
-          </p>
+        <div class="min-w-0 flex-1 flex items-center gap-2.5">
+          <div class="min-w-0">
+            <h1 class="truncate text-base font-bold text-slate-50 sm:text-lg leading-tight">
+              {{ tournamentName || 'Турнир' }}
+            </h1>
+            <p v-if="tournamentDate" class="truncate text-xs text-slate-400 leading-tight mt-0.5">
+              {{ tournamentDate }}
+            </p>
+          </div>
+
+          <!-- Бейдж статуса — сразу видно идёт ли матч сейчас -->
+          <AtomsMatchStatusBadge
+            v-if="matchStatus"
+            :status="matchStatus"
+            class="shrink-0"
+          />
         </div>
 
         <!-- Кнопка «Войти»: спокойная (для владельца), но с нормальной тач-зоной -->
@@ -24,10 +33,44 @@
           Войти
         </button>
       </div>
+
+      <!-- Строка с текущими командами Live-матча — показывается только когда матч идёт -->
+      <Transition
+        enter-active-class="transition-all duration-300 ease-out overflow-hidden"
+        enter-from-class="max-h-0 opacity-0"
+        enter-to-class="max-h-16 opacity-100"
+        leave-active-class="transition-all duration-200 ease-in overflow-hidden"
+        leave-from-class="max-h-16 opacity-100"
+        leave-to-class="max-h-0 opacity-0"
+      >
+        <div
+          v-if="matchStatus === 'live' && liveHomeTeam && liveAwayTeam"
+          class="border-t border-red-500/20 bg-red-500/5"
+        >
+          <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-center gap-3 px-4 sm:px-6 py-1.5">
+            <!-- Название домашней команды -->
+            <span class="min-w-0 truncate text-right text-sm font-semibold text-slate-100 flex-1">
+              {{ liveHomeTeam }}
+            </span>
+            <!-- Разделитель "vs" -->
+            <span class="shrink-0 text-xs font-bold text-red-400 uppercase tracking-widest">vs</span>
+            <!-- Название гостевой команды -->
+            <span class="min-w-0 truncate text-left text-sm font-semibold text-slate-100 flex-1">
+              {{ liveAwayTeam }}
+            </span>
+          </div>
+        </div>
+      </Transition>
     </header>
 
     <!-- main всегда присутствует в DOM — стабильный каркас без прыжков при refresh -->
-    <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]">
+    <!-- Отступ сверху увеличивается на высоту live-строки (примерно 36px = 2.25rem) когда матч идёт -->
+    <main
+      class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6 transition-[padding] duration-300"
+      :class="matchStatus === 'live' && liveHomeTeam && liveAwayTeam
+        ? 'pt-[calc(theme(spacing.14)+env(safe-area-inset-top)+2.25rem)]'
+        : 'pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]'"
+    >
       <div class="flex flex-1 flex-col py-5 sm:py-8">
         <!-- Заглушка «турнир не начался» — сверху, как обычный контент -->
         <div
@@ -99,6 +142,12 @@ const teams = computed(() => props.state?.confirmedTeamNames ?? [])
 const teamColors = computed(() => props.state?.teamColors ?? {})
 const assignmentByPlayerId = computed(() => props.state?.assignmentByPlayerId ?? {})
 const initialSnapshot = computed<SavedStandingsSnapshot | null>(() => props.state?.standingsSnapshot ?? null)
+
+// Статус матча — upcoming / live / finished. По умолчанию upcoming если данных нет.
+const matchStatus = computed(() => props.state?.matchStatus ?? 'upcoming')
+// Команды текущего live-матча — отображаем в шапке когда статус Live.
+const liveHomeTeam = computed(() => props.state?.liveHomeTeam ?? '')
+const liveAwayTeam = computed(() => props.state?.liveAwayTeam ?? '')
 
 const snapshotKey = computed(() => {
   const matchCount = initialSnapshot.value?.playedMatchesList?.length ?? 0

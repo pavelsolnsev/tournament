@@ -251,6 +251,7 @@
         :on-clear-data="handleClearData"
         @update:home-team="handleUpdateHomeTeam"
         @update:away-team="handleUpdateAwayTeam"
+        @update:match-status="(status, home, away) => emit('update:matchStatus', status, home, away)"
       />
 
     </section>
@@ -258,7 +259,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Player } from '~/types/tournament'
+import type { Player, MatchStatus } from '~/types/tournament'
 import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { useTournamentStandingsRefactored } from '~/composables/useTournamentStandingsRefactored'
 import { useFinishTournament } from '~/composables/useFinishTournament'
@@ -285,6 +286,8 @@ const emit = defineEmits<{
   'tournament-finished': []
   // Вызывается после локальной очистки без записи в базу — родитель сбрасывает wizard.
   'tournament-cleared': []
+  // Статус матча изменился — родитель (wizard) должен сохранить его в БД.
+  'update:matchStatus': [status: MatchStatus, homeTeam: string, awayTeam: string]
 }>()
 
 const {
@@ -378,8 +381,9 @@ const {
 
 async function handleFinishTournament() {
   await finishTournament()
-  // После успешного завершения сообщаем родителю — он сбросит весь wizard.
+  // После успешного завершения турнира переводим статус в finished и сообщаем родителю.
   if (finishStatus.value === 'success') {
+    emit('update:matchStatus', 'finished', '', '')
     emit('tournament-finished')
   }
 }
