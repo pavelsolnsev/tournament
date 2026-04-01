@@ -1,13 +1,15 @@
 <template>
-  <div class="min-h-screen bg-slate-900 text-slate-100">
+  <!-- min-h-screen убран — он уже есть в app.vue. Дублирование давало лишнюю высоту. -->
+  <div>
     <!-- clientReady становится true только после монтирования на клиенте.
          До этого рендерим нейтральный скелетон — он совпадает с SSR и не даёт hydration mismatch. -->
-    <div v-if="!clientReady" class="min-h-screen bg-slate-900" aria-hidden="true" />
+    <div v-if="!clientReady" class="bg-slate-900" aria-hidden="true" />
 
     <!-- После монтирования на клиенте показываем реальный UI -->
     <template v-else>
       <!-- Режим администратора -->
       <template v-if="isAdmin">
+        <!-- min-h-screen здесь нужен чтобы header + main занимали весь экран в режиме админа. -->
         <div class="flex min-h-screen flex-col">
           <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-800/70 bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)]">
             <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6 h-14">

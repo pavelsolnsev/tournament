@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-900 text-slate-100">
-    <slot />
-  </div>
+  <!-- min-h-screen здесь убран — он уже есть на корневом div в app.vue.
+       Дублирование создавало лишнюю высоту и ложный скролл когда контент помещается в экран. -->
+  <slot />
 </template>
