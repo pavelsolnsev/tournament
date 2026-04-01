@@ -4,6 +4,10 @@ export default defineNuxtConfig({
   css: ['~/assets/css/tailwind.css'],
   app: {
     head: {
+      // Добавляем базовые классы на body, чтобы фон сразу был "как на сайте".
+      bodyAttrs: {
+        class: 'bg-slate-900 text-slate-100',
+      },
       // Подключаем фавиконки и PWA-иконки глобально для всех страниц сайта.
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
@@ -14,9 +18,13 @@ export default defineNuxtConfig({
       ],
       // Добавляем мета для iOS, чтобы ярлык на домашнем экране использовал иконку и веб-режим.
       meta: [
+        // Задаём общий цвет темы, чтобы не было белой подложки во время загрузки.
+        { name: 'theme-color', content: '#0f172a' },
+        { name: 'color-scheme', content: 'dark' },
         // Фиксируем viewport на мобильных: отключаем зум/масштабирование.
         { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
         { name: 'apple-mobile-web-app-title', content: 'Footboal Admin' },
         { name: 'format-detection', content: 'telephone=no' },

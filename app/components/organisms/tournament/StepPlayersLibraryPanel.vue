@@ -34,32 +34,7 @@
       >
         {{ creating ? '…' : '+' }}
       </AtomsPrimaryButton>
-
-      <button
-        type="button"
-        class="rounded-lg bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-200
-               transition-colors md:hover:bg-slate-700 active:bg-slate-900
-               disabled:cursor-not-allowed disabled:opacity-40"
-        :disabled="resetting"
-        @click="openResetConfirm"
-      >
-        {{ resetting ? 'Reset…' : 'Reset' }}
-      </button>
     </form>
-
-    <MoleculesDangerConfirmInline
-      class="mt-2"
-      :open="isResetConfirmOpen"
-      :seconds-left="resetConfirmSecondsLeft"
-      :busy="resetting"
-      aria-label="Подтверждение reset"
-      title="Reset обнулит статистику у всех игроков."
-      cancel-text="Отмена"
-      confirm-text="Подтвердить reset"
-      busy-text="Reset…"
-      @cancel="closeResetConfirm"
-      @confirm="confirmResetPlayers"
-    />
 
     <p v-if="createError" class="text-[11px] text-red-400">
       {{ createError }}
@@ -87,6 +62,32 @@
     <p v-if="filteredAvailablePlayers.length === 0 && availablePlayers.length > 0" class="text-slate-500 text-xs">
       Ничего не найдено.
     </p>
+
+    <!-- Reset в самом низу: спокойная второстепенная кнопка. -->
+    <div class="mt-6 flex flex-col items-center">
+      <button
+        type="button"
+        class="inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-800/60 hover:text-slate-300 active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-40"
+        :disabled="resetting"
+        @click="openResetConfirm"
+      >
+        {{ resetting ? 'Reset…' : 'Reset' }}
+      </button>
+
+      <MoleculesDangerConfirmInline
+        class="mt-2 w-full"
+        :open="isResetConfirmOpen"
+        :seconds-left="resetConfirmSecondsLeft"
+        :busy="resetting"
+        aria-label="Подтверждение reset"
+        title="Reset обнулит статистику у всех игроков."
+        cancel-text="Отмена"
+        confirm-text="Подтвердить reset"
+        busy-text="Reset…"
+        @cancel="closeResetConfirm"
+        @confirm="confirmResetPlayers"
+      />
+    </div>
   </AtomsTournamentPanel>
 </template>
 

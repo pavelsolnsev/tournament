@@ -17,7 +17,7 @@
           type="button"
           class="shrink-0 inline-flex h-11 items-center gap-2 rounded-xl px-3 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800/60 hover:text-slate-200 active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
           aria-label="Войти как администратор"
-          @click="showLoginModal = true"
+          @click="onAdminEnter"
         >
           <span aria-hidden="true">🔐</span>
           Войти
@@ -76,6 +76,7 @@
 import type { Player } from '~/types/tournament'
 import type { SavedTournamentContext } from '~/composables/useTournamentWizard'
 import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
+import { useAdminAuth } from '~/composables/useAdminAuth'
 
 const props = defineProps<{
   state: SavedTournamentContext | null
@@ -83,6 +84,13 @@ const props = defineProps<{
 }>()
 
 const showLoginModal = ref(false)
+const { restoreSession } = useAdminAuth()
+
+function onAdminEnter() {
+  // Если сессия уже есть — входим сразу, без пароля.
+  if (restoreSession()) return
+  showLoginModal.value = true
+}
 
 const tournamentName = computed(() => props.state?.tournamentName ?? '')
 const tournamentDate = computed(() => props.state?.tournamentDate ?? '')

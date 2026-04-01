@@ -1,17 +1,18 @@
 // Composable для управления режимом администратора.
-// Начальное значение isAdmin устанавливается в plugins/admin-auth.server.ts до рендера.
+// Значение isAdmin устанавливается серверным плагином admin-auth.server.ts (enforce: 'pre').
+// На клиенте значение приходит через гидрацию __NUXT_DATA__ — не переинициализируем.
 
 export function useAdminAuth() {
-  // useState с ключом 'isAdmin' — один shared ref на всё приложение.
-  // Значение установлено серверным плагином из cookie до первого рендера.
-  const isAdmin = useState<boolean>('isAdmin', () => false)
-
-  // useCookie нужен только для записи при login/logout.
   const sessionCookie = useCookie<string>('admin_session', {
     maxAge: 60 * 60 * 24 * 30,
     sameSite: 'lax',
     path: '/',
   })
+
+  // Фабрика используется как fallback если плагин ещё не успел создать useState.
+  // На сервере: читает cookie из HTTP-контекста.
+  // На клиенте: читает sessionCookie.value — Nuxt восстанавливает его из документа.
+  const isAdmin = useState<boolean>('isAdmin', () => sessionCookie.value === 'true')
 
   async function login(password: string): Promise<{ ok: boolean; error?: string }> {
     try {
@@ -19,7 +20,6 @@ export function useAdminAuth() {
         method: 'POST',
         body: { password },
       })
-      // Записываем cookie и обновляем shared state — страница переключится реактивно.
       sessionCookie.value = 'true'
       isAdmin.value = true
       return { ok: true }
@@ -37,5 +37,13 @@ export function useAdminAuth() {
     window.location.reload()
   }
 
-  return { isAdmin, login, logout }
+  function restoreSession(): boolean {
+    if (sessionCookie.value === 'true') {
+      isAdmin.value = true
+      return true
+    }
+    return false
+  }
+
+  return { isAdmin, login, logout, restoreSession }
 }
