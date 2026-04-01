@@ -1,6 +1,6 @@
 <template>
-  <!-- min-h-screen убран — он уже есть в app.vue. Дублирование давало лишнюю высоту. -->
-  <div>
+  <!-- h-full продолжает цепочку высоты от #scroll-root → landing → сюда. -->
+  <div class="h-full">
     <!-- clientReady становится true только после монтирования на клиенте.
          До этого рендерим нейтральный скелетон — он совпадает с SSR и не даёт hydration mismatch. -->
     <div v-if="!clientReady" class="bg-slate-900" aria-hidden="true" />
