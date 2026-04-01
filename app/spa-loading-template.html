@@ -1,34 +1,35 @@
 <template>
-  <div class="min-h-screen bg-slate-900 text-slate-100">
-    <main class="mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-center gap-5 px-4">
-      <div class="flex flex-col items-center gap-4">
-        <img
-          src="/apple-touch-icon.png"
-          width="96"
-          height="96"
-          alt="Иконка приложения"
-          class="h-20 w-20 rounded-3xl shadow-xl"
-        />
+  <!-- Этот шаблон показывается ДО загрузки CSS/Vue, поэтому тут только "голый" HTML + встроенный стиль. -->
+  <div class="app">
+    <style>
+      html, body { height: 100%; }
+      body { margin: 0; background: #0f172a; color: #f8fafc; }
+      .app { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+      .card { display: grid; justify-items: center; gap: 14px; }
+      .icon { width: 80px; height: 80px; border-radius: 22px; box-shadow: 0 18px 40px rgba(0,0,0,.55); }
+      .row { display: inline-flex; align-items: center; gap: 10px; }
+      .title { font: 700 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #e2e8f0; }
+      .hint { font: 600 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #94a3b8; }
+      .spinner { width: 18px; height: 18px; color: #34d399; animation: spin 900ms linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 
-        <div class="flex items-center gap-3">
-          <svg
-            class="h-5 w-5 animate-spin text-emerald-400"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-          >
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 0 1 8-8v3.2A4.8 4.8 0 0 0 7.2 12H4Z"
-            />
-          </svg>
-          <p class="text-sm font-semibold text-slate-200">Загружаем…</p>
-        </div>
+    <main class="card" aria-busy="true" aria-live="polite">
+      <img src="/apple-touch-icon.png" width="80" height="80" alt="Иконка приложения" class="icon" />
 
-        <p class="text-xs text-slate-400">Почти готово</p>
+      <div class="row">
+        <svg class="spinner" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25" />
+          <path
+            fill="currentColor"
+            opacity="0.75"
+            d="M4 12a8 8 0 0 1 8-8v3.2A4.8 4.8 0 0 0 7.2 12H4Z"
+          />
+        </svg>
+        <p class="title">Загружаем…</p>
       </div>
+
+      <p class="hint">Почти готово</p>
     </main>
   </div>
 </template>

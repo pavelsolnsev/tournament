@@ -29,6 +29,10 @@ export default defineNuxtConfig({
         { name: 'apple-mobile-web-app-title', content: 'Footboal Admin' },
         { name: 'format-detection', content: 'telephone=no' },
       ],
+      // Принудительно задаём тёмный фон сразу, ещё до загрузки Tailwind CSS (убирает "белую вспышку").
+      style: [
+        { innerHTML: 'html,body,#__nuxt{background:#0f172a;color:#f8fafc;} body{margin:0;}' },
+      ],
     },
   },
   devtools: {
