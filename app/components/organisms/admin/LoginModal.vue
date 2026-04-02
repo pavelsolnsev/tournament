@@ -4,7 +4,7 @@
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4 pb-[env(safe-area-inset-bottom)]"
     @click.self="$emit('close')"
   >
-    <div class="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-2xl p-6 flex flex-col gap-5 max-h-[min(80vh,640px)] overflow-auto">
+    <div class="w-full max-w-sm rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700/60 shadow-2xl p-6 flex flex-col gap-5 max-h-[min(80vh,640px)] overflow-auto">
 
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100">Вход для администратора</h2>

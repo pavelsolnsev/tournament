@@ -3,7 +3,7 @@
   <div class="h-full">
     <!-- clientReady становится true только после монтирования на клиенте.
          До этого рендерим нейтральный скелетон — он совпадает с SSR и не даёт hydration mismatch. -->
-    <div v-if="!clientReady" class="bg-slate-50 dark:bg-slate-900" aria-hidden="true" />
+    <div v-if="!clientReady" class="bg-slate-100 dark:bg-slate-900" aria-hidden="true" />
 
     <!-- После монтирования на клиенте показываем реальный UI -->
     <template v-else>
@@ -18,8 +18,9 @@
                 <span class="inline-block h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400" aria-hidden="true" />
                 Администратор
               </span>
-              <!-- Кнопки в шапке: кнопка темы + выход. -->
+              <!-- Кнопки в шапке: пожелания + кнопка темы + выход. -->
               <div class="flex items-center gap-1">
+                <AtomsFeedbackButton />
                 <AtomsThemeToggle />
                 <button
                   type="button"
@@ -144,6 +145,9 @@
                 />
               </template>
 
+              <!-- Панель пожеланий пользователей — только на шаге 0, после списка игроков. -->
+              <OrganismsAdminFeedbackAdmin v-if="wizard.step.value === 0" />
+
               <OrganismsTournamentStepStandings
                 v-if="wizard.step.value === 2"
                 :tournament-name="wizard.tournamentName.value"
@@ -160,6 +164,8 @@
               />
             </section>
           </main>
+        <!-- Модальное окно пожеланий — доступно и администратору. -->
+        <MoleculesFeedbackModal />
         </div>
       </template>
 

@@ -16,6 +16,8 @@ export type AwardWinner = {
   // Маркер-эмодзи команды — цветной кружок команды.
   teamMarker: string
   value: number
+  // Статистика за весь турнир — для строки отметок у MVP (голы/пасы/сейвы/жёлтые).
+  tournamentStats?: PlayerMatchStats
 }
 
 // MVP команды — лучший игрок отдельной команды.
@@ -207,7 +209,15 @@ function findTournamentMvp(
   // Если один — возвращаем сразу.
   if (topCandidates.length === 1) {
     const c = topCandidates[0]!
-    return [{ playerId: c.playerId, name: c.name, photo: c.photo, teamName: c.teamName, teamMarker: c.teamMarker, value: c.goals }]
+    return [{
+      playerId: c.playerId,
+      name: c.name,
+      photo: c.photo,
+      teamName: c.teamName,
+      teamMarker: c.teamMarker,
+      value: c.goals,
+      tournamentStats: { goals: c.goals, assists: c.assists, saves: c.saves, yellows: c.yellows },
+    }]
   }
 
   // Если несколько — сортируем по дополнительным критериям.
@@ -227,7 +237,15 @@ function findTournamentMvp(
       c.ratingDelta === best.ratingDelta,
   )
 
-  return winners.map((c) => ({ playerId: c.playerId, name: c.name, photo: c.photo, teamName: c.teamName, teamMarker: c.teamMarker, value: c.goals }))
+  return winners.map((c) => ({
+    playerId: c.playerId,
+    name: c.name,
+    photo: c.photo,
+    teamName: c.teamName,
+    teamMarker: c.teamMarker,
+    value: c.goals,
+    tournamentStats: { goals: c.goals, assists: c.assists, saves: c.saves, yellows: c.yellows },
+  }))
 }
 
 // Основной composable — вычисляет все итоги турнира из снапшота.

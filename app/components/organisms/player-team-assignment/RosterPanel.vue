@@ -22,7 +22,7 @@
       <div class="grid gap-4 sm:grid-cols-2">
 
         <!-- Левый блок: игроки, назначенные в эту команду -->
-        <div class="flex flex-col gap-2 rounded-xl border border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-900/30 p-3">
+        <div class="flex flex-col gap-2 rounded-xl border border-slate-300 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/30 p-3">
           <div class="flex items-center justify-between gap-2">
             <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">В команде</h4>
             <span class="text-xs tabular-nums text-slate-400 dark:text-slate-500">{{ playersInTeam.length }}</span>
@@ -45,7 +45,7 @@
         </div>
 
         <!-- Правый блок: нераспределённые игроки с поиском -->
-        <div class="flex flex-col gap-2 rounded-xl border border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-900/30 p-3">
+        <div class="flex flex-col gap-2 rounded-xl border border-slate-300 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/30 p-3">
           <div class="flex items-center justify-between gap-2">
             <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Свободные</h4>
             <span class="text-xs tabular-nums text-slate-400 dark:text-slate-500">{{ unassignedPlayers.length }}</span>

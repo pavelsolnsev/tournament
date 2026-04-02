@@ -9,7 +9,7 @@
 
     <!-- Выбор команд (дом/гость) — overflow-hidden как у остальных аккордеонов; списки рендерятся через Teleport -->
     <div
-      class="overflow-hidden rounded-2xl border bg-white dark:bg-slate-900/60 transition-colors"
+      class="overflow-hidden rounded-2xl border bg-slate-50 dark:bg-slate-900/60 transition-colors"
       :class="isTeamPickersOpen ? 'border-slate-300 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
     >
       <button
@@ -76,7 +76,7 @@
     <!-- Карточка матча — показывается только когда выбраны обе команды -->
     <div
       v-if="homeTeam && awayTeam"
-      class="rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900"
+      class="rounded-2xl border border-slate-300 dark:border-slate-700/60 bg-slate-50 dark:bg-slate-900"
     >
 
       <!-- Табло -->
@@ -173,7 +173,7 @@
     </div>
 
     <!-- Кнопка "Управление" — всегда видна, вне карточки матча -->
-    <div class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900">
+    <div class="overflow-hidden rounded-2xl border border-slate-300 dark:border-slate-700/60 bg-slate-50 dark:bg-slate-900">
       <button
         :id="mgmtToggleId"
         type="button"

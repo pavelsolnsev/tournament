@@ -36,8 +36,8 @@
         :key="m.matchNumber"
         class="min-w-0 overflow-hidden rounded-xl border transition-colors"
         :class="(openMatch === m.matchNumber || editMatch === m.matchNumber)
-          ? 'border-slate-300 dark:border-slate-600/60 bg-white dark:bg-slate-900'
-          : 'border-slate-200 dark:border-slate-700/40 bg-white dark:bg-slate-900 md:hover:border-slate-300 dark:md:hover:border-slate-600/50'"
+          ? 'border-slate-400/60 dark:border-slate-600/60 bg-slate-50 dark:bg-slate-900'
+          : 'border-slate-300 dark:border-slate-700/40 bg-slate-50 dark:bg-slate-900 md:hover:border-slate-400/60 dark:md:hover:border-slate-600/50'"
       >
         <!-- Строка матча: счёт + команды -->
         <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-3">

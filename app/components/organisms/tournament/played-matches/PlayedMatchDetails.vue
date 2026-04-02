@@ -23,7 +23,7 @@
           <li
             v-for="p in match.homePlayers"
             :key="p.playerId"
-            class="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3 py-2.5 dark:border-transparent dark:bg-slate-800/40"
+            class="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200/90 bg-slate-50 px-3 py-2.5 dark:border-transparent dark:bg-slate-800/40"
           >
             <AtomsPlayerAvatar
               class="shrink-0"
@@ -61,7 +61,7 @@
           <li
             v-for="p in match.awayPlayers"
             :key="p.playerId"
-            class="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3 py-2.5 dark:border-transparent dark:bg-slate-800/40"
+            class="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200/90 bg-slate-50 px-3 py-2.5 dark:border-transparent dark:bg-slate-800/40"
           >
             <AtomsPlayerAvatar
               class="shrink-0"

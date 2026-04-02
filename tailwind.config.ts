@@ -1,6 +1,10 @@
 import type { Config } from 'tailwindcss'
 
 export default {
+  // Hover только на устройствах с настоящим hover (мышь/трекпад). На таче классы hover: не применяются.
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
   // Тема управляется классом 'dark' на <html> — так мы можем переключать вручную.
   darkMode: 'class',
   content: [

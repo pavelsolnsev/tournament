@@ -1,7 +1,7 @@
 <template>
   <!-- min-h-full вместо min-h-screen — высота от #scroll-root (fixed контейнера). -->
   <!-- Светлая тема: белый фон. Тёмная: slate-900. -->
-  <div class="flex min-h-full flex-col bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+  <div class="flex min-h-full flex-col bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
     <!-- Шапка: absolute + safe-area сверху, не двигает контент -->
     <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)]">
       <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6 h-14">
@@ -23,8 +23,9 @@
           />
         </div>
 
-        <!-- Кнопки шапки: переключатель темы + войти. -->
+        <!-- Кнопки шапки: переключатель темы + пожелания + войти. -->
         <div class="flex shrink-0 items-center gap-1">
+          <AtomsFeedbackButton />
           <AtomsThemeToggle />
         <!-- Кнопка «Войти»: спокойная (для владельца), но с нормальной тач-зоной -->
         <button
@@ -174,7 +175,7 @@
         <!-- Заглушка «турнир не начался» — сверху, как обычный контент -->
         <div
           v-if="!hasViewerData"
-          class="flex flex-col"
+          class="flex flex-col items-center justify-center"
         >
           <div class="flex w-full max-w-sm flex-col items-center gap-4 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/60 px-6 py-16 text-center">
             <svg class="h-10 w-10 text-slate-300 dark:text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -190,12 +191,21 @@
         </div>
 
         <!-- Итоги турнира — показываются когда турнир завершён -->
-        <OrganismsViewerTournamentSummary
+        <!-- Обёртка даёт чуть более тёмный фон в светлой теме для контраста со страницей -->
+        <div
           v-else-if="matchStatus === 'finished' && tournamentSummary"
-          :summary="tournamentSummary"
-          :tournament-date="tournamentDate"
-          :team-colors="teamColors"
-        />
+          class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-700/50 dark:bg-slate-900/60"
+        >
+          <OrganismsViewerTournamentSummary
+            :summary="tournamentSummary"
+            :tournament-date="tournamentDate"
+            :team-colors="teamColors"
+            :players="players"
+            :assignment-by-player-id="assignmentByPlayerId"
+            :aggregate-player-stats="initialSnapshot?.aggregatePlayerStats ?? {}"
+            :player-rating-deltas="initialSnapshot?.playerRatingDeltas ?? {}"
+          />
+        </div>
 
         <!-- Таблица зрителя — показывается во время турнира -->
         <OrganismsTournamentStepStandings
@@ -220,6 +230,9 @@
       v-if="showLoginModal"
       @close="showLoginModal = false"
     />
+
+    <!-- Модальное окно пожеланий — доступно любому зрителю. -->
+    <MoleculesFeedbackModal />
   </div>
 </template>
 

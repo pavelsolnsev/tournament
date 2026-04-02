@@ -3,8 +3,8 @@
   <div class="min-w-0 space-y-4">
     <!-- Блок 1: турнирная таблица -->
     <div
-      class="overflow-hidden rounded-2xl border bg-white dark:bg-slate-900/60 transition-colors"
-      :class="isStandingsBlockOpen ? 'border-slate-200 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
+      class="overflow-hidden rounded-2xl border bg-slate-50 dark:bg-slate-900/60 transition-colors"
+      :class="isStandingsBlockOpen ? 'border-slate-300 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
     >
       <button
         :id="standingsToggleId"
@@ -79,8 +79,8 @@
 
     <!-- Блок 2: составы и накопленная статистика игроков -->
     <div
-      class="overflow-hidden rounded-2xl border bg-white dark:bg-slate-900/60 transition-colors"
-      :class="isRosterTotalsOpen ? 'border-slate-200 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
+      class="overflow-hidden rounded-2xl border bg-slate-50 dark:bg-slate-900/60 transition-colors"
+      :class="isRosterTotalsOpen ? 'border-slate-300 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
     >
       <button
         :id="rosterTotalsToggleId"
@@ -147,8 +147,8 @@
     <!-- Блок 3: результаты матчей + управление текущим матчем -->
     <section class="min-w-0 space-y-4">
       <div
-        class="overflow-hidden rounded-2xl border bg-white dark:bg-slate-900/60 transition-colors"
-        :class="isPlayedMatchesOpen ? 'border-slate-200 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
+        class="overflow-hidden rounded-2xl border bg-slate-50 dark:bg-slate-900/60 transition-colors"
+        :class="isPlayedMatchesOpen ? 'border-slate-300 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
       >
         <button
           :id="playedMatchesToggleId"

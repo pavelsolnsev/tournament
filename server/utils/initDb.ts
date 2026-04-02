@@ -27,6 +27,15 @@ export async function ensureTablesExist() {
       ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
     `)
 
+    // Таблица feedback: хранит пожелания и идеи от пользователей сайта.
+    await queryWithRetry(`
+      CREATE TABLE IF NOT EXISTS feedback (
+        id BIGINT PRIMARY KEY,
+        text TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+    `)
+
     // Помечаем как инициализированное только после успешного создания таблиц.
     initialized = true
   } catch (err) {

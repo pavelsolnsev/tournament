@@ -46,7 +46,7 @@
             class="rounded-xl border px-3 py-2 transition"
             :class="selectedTeamName === name
               ? 'border-emerald-500/60 bg-emerald-500/5'
-              : 'border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-900/30 hover:bg-slate-50 dark:hover:bg-slate-900/50'"
+              : 'border-slate-300 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/30 hover:bg-slate-100 dark:hover:bg-slate-900/50'"
           >
           <OrganismsPlayerTeamAssignmentTeamRowContent
             :name="name"

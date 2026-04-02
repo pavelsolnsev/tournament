@@ -1,6 +1,6 @@
 <!-- Компонент PlayedMatchEditor: inline-редактор статистики игроков для завершённого матча. -->
 <template>
-  <div class="border-t border-slate-200 bg-white dark:border-slate-700/60 dark:bg-slate-950/60">
+  <div class="border-t border-slate-200 bg-slate-50 dark:border-slate-700/60 dark:bg-slate-950/60">
     <!-- Авто-счёт: голы считаются из статистики игроков -->
     <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-3">
       <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-500">

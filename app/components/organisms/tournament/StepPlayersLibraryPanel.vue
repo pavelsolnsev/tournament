@@ -38,7 +38,7 @@
     </p>
 
     <!-- Разделитель между формой и поиском -->
-    <div class="border-t border-slate-200 dark:border-slate-700/40" />
+    <div class="border-t border-slate-300 dark:border-slate-700/40" />
 
     <AtomsTournamentTextInput
       :model-value="playerSearch"
@@ -49,7 +49,7 @@
     />
 
     <!-- Разделитель между поиском и списком -->
-    <div class="border-t border-slate-200 dark:border-slate-700/40" />
+    <div class="border-t border-slate-300 dark:border-slate-700/40" />
 
     <p v-if="!players?.length" class="text-slate-500 text-xs">
       Нет игроков в базе.

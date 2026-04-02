@@ -2,7 +2,7 @@
   <li
     role="button"
     tabindex="0"
-    class="flex h-11 min-w-0 cursor-pointer items-center gap-2 rounded-xl border border-transparent bg-slate-100 dark:bg-slate-800/50 px-3 text-left transition md:hover:bg-slate-200 dark:md:hover:bg-slate-700/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 active:scale-[0.99]"
+    class="flex h-11 min-w-0 cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white dark:border-transparent dark:bg-slate-800/50 px-3 text-left transition md:hover:bg-slate-100 dark:md:hover:bg-slate-700/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 active:scale-[0.99]"
     :class="rootClass"
     :title="title"
     @click="emit('activate')"
