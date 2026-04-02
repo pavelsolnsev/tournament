@@ -41,10 +41,8 @@
             </div>
 
             <section v-else class="flex w-full flex-col gap-6 py-5 sm:py-8">
-              <!-- Крошки слева; справа — сколько вкладок недавно пинговало (см. plugins/presence.client). -->
-              <div class="flex min-w-0 items-center justify-between gap-3">
               <!-- На шаге 0 крошку не показываем: заголовок уже «Выберите игроков», подпись «Игроки» лишняя. -->
-              <nav v-if="wizard.step.value > 0" aria-label="Шаги мастера" class="min-w-0">
+              <nav v-if="wizard.step.value > 0" aria-label="Шаги мастера">
                 <ol class="flex min-w-0 flex-wrap items-center gap-1">
                   <li
                     v-for="(crumb, idx) in breadcrumbs.filter(c => c.step <= wizard.step.value)"
@@ -81,8 +79,6 @@
                   </li>
                 </ol>
               </nav>
-              <MoleculesAdminOnlineCount />
-              </div>
 
               <!-- Баннер «Турнир завершён» — появляется на шаге 0 после финиша турнира -->
               <!-- Даёт администратору возможность запустить новый турнир, не мешая зрителям видеть итоги -->
@@ -164,8 +160,32 @@
                 @update:snapshot="wizard.saveStandingsSnapshot"
                 @update:match-status="wizard.updateMatchStatus"
                 @tournament-finished="wizard.step.value = 0"
-                @tournament-cleared="wizard.resetWizard()"
               />
+
+              <!-- Сброс турнира внизу страницы мастера — после контента шага, с разделителем. -->
+              <div class="mt-8 flex flex-col gap-2 border-t border-slate-200 pt-6 dark:border-slate-700 sm:items-end">
+                <button
+                  v-if="!showClearTournamentConfirm"
+                  type="button"
+                  class="self-end inline-flex items-center gap-2 rounded-xl border border-red-300/70 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100 dark:border-red-800/60 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-950/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50 sm:px-4 sm:text-sm"
+                  @click="showClearTournamentConfirm = true"
+                >
+                  Очистить данные
+                </button>
+                <MoleculesDangerConfirmInline
+                  v-else
+                  :open="true"
+                  :seconds-left="clearTournamentSeconds"
+                  :busy="clearTournamentBusy"
+                  title="Сбросить турнир? Игроки в турнире, команды, таблица и статус матча обнулятся. Список игроков в базе не трогаем."
+                  cancel-text="Отмена"
+                  confirm-text="Очистить всё"
+                  busy-text="Очищаем…"
+                  aria-label="Подтверждение полного сброса турнира"
+                  @cancel="cancelClearTournament"
+                  @confirm="confirmClearTournament"
+                />
+              </div>
             </section>
           </main>
         <!-- Модальное окно пожеланий — доступно и администратору. -->
@@ -186,6 +206,7 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
+import { useQueryClient } from '@tanstack/vue-query'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTournamentWizard } from '~/composables/useTournamentWizard'
 import { useTournamentState } from '~/composables/useTournamentState'
@@ -211,6 +232,54 @@ await stateQuery.suspense()
 
 const viewerState = computed(() => serverState.value)
 const wizard = useTournamentWizard()
+const queryClient = useQueryClient()
+
+// Панель «Очистить данные» — обратный отсчёт как у очистки пожеланий.
+const showClearTournamentConfirm = ref(false)
+const clearTournamentBusy = ref(false)
+const clearTournamentSeconds = ref(3)
+let clearTournamentCountdown: ReturnType<typeof setInterval> | null = null
+
+function startClearTournamentCountdown() {
+  clearTournamentSeconds.value = 3
+  clearTournamentCountdown = setInterval(() => {
+    clearTournamentSeconds.value -= 1
+    if (clearTournamentSeconds.value <= 0 && clearTournamentCountdown) {
+      clearInterval(clearTournamentCountdown)
+      clearTournamentCountdown = null
+    }
+  }, 1000)
+}
+
+watch(showClearTournamentConfirm, (open) => {
+  if (open) startClearTournamentCountdown()
+  else {
+    if (clearTournamentCountdown) {
+      clearInterval(clearTournamentCountdown)
+      clearTournamentCountdown = null
+    }
+    clearTournamentSeconds.value = 3
+  }
+})
+
+onUnmounted(() => {
+  if (clearTournamentCountdown) clearInterval(clearTournamentCountdown)
+})
+
+function cancelClearTournament() {
+  showClearTournamentConfirm.value = false
+}
+
+async function confirmClearTournament() {
+  clearTournamentBusy.value = true
+  try {
+    await wizard.resetWizard()
+    await queryClient.invalidateQueries({ queryKey: ['tournament-state'] })
+  } finally {
+    clearTournamentBusy.value = false
+    showClearTournamentConfirm.value = false
+  }
+}
 
 const { data: allPlayers } = useFetch<Player[]>('/api/players', {
   default: () => [],

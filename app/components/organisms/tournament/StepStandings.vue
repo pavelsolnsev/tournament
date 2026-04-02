@@ -249,7 +249,6 @@
         :finish-tournament-status="finishStatus"
         :finish-tournament-error="finishErrorMessage"
         :on-finish-tournament="handleFinishTournament"
-        :on-clear-data="handleClearData"
         @update:home-team="handleUpdateHomeTeam"
         @update:away-team="handleUpdateAwayTeam"
       />
@@ -284,8 +283,6 @@ const emit = defineEmits<{
   'update:snapshot': [snapshot: SavedStandingsSnapshot]
   // Вызывается после успешного завершения турнира — родитель сбрасывает wizard.
   'tournament-finished': []
-  // Вызывается после локальной очистки без записи в базу — родитель сбрасывает wizard.
-  'tournament-cleared': []
   // Статус матча изменился — родитель (wizard) должен сохранить его в БД.
   'update:matchStatus': [status: MatchStatus, homeTeam: string, awayTeam: string]
 }>()
@@ -422,11 +419,6 @@ async function handleFinishTournament() {
     emit('update:matchStatus', 'finished', '', '')
     emit('tournament-finished')
   }
-}
-
-function handleClearData() {
-  // Очищаем локально без обращения к базе — просто сбрасываем wizard в родителе.
-  emit('tournament-cleared')
 }
 </script>
 
