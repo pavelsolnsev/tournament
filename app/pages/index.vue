@@ -41,8 +41,10 @@
             </div>
 
             <section v-else class="flex w-full flex-col gap-6 py-5 sm:py-8">
+              <!-- Крошки слева; справа — сколько вкладок недавно пинговало (см. plugins/presence.client). -->
+              <div class="flex min-w-0 items-center justify-between gap-3">
               <!-- На шаге 0 крошку не показываем: заголовок уже «Выберите игроков», подпись «Игроки» лишняя. -->
-              <nav v-if="wizard.step.value > 0" aria-label="Шаги мастера">
+              <nav v-if="wizard.step.value > 0" aria-label="Шаги мастера" class="min-w-0">
                 <ol class="flex min-w-0 flex-wrap items-center gap-1">
                   <li
                     v-for="(crumb, idx) in breadcrumbs.filter(c => c.step <= wizard.step.value)"
@@ -79,6 +81,8 @@
                   </li>
                 </ol>
               </nav>
+              <MoleculesAdminOnlineCount />
+              </div>
 
               <!-- Баннер «Турнир завершён» — появляется на шаге 0 после финиша турнира -->
               <!-- Даёт администратору возможность запустить новый турнир, не мешая зрителям видеть итоги -->

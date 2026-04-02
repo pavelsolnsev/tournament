@@ -6,6 +6,16 @@ import type { SavedTournamentContext } from '~/composables/useTournamentWizard'
 // Debounce-задержка: не сохраняем после каждой клавиши — ждём паузы в 800мс.
 const SAVE_DEBOUNCE_MS = 800
 
+// Поллинг GET /state только пока матч в эфире — в ожидании и после финала запросы по таймеру не крутятся.
+const STATE_REFETCH_LIVE_MS = 20_000
+
+// Смотрим последний ответ query: если матч live — раз в 20 с подтягиваем state, иначе таймер выключаем.
+function refetchIntervalForState(query: { state: { data: unknown } }): number | false {
+  const payload = query.state.data as { state: SavedTournamentContext | null } | undefined
+  if (payload?.state?.matchStatus === 'live') return STATE_REFETCH_LIVE_MS
+  return false
+}
+
 export function useTournamentState() {
   // saveTimer живёт внутри composable — очищается при unmount компонента.
   // Раньше был на уровне модуля и утекал между перезагрузками/переходами.
@@ -15,9 +25,9 @@ export function useTournamentState() {
   const query = useQuery({
     queryKey: ['tournament-state'],
     queryFn: () => $fetch<{ state: SavedTournamentContext | null }>('/api/tournament/state'),
-    // Повторно проверяем состояние каждые 5 секунд — зритель видит изменения быстро.
-    refetchInterval: 5_000,
-    // При возврате на вкладку сразу обновляем — важно если пользователь долго не смотрел.
+    // Интервал только в live; до старта и после финала — без поллинга (обновление ещё по фокусу вкладки).
+    refetchInterval: refetchIntervalForState,
+    // При возврате на вкладку сразу обновляем — подхватить переход upcoming → live без ожидания интервала.
     refetchOnWindowFocus: true,
   })
 
