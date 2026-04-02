@@ -37,9 +37,15 @@
             :fallback-name="p.name"
             size="md"
           />
-          <!-- Имя: растягивается, обрезается если длинное -->
-          <span class="min-w-0 flex-1 truncate text-sm font-medium leading-tight text-slate-100">
-            {{ displayPlayerLabel(p) }}
+          <!-- Имя сжимается (truncate), рейтинг справа всегда целиком. -->
+          <span class="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+            <span class="min-w-0 truncate text-sm font-medium leading-tight text-slate-100">
+              {{ labelParts(p).name }}
+            </span>
+            <span
+              v-if="labelParts(p).rating"
+              class="shrink-0 whitespace-nowrap text-sm font-medium leading-tight text-slate-100 tabular-nums"
+            >{{ labelParts(p).rating }}</span>
           </span>
 
           <!-- Бейджи событий — только показ счётчика, без кнопки «−» на карточке -->
@@ -137,6 +143,7 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import type { StatKey } from '~/composables/tournament-standings/types'
+import { playerLabelRatingParts } from '~/composables/usePlayerDisplay'
 
 type Side = 'home' | 'away'
 // Сторона матча: домашняя или гостевая.
@@ -200,6 +207,10 @@ const STAT_BADGES = [
   { key: 'saves' as StatKey,   icon: '🧤', bgClass: 'bg-violet-500/15',  textClass: 'text-violet-300' },
   { key: 'yellows' as StatKey, icon: '🟨', bgClass: 'bg-yellow-500/15',  textClass: 'text-yellow-300' },
 ] as const
+
+function labelParts(p: Player) {
+  return playerLabelRatingParts(p)
+}
 
 const rosterColumnProps = defineProps<{
   side: Side

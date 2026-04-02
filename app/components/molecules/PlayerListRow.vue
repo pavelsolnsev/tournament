@@ -16,7 +16,18 @@
       :fallback-name="avatarFallbackName ?? label"
       size="sm"
     />
-    <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-100">{{ label }}</span>
+    <!-- С рейтингом: обрезаем только имя; суффикс рейтинга не трогаем (не в truncate). -->
+    <span
+      v-if="rating == null || rating === ''"
+      class="min-w-0 flex-1 truncate text-sm font-medium text-slate-100"
+    >{{ label }}</span>
+    <span
+      v-else
+      class="flex min-w-0 flex-1 items-center gap-1 overflow-hidden"
+    >
+      <span class="min-w-0 truncate text-sm font-medium text-slate-100">{{ label }}</span>
+      <span class="shrink-0 whitespace-nowrap text-sm font-medium leading-tight text-slate-100 tabular-nums">{{ rating }}</span>
+    </span>
     <span
       v-if="action !== 'none'"
       class="shrink-0 select-none text-xs leading-none"
@@ -41,6 +52,8 @@ defineProps<{
   photo?: string | null
   /** Имя для инициалов; если не задано — первый символ label (если в label есть рейтинг, лучше передать name). */
   avatarFallbackName?: string
+  /** «⭐️ 42» отдельно от имени — чтобы CSS truncate резал только имя. */
+  rating?: string | null
 }>()
 
 const emit = defineEmits<{ activate: [] }>()

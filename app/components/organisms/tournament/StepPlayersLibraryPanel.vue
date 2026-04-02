@@ -63,10 +63,7 @@
       <MoleculesPlayerListRow
         v-for="p in filteredAvailablePlayers"
         :key="p.id"
-        :photo="p.photo"
-        :avatar-fallback-name="p.name"
-        :label="displayPlayerLabel(p)"
-        :title="'Добавить в турнир: ' + displayPlayerLabel(p)"
+        v-bind="libraryPlayerRowBind(p)"
         action="add"
         @activate="emit('selectPlayer', p.id)"
       />
@@ -127,7 +124,18 @@ const newUsername = ref('')
 const creating = ref(false)
 const createError = ref('')
 
-const { displayPlayerLabel } = usePlayerDisplay()
+const { displayPlayerLabel, playerLabelRatingParts } = usePlayerDisplay()
+
+function libraryPlayerRowBind(p: Player) {
+  const { name, rating } = playerLabelRatingParts(p)
+  return {
+    photo: p.photo,
+    avatarFallbackName: p.name,
+    label: name,
+    rating,
+    title: `Добавить в турнир: ${displayPlayerLabel(p)}`,
+  }
+}
 
 const resetting = ref(false)
 const resetError = ref('')

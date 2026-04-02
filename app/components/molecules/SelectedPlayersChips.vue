@@ -3,10 +3,7 @@
     <MoleculesPlayerListRow
       v-for="p in players"
       :key="p.id"
-      :photo="p.photo"
-      :avatar-fallback-name="p.name"
-      :label="displayPlayerLabel(p)"
-      :title="'Убрать из списка: ' + displayPlayerLabel(p)"
+      v-bind="chipPlayerRowBind(p)"
       action="remove"
       @activate="emit('remove', p.id)"
     />
@@ -23,5 +20,16 @@ defineProps<{
 
 const emit = defineEmits<{ remove: [id: number] }>()
 
-const { displayPlayerLabel } = usePlayerDisplay()
+const { displayPlayerLabel, playerLabelRatingParts } = usePlayerDisplay()
+
+function chipPlayerRowBind(p: Player) {
+  const { name, rating } = playerLabelRatingParts(p)
+  return {
+    photo: p.photo,
+    avatarFallbackName: p.name,
+    label: name,
+    rating,
+    title: `Убрать из списка: ${displayPlayerLabel(p)}`,
+  }
+}
 </script>

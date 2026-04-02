@@ -125,11 +125,12 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     return true
   })
 
-  const homeTeam = ref('')
-  const awayTeam = ref('')
+  // Восстанавливаем текущий матч из снапшота — чтобы админ мог вернуться к нему после выхода.
+  const homeTeam = ref(snap?.currentHomeTeam ?? '')
+  const awayTeam = ref(snap?.currentAwayTeam ?? '')
   const matchFinalized = ref(false)
-  const homeStats = ref<Record<number, PlayerMatchStats>>({})
-  const awayStats = ref<Record<number, PlayerMatchStats>>({})
+  const homeStats = ref<Record<number, PlayerMatchStats>>(snap?.currentHomeStats ?? {})
+  const awayStats = ref<Record<number, PlayerMatchStats>>(snap?.currentAwayStats ?? {})
   // Суммарные события по каждому игроку за все завершённые матчи — восстанавливаем из снапшота.
   // snap уже клонирован выше, поэтому объекты здесь изменяемые.
   const aggregatePlayerStats = ref<Record<number, PlayerMatchStats>>(snap?.aggregatePlayerStats ?? {})
@@ -522,7 +523,8 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
   // Когда список матчей или таблица меняются — вызываем callback для сохранения в куку.
   // Это позволяет восстановить состояние после перезагрузки страницы.
   watch(
-    [playedMatchesList, standingsRows, aggregatePlayerStats, playerRatingDeltas],
+    // Сохраняем и незавершённый матч тоже — команды и их текущую статистику.
+    [playedMatchesList, standingsRows, aggregatePlayerStats, playerRatingDeltas, homeTeam, awayTeam, homeStats, awayStats],
     () => {
       if (!options.onSnapshot) return
       options.onSnapshot({
@@ -537,6 +539,11 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
         playedSingleMatch: playedSingleMatch.value,
         // Сохраняем дельты рейтинга — чтобы UI не сбрасывался после перезагрузки.
         playerRatingDeltas: playerRatingDeltas.value,
+        // Сохраняем текущий матч — чтобы вернуться в тот же матч после выхода из админки.
+        currentHomeTeam: homeTeam.value,
+        currentAwayTeam: awayTeam.value,
+        currentHomeStats: homeStats.value,
+        currentAwayStats: awayStats.value,
       })
     },
     { deep: true },

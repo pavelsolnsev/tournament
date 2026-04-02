@@ -14,10 +14,7 @@
         <MoleculesPlayerListRow
           v-for="p in selectedPlayers"
           :key="p.id"
-          :photo="p.photo"
-          :avatar-fallback-name="p.name"
-          :label="displayPlayerLabel(p)"
-          :title="'Убрать из турнира: ' + displayPlayerLabel(p)"
+          v-bind="selectedPlayerRowBind(p)"
           action="remove"
           @activate="emit('removePlayer', p.id)"
         />
@@ -48,5 +45,16 @@ const emit = defineEmits<{
   goToTeams: []
 }>()
 
-const { displayPlayerLabel } = usePlayerDisplay()
+const { displayPlayerLabel, playerLabelRatingParts } = usePlayerDisplay()
+
+function selectedPlayerRowBind(p: Player) {
+  const { name, rating } = playerLabelRatingParts(p)
+  return {
+    photo: p.photo,
+    avatarFallbackName: p.name,
+    label: name,
+    rating,
+    title: `Убрать из турнира: ${displayPlayerLabel(p)}`,
+  }
+}
 </script>

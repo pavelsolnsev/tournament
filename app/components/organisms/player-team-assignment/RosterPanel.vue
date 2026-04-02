@@ -32,10 +32,7 @@
             <MoleculesPlayerListRow
               v-for="p in playersInTeam"
               :key="p.id"
-              :photo="p.photo"
-              :avatar-fallback-name="p.name"
-              :label="displayPlayerLabel(p)"
-              :title="'Убрать из команды: ' + displayPlayerLabel(p)"
+              v-bind="rosterRowBind(p, 'Убрать из команды: ')"
               action="remove"
               @activate="emit('removeFromTeam', p.id)"
             />
@@ -67,10 +64,7 @@
             <MoleculesPlayerListRow
               v-for="p in filteredUnassignedPlayers"
               :key="p.id"
-              :photo="p.photo"
-              :avatar-fallback-name="p.name"
-              :label="displayPlayerLabel(p)"
-              :title="'Добавить в команду: ' + displayPlayerLabel(p)"
+              v-bind="rosterRowBind(p, 'Добавить в команду: ')"
               action="add"
               @activate="emit('setTeam', p.id, selectedTeamName)"
             />
@@ -109,7 +103,18 @@ const emit = defineEmits<{
   setTeam: [playerId: number, teamName: string]
 }>()
 
-const { displayPlayerLabel } = usePlayerDisplay()
+const { displayPlayerLabel, playerLabelRatingParts } = usePlayerDisplay()
+
+function rosterRowBind(p: Player, titlePrefix: string) {
+  const { name, rating } = playerLabelRatingParts(p)
+  return {
+    photo: p.photo,
+    avatarFallbackName: p.name,
+    label: name,
+    rating,
+    title: `${titlePrefix}${displayPlayerLabel(p)}`,
+  }
+}
 
 const unassignedSearch = ref('')
 

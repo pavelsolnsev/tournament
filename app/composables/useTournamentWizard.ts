@@ -21,6 +21,11 @@ export type SavedStandingsSnapshot = {
   playedSingleMatch: boolean
   // Накопленные дельты рейтинга за все матчи турнира — нужны для UI и восстановления после перезагрузки.
   playerRatingDeltas: Record<number, number>
+  // Текущий незавершённый матч — нужен чтобы админ мог выйти и вернуться к нему.
+  currentHomeTeam: string
+  currentAwayTeam: string
+  currentHomeStats: Record<number, PlayerMatchStats>
+  currentAwayStats: Record<number, PlayerMatchStats>
 }
 
 export type SavedTournamentContext = {

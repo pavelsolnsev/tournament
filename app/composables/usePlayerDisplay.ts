@@ -58,40 +58,39 @@ export function displayPlayerLabelWithoutRating(p: Player): string {
   return clipLongPlayerLabel(raw)
 }
 
-export function usePlayerDisplay() {
-  function displayPlayerLabel(p: Player) {
-    // Берём ник без @, чтобы подпись была чистой и одинаковой во всех списках.
-    const cleaned = p.username?.replace(/^@+/, '').trim()
-    // Если ника нет или он "unknown", показываем обычное имя игрока.
-    const raw =
-      !cleaned || cleaned.toLowerCase() === 'unknown'
-        ? (p.name || '').trim()
-        : cleaned
-    // Приводим рейтинг к числу, потому что из БД он может прийти строкой.
-    const ratingValue = Number(p.rating)
-    // Проверяем, что рейтинг валиден и конечен, чтобы не показать NaN в UI.
-    const hasRating = Number.isFinite(ratingValue)
-    // Если рейтинга нет, оставляем старое поведение и просто безопасно обрезаем подпись.
-    if (!hasRating) {
-      return clipLongPlayerLabel(raw)
-    }
-
-    // Суффикс: эмодзи уровня + число, без скобок.
-    const r = Math.round(ratingValue)
-    const ratingSuffix = ` ${ratingTierEmoji(r)} ${r}`
-    // Считаем, сколько символов остаётся для ника после суффикса с рейтингом.
-    const maxNameChars = Math.max(1, PLAYER_LABEL_MAX_CHARS - ratingSuffix.length)
-    // Обрезаем только ник, чтобы рейтинг не попадал под сокращение.
-    const clippedName = raw.length <= maxNameChars
+/** Части подписи для вёрстки: имя можно сжимать (truncate), рейтинг — всегда целиком справа. */
+export function playerLabelRatingParts(p: Player): { name: string; rating: string | null } {
+  const cleaned = p.username?.replace(/^@+/, '').trim()
+  const raw =
+    !cleaned || cleaned.toLowerCase() === 'unknown'
+      ? (p.name || '').trim()
+      : cleaned
+  const ratingValue = Number(p.rating)
+  const hasRating = Number.isFinite(ratingValue)
+  if (!hasRating) {
+    return { name: clipLongPlayerLabel(raw), rating: null }
+  }
+  const r = Math.round(ratingValue)
+  const emoji = ratingTierEmoji(r)
+  const ratingSuffix = ` ${emoji} ${r}`
+  const maxNameChars = Math.max(1, PLAYER_LABEL_MAX_CHARS - ratingSuffix.length)
+  const clippedName =
+    raw.length <= maxNameChars
       ? raw
       : `${raw.slice(0, Math.max(1, maxNameChars - 1))}…`
-    // Склеиваем: сокращённый ник + иконка уровня + значение рейтинга.
-    return `${clippedName}${ratingSuffix}`
+  return { name: clippedName, rating: `${emoji} ${r}` }
+}
+
+export function usePlayerDisplay() {
+  function displayPlayerLabel(p: Player) {
+    const { name, rating } = playerLabelRatingParts(p)
+    return rating ? `${name} ${rating}` : name
   }
 
   return {
     displayPlayerLabel,
     displayPlayerLabelWithoutRating,
+    playerLabelRatingParts,
     ratingTierEmoji,
   }
 }

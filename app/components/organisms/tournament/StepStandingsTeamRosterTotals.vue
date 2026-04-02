@@ -48,9 +48,15 @@
                 :fallback-name="p.name"
                 size="md"
               />
-              <!-- Имя — flex-1 забирает всё свободное место, остальное уходит под бейджи -->
-              <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-100">
-                {{ displayPlayerLabel(p) }}
+              <!-- Имя сжимается, рейтинг рядом не обрезается. -->
+              <span class="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+                <span class="min-w-0 truncate text-sm font-medium text-slate-100">
+                  {{ labelParts(p).name }}
+                </span>
+                <span
+                  v-if="labelParts(p).rating"
+                  class="shrink-0 whitespace-nowrap text-sm font-medium text-slate-100 tabular-nums"
+                >{{ labelParts(p).rating }}</span>
               </span>
 
               <!-- Бейджи событий — в одну строку справа, не переносятся -->
@@ -110,6 +116,7 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
+import { playerLabelRatingParts } from '~/composables/usePlayerDisplay'
 
 type PlayerMatchStats = {
   goals: number
@@ -131,6 +138,10 @@ const props = defineProps<{
 }>()
 
 const showHeading = computed(() => props.showHeading ?? true)
+
+function labelParts(p: Player) {
+  return playerLabelRatingParts(p)
+}
 
 // Статистика игрока или нули если матчей ещё не было.
 function statsFor(playerId: number): PlayerMatchStats {

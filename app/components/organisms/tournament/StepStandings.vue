@@ -242,16 +242,15 @@
         :on-select-action="onSelectAction"
         :add-player-event="addPlayerEvent"
         :remove-player-event="removePlayerEvent"
-        :go-to-next-match="goToNextMatch"
+        :go-to-next-match="handleGoToNextMatch"
         :reset-match-stats="resetMatchStats"
-        :finish-match="finishMatch"
+        :finish-match="handleFinishMatch"
         :finish-tournament-status="finishStatus"
         :finish-tournament-error="finishErrorMessage"
         :on-finish-tournament="handleFinishTournament"
         :on-clear-data="handleClearData"
         @update:home-team="handleUpdateHomeTeam"
         @update:away-team="handleUpdateAwayTeam"
-        @update:match-status="(status, home, away) => emit('update:matchStatus', status, home, away)"
       />
 
     </section>
@@ -357,13 +356,49 @@ const isPlayedMatchesOpen = ref(false)
 
 function handleUpdateHomeTeam(next: string) {
   homeTeam.value = next
+  // Если обе команды выбраны — матч идёт сейчас. Иначе — ожидается.
+  if (homeTeam.value && awayTeam.value) {
+    emit('update:matchStatus', 'live', homeTeam.value, awayTeam.value)
+  } else {
+    emit('update:matchStatus', 'upcoming', '', '')
+  }
 }
 // Это обновляет домашнюю команду, когда пользователь меняет select в дочернем UI.
 
 function handleUpdateAwayTeam(next: string) {
   awayTeam.value = next
+  // Если обе команды выбраны — матч идёт сейчас. Иначе — ожидается.
+  if (homeTeam.value && awayTeam.value) {
+    emit('update:matchStatus', 'live', homeTeam.value, awayTeam.value)
+  } else {
+    emit('update:matchStatus', 'upcoming', '', '')
+  }
 }
 // Это обновляет гостевую команду, когда пользователь меняет select в дочернем UI.
+
+function handleFinishMatch() {
+  // Ставим статус finished ДО сброса команд внутри finishMatch(), чтобы зритель успел увидеть «Завершён».
+  if (homeTeam.value && awayTeam.value) {
+    emit('update:matchStatus', 'finished', homeTeam.value, awayTeam.value)
+  } else {
+    emit('update:matchStatus', 'finished', '', '')
+  }
+  finishMatch()
+}
+// Этот обработчик централизует статус: после нажатия «Завершить матч» он остаётся finished,
+// даже если админский UI очищает выбранные команды.
+
+function handleGoToNextMatch() {
+  // Переходим к следующему матчу (может автоматически завершить текущий).
+  goToNextMatch()
+  // После подбора следующей пары проверяем команды и обновляем статус для зрителя.
+  if (homeTeam.value && awayTeam.value) {
+    emit('update:matchStatus', 'live', homeTeam.value, awayTeam.value)
+  } else {
+    emit('update:matchStatus', 'upcoming', '', '')
+  }
+}
+// Этот обработчик даёт зрителю максимально актуальный статус после «Следующий матч».
 
 // Подключаем логику завершения турнира.
 const {
