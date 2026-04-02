@@ -1,7 +1,7 @@
 <!-- Компонент StandingsTable: турнирная таблица мест и очков команд. -->
 <template>
   <!-- Без overflow-x-auto — таблица должна помещаться в любой ширине экрана -->
-  <div class="w-full rounded-xl border border-slate-700/60 overflow-hidden">
+  <div class="w-full rounded-xl border border-slate-200 dark:border-slate-700/60 overflow-hidden">
     <table class="w-full table-fixed border-collapse text-left">
       <colgroup>
         <!-- Фиксированные пропорции: таблица выглядит ровно и без скролла -->
@@ -19,7 +19,8 @@
       </colgroup>
 
       <thead>
-        <tr class="border-b border-slate-700/60 bg-slate-800/80">
+        <!-- Шапка таблицы: светлая тема — slate-100 фон, тёмная — slate-800. -->
+        <tr class="border-b border-slate-200 dark:border-slate-700/60 bg-slate-100 dark:bg-slate-800/80">
           <th class="whitespace-nowrap px-1 py-2.5 text-xs font-semibold text-slate-500 sm:px-1.5">М</th>
           <th class="px-1 py-2.5 text-left text-xs font-semibold text-slate-500 sm:px-1.5">Команда</th>
           <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">И</th>
@@ -30,7 +31,7 @@
           <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">ПМ</th>
           <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">РМ</th>
           <!-- Очки выделены цветом -->
-          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-bold text-slate-300">О</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-bold text-slate-600 dark:text-slate-300">О</th>
         </tr>
       </thead>
 
@@ -38,10 +39,10 @@
         <tr
           v-for="(row, i) in computedRows"
           :key="row.teamName"
-          class="border-b border-slate-800/50 transition-colors last:border-0 md:hover:bg-slate-800/30"
+          class="border-b border-slate-100 dark:border-slate-800/50 transition-colors last:border-0 md:hover:bg-slate-50 dark:md:hover:bg-slate-800/30"
         >
           <!-- Место -->
-          <td class="whitespace-nowrap px-1 py-3 text-sm font-medium tabular-nums text-slate-400 sm:px-1.5">
+          <td class="whitespace-nowrap px-1 py-3 text-sm font-medium tabular-nums text-slate-500 dark:text-slate-400 sm:px-1.5">
             {{ row.place }}
           </td>
 
@@ -51,45 +52,45 @@
               <span class="shrink-0 text-sm leading-none" aria-hidden="true">
                 {{ markerForTeam(row.teamName, i) }}
               </span>
-              <span class="min-w-0 truncate text-sm font-semibold text-slate-100">
+              <span class="min-w-0 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
                 {{ row.teamName }}
               </span>
             </div>
           </td>
 
           <!-- И -->
-          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-400">
+          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-500 dark:text-slate-400">
             {{ row.played }}
           </td>
 
           <!-- В — зелёный если есть победы -->
           <td
             class="whitespace-nowrap px-1 py-3 text-center text-sm font-medium tabular-nums"
-            :class="row.wins > 0 ? 'text-emerald-400' : 'text-slate-500'"
+            :class="row.wins > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'"
           >
             {{ row.wins }}
           </td>
 
           <!-- Н -->
-          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-500">
+          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-400 dark:text-slate-500">
             {{ row.draws }}
           </td>
 
           <!-- П — красный если есть поражения -->
           <td
             class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums"
-            :class="row.losses > 0 ? 'text-red-400/80' : 'text-slate-500'"
+            :class="row.losses > 0 ? 'text-red-500/90 dark:text-red-400/80' : 'text-slate-400 dark:text-slate-500'"
           >
             {{ row.losses }}
           </td>
 
           <!-- ЗМ -->
-          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-400">
+          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-500 dark:text-slate-400">
             {{ row.goalsFor }}
           </td>
 
           <!-- ПМ -->
-          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-400">
+          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-500 dark:text-slate-400">
             {{ row.goalsAgainst }}
           </td>
 
@@ -102,7 +103,7 @@
           </td>
 
           <!-- Очки — жирные, самые заметные -->
-          <td class="whitespace-nowrap px-1 py-3 text-center text-base font-bold tabular-nums text-slate-100">
+          <td class="whitespace-nowrap px-1 py-3 text-center text-base font-bold tabular-nums text-slate-800 dark:text-slate-100">
             {{ row.points }}
           </td>
         </tr>
@@ -163,8 +164,9 @@ function markerForTeam(teamName: string, rowIndex: number): string {
 
 // Цвет ячейки разницы мячей по знаку числа.
 function goalDiffClass(diff: number): string {
-  if (diff > 0) return 'text-emerald-400'
-  if (diff < 0) return 'text-red-400/80'
-  return 'text-slate-500'
+  // В светлой теме зелёный и красный чуть насыщеннее для лучшего контраста.
+  if (diff > 0) return 'text-emerald-600 dark:text-emerald-400'
+  if (diff < 0) return 'text-red-500/90 dark:text-red-400/80'
+  return 'text-slate-400 dark:text-slate-500'
 }
 </script>

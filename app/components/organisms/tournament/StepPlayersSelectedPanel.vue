@@ -3,7 +3,7 @@
   <section class="min-w-0 space-y-4 lg:col-span-2">
     <AtomsTournamentPanel as="div">
       <div class="flex items-center justify-end gap-2">
-        <span class="text-xs text-slate-400">{{ selectedPlayers.length }}</span>
+        <span class="text-xs text-slate-500 dark:text-slate-400">{{ selectedPlayers.length }}</span>
       </div>
 
       <AtomsEmptyStateBox v-if="selectedPlayers.length === 0">

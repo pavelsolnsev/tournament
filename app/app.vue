@@ -7,9 +7,11 @@
   -->
   <!-- h-full на NuxtLayout и slot пробрасывает высоту вниз по цепочке,
        чтобы min-h-full в дочерних компонентах работал корректно. -->
+  <!-- transition-colors добавляет плавный переход при смене темы — без рывков. -->
+  <!-- Светлая тема: bg-slate-50, text-slate-900. Тёмная тема: dark: классы. -->
   <div
     id="scroll-root"
-    class="bg-slate-900 text-slate-100 h-full"
+    class="bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 h-full transition-colors duration-200"
     style="position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:none;scrollbar-gutter:stable;"
   >
     <NuxtLayout>
@@ -17,3 +19,15 @@
     </NuxtLayout>
   </div>
 </template>
+
+<script setup lang="ts">
+import { useTheme } from '~/composables/useTheme'
+
+const { initTheme } = useTheme()
+
+// Инициализируем тему после монтирования — читаем localStorage и системные настройки.
+// Это единственное место где вызываем initTheme, чтобы не дублировать логику.
+onMounted(() => {
+  initTheme()
+})
+</script>

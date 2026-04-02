@@ -33,10 +33,12 @@ const mergedClass = computed(() => {
         ? 'rounded-xl px-5 h-11 text-sm sm:text-base'
         : 'rounded-xl px-3 h-9 text-xs'
 
+  // Muted: в светлой теме — рамка + текст вместо залитого серого, чтобы disabled выглядел читаемо.
+  // Solid: зелёная кнопка одинакова в обеих темах (emerald хорошо контрастирует).
   const tone =
     props.variant === 'muted'
-      ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-      : 'bg-emerald-500 text-slate-900 hover:bg-emerald-400 active:bg-emerald-600'
+      ? 'border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-800 dark:border-transparent dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600'
+      : 'bg-emerald-500 text-white hover:bg-emerald-400 active:bg-emerald-600 dark:text-slate-900'
 
   return `${size} ${tone}`.trim()
 })

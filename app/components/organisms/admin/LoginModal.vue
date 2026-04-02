@@ -4,14 +4,14 @@
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4 pb-[env(safe-area-inset-bottom)]"
     @click.self="$emit('close')"
   >
-    <div class="w-full max-w-sm rounded-2xl bg-slate-800 border border-slate-700/60 shadow-2xl p-6 flex flex-col gap-5 max-h-[min(80vh,640px)] overflow-auto">
+    <div class="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-2xl p-6 flex flex-col gap-5 max-h-[min(80vh,640px)] overflow-auto">
 
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-bold text-slate-100">Вход для администратора</h2>
+        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100">Вход для администратора</h2>
         <!-- Кнопка закрытия: 44×44px тач-зона -->
         <button
           type="button"
-          class="-mr-2 flex h-11 w-11 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-700 hover:text-slate-200 active:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          class="-mr-2 flex h-11 w-11 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
           aria-label="Закрыть"
           @click="$emit('close')"
         >
@@ -21,13 +21,13 @@
         </button>
       </div>
 
-      <p class="text-sm text-slate-400 leading-relaxed">
+      <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
         Введите пароль администратора. При первом входе он станет мастер-паролем.
       </p>
 
       <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
         <div class="flex flex-col gap-2">
-          <label for="admin-password" class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <label for="admin-password" class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Пароль
           </label>
           <!-- font-size: 16px — предотвращает автозум на iOS Safari при фокусе -->
@@ -38,7 +38,7 @@
             placeholder="Введите пароль..."
             autocomplete="current-password"
             :disabled="isLoading"
-            class="w-full rounded-xl border border-slate-600 bg-slate-700/80 px-4 py-3 text-base text-slate-100 placeholder-slate-500 transition-colors focus:border-emerald-500/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 disabled:opacity-50"
+            class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/80 px-4 py-3 text-base text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors focus:border-emerald-500/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 disabled:opacity-50"
           />
         </div>
 

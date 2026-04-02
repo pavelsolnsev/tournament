@@ -2,21 +2,21 @@
 <!-- Шаг 1: список свободных игроков + кнопка-триггер.                -->
 <!-- Шаг 2: выбор количества команд + подтверждение.                   -->
 <template>
-  <div class="rounded-xl bg-slate-800/50 p-3 sm:px-4 sm:py-3">
+  <div class="rounded-xl bg-slate-100 dark:bg-slate-800/50 p-3 sm:px-4 sm:py-3">
 
     <!-- ─── Шаг 1: список свободных игроков ─── -->
     <template v-if="!open">
 
       <!-- Заголовок -->
-      <span class="text-sm font-medium text-slate-300">
+      <span class="text-sm font-medium text-slate-600 dark:text-slate-300">
         <template v-if="freePlayers.length > 0">
           Свободные игроки
-          <span class="ml-1 rounded bg-slate-700/80 px-1.5 py-0.5 text-xs tabular-nums text-slate-400">
+          <span class="ml-1 rounded bg-slate-200 dark:bg-slate-700/80 px-1.5 py-0.5 text-xs tabular-nums text-slate-500 dark:text-slate-400">
             {{ freePlayers.length }}
           </span>
         </template>
         <template v-else>
-          <span class="text-slate-500">Все игроки распределены</span>
+          <span class="text-slate-400 dark:text-slate-500">Все игроки распределены</span>
         </template>
       </span>
 
@@ -29,30 +29,35 @@
         <li
           v-for="p in freePlayers"
           :key="p.id"
-          class="flex min-w-0 items-center gap-1 rounded-lg bg-slate-700/50 px-2 py-1"
+          class="flex min-w-0 items-center gap-1 rounded-lg bg-slate-200/80 dark:bg-slate-700/50 px-2 py-1"
         >
-          <span class="max-w-[7rem] truncate text-xs text-slate-200 sm:max-w-[10rem]">
+          <span class="max-w-[7rem] truncate text-xs text-slate-700 dark:text-slate-200 sm:max-w-[10rem]">
             {{ displayName(p) }}
           </span>
           <span
             v-if="p.rating != null"
-            class="shrink-0 text-[11px] tabular-nums text-slate-500"
+            class="shrink-0 text-[11px] tabular-nums text-slate-400 dark:text-slate-500"
           >
             {{ ratingTierEmoji(Math.round(p.rating)) }} {{ Math.round(p.rating) }}
           </span>
         </li>
       </ul>
 
-      <!-- Кнопка-триггер — под игроками, во всю ширину -->
+      <!-- Кнопка-триггер — под игроками, во всю ширину.
+           В светлой теме: насыщенный зелёный текст на слабом зелёном фоне — контраст достаточный.
+           В тёмной теме: text-emerald-300 как раньше. -->
       <button
         type="button"
         :disabled="freePlayers.length === 0"
         title="Автоматически распределить по рейтингу"
-        class="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/60
-               bg-emerald-500/10 px-5 text-sm font-semibold text-emerald-300
+        class="flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-5 text-sm font-semibold
                transition-colors
-               hover:border-emerald-500 hover:bg-emerald-500/20 hover:text-emerald-200
-               active:bg-emerald-500/30
+               border-emerald-600/50 bg-emerald-50 text-emerald-700
+               hover:border-emerald-600 hover:bg-emerald-100 hover:text-emerald-800
+               active:bg-emerald-200
+               dark:border-emerald-500/60 dark:bg-emerald-500/10 dark:text-emerald-300
+               dark:hover:border-emerald-500 dark:hover:bg-emerald-500/20 dark:hover:text-emerald-200
+               dark:active:bg-emerald-500/30
                focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50
                disabled:cursor-not-allowed disabled:opacity-40"
         @click="open = true"
@@ -64,7 +69,7 @@
 
     <!-- ─── Шаг 2: выбор количества команд ─── -->
     <template v-else>
-      <p class="mb-3 text-sm font-medium text-slate-200">На сколько команд делим?</p>
+      <p class="mb-3 text-sm font-medium text-slate-700 dark:text-slate-200">На сколько команд делим?</p>
 
       <!-- Три карточки 2 / 3 / 4 — всегда 3 колонки, на мобиле чуть меньше паддинг -->
       <div class="mb-3 grid grid-cols-3 gap-2" role="group" aria-label="Количество команд">
@@ -77,7 +82,7 @@
           :class="
             modelValue === n
               ? 'border-emerald-500/60 bg-emerald-500/10'
-              : 'border-slate-700/60 bg-slate-900/40 md:hover:border-slate-600 md:hover:bg-slate-800/60'
+              : 'border-slate-300 dark:border-slate-700/60 bg-white dark:bg-slate-900/40 md:hover:border-slate-400 dark:md:hover:border-slate-600 md:hover:bg-slate-50 dark:md:hover:bg-slate-800/60'
           "
           :aria-pressed="modelValue === n"
           @click="emit('update:modelValue', n)"
@@ -85,7 +90,7 @@
           <!-- Цифра -->
           <span
             class="text-2xl font-bold leading-none"
-            :class="modelValue === n ? 'text-emerald-400' : 'text-slate-200'"
+            :class="modelValue === n ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-200'"
           >
             {{ n }}
           </span>
@@ -100,8 +105,8 @@
       <div class="flex flex-col gap-2 sm:flex-row">
         <button
           type="button"
-          class="min-h-[2.75rem] flex-1 rounded-xl border border-slate-700/60 px-4 text-sm font-medium text-slate-400
-                 transition-colors md:hover:border-slate-600 md:hover:text-slate-200
+          class="min-h-[2.75rem] flex-1 rounded-xl border border-slate-300 dark:border-slate-700/60 px-4 text-sm font-medium text-slate-500 dark:text-slate-400
+                 transition-colors md:hover:border-slate-400 dark:md:hover:border-slate-600 md:hover:text-slate-700 dark:md:hover:text-slate-200
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
           @click="open = false"
         >
@@ -110,7 +115,7 @@
 
         <button
           type="button"
-          class="min-h-[2.75rem] flex-[2] rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-slate-900
+          class="min-h-[2.75rem] flex-[2] rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-white dark:text-slate-900
                  transition-colors md:hover:bg-emerald-400 active:bg-emerald-600
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
           @click="onConfirm"

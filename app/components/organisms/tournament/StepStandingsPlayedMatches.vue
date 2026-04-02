@@ -4,12 +4,12 @@
 
     <!-- Заголовок секции -->
     <div v-if="showHeading" class="flex items-center justify-between gap-3">
-      <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-400">
+      <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
         Сыгранные матчи
       </h3>
       <span
         v-if="playedMatchesList.length > 0"
-        class="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-400"
+        class="rounded-full bg-slate-200 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400"
       >
         {{ playedMatchesList.length }}
       </span>
@@ -18,15 +18,15 @@
     <!-- Пустое состояние -->
     <div
       v-if="playedMatchesList.length === 0"
-      class="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-slate-700/60 px-4 py-8 text-center"
+      class="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/60 px-4 py-8 text-center"
     >
-      <svg class="h-8 w-8 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+      <svg class="h-8 w-8 text-slate-300 dark:text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
         <circle cx="12" cy="12" r="10" />
         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
         <path d="M2 12h20" />
       </svg>
       <p class="text-xs text-slate-500">Пока матчей нет.</p>
-      <p class="text-[11px] text-slate-600">Завершите первый матч, чтобы он появился здесь.</p>
+      <p class="text-[11px] text-slate-400 dark:text-slate-600">Завершите первый матч, чтобы он появился здесь.</p>
     </div>
 
     <!-- Список матчей -->
@@ -36,14 +36,14 @@
         :key="m.matchNumber"
         class="min-w-0 overflow-hidden rounded-xl border transition-colors"
         :class="(openMatch === m.matchNumber || editMatch === m.matchNumber)
-          ? 'border-slate-600/60 bg-slate-900'
-          : 'border-slate-700/40 bg-slate-900 md:hover:border-slate-600/50'"
+          ? 'border-slate-300 dark:border-slate-600/60 bg-white dark:bg-slate-900'
+          : 'border-slate-200 dark:border-slate-700/40 bg-white dark:bg-slate-900 md:hover:border-slate-300 dark:md:hover:border-slate-600/50'"
       >
         <!-- Строка матча: счёт + команды -->
         <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-3">
           <div class="flex min-w-0 items-center gap-2">
             <span aria-hidden="true" class="shrink-0 text-base leading-none">{{ teamMarker(m.homeTeam) }}</span>
-            <span class="min-w-0 truncate text-sm font-semibold text-slate-200">{{ m.homeTeam }}</span>
+            <span class="min-w-0 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{{ m.homeTeam }}</span>
           </div>
           <div class="flex shrink-0 flex-col items-center gap-0.5">
             <span
@@ -54,20 +54,20 @@
             </span>
           </div>
           <div class="flex min-w-0 items-center justify-end gap-2">
-            <span class="min-w-0 truncate text-right text-sm font-semibold text-slate-200">{{ m.awayTeam }}</span>
+            <span class="min-w-0 truncate text-right text-sm font-semibold text-slate-700 dark:text-slate-200">{{ m.awayTeam }}</span>
             <span aria-hidden="true" class="shrink-0 text-base leading-none">{{ teamMarker(m.awayTeam) }}</span>
           </div>
         </div>
 
         <!-- Панель кнопок: детали / редактировать -->
-        <div class="flex items-center gap-2 border-t border-slate-800/60 px-3 py-2">
+        <div class="flex items-center gap-2 border-t border-slate-100 dark:border-slate-800/60 px-3 py-2">
           <button
             type="button"
             class="inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-medium transition-colors
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
             :class="openMatch === m.matchNumber
-              ? 'bg-slate-700 text-slate-200'
-              : 'text-slate-500 md:hover:bg-slate-800 md:hover:text-slate-300'"
+              ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+              : 'text-slate-500 md:hover:bg-slate-100 dark:md:hover:bg-slate-800 md:hover:text-slate-700 dark:md:hover:text-slate-300'"
             @click="toggleDetails(m.matchNumber)"
           >
             <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -81,8 +81,8 @@
             class="inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-medium transition-colors
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
             :class="editMatch === m.matchNumber
-              ? 'bg-emerald-500/20 text-emerald-300'
-              : 'text-slate-500 md:hover:bg-slate-800 md:hover:text-slate-300'"
+              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300'
+              : 'text-slate-500 md:hover:bg-slate-100 md:hover:text-slate-700 dark:md:hover:bg-slate-800 dark:md:hover:text-slate-300'"
             @click="toggleEdit(m)"
           >
             <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -93,8 +93,8 @@
 
           <!-- Номер матча: закреплён в строке действий, не уезжает вниз -->
           <span
-            class="ml-auto rounded-md bg-slate-800/70 px-2 py-0.5 text-[10px]
-                   font-semibold uppercase tracking-widest tabular-nums text-slate-400"
+            class="ml-auto rounded-md bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest
+                   tabular-nums text-slate-600 dark:bg-slate-800/70 dark:text-slate-400"
           >
             М{{ m.matchNumber }}
           </span>
@@ -123,7 +123,8 @@
             <button
             v-else-if="!props.readonly"
             type="button"
-            class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 transition-colors md:hover:bg-slate-800 md:hover:text-red-400
+            class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 transition-colors
+                   md:hover:bg-slate-200 md:hover:text-red-600 dark:md:hover:bg-slate-800 dark:md:hover:text-red-400
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
             title="Удалить матч"
             @click="requestDelete(m.matchNumber)"

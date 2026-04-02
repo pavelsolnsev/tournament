@@ -4,12 +4,12 @@
 
     <!-- Хозяева -->
     <div ref="homeColumnRef" class="min-w-0 flex-1">
-      <p class="mb-1.5 text-xs font-medium text-slate-400">Хозяева</p>
+      <p class="mb-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">Хозяева</p>
       <button
         ref="homeTriggerRef"
         type="button"
-        class="flex h-11 w-full items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/70
-               px-3 text-left text-sm text-slate-100 transition-colors
+        class="flex h-11 w-full items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-700/60 bg-white dark:bg-slate-900/70
+               px-3 text-left text-sm text-slate-800 dark:text-slate-100 transition-colors
                focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
         :class="homeOpen ? 'border-emerald-500/50' : 'hover:border-slate-600'"
         @click="toggleHome"
@@ -17,7 +17,7 @@
         <span v-if="homeTeam" class="shrink-0 text-base leading-none">{{ teamMarker(homeTeam) }}</span>
         <span
           class="min-w-0 flex-1 truncate"
-          :class="homeTeam ? 'text-slate-100' : 'text-slate-500'"
+          :class="homeTeam ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'"
         >
           {{ homeTeam || 'Выберите команду' }}
         </span>
@@ -48,15 +48,15 @@
           <ul
             v-if="homeOpen"
             ref="homeListRef"
-            class="fixed z-[100] max-h-[min(70vh,22rem)] overflow-y-auto rounded-xl border border-slate-700/60 bg-slate-900 py-1 shadow-xl"
+            class="fixed z-[100] max-h-[min(70vh,22rem)] overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 py-1 shadow-xl"
             :style="homeListStyle"
             role="listbox"
           >
             <li>
               <button
                 type="button"
-                class="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-slate-500 transition-colors
-                       hover:bg-slate-800/60 hover:text-slate-300"
+                class="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-slate-400 dark:text-slate-500 transition-colors
+                       hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-600 dark:hover:text-slate-300"
                 @click="selectHome('')"
               >
                 — не выбрано —
@@ -70,8 +70,8 @@
                   name === awayTeam
                     ? 'cursor-not-allowed text-slate-400 opacity-40'
                     : name === homeTeam
-                      ? 'bg-emerald-500/10 text-emerald-300'
-                      : 'text-slate-100 hover:bg-slate-800/60'
+                      ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                      : 'text-slate-700 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60'
                 "
                 :disabled="name === awayTeam"
                 @click="name !== awayTeam && selectHome(name)"
@@ -87,12 +87,12 @@
 
     <!-- Гости -->
     <div ref="awayColumnRef" class="min-w-0 flex-1">
-      <p class="mb-1.5 text-xs font-medium text-slate-400">Гости</p>
+      <p class="mb-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">Гости</p>
       <button
         ref="awayTriggerRef"
         type="button"
-        class="flex h-11 w-full items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/70
-               px-3 text-left text-sm text-slate-100 transition-colors
+        class="flex h-11 w-full items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-700/60 bg-white dark:bg-slate-900/70
+               px-3 text-left text-sm text-slate-800 dark:text-slate-100 transition-colors
                focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
         :class="awayOpen ? 'border-emerald-500/50' : 'hover:border-slate-600'"
         @click="toggleAway"
@@ -100,7 +100,7 @@
         <span v-if="awayTeam" class="shrink-0 text-base leading-none">{{ teamMarker(awayTeam) }}</span>
         <span
           class="min-w-0 flex-1 truncate"
-          :class="awayTeam ? 'text-slate-100' : 'text-slate-500'"
+          :class="awayTeam ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'"
         >
           {{ awayTeam || 'Выберите команду' }}
         </span>
@@ -131,15 +131,15 @@
           <ul
             v-if="awayOpen"
             ref="awayListRef"
-            class="fixed z-[100] max-h-[min(70vh,22rem)] overflow-y-auto rounded-xl border border-slate-700/60 bg-slate-900 py-1 shadow-xl"
+            class="fixed z-[100] max-h-[min(70vh,22rem)] overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 py-1 shadow-xl"
             :style="awayListStyle"
             role="listbox"
           >
             <li>
               <button
                 type="button"
-                class="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-slate-500 transition-colors
-                       hover:bg-slate-800/60 hover:text-slate-300"
+                class="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-slate-400 dark:text-slate-500 transition-colors
+                       hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-600 dark:hover:text-slate-300"
                 @click="selectAway('')"
               >
                 — не выбрано —
@@ -153,8 +153,8 @@
                   name === homeTeam
                     ? 'cursor-not-allowed text-slate-400 opacity-40'
                     : name === awayTeam
-                      ? 'bg-emerald-500/10 text-emerald-300'
-                      : 'text-slate-100 hover:bg-slate-800/60'
+                      ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                      : 'text-slate-700 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60'
                 "
                 :disabled="name === homeTeam"
                 @click="name !== homeTeam && selectAway(name)"

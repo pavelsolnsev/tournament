@@ -7,7 +7,7 @@
       <span v-if="teamName" aria-hidden="true" class="shrink-0 text-base leading-none">
         {{ teamMarker(teamName) }}
       </span>
-      <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-400">
+      <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
         {{ teamName }}
       </span>
     </div>
@@ -19,7 +19,7 @@
         :key="p.id"
         class="relative min-w-0 overflow-visible rounded-xl border transition-colors duration-150"
         :class="isActivePlayer(side, p.id)
-          ? ['z-20 border-slate-600/70', activeShadowClass]
+          ? ['z-20', activeShadowClass]
           : 'z-0 border-transparent'"
       >
         <!-- Строка игрока: одна строка — имя слева, бейджи справа -->
@@ -39,12 +39,12 @@
           />
           <!-- Имя сжимается (truncate), рейтинг справа всегда целиком. -->
           <span class="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
-            <span class="min-w-0 truncate text-sm font-medium leading-tight text-slate-100">
+            <span class="min-w-0 truncate text-sm font-medium leading-tight text-slate-800 dark:text-slate-100">
               {{ labelParts(p).name }}
             </span>
             <span
               v-if="labelParts(p).rating"
-              class="shrink-0 whitespace-nowrap text-sm font-medium leading-tight text-slate-100 tabular-nums"
+              class="shrink-0 whitespace-nowrap text-sm font-medium leading-tight text-slate-800 dark:text-slate-100 tabular-nums"
             >{{ labelParts(p).rating }}</span>
           </span>
 
@@ -65,7 +65,7 @@
           <!-- Шеврон — показывает что строку можно раскрыть -->
           <svg
             class="h-4 w-4 shrink-0 transition-transform duration-200"
-            :class="isActivePlayer(side, p.id) ? 'rotate-180 text-slate-300' : 'text-slate-600'"
+            :class="isActivePlayer(side, p.id) ? 'rotate-180 text-slate-500 dark:text-slate-300' : 'text-slate-500 dark:text-slate-600'"
             viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
           >
             <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
@@ -84,8 +84,8 @@
         >
           <div
             v-if="isActivePlayer(side, p.id)"
-            class="absolute left-0 right-0 z-30 rounded-xl border border-slate-700/60
-                   bg-slate-950/95 px-2.5 py-2.5 shadow-xl shadow-slate-950/40 backdrop-blur-sm"
+            class="absolute left-0 right-0 z-30 rounded-xl border border-slate-200 bg-white px-2.5 py-2.5 shadow-lg shadow-slate-200/40 backdrop-blur-sm
+                   dark:border-slate-700/60 dark:bg-slate-950/95 dark:shadow-xl dark:shadow-slate-950/40"
             :class="opensUp(idx, players.length) ? 'bottom-full mb-1.5' : 'top-full mt-1.5'"
           >
             <!-- 2 колонки × 2 строки — каждая карточка шире, кнопкам есть куда разместиться -->
@@ -104,7 +104,7 @@
                   class="flex h-14 w-12 shrink-0 items-center justify-center text-xl font-bold
                          transition-colors active:scale-95
                          focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40
-                         disabled:opacity-20 disabled:cursor-not-allowed"
+                         disabled:cursor-not-allowed disabled:text-slate-300 disabled:opacity-60 dark:disabled:opacity-20"
                   :class="action.removeBtnClass"
                   :disabled="playerStat(side, p.id)[action.value] === 0"
                   :title="'Отменить: ' + action.label"
@@ -166,46 +166,46 @@ const EVENT_ACTIONS = [
     value: 'goals' as StatKey,
     icon: '⚽',
     label: 'Гол',
-    colorClass: 'bg-emerald-500/10 border-emerald-500/25',
-    countClass: 'text-emerald-300',
-    addBtnClass: 'text-emerald-300 md:hover:bg-emerald-500/20',
-    removeBtnClass: 'text-emerald-500/70 md:hover:bg-emerald-500/20 md:hover:text-emerald-300',
+    colorClass: 'bg-emerald-50 border-emerald-200/90 dark:bg-emerald-500/10 dark:border-emerald-500/25',
+    countClass: 'text-emerald-700 dark:text-emerald-300',
+    addBtnClass: 'text-emerald-600 dark:text-emerald-300 md:hover:bg-emerald-100 dark:md:hover:bg-emerald-500/20',
+    removeBtnClass: 'text-emerald-700 dark:text-emerald-400 md:hover:bg-emerald-100 dark:md:hover:bg-emerald-500/20 md:hover:text-emerald-800 dark:md:hover:text-emerald-300',
   },
   {
     value: 'assists' as StatKey,
     icon: '🎯',
     label: 'Ассист',
-    colorClass: 'bg-sky-500/10 border-sky-500/25',
-    countClass: 'text-sky-300',
-    addBtnClass: 'text-sky-300 md:hover:bg-sky-500/20',
-    removeBtnClass: 'text-sky-500/70 md:hover:bg-sky-500/20 md:hover:text-sky-300',
+    colorClass: 'bg-sky-50 border-sky-200/90 dark:bg-sky-500/10 dark:border-sky-500/25',
+    countClass: 'text-sky-700 dark:text-sky-300',
+    addBtnClass: 'text-sky-600 dark:text-sky-300 md:hover:bg-sky-100 dark:md:hover:bg-sky-500/20',
+    removeBtnClass: 'text-sky-700 dark:text-sky-400 md:hover:bg-sky-100 dark:md:hover:bg-sky-500/20 md:hover:text-sky-800 dark:md:hover:text-sky-300',
   },
   {
     value: 'saves' as StatKey,
     icon: '🧤',
     label: 'Сейв',
-    colorClass: 'bg-violet-500/10 border-violet-500/25',
-    countClass: 'text-violet-300',
-    addBtnClass: 'text-violet-300 md:hover:bg-violet-500/20',
-    removeBtnClass: 'text-violet-500/70 md:hover:bg-violet-500/20 md:hover:text-violet-300',
+    colorClass: 'bg-violet-50 border-violet-200/90 dark:bg-violet-500/10 dark:border-violet-500/25',
+    countClass: 'text-violet-700 dark:text-violet-300',
+    addBtnClass: 'text-violet-600 dark:text-violet-300 md:hover:bg-violet-100 dark:md:hover:bg-violet-500/20',
+    removeBtnClass: 'text-violet-700 dark:text-violet-400 md:hover:bg-violet-100 dark:md:hover:bg-violet-500/20 md:hover:text-violet-800 dark:md:hover:text-violet-300',
   },
   {
     value: 'yellows' as StatKey,
     icon: '🟨',
     label: 'Жёлтая',
-    colorClass: 'bg-yellow-500/10 border-yellow-500/25',
-    countClass: 'text-yellow-300',
-    addBtnClass: 'text-yellow-300 md:hover:bg-yellow-500/20',
-    removeBtnClass: 'text-yellow-500/70 md:hover:bg-yellow-500/20 md:hover:text-yellow-300',
+    colorClass: 'bg-amber-50 border-amber-200/90 dark:bg-yellow-500/10 dark:border-yellow-500/25',
+    countClass: 'text-amber-800 dark:text-yellow-300',
+    addBtnClass: 'text-amber-700 dark:text-yellow-300 md:hover:bg-amber-100 dark:md:hover:bg-yellow-500/20',
+    removeBtnClass: 'text-amber-800 dark:text-yellow-400 md:hover:bg-amber-100 dark:md:hover:bg-yellow-500/20 md:hover:text-amber-900 dark:md:hover:text-yellow-300',
   },
 ] as const
 
 // Конфигурация бейджей на карточке игрока — только фон и цвет текста (без кнопки «−»).
 const STAT_BADGES = [
-  { key: 'goals' as StatKey,   icon: '⚽', bgClass: 'bg-emerald-500/15', textClass: 'text-emerald-300' },
-  { key: 'assists' as StatKey, icon: '🎯', bgClass: 'bg-sky-500/15',     textClass: 'text-sky-300' },
-  { key: 'saves' as StatKey,   icon: '🧤', bgClass: 'bg-violet-500/15',  textClass: 'text-violet-300' },
-  { key: 'yellows' as StatKey, icon: '🟨', bgClass: 'bg-yellow-500/15',  textClass: 'text-yellow-300' },
+  { key: 'goals' as StatKey,   icon: '⚽', bgClass: 'bg-emerald-500/15', textClass: 'text-emerald-900 dark:text-emerald-300' },
+  { key: 'assists' as StatKey, icon: '🎯', bgClass: 'bg-sky-500/15',     textClass: 'text-sky-900 dark:text-sky-300' },
+  { key: 'saves' as StatKey,   icon: '🧤', bgClass: 'bg-violet-500/15',  textClass: 'text-violet-900 dark:text-violet-300' },
+  { key: 'yellows' as StatKey, icon: '🟨', bgClass: 'bg-amber-500/15',  textClass: 'text-amber-950 dark:text-yellow-300' },
 ] as const
 
 function labelParts(p: Player) {
@@ -235,8 +235,8 @@ const TEAM_COLOR_BG: Record<number, string> = {
   1: 'bg-emerald-500/5',
   2: 'bg-blue-500/5',
   3: 'bg-yellow-500/5',
-  4: 'bg-slate-300/5',
-  5: 'bg-slate-900/5',
+  4: 'bg-slate-200/40 dark:bg-slate-300/5',
+  5: 'bg-slate-100 dark:bg-slate-900/5',
 }
 
 // Слегка более тёмный фон когда строка игрока активна (выбрана).
@@ -245,15 +245,15 @@ const TEAM_COLOR_BG_ACTIVE: Record<number, string> = {
   1: 'bg-emerald-500/10',
   2: 'bg-blue-500/10',
   3: 'bg-yellow-500/10',
-  4: 'bg-slate-300/10',
-  5: 'bg-slate-900/10',
+  4: 'bg-slate-200/70 dark:bg-slate-300/10',
+  5: 'bg-slate-200 dark:bg-slate-900/10',
 }
 
 function playerBg(isActive: boolean): string {
   const idx = rosterColumnProps.teamColorIndex
   return isActive
-    ? (TEAM_COLOR_BG_ACTIVE[idx] ?? 'bg-slate-800/60')
-    : (TEAM_COLOR_BG[idx] ?? 'bg-slate-800/40')
+    ? (TEAM_COLOR_BG_ACTIVE[idx] ?? 'bg-slate-200 dark:bg-slate-800/60')
+    : (TEAM_COLOR_BG[idx] ?? 'bg-slate-100 dark:bg-slate-800/40')
 }
 
 // Клик по строке игрока — выбирает или снимает выбор (toggle).

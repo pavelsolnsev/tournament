@@ -9,7 +9,7 @@
       </p>
     </div>
 
-    <div v-if="props.tournamentDate" class="mx-4 border-t border-slate-700/50 sm:mx-6" />
+    <div v-if="props.tournamentDate" class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 1. MVP ТУРНИРА ─────────────────────────────────────── -->
     <div v-if="props.summary.mvp.length > 0" class="px-4 pt-6 pb-5 sm:px-6">
@@ -19,7 +19,7 @@
       <div
         v-for="player in props.summary.mvp"
         :key="player.playerId"
-        class="relative overflow-hidden rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 to-slate-800/70 p-4"
+        class="relative overflow-hidden rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 to-slate-100 dark:to-slate-800/70 p-4"
       >
         <!-- Свечение за аватаром -->
         <div class="pointer-events-none absolute -left-4 -top-4 h-32 w-32 rounded-full bg-amber-400/10 blur-3xl" aria-hidden="true" />
@@ -34,29 +34,29 @@
               class="ring-2 ring-amber-400/50"
             />
             <span
-              class="absolute -bottom-1 -right-1 flex h-[16px] w-[16px] items-center justify-center rounded-full bg-slate-900 text-[9px] ring-1 ring-amber-500/40 leading-none"
+              class="absolute -bottom-1 -right-1 flex h-[16px] w-[16px] items-center justify-center rounded-full bg-white dark:bg-slate-900 text-[9px] ring-1 ring-amber-500/40 leading-none"
               aria-hidden="true"
             >🏆</span>
           </div>
 
           <!-- Имя и команда — выровнены по левому краю, flex-col -->
           <div class="min-w-0 flex-1 flex flex-col justify-center gap-0.5">
-            <p class="truncate text-[14px] font-bold leading-tight text-amber-200">{{ player.name }}</p>
-            <p class="flex items-center gap-1 text-[11px] leading-none text-slate-400">
+            <p class="truncate text-[14px] font-bold leading-tight text-amber-700 dark:text-amber-200">{{ player.name }}</p>
+            <p class="flex items-center gap-1 text-[11px] leading-none text-slate-500 dark:text-slate-400">
               <span class="shrink-0" aria-hidden="true">{{ player.teamMarker }}</span>
               <span class="truncate">{{ player.teamName }}</span>
             </p>
           </div>
 
           <!-- Бейдж MVP -->
-          <span class="shrink-0 self-center rounded-md bg-amber-500/15 px-2 py-1 text-[11px] font-bold tracking-wider text-amber-300 ring-1 ring-amber-500/25">
+          <span class="shrink-0 self-center rounded-md bg-amber-500/15 px-2 py-1 text-[11px] font-bold tracking-wider text-amber-900 ring-1 ring-amber-500/30 dark:text-amber-300 dark:ring-amber-500/25">
             MVP
           </span>
         </div>
       </div>
     </div>
 
-    <div class="mx-4 border-t border-slate-700/50 sm:mx-6" />
+    <div class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 2. ИНДИВИДУАЛЬНЫЕ НАГРАДЫ ─────────────────────────── -->
     <div class="px-4 pt-5 pb-5 sm:px-6">
@@ -121,7 +121,7 @@
 
           <!-- Имя и команда -->
           <div class="min-w-0 flex-1 flex flex-col justify-center gap-0.5">
-            <p class="truncate text-[13px] font-semibold leading-tight text-slate-200">{{ player.name }}</p>
+            <p class="truncate text-[13px] font-semibold leading-tight text-slate-800 dark:text-slate-200">{{ player.name }}</p>
             <p class="flex items-center gap-1 text-[11px] leading-none text-slate-500">
               <span class="shrink-0" aria-hidden="true">{{ player.teamMarker }}</span>
               <span class="truncate">{{ player.teamName }}</span>
@@ -136,28 +136,28 @@
               class="inline-block h-4 w-3 rounded-sm bg-yellow-400 ring-1 ring-yellow-500/50"
               aria-hidden="true"
             />
-            <span class="ml-1 text-[12px] font-bold tabular-nums text-yellow-300">{{ player.count }}</span>
+            <span class="ml-1 text-[12px] font-bold tabular-nums text-amber-900 dark:text-yellow-300">{{ player.count }}</span>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="mx-4 border-t border-slate-700/50 sm:mx-6" />
+    <div class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 3. САМЫЙ РЕЗУЛЬТАТИВНЫЙ МАТЧ ──────────────────────── -->
     <div v-if="props.summary.stats.topScoringMatch" class="px-4 pt-5 pb-5 sm:px-6">
       <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">🔥 Самый результативный матч</p>
 
-      <div class="overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-800/60">
+      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700/60 dark:bg-slate-800/60">
 
         <!-- Мобиль: вертикально (команда → счёт → команда) -->
         <div class="sm:hidden">
           <div class="flex items-center gap-2.5 px-4 pt-4 pb-3">
             <span class="shrink-0 text-lg leading-none" aria-hidden="true">{{ homeTeamMarker }}</span>
-            <span class="text-[14px] font-semibold text-slate-100 leading-snug">{{ props.summary.stats.topScoringMatch.homeTeam }}</span>
+            <span class="text-[14px] font-semibold text-slate-800 leading-snug dark:text-slate-100">{{ props.summary.stats.topScoringMatch.homeTeam }}</span>
           </div>
           <div class="relative flex items-center px-4">
-            <div class="flex-1 border-t border-slate-700/50" />
+            <div class="flex-1 border-t border-slate-200 dark:border-slate-700/50" />
             <div
               class="mx-3 shrink-0 flex items-baseline gap-1.5 rounded-xl px-4 py-1.5 ring-1"
               :class="topScoringMatchPillClass"
@@ -166,11 +166,11 @@
               <span class="text-base font-light leading-none opacity-60">:</span>
               <span class="text-2xl font-black tabular-nums leading-none">{{ props.summary.stats.topScoringMatch.awayGoals }}</span>
             </div>
-            <div class="flex-1 border-t border-slate-700/50" />
+            <div class="flex-1 border-t border-slate-200 dark:border-slate-700/50" />
           </div>
           <div class="flex items-center gap-2.5 px-4 pt-3 pb-4">
             <span class="shrink-0 text-lg leading-none" aria-hidden="true">{{ awayTeamMarker }}</span>
-            <span class="text-[14px] font-semibold text-slate-100 leading-snug">{{ props.summary.stats.topScoringMatch.awayTeam }}</span>
+            <span class="text-[14px] font-semibold text-slate-800 leading-snug dark:text-slate-100">{{ props.summary.stats.topScoringMatch.awayTeam }}</span>
           </div>
         </div>
 
@@ -178,7 +178,7 @@
         <div class="hidden sm:flex items-center gap-3 px-6 py-5">
           <!-- Домашняя: название + маркер, прижато вправо -->
           <div class="min-w-0 flex-1 flex items-center justify-end gap-2">
-            <span class="min-w-0 text-[15px] font-semibold text-slate-100 leading-tight text-right">
+            <span class="min-w-0 text-[15px] font-semibold text-slate-800 leading-tight text-right dark:text-slate-100">
               {{ props.summary.stats.topScoringMatch.homeTeam }}
             </span>
             <span class="shrink-0 text-xl leading-none" aria-hidden="true">{{ homeTeamMarker }}</span>
@@ -195,20 +195,20 @@
           <!-- Гостевая: маркер + название, прижато влево -->
           <div class="min-w-0 flex-1 flex items-center justify-start gap-2">
             <span class="shrink-0 text-xl leading-none" aria-hidden="true">{{ awayTeamMarker }}</span>
-            <span class="min-w-0 text-[15px] font-semibold text-slate-100 leading-tight text-left">
+            <span class="min-w-0 text-[15px] font-semibold text-slate-800 leading-tight text-left dark:text-slate-100">
               {{ props.summary.stats.topScoringMatch.awayTeam }}
             </span>
           </div>
         </div>
 
         <!-- Подпись — общая для обоих layout -->
-        <div class="border-t border-slate-700/40 px-4 py-2 text-center text-[11px] font-medium text-slate-500">
+        <div class="border-t border-slate-200 px-4 py-2 text-center text-[11px] font-medium text-slate-600 dark:border-slate-700/40 dark:text-slate-400">
           {{ pluralGoals(props.summary.stats.topScoringMatchGoals) }} в матче
         </div>
       </div>
     </div>
 
-    <div class="mx-4 border-t border-slate-700/50 sm:mx-6" />
+    <div class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 4. MVP КОМАНД ─────────────────────────────────────── -->
     <div v-if="props.summary.teamMvps.length > 0" class="px-4 pt-5 pb-5 sm:px-6">
@@ -218,7 +218,7 @@
         <div
           v-for="teamMvp in props.summary.teamMvps"
           :key="teamMvp.teamName"
-          class="flex items-center gap-3 rounded-xl border border-slate-700/60 bg-slate-800/50 p-3"
+          class="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700/60 dark:bg-slate-800/50"
         >
           <!-- Аватар с маркером команды -->
           <div class="relative shrink-0">
@@ -228,19 +228,19 @@
               size="md"
             />
             <span
-              class="absolute -bottom-0.5 -right-0.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-slate-900 text-[10px] ring-1 ring-slate-700/60"
+              class="absolute -bottom-0.5 -right-0.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-white text-[10px] ring-1 ring-slate-300 dark:bg-slate-900 dark:ring-slate-700/60"
               aria-hidden="true"
             >{{ teamMvp.teamMarker }}</span>
           </div>
 
           <!-- Название команды + имя игрока -->
           <div class="min-w-0 flex-1">
-            <p class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 leading-none">
+            <p class="text-[10px] font-semibold uppercase tracking-widest text-slate-600 leading-none dark:text-slate-400">
               {{ teamMvp.teamName }}
             </p>
             <p
               v-if="teamMvp.players.length > 0"
-              class="mt-1 truncate text-[13px] font-semibold text-slate-100 leading-tight"
+              class="mt-1 truncate text-[13px] font-semibold text-slate-800 leading-tight dark:text-slate-100"
             >
               {{ teamMvp.players[0]!.name }}
             </p>
@@ -251,22 +251,22 @@
           <div v-if="teamMvp.players.length > 0" class="flex shrink-0 items-center gap-1">
             <span
               v-if="teamMvp.goals > 0"
-              class="inline-flex items-center gap-0.5 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-emerald-300"
+              class="inline-flex items-center gap-0.5 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-emerald-900 dark:text-emerald-300"
             >⚽ {{ teamMvp.goals }}</span>
             <span
               v-if="teamMvp.assists > 0"
-              class="inline-flex items-center gap-0.5 rounded bg-sky-500/15 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-sky-300"
+              class="inline-flex items-center gap-0.5 rounded bg-sky-500/15 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-sky-900 dark:text-sky-300"
             >🎯 {{ teamMvp.assists }}</span>
             <span
               v-if="teamMvp.saves > 0"
-              class="inline-flex items-center gap-0.5 rounded bg-violet-500/15 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-violet-300"
+              class="inline-flex items-center gap-0.5 rounded bg-violet-500/15 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-violet-900 dark:text-violet-300"
             >🧤 {{ teamMvp.saves }}</span>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="mx-4 border-t border-slate-700/50 sm:mx-6" />
+    <div class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 5. ИТОГОВАЯ ТАБЛИЦА ───────────────────────────────── -->
     <div v-if="props.summary.standingsRows.length > 0" class="px-4 pt-5 pb-6 sm:px-6">
@@ -278,13 +278,13 @@
           :key="row.teamName"
           class="flex items-center gap-3 rounded-xl px-3.5 py-3"
           :class="i === 0
-            ? 'border border-amber-500/25 bg-gradient-to-r from-amber-500/10 to-slate-800/50'
-            : 'border border-slate-700/50 bg-slate-800/40'"
+            ? 'border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-amber-50 dark:to-slate-800/50'
+            : 'border border-slate-200 bg-slate-50 dark:border-slate-700/50 dark:bg-slate-800/40'"
         >
           <!-- Место — медаль или цифра -->
           <span
             class="w-5 shrink-0 text-center text-sm font-bold leading-none tabular-nums"
-            :class="i === 0 ? 'text-amber-400' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-slate-600'"
+            :class="i === 0 ? 'text-amber-600 dark:text-amber-400' : i === 1 ? 'text-slate-500 dark:text-slate-300' : i === 2 ? 'text-amber-700 dark:text-amber-600' : 'text-slate-600 dark:text-slate-500'"
           >{{ PLACE_ICONS[i] ?? row.place }}</span>
 
           <!-- Маркер команды -->
@@ -293,24 +293,24 @@
           <!-- Название -->
           <span
             class="min-w-0 flex-1 truncate text-[13px] font-semibold leading-tight"
-            :class="i === 0 ? 'text-amber-100' : 'text-slate-200'"
+            :class="i === 0 ? 'text-amber-950 dark:text-amber-100' : 'text-slate-800 dark:text-slate-200'"
           >{{ row.teamName }}</span>
 
           <!-- Стата — только на SM+ -->
-          <div class="hidden sm:flex shrink-0 items-center gap-2.5 text-[11px] text-slate-500">
-            <span class="tabular-nums">{{ row.played }}<span class="ml-0.5 text-slate-600">и</span></span>
-            <span class="tabular-nums text-emerald-500/80">{{ row.wins }}<span class="text-slate-600">в</span></span>
-            <span class="tabular-nums">{{ row.draws }}<span class="text-slate-600">н</span></span>
-            <span class="tabular-nums text-red-500/60">{{ row.losses }}<span class="text-slate-600">п</span></span>
-            <span class="tabular-nums text-slate-400">{{ row.goalsFor }}:{{ row.goalsAgainst }}</span>
+          <div class="hidden sm:flex shrink-0 items-center gap-2.5 text-[11px] text-slate-600 dark:text-slate-500">
+            <span class="tabular-nums">{{ row.played }}<span class="ml-0.5 text-slate-500 dark:text-slate-600">и</span></span>
+            <span class="tabular-nums text-emerald-700 dark:text-emerald-500/80">{{ row.wins }}<span class="text-slate-500 dark:text-slate-600">в</span></span>
+            <span class="tabular-nums">{{ row.draws }}<span class="text-slate-500 dark:text-slate-600">н</span></span>
+            <span class="tabular-nums text-red-600 dark:text-red-500/60">{{ row.losses }}<span class="text-slate-500 dark:text-slate-600">п</span></span>
+            <span class="tabular-nums text-slate-500 dark:text-slate-400">{{ row.goalsFor }}:{{ row.goalsAgainst }}</span>
           </div>
 
           <!-- Очки — всегда видны -->
           <span
             class="shrink-0 w-9 rounded-lg py-1 text-center text-[13px] font-bold tabular-nums"
             :class="i === 0
-              ? 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/25'
-              : 'bg-slate-700/50 text-slate-300'"
+              ? 'bg-amber-500/20 text-amber-900 ring-1 ring-amber-500/35 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-500/25'
+              : 'bg-slate-200 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300'"
           >{{ row.points }}</span>
         </div>
       </div>
@@ -331,9 +331,9 @@ const PLACE_ICONS: Record<number, string> = { 0: '🥇', 1: '🥈', 2: '🥉' }
 const EmptyAward = defineComponent({
   props: { icon: String, text: String },
   template: `
-    <div class="flex items-center gap-3 rounded-xl border border-dashed border-slate-700/40 bg-slate-800/20 px-4 py-3">
-      <span class="text-base opacity-30" aria-hidden="true">{{ icon }}</span>
-      <span class="text-[12px] text-slate-600">{{ text }}</span>
+    <div class="flex items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 dark:border-slate-700/40 dark:bg-slate-800/20">
+      <span class="text-base opacity-40 dark:opacity-30" aria-hidden="true">{{ icon }}</span>
+      <span class="text-[12px] text-slate-600 dark:text-slate-500">{{ text }}</span>
     </div>
   `,
 })
@@ -359,7 +359,7 @@ function colorIndexForTeam(teamName: string): number {
 // Плашка «самый результативный матч»: ничья — нейтрально, иначе — цвет победителя.
 const topScoringMatchPillClass = computed(() => {
   const m = props.summary.stats.topScoringMatch
-  if (!m) return 'bg-slate-800/90 text-slate-400 ring-slate-600/40'
+  if (!m) return 'bg-slate-100 text-slate-800 ring-slate-300/90 dark:bg-slate-800/90 dark:text-slate-400 dark:ring-slate-600/40'
   return getMatchScorePillClass(
     m.homeGoals,
     m.awayGoals,

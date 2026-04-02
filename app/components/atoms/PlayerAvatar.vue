@@ -1,7 +1,7 @@
 <template>
   <span
     class="relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-700/80 text-slate-200 ring-1 ring-slate-600/50"
-    :class="size === 'md' ? 'h-8 w-8' : 'h-7 w-7'"
+    :class="wrapperSizeClass"
     role="img"
     :aria-label="ariaLabel"
   >
@@ -15,7 +15,7 @@
     <span
       v-else
       class="select-none font-semibold uppercase leading-none"
-      :class="size === 'md' ? 'text-xs' : 'text-[10px]'"
+      :class="initialsSizeClass"
     >{{ initials }}</span>
   </span>
 </template>
@@ -28,10 +28,27 @@ const props = defineProps<{
   photo?: string | null
   /** Имя для инициалов и подписи доступности, если фото нет или оно не загрузилось. */
   fallbackName: string
-  size?: 'sm' | 'md'
+  /** xs — компактно (шапка live и т.п.), sm — списки, md — крупнее. */
+  size?: 'xs' | 'sm' | 'md'
 }>()
 
 const size = computed(() => props.size ?? 'sm')
+
+// Размер круга под выбранный вариант — чтобы не плодить длинные тернарники в шаблоне.
+const wrapperSizeClass = computed(() => {
+  const s = size.value
+  if (s === 'md') return 'h-8 w-8'
+  if (s === 'xs') return 'h-5 w-5'
+  return 'h-7 w-7'
+})
+
+// Кегль инициалов под размер круга — в xs буква остаётся читаемой.
+const initialsSizeClass = computed(() => {
+  const s = size.value
+  if (s === 'md') return 'text-xs'
+  if (s === 'xs') return 'text-[8px]'
+  return 'text-[10px]'
+})
 
 const src = computed(() => playerPhotoPublicUrl(props.photo))
 

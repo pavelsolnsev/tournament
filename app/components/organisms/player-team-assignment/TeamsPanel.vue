@@ -36,7 +36,7 @@
 
       <!-- Секция авто-команд (появились после «Распределить по рейтингу») -->
       <template v-if="autoTeams.length > 0">
-        <p class="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+        <p class="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
           <span aria-hidden="true">⚡</span>По рейтингу
         </p>
         <ul class="space-y-1.5" role="list">
@@ -46,7 +46,7 @@
             class="rounded-xl border px-3 py-2 transition"
             :class="selectedTeamName === name
               ? 'border-emerald-500/60 bg-emerald-500/5'
-              : 'border-slate-800/50 bg-slate-900/30 hover:bg-slate-900/50'"
+              : 'border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-900/30 hover:bg-slate-50 dark:hover:bg-slate-900/50'"
           >
           <OrganismsPlayerTeamAssignmentTeamRowContent
             :name="name"
@@ -75,9 +75,9 @@
         class="my-3 flex items-center gap-2"
         aria-hidden="true"
       >
-        <div class="h-px flex-1 bg-slate-700/50" />
-        <span class="text-[10px] font-semibold uppercase tracking-widest text-slate-600">вручную</span>
-        <div class="h-px flex-1 bg-slate-700/50" />
+        <div class="h-px flex-1 bg-slate-300 dark:bg-slate-700/50" />
+        <span class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600">вручную</span>
+        <div class="h-px flex-1 bg-slate-300 dark:bg-slate-700/50" />
       </div>
 
       <!-- Секция ручных команд -->
@@ -88,7 +88,7 @@
           class="rounded-xl border px-3 py-2 transition"
           :class="selectedTeamName === name
             ? 'border-emerald-500/60 bg-emerald-500/5'
-            : 'border-slate-800/50 bg-slate-900/30 hover:bg-slate-900/50'"
+            : 'border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-900/30 hover:bg-slate-50 dark:hover:bg-slate-900/50'"
         >
           <OrganismsPlayerTeamAssignmentTeamRowContent
             :name="name"

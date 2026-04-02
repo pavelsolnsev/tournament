@@ -4,10 +4,8 @@ export default defineNuxtConfig({
   css: ['~/assets/css/tailwind.css'],
   app: {
     head: {
-      // Добавляем базовые классы на body, чтобы фон сразу был "как на сайте".
-      bodyAttrs: {
-        class: 'bg-slate-900 text-slate-100',
-      },
+      // Базовый класс на body убран — тема управляется через класс на <html>.
+      bodyAttrs: {},
       // Подключаем фавиконки и PWA-иконки глобально для всех страниц сайта.
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
@@ -34,9 +32,10 @@ export default defineNuxtConfig({
       ],
       // Добавляем мета для iOS, чтобы ярлык на домашнем экране использовал иконку и веб-режим.
       meta: [
-        // Задаём общий цвет темы, чтобы не было белой подложки во время загрузки.
-        { name: 'theme-color', content: '#0f172a' },
-        { name: 'color-scheme', content: 'dark' },
+        // Задаём поддержку обеих цветовых схем — браузер выберет нужный theme-color.
+        { name: 'theme-color', content: '#0f172a', media: '(prefers-color-scheme: dark)' },
+        { name: 'theme-color', content: '#f8fafc', media: '(prefers-color-scheme: light)' },
+        { name: 'color-scheme', content: 'dark light' },
         // viewport-fit=cover нужен для safe-area на iPhone с чёлкой.
         // user-scalable и maximum-scale убраны — они блокируют скролл колёсиком на десктопе
         // и ухудшают доступность (запрет зума).
@@ -47,11 +46,22 @@ export default defineNuxtConfig({
         { name: 'apple-mobile-web-app-title', content: 'Football Admin' },
         { name: 'format-detection', content: 'telephone=no' },
       ],
-      // Принудительно задаём тёмный фон сразу, ещё до загрузки Tailwind CSS (убирает "белую вспышку").
+      // Принудительно задаём фон сразу, ещё до загрузки Tailwind CSS (убирает "вспышку").
+      // CSS переменные задают цвета для обеих тем — браузер применяет правильный сразу.
       style: [
         // position:fixed на body — единственный способ заблокировать rubber-band на iOS и Chrome.
         // Скролл живёт только в #scroll-root внутри app.vue.
-        { innerHTML: `*{box-sizing:border-box}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#0f172a;color:#f8fafc;}body{position:fixed;}` },
+        // По умолчанию светлый фон — скрипт выше добавит 'dark' если нужно.
+        { innerHTML: `*{box-sizing:border-box}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;}body{position:fixed;}html{background:#f8fafc;color:#0f172a;}html.dark{background:#0f172a;color:#f8fafc;}` },
+      ],
+      // Скрипт запускается ДО рендера: читает localStorage или системные настройки
+      // и сразу ставит класс 'dark' на <html>, чтобы не было мигания при загрузке.
+      // По умолчанию (если нет сохранения) — тёмная тема, как было раньше.
+      script: [
+        {
+          innerHTML: `(function(){try{var s=localStorage.getItem('theme');var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;if(s==='dark'||(s===null&&prefersDark)||s===null){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){document.documentElement.classList.add('dark');}})();`,
+          type: 'text/javascript',
+        },
       ],
     },
   },

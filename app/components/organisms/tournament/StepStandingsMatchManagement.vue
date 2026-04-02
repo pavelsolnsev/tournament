@@ -3,30 +3,30 @@
   <div class="flex flex-col gap-4">
 
     <!-- Заголовок секции — единый стиль с остальными заголовками сайта -->
-    <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-400">
+    <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
       Управление матчем
     </h3>
 
     <!-- Выбор команд (дом/гость) — overflow-hidden как у остальных аккордеонов; списки рендерятся через Teleport -->
     <div
-      class="overflow-hidden rounded-2xl border bg-slate-900/60 transition-colors"
-      :class="isTeamPickersOpen ? 'border-slate-700/60' : 'border-slate-800/60 hover:border-slate-700/50'"
+      class="overflow-hidden rounded-2xl border bg-white dark:bg-slate-900/60 transition-colors"
+      :class="isTeamPickersOpen ? 'border-slate-300 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
     >
       <button
         :id="teamPickersToggleId"
         type="button"
         class="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left
                transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-        :class="isTeamPickersOpen ? 'bg-slate-800/80' : 'hover:bg-slate-800/30'"
+        :class="isTeamPickersOpen ? 'bg-slate-100 dark:bg-slate-800/80' : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'"
         :aria-expanded="isTeamPickersOpen"
         :aria-controls="teamPickersPanelId"
         @click="isTeamPickersOpen = !isTeamPickersOpen"
       >
-        <span class="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-100">
+        <span class="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
           Команды (дом/гость)
           <span
             class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-            :class="isTeamPickersOpen ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800/80 text-slate-500'"
+            :class="isTeamPickersOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-800/80 text-slate-500'"
           >
             {{ isTeamPickersOpen ? 'Открыт' : 'Скрыт' }}
           </span>
@@ -76,12 +76,12 @@
     <!-- Карточка матча — показывается только когда выбраны обе команды -->
     <div
       v-if="homeTeam && awayTeam"
-      class="rounded-2xl border border-slate-700/60 bg-slate-900"
+      class="rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900"
     >
 
       <!-- Табло -->
-      <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-slate-700/60 px-4 py-3">
-        <p class="flex items-center gap-1.5 truncate text-sm font-semibold text-slate-100">
+      <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-slate-200 dark:border-slate-700/60 px-4 py-3">
+        <p class="flex items-center gap-1.5 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
           <span class="shrink-0">{{ teamMarker(homeTeam) }}</span>
           <span class="truncate">{{ homeTeam }}</span>
         </p>
@@ -95,19 +95,19 @@
           </p>
         </div>
 
-        <p class="flex items-center justify-end gap-1.5 truncate text-sm font-semibold text-slate-100">
+        <p class="flex items-center justify-end gap-1.5 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
           <span class="truncate">{{ awayTeam }}</span>
           <span class="shrink-0">{{ teamMarker(awayTeam) }}</span>
         </p>
       </div>
 
       <!-- Составы: на мобайле — друг под другом, на широком — рядом -->
-      <div class="flex flex-col divide-y divide-slate-700/60 sm:grid sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+      <div class="flex flex-col divide-y divide-slate-200 dark:divide-slate-700/60 sm:grid sm:grid-cols-2 sm:divide-x sm:divide-y-0">
         <OrganismsTournamentStepStandingsTeamRosterColumn
           side="home"
           :team-name="homeTeam"
           :players="playersByTeam(homeTeam)"
-          active-shadow-class="bg-sky-500/10 border-sky-500/40"
+          active-shadow-class="border-sky-300 bg-sky-50 shadow-sm shadow-sky-200/30 dark:border-sky-500/40 dark:bg-sky-500/10 dark:shadow-none"
           :team-color-index="effectiveTeamColors[homeTeam] ?? 0"
           :team-marker="teamMarker"
           :display-player-label="displayPlayerLabelWithoutRating"
@@ -121,7 +121,7 @@
           side="away"
           :team-name="awayTeam"
           :players="playersByTeam(awayTeam)"
-          active-shadow-class="bg-emerald-500/10 border-emerald-500/40"
+          active-shadow-class="border-emerald-300 bg-emerald-50 shadow-sm shadow-emerald-200/30 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:shadow-none"
           :team-color-index="effectiveTeamColors[awayTeam] ?? 0"
           :team-marker="teamMarker"
           :display-player-label="displayPlayerLabelWithoutRating"
@@ -134,10 +134,10 @@
       </div>
 
       <!-- Кнопка "Следующий матч" — только когда выбраны команды -->
-      <div class="border-t border-slate-700/60 px-3 py-2.5">
+      <div class="border-t border-slate-200 dark:border-slate-700/60 px-3 py-2.5">
         <button
           type="button"
-          class="inline-flex h-11 items-center justify-center rounded-xl bg-sky-500 px-5 text-sm font-semibold text-slate-900
+          class="inline-flex h-11 items-center justify-center rounded-xl bg-sky-500 px-5 text-sm font-semibold text-white dark:text-slate-900
                  transition-colors md:hover:bg-sky-400 active:bg-sky-600
                  disabled:cursor-not-allowed disabled:opacity-40
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50"
@@ -150,7 +150,7 @@
 
       <!-- Подтверждение для "Следующий матч" -->
       <MoleculesConfirmInline
-        class="border-t border-slate-700/60 px-3 py-2.5"
+        class="border-t border-slate-200 dark:border-slate-700/60 px-3 py-2.5"
         :open="isActionConfirmOpen && pendingAction === 'next'"
         :busy="false"
         tone="neutral"
@@ -166,29 +166,29 @@
       <!-- Подсказка когда все пары сыграли -->
       <p
         v-if="!hasNextMatch"
-        class="px-4 pb-3 text-[11px] text-slate-500"
+        class="px-4 pb-3 text-[11px] text-slate-400 dark:text-slate-500"
       >
         Все пары команд уже сыграли между собой.
       </p>
     </div>
 
     <!-- Кнопка "Управление" — всегда видна, вне карточки матча -->
-    <div class="overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900">
+    <div class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900">
       <button
         :id="mgmtToggleId"
         type="button"
         class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors
                focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
-        :class="isMgmtOpen ? 'bg-slate-800/80' : 'bg-transparent'"
+        :class="isMgmtOpen ? 'bg-slate-100 dark:bg-slate-800/80' : 'bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/20'"
         :aria-expanded="isMgmtOpen"
         :aria-controls="mgmtPanelId"
         @click="isMgmtOpen = !isMgmtOpen"
       >
-        <span class="flex items-center gap-2 text-sm font-semibold text-slate-100">
+        <span class="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
           Управление
           <span
             class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-            :class="isMgmtOpen ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800/80 text-slate-500'"
+            :class="isMgmtOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-800/80 text-slate-500'"
           >
             {{ isMgmtOpen ? 'Открыт' : 'Скрыт' }}
           </span>
@@ -221,12 +221,12 @@
           :id="mgmtPanelId"
           role="region"
           :aria-labelledby="mgmtToggleId"
-          class="flex flex-col gap-2 border-t border-slate-700/60 px-3 py-3"
+          class="flex flex-col gap-2 border-t border-slate-200 dark:border-slate-700/60 px-3 py-3"
         >
           <!-- Завершить матч — активна только когда есть текущий матч -->
           <button
             type="button"
-            class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-slate-900
+            class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-white dark:text-slate-900
                    transition-colors md:hover:bg-emerald-400 active:bg-emerald-600
                    disabled:cursor-not-allowed disabled:opacity-40
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
@@ -250,19 +250,19 @@
             @confirm="confirmPendingAction"
           />
 
-          <div class="border-t border-slate-700/60" />
+          <div class="border-t border-slate-200 dark:border-slate-700/60" />
 
           <!-- Сообщение об успехе / ошибке завершения турнира -->
           <div
             v-if="finishTournamentStatus === 'success'"
-            class="flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300"
+            class="flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300"
           >
             <span aria-hidden="true">✅</span>
             <span>Данные сохранены в базу!</span>
           </div>
           <div
             v-else-if="finishTournamentStatus === 'error' && finishTournamentError"
-            class="flex items-start gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300"
+            class="flex items-start gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-600 dark:text-red-300"
           >
             <span aria-hidden="true" class="mt-0.5 shrink-0">⚠️</span>
             <span>{{ finishTournamentError }}</span>
@@ -276,16 +276,16 @@
                    disabled:cursor-not-allowed disabled:opacity-40
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
             :class="finishTournamentStatus === 'success'
-              ? 'border-emerald-600/40 bg-emerald-950/60 text-emerald-400'
+              ? 'border-emerald-600/40 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
               : finishTournamentStatus === 'loading'
-                ? 'border-slate-700 bg-slate-800 text-slate-400'
-                : 'border-amber-500/30 bg-amber-500/10 text-amber-300 md:hover:bg-amber-500/20 md:hover:border-amber-500/50'"
+                ? 'border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                : 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 md:hover:bg-amber-500/20 md:hover:border-amber-500/50'"
             :disabled="!hasPlayedMatches || finishTournamentStatus === 'loading' || finishTournamentStatus === 'success'"
             @click="onFinishTournament"
           >
             <span
               v-if="finishTournamentStatus === 'loading'"
-              class="h-4 w-4 animate-spin rounded-full border-2 border-slate-500 border-t-slate-200"
+              class="h-4 w-4 animate-spin rounded-full border-2 border-slate-400 dark:border-slate-500 border-t-slate-700 dark:border-t-slate-200"
               aria-hidden="true"
             />
             <span v-else class="text-base leading-none" aria-hidden="true">
@@ -298,7 +298,7 @@
             }}</span>
           </button>
 
-          <div class="border-t border-slate-700/60" />
+          <div class="border-t border-slate-200 dark:border-slate-700/60" />
 
           <!-- Очистить данные — сбрасывает весь турнир без записи в базу -->
           <button

@@ -1,6 +1,6 @@
 <template>
   <p
-    class="rounded-lg bg-slate-900/40 px-3 text-slate-500"
+    class="rounded-lg bg-slate-100 dark:bg-slate-900/40 px-3 text-slate-500 dark:text-slate-500"
     :class="[boxClass, rootClass]"
   >
     <!-- Пустое состояние: подсказка вместо списка. -->

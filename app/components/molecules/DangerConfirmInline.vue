@@ -5,13 +5,14 @@
     role="region"
     :aria-label="ariaLabel"
   >
-    <p class="text-[11px] font-semibold text-red-200">
+    <!-- В светлой теме красный текст темнее для лучшего контраста. -->
+    <p class="text-[11px] font-semibold text-red-700 dark:text-red-200">
       {{ title }}
     </p>
-    <p v-if="subtitle" class="mt-0.5 text-[11px] text-red-200/80">
+    <p v-if="subtitle" class="mt-0.5 text-[11px] text-red-600/80 dark:text-red-200/80">
       {{ subtitle }}
     </p>
-    <p v-else class="mt-0.5 text-[11px] text-red-200/80">
+    <p v-else class="mt-0.5 text-[11px] text-red-600/80 dark:text-red-200/80">
       Подтвердить можно через {{ secondsLeft }}с.
     </p>
 
@@ -19,8 +20,8 @@
     <div class="mt-2.5 flex flex-wrap gap-2">
       <button
         type="button"
-        class="inline-flex h-9 items-center rounded-xl bg-slate-800 px-4 text-xs font-semibold text-slate-200
-               transition-colors md:hover:bg-slate-700 active:bg-slate-900
+        class="inline-flex h-9 items-center rounded-xl bg-slate-200 dark:bg-slate-800 px-4 text-xs font-semibold text-slate-700 dark:text-slate-200
+               transition-colors md:hover:bg-slate-300 dark:md:hover:bg-slate-700 active:bg-slate-400 dark:active:bg-slate-900
                disabled:cursor-not-allowed disabled:opacity-40
                focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
         :disabled="busy"

@@ -1,7 +1,7 @@
 <!-- Компонент PlayerCreateForm: те же поля и кнопка, что в турнире, в чуть более крупном блоке. -->
 <template>
   <AtomsTournamentPanel as="section" tone="raised" root-class="mb-6">
-    <h2 class="mb-3 text-lg font-semibold text-slate-200">
+    <h2 class="mb-3 text-lg font-semibold text-slate-700 dark:text-slate-200">
       Добавить нового игрока
     </h2>
     <form
@@ -34,7 +34,7 @@
         {{ creating ? 'Добавляем…' : 'Добавить игрока' }}
       </AtomsPrimaryButton>
     </form>
-    <p v-if="createError" class="mt-2 text-sm text-red-400">
+    <p v-if="createError" class="mt-2 text-sm text-red-600 dark:text-red-400">
       {{ createError }}
     </p>
   </AtomsTournamentPanel>

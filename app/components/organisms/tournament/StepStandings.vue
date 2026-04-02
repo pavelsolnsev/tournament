@@ -3,32 +3,32 @@
   <div class="min-w-0 space-y-4">
     <!-- Блок 1: турнирная таблица -->
     <div
-      class="overflow-hidden rounded-2xl border bg-slate-900/60 transition-colors"
-      :class="isStandingsBlockOpen ? 'border-slate-700/60' : 'border-slate-800/60 hover:border-slate-700/50'"
+      class="overflow-hidden rounded-2xl border bg-white dark:bg-slate-900/60 transition-colors"
+      :class="isStandingsBlockOpen ? 'border-slate-200 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
     >
       <button
         :id="standingsToggleId"
         type="button"
         class="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors
                focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-        :class="isStandingsBlockOpen ? 'bg-slate-800/80' : 'hover:bg-slate-800/30'"
+        :class="isStandingsBlockOpen ? 'bg-slate-50 dark:bg-slate-800/80' : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'"
         :aria-expanded="isStandingsBlockOpen"
         :aria-controls="standingsPanelId"
         @click="isStandingsBlockOpen = !isStandingsBlockOpen"
       >
         <div class="min-w-0 flex-1">
-          <span class="flex items-center gap-2 text-sm font-semibold text-slate-100">
+          <span class="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
             Таблица
             <span
               class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-              :class="isStandingsBlockOpen ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800/80 text-slate-500'"
+              :class="isStandingsBlockOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500'"
             >
               {{ isStandingsBlockOpen ? 'Открыт' : 'Скрыт' }}
             </span>
           </span>
           <span
             v-if="tournamentName || tournamentDate"
-            class="mt-0.5 block truncate text-xs text-slate-500"
+            class="mt-0.5 block truncate text-xs text-slate-400 dark:text-slate-500"
           >
             <span v-if="tournamentName">{{ tournamentName }}</span>
             <span v-if="tournamentName && tournamentDate"> · </span>
@@ -36,7 +36,7 @@
           </span>
         </div>
         <svg
-          class="h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200"
+          class="h-5 w-5 shrink-0 text-slate-400 dark:text-slate-400 transition-transform duration-200"
           :class="isStandingsBlockOpen && 'rotate-180'"
           viewBox="0 0 20 20"
           fill="currentColor"
@@ -79,24 +79,24 @@
 
     <!-- Блок 2: составы и накопленная статистика игроков -->
     <div
-      class="overflow-hidden rounded-2xl border bg-slate-900/60 transition-colors"
-      :class="isRosterTotalsOpen ? 'border-slate-700/60' : 'border-slate-800/60 hover:border-slate-700/50'"
+      class="overflow-hidden rounded-2xl border bg-white dark:bg-slate-900/60 transition-colors"
+      :class="isRosterTotalsOpen ? 'border-slate-200 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
     >
       <button
         :id="rosterTotalsToggleId"
         type="button"
         class="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors
                focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-        :class="isRosterTotalsOpen ? 'bg-slate-800/80' : 'hover:bg-slate-800/30'"
+        :class="isRosterTotalsOpen ? 'bg-slate-50 dark:bg-slate-800/80' : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'"
         :aria-expanded="isRosterTotalsOpen"
         :aria-controls="rosterTotalsPanelId"
         @click="isRosterTotalsOpen = !isRosterTotalsOpen"
       >
-        <span class="flex items-center gap-2 text-sm font-semibold text-slate-100">
+        <span class="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
           Составы
           <span
             class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-            :class="isRosterTotalsOpen ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800/80 text-slate-500'"
+            :class="isRosterTotalsOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500'"
           >
             {{ isRosterTotalsOpen ? 'Открыт' : 'Скрыт' }}
           </span>
@@ -147,24 +147,24 @@
     <!-- Блок 3: результаты матчей + управление текущим матчем -->
     <section class="min-w-0 space-y-4">
       <div
-        class="overflow-hidden rounded-2xl border bg-slate-900/60 transition-colors"
-        :class="isPlayedMatchesOpen ? 'border-slate-700/60' : 'border-slate-800/60 hover:border-slate-700/50'"
+        class="overflow-hidden rounded-2xl border bg-white dark:bg-slate-900/60 transition-colors"
+        :class="isPlayedMatchesOpen ? 'border-slate-200 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
       >
         <button
           :id="playedMatchesToggleId"
           type="button"
           class="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-          :class="isPlayedMatchesOpen ? 'bg-slate-800/80' : 'hover:bg-slate-800/30'"
+          :class="isPlayedMatchesOpen ? 'bg-slate-50 dark:bg-slate-800/80' : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'"
           :aria-expanded="isPlayedMatchesOpen"
           :aria-controls="playedMatchesPanelId"
           @click="isPlayedMatchesOpen = !isPlayedMatchesOpen"
         >
-          <span class="flex items-center gap-2 text-sm font-semibold text-slate-100">
+          <span class="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
             Результаты
             <span
               class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-              :class="isPlayedMatchesOpen ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800/80 text-slate-500'"
+              :class="isPlayedMatchesOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500'"
             >
               {{ isPlayedMatchesOpen ? 'Открыт' : 'Скрыт' }}
             </span>
@@ -172,7 +172,7 @@
           <div class="flex shrink-0 items-center gap-2">
             <span
               v-if="playedMatchesList.length > 0"
-              class="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-400"
+              class="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400"
             >
               {{ playedMatchesList.length }}
             </span>

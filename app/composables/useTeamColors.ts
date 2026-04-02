@@ -6,19 +6,37 @@ export function useTeamColors() {
   const teamMarkers = ['🔴', '🔵', '🟢', '🟡', '⚪', '⚫'] as const
 
   // Фон + цвет текста для плашки счёта — тот же порядок, что и у маркеров.
+  // В светлой теме — тёмный текст на лёгком тинте; в тёмной — светлый текст как раньше.
   const scorePillTones = [
-    'bg-red-500/15 text-red-200 ring-red-500/25',
-    'bg-sky-500/15 text-sky-200 ring-sky-500/25',
-    'bg-emerald-500/15 text-emerald-200 ring-emerald-500/25',
-    'bg-amber-500/15 text-amber-200 ring-amber-500/25',
-    'bg-slate-500/15 text-slate-200 ring-slate-500/25',
-    'bg-zinc-500/20 text-zinc-200 ring-zinc-500/30',
+    'bg-red-500/10 text-red-800 ring-red-300/70 dark:bg-red-500/15 dark:text-red-200 dark:ring-red-500/25',
+    'bg-sky-500/10 text-sky-800 ring-sky-300/70 dark:bg-sky-500/15 dark:text-sky-200 dark:ring-sky-500/25',
+    'bg-emerald-500/10 text-emerald-800 ring-emerald-300/70 dark:bg-emerald-500/15 dark:text-emerald-200 dark:ring-emerald-500/25',
+    'bg-amber-500/10 text-amber-900 ring-amber-300/70 dark:bg-amber-500/15 dark:text-amber-200 dark:ring-amber-500/25',
+    'bg-slate-200/80 text-slate-800 ring-slate-300/80 dark:bg-slate-500/15 dark:text-slate-200 dark:ring-slate-500/25',
+    'bg-zinc-200/80 text-zinc-800 ring-zinc-300/80 dark:bg-zinc-500/20 dark:text-zinc-200 dark:ring-zinc-500/30',
   ] as const
 
   function getMarkerByIndex(index: number): string {
     const safeIndex = Number.isFinite(index) ? index : 0
     const clamped = Math.max(0, Math.min(safeIndex, teamMarkers.length - 1))
     return teamMarkers[clamped] ?? teamMarkers[0]
+  }
+
+  // Имя игрока: цвет почти как обычный текст (slate), чтобы буквы читались чётко.
+  // В смесь добавляем каплю цвета команды (3%) — оттенок слабый, но различимый.
+  // Индексы: 0=красный, 1=синий, 2=зелёный, 3=жёлтый; 4 и 5 — без оттенка, только нейтраль.
+  const playerNameTones = [
+    'text-[color-mix(in_srgb,rgb(51_65_85)_97%,rgb(239_68_68)_3%)] dark:text-[color-mix(in_srgb,rgb(226_232_240)_97%,rgb(248_113_113)_3%)]',
+    'text-[color-mix(in_srgb,rgb(51_65_85)_97%,rgb(14_165_233)_3%)] dark:text-[color-mix(in_srgb,rgb(226_232_240)_97%,rgb(56_189_248)_3%)]',
+    'text-[color-mix(in_srgb,rgb(51_65_85)_97%,rgb(16_185_129)_3%)] dark:text-[color-mix(in_srgb,rgb(226_232_240)_97%,rgb(52_211_153)_3%)]',
+    'text-[color-mix(in_srgb,rgb(51_65_85)_97%,rgb(245_158_11)_3%)] dark:text-[color-mix(in_srgb,rgb(226_232_240)_97%,rgb(251_191_36)_3%)]',
+    'text-slate-700 dark:text-slate-200',
+    'text-zinc-700 dark:text-zinc-200',
+  ] as const
+
+  function getPlayerNameTone(index: number): string {
+    const safe = Number.isFinite(index) ? Math.max(0, Math.min(index, playerNameTones.length - 1)) : 0
+    return playerNameTones[safe] ?? playerNameTones[0]
   }
 
   // Ничья — нейтральная плашка; победа — тон команды-победителя (индекс из teamColors).
@@ -30,7 +48,7 @@ export function useTeamColors() {
     colorIndexForTeam: (teamName: string) => number,
   ): string {
     if (homeGoals === awayGoals) {
-      return 'bg-slate-800/90 text-slate-400 ring-slate-600/40'
+      return 'bg-slate-100 text-slate-800 ring-slate-300/90 dark:bg-slate-800/90 dark:text-slate-400 dark:ring-slate-600/40'
     }
     const winnerTeam = homeGoals > awayGoals ? homeTeam : awayTeam
     const idx = colorIndexForTeam(winnerTeam)
@@ -42,6 +60,7 @@ export function useTeamColors() {
     teamMarkers,
     getMarkerByIndex,
     getMatchScorePillClass,
+    getPlayerNameTone,
   }
 }
 

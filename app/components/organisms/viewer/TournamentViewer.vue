@@ -1,15 +1,16 @@
 <template>
   <!-- min-h-full вместо min-h-screen — высота от #scroll-root (fixed контейнера). -->
-  <div class="flex min-h-full flex-col bg-slate-900 text-slate-100">
+  <!-- Светлая тема: белый фон. Тёмная: slate-900. -->
+  <div class="flex min-h-full flex-col bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
     <!-- Шапка: absolute + safe-area сверху, не двигает контент -->
-    <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-800/70 bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)]">
+    <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)]">
       <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6 h-14">
         <div class="min-w-0 flex-1 flex items-center gap-2.5">
           <div class="min-w-0">
-            <h1 class="truncate text-base font-bold text-slate-50 sm:text-lg leading-tight">
+            <h1 class="truncate text-base font-bold text-slate-800 dark:text-slate-50 sm:text-lg leading-tight">
               {{ tournamentName || 'Турнир' }}
             </h1>
-            <p v-if="tournamentDate" class="truncate text-xs text-slate-400 leading-tight mt-0.5">
+            <p v-if="tournamentDate" class="truncate text-xs text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
               {{ tournamentDate }}
             </p>
           </div>
@@ -22,16 +23,20 @@
           />
         </div>
 
+        <!-- Кнопки шапки: переключатель темы + войти. -->
+        <div class="flex shrink-0 items-center gap-1">
+          <AtomsThemeToggle />
         <!-- Кнопка «Войти»: спокойная (для владельца), но с нормальной тач-зоной -->
         <button
           type="button"
-          class="shrink-0 inline-flex h-11 items-center gap-2 rounded-xl px-3 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800/60 hover:text-slate-200 active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          class="inline-flex h-11 items-center gap-2 rounded-xl px-3 text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
           aria-label="Войти как администратор"
           @click="onAdminEnter"
         >
           <span aria-hidden="true">🔐</span>
           Войти
         </button>
+        </div>
       </div>
 
       <!-- Строка с текущими командами Live-матча — показывается только когда матч идёт -->
@@ -50,7 +55,7 @@
           <!-- Строка счёта: маркер + название команды — СЧЁТ — маркер + название команды -->
           <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-center gap-2 px-4 sm:px-6 pt-2 pb-1">
             <!-- Домашняя команда: маркер слева, название по правому краю -->
-            <span class="min-w-0 flex items-center justify-end gap-1.5 text-right text-sm font-semibold text-slate-100 flex-1">
+            <span class="min-w-0 flex items-center justify-end gap-1.5 text-right text-sm font-semibold text-slate-800 dark:text-slate-100 flex-1">
               <span class="shrink-0">{{ liveHomeMarker }}</span>
               <span class="truncate">{{ liveHomeTeam }}</span>
             </span>
@@ -62,7 +67,7 @@
               {{ liveHomeScore }}&thinsp;:&thinsp;{{ liveAwayScore }}
             </span>
             <!-- Гостевая команда: название по левому краю, маркер справа -->
-            <span class="min-w-0 flex items-center justify-start gap-1.5 text-left text-sm font-semibold text-slate-100 flex-1">
+            <span class="min-w-0 flex items-center justify-start gap-1.5 text-left text-sm font-semibold text-slate-800 dark:text-slate-100 flex-1">
               <span class="truncate">{{ liveAwayTeam }}</span>
               <span class="shrink-0">{{ liveAwayMarker }}</span>
             </span>
@@ -82,20 +87,34 @@
                 <div
                   v-for="row in livePlayerRows.filter(r => r.side === 'home')"
                   :key="row.playerId"
-                  class="flex min-w-0 items-center gap-1.5"
+                  class="flex min-w-0 items-center gap-1"
+                  :class="row.badges.length > MAX_VISIBLE_BADGES && 'cursor-pointer select-none'"
+                  @click="row.badges.length > MAX_VISIBLE_BADGES && togglePlayerExpand(row.playerId)"
                 >
-                  <!-- Имя игрока — обрезается при нехватке места -->
-                  <span class="min-w-0 truncate text-[11px] font-medium text-slate-200 leading-none">{{ row.name }}</span>
-                  <!-- Бейджи событий: цвет как в менеджере матча -->
+                  <!-- Аватар у края своей половины — сразу видно чей игрок -->
+                  <AtomsPlayerAvatar
+                    class="shrink-0"
+                    size="xs"
+                    :photo="row.photo"
+                    :fallback-name="row.avatarFallbackName"
+                  />
+                  <!-- Имя игрока — обрезается при нехватке места, слегка подсвечен в цвет команды -->
+                  <span class="min-w-0 truncate text-[11px] font-medium leading-none" :class="row.nameColorClass">{{ row.name }}</span>
+                  <!-- Бейджи событий: показываем лимит или все если раскрыто -->
                   <div class="flex shrink-0 items-center gap-0.5">
                     <span
-                      v-for="badge in row.badges"
+                      v-for="badge in row.badges.slice(0, visibleBadgeCount(row.playerId, row.badges.length))"
                       :key="badge.key"
                       class="inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 text-[10px] font-semibold tabular-nums leading-none"
                       :class="badge.bgClass + ' ' + badge.textClass"
                     >
                       {{ badge.icon }}{{ badge.count }}
                     </span>
+                    <!-- Чип "+N" — показываем если игрок свёрнут и есть скрытые бейджи -->
+                    <span
+                      v-if="row.badges.length > MAX_VISIBLE_BADGES && !expandedPlayerIds.has(row.playerId)"
+                      class="inline-flex items-center rounded-md px-1 py-0.5 text-[10px] font-semibold leading-none bg-slate-200/80 text-slate-500 dark:bg-slate-700/80 dark:text-slate-400 transition-opacity"
+                    >+{{ row.badges.length - MAX_VISIBLE_BADGES }}</span>
                   </div>
                 </div>
               </div>
@@ -104,12 +123,19 @@
                 <div
                   v-for="row in livePlayerRows.filter(r => r.side === 'away')"
                   :key="row.playerId"
-                  class="flex min-w-0 items-center justify-end gap-1.5"
+                  class="flex min-w-0 items-center justify-end gap-1"
+                  :class="row.badges.length > MAX_VISIBLE_BADGES && 'cursor-pointer select-none'"
+                  @click="row.badges.length > MAX_VISIBLE_BADGES && togglePlayerExpand(row.playerId)"
                 >
                   <!-- Бейджи событий идут перед именем (зеркально левой колонке) -->
                   <div class="flex shrink-0 items-center gap-0.5">
+                    <!-- Чип "+N" (зеркально — слева от бейджей) если игрок свёрнут -->
                     <span
-                      v-for="badge in row.badges"
+                      v-if="row.badges.length > MAX_VISIBLE_BADGES && !expandedPlayerIds.has(row.playerId)"
+                      class="inline-flex items-center rounded-md px-1 py-0.5 text-[10px] font-semibold leading-none bg-slate-200/80 text-slate-500 dark:bg-slate-700/80 dark:text-slate-400 transition-opacity"
+                    >+{{ row.badges.length - MAX_VISIBLE_BADGES }}</span>
+                    <span
+                      v-for="badge in row.badges.slice(0, visibleBadgeCount(row.playerId, row.badges.length))"
                       :key="badge.key"
                       class="inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 text-[10px] font-semibold tabular-nums leading-none"
                       :class="badge.bgClass + ' ' + badge.textClass"
@@ -117,8 +143,15 @@
                       {{ badge.icon }}{{ badge.count }}
                     </span>
                   </div>
-                  <!-- Имя игрока — обрезается при нехватке места -->
-                  <span class="min-w-0 truncate text-[11px] font-medium text-slate-200 leading-none">{{ row.name }}</span>
+                  <!-- Имя игрока — обрезается при нехватке места, слегка подсвечен в цвет команды -->
+                  <span class="min-w-0 truncate text-[11px] font-medium leading-none" :class="row.nameColorClass">{{ row.name }}</span>
+                  <!-- Аватар у правого края гостевой колонки — зеркально домашней -->
+                  <AtomsPlayerAvatar
+                    class="shrink-0"
+                    size="xs"
+                    :photo="row.photo"
+                    :fallback-name="row.avatarFallbackName"
+                  />
                 </div>
               </div>
             </div>
@@ -143,15 +176,15 @@
           v-if="!hasViewerData"
           class="flex flex-col"
         >
-          <div class="flex w-full max-w-sm flex-col items-center gap-4 rounded-2xl border border-dashed border-slate-700/60 px-6 py-16 text-center">
-            <svg class="h-10 w-10 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <div class="flex w-full max-w-sm flex-col items-center gap-4 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/60 px-6 py-16 text-center">
+            <svg class="h-10 w-10 text-slate-300 dark:text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
               <path d="M2 12h20" />
             </svg>
             <div>
-              <p class="font-medium text-slate-400">Турнир ещё не начался</p>
-              <p class="mt-1 text-sm text-slate-600">Данные появятся здесь, когда администратор запустит турнир.</p>
+              <p class="font-medium text-slate-500 dark:text-slate-400">Турнир ещё не начался</p>
+              <p class="mt-1 text-sm text-slate-400 dark:text-slate-600">Данные появятся здесь, когда администратор запустит турнир.</p>
             </div>
           </div>
         </div>
@@ -242,7 +275,7 @@ const liveHomeTeam = computed(() => props.state?.liveHomeTeam ?? '')
 const liveAwayTeam = computed(() => props.state?.liveAwayTeam ?? '')
 
 // Маркеры цветов для команд live-матча — берём из teamColors через индекс.
-const { getMarkerByIndex, getMatchScorePillClass } = useTeamColors()
+const { getMarkerByIndex, getMatchScorePillClass, getPlayerNameTone } = useTeamColors()
 const liveHomeMarker = computed(() => {
   // Находим индекс цвета для домашней команды, по умолчанию 0 (🔴).
   const idx = teamColors.value[liveHomeTeam.value] ?? 0
@@ -269,7 +302,7 @@ const liveAwayScore = computed(() => {
 const liveScorePillClass = computed(() => {
   const h = liveHomeTeam.value
   const a = liveAwayTeam.value
-  if (!h || !a) return 'bg-slate-800/90 text-slate-400 ring-slate-600/40'
+  if (!h || !a) return 'bg-slate-200 text-slate-500 ring-slate-300 dark:bg-slate-800/90 dark:text-slate-400 dark:ring-slate-600/40'
   return getMatchScorePillClass(
     liveHomeScore.value,
     liveAwayScore.value,
@@ -279,22 +312,58 @@ const liveScorePillClass = computed(() => {
   )
 })
 
+// Максимум бейджей на одного игрока в компактной строке — остальные схлопываются в "+N".
+// 2 штуки хватает чтобы влезли самые важные (голы + пасы), не перегружая строку.
+const MAX_VISIBLE_BADGES = 2
+
+// Множество id игроков у которых сейчас раскрыты все бейджи.
+// По клику добавляем/удаляем id — работает как toggle.
+const expandedPlayerIds = ref<Set<number>>(new Set())
+
+// Переключаем раскрытое состояние игрока по его id.
+function togglePlayerExpand(playerId: number) {
+  const next = new Set(expandedPlayerIds.value)
+  if (next.has(playerId)) {
+    next.delete(playerId)
+  } else {
+    next.add(playerId)
+  }
+  expandedPlayerIds.value = next
+}
+
+// Сколько бейджей показывать для конкретного игрока — все если раскрыт, иначе лимит.
+function visibleBadgeCount(playerId: number, totalBadges: number): number {
+  return expandedPlayerIds.value.has(playerId) ? totalBadges : Math.min(MAX_VISIBLE_BADGES, totalBadges)
+}
+
 // Конфигурация бейджей событий — те же цвета и иконки что в менеджере матча.
+// В светлой теме цифры — тёмные (читаемо на бледном фоне); в тёмной — светлые как раньше.
 const LIVE_STAT_BADGES = [
-  { key: 'goals',   icon: '⚽', bgClass: 'bg-emerald-500/15', textClass: 'text-emerald-300' },
-  { key: 'assists', icon: '🎯', bgClass: 'bg-sky-500/15',     textClass: 'text-sky-300' },
-  { key: 'saves',   icon: '🧤', bgClass: 'bg-violet-500/15',  textClass: 'text-violet-300' },
-  { key: 'yellows', icon: '🟨', bgClass: 'bg-yellow-500/15',  textClass: 'text-yellow-300' },
+  { key: 'goals',   icon: '⚽', bgClass: 'bg-emerald-500/15', textClass: 'text-emerald-900 dark:text-emerald-300' },
+  { key: 'assists', icon: '🎯', bgClass: 'bg-sky-500/15',     textClass: 'text-sky-900 dark:text-sky-300' },
+  { key: 'saves',   icon: '🧤', bgClass: 'bg-violet-500/15',  textClass: 'text-violet-900 dark:text-violet-300' },
+  { key: 'yellows', icon: '🟨', bgClass: 'bg-amber-500/15',  textClass: 'text-amber-950 dark:text-yellow-300' },
 ] as const
 
 type LiveBadge = { key: string; icon: string; count: number; bgClass: string; textClass: string }
 // Строки статистики игроков текущего матча — только игроки с хотя бы одним событием.
-type LivePlayerRow = { playerId: number; name: string; badges: LiveBadge[]; side: 'home' | 'away' }
+// nameColorClass — лёгкий тон цвета команды для имени игрока.
+// photo / avatarFallbackName — для AtomsPlayerAvatar (файл в public/player-photos/ или инициалы).
+type LivePlayerRow = {
+  playerId: number
+  name: string
+  badges: LiveBadge[]
+  side: 'home' | 'away'
+  nameColorClass: string
+  photo: string | null
+  avatarFallbackName: string
+}
 
 function buildPlayerRow(
   idStr: string,
   stats: { goals: number; assists: number; saves: number; yellows: number },
   side: 'home' | 'away',
+  teamName: string,
 ): LivePlayerRow | null {
   // Считаем сумму всех событий — пропускаем игроков без отметок.
   const total = (stats.goals ?? 0) + (stats.assists ?? 0) + (stats.saves ?? 0) + (stats.yellows ?? 0)
@@ -305,11 +374,19 @@ function buildPlayerRow(
   const badges = LIVE_STAT_BADGES
     .filter((b) => (stats[b.key as keyof typeof stats] ?? 0) > 0)
     .map((b) => ({ key: b.key, icon: b.icon, count: stats[b.key as keyof typeof stats] ?? 0, bgClass: b.bgClass, textClass: b.textClass }))
+  // Получаем лёгкий тон цвета по индексу команды из teamColors.
+  const colorIdx = teamColors.value[teamName] ?? 0
+  const nameColorClass = getPlayerNameTone(colorIdx)
+  // Имя для инициалов в аватаре — сырое из карточки игрока, без подписи рейтинга.
+  const avatarFallbackName = (player?.name ?? '').trim() || `#${playerId}`
   return {
     playerId,
     name: player ? displayPlayerLabelWithoutRating(player) : `#${playerId}`,
     badges,
     side,
+    nameColorClass,
+    photo: player?.photo ?? null,
+    avatarFallbackName,
   }
 }
 
@@ -317,14 +394,14 @@ const livePlayerRows = computed<LivePlayerRow[]>(() => {
   const snap = initialSnapshot.value
   if (!snap) return []
   const rows: LivePlayerRow[] = []
-  // Домашние игроки с событиями.
+  // Домашние игроки — передаём имя домашней команды чтобы получить её цвет.
   for (const [idStr, stats] of Object.entries(snap.currentHomeStats ?? {})) {
-    const row = buildPlayerRow(idStr, stats, 'home')
+    const row = buildPlayerRow(idStr, stats, 'home', liveHomeTeam.value)
     if (row) rows.push(row)
   }
-  // Гостевые игроки с событиями.
+  // Гостевые игроки — передаём имя гостевой команды чтобы получить её цвет.
   for (const [idStr, stats] of Object.entries(snap.currentAwayStats ?? {})) {
-    const row = buildPlayerRow(idStr, stats, 'away')
+    const row = buildPlayerRow(idStr, stats, 'away', liveAwayTeam.value)
     if (row) rows.push(row)
   }
   return rows

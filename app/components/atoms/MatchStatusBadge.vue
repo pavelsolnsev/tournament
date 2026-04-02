@@ -71,7 +71,7 @@ const badgeClasses = computed(() => {
   if (props.status === 'finished') {
     return 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30'
   }
-  // upcoming
-  return 'bg-slate-700/60 text-slate-400 ring-1 ring-slate-600/40'
+  // upcoming — в светлой теме серый фон чуть темнее, в тёмной как раньше.
+  return 'bg-slate-200 text-slate-500 ring-1 ring-slate-300 dark:bg-slate-700/60 dark:text-slate-400 dark:ring-slate-600/40'
 })
 </script>

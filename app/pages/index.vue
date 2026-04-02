@@ -3,7 +3,7 @@
   <div class="h-full">
     <!-- clientReady становится true только после монтирования на клиенте.
          До этого рендерим нейтральный скелетон — он совпадает с SSR и не даёт hydration mismatch. -->
-    <div v-if="!clientReady" class="bg-slate-900" aria-hidden="true" />
+    <div v-if="!clientReady" class="bg-slate-50 dark:bg-slate-900" aria-hidden="true" />
 
     <!-- После монтирования на клиенте показываем реальный UI -->
     <template v-else>
@@ -11,26 +11,31 @@
       <template v-if="isAdmin">
         <!-- min-h-full растягивает до высоты #scroll-root (= весь экран). -->
         <div class="flex min-h-full flex-col">
-          <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-800/70 bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)]">
+          <!-- Шапка администратора — светлая/тёмная тема через dark: классы. -->
+          <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)]">
             <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6 h-14">
-              <span class="flex items-center gap-2 text-sm font-semibold text-emerald-400">
-                <span class="inline-block h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
+              <span class="flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                <span class="inline-block h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400" aria-hidden="true" />
                 Администратор
               </span>
-              <button
-                type="button"
-                class="inline-flex h-11 items-center rounded-xl border border-slate-700/60 bg-slate-800/60 px-4 text-sm font-medium text-slate-300 transition-colors hover:border-slate-600 hover:text-slate-100 active:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-                @click="logout"
-              >
-                Выйти
-              </button>
+              <!-- Кнопки в шапке: кнопка темы + выход. -->
+              <div class="flex items-center gap-1">
+                <AtomsThemeToggle />
+                <button
+                  type="button"
+                  class="inline-flex h-11 items-center rounded-xl border border-slate-300/60 dark:border-slate-700/60 bg-slate-100/60 dark:bg-slate-800/60 px-4 text-sm font-medium text-slate-600 dark:text-slate-300 transition-colors hover:border-slate-400 dark:hover:border-slate-600 hover:text-slate-800 dark:hover:text-slate-100 active:bg-slate-200 dark:active:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+                  @click="logout"
+                >
+                  Выйти
+                </button>
+              </div>
             </div>
           </header>
 
           <!-- flex-1 растягивает main; pt — отступ под абсолютный header. Контент идёт сверху. -->
           <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]">
-            <div v-if="!wizard.stateRestored.value" class="flex items-center gap-3 py-8 text-sm text-slate-400">
-              <div class="h-9 w-9 shrink-0 animate-spin rounded-full border-2 border-slate-700 border-t-emerald-500" />
+            <div v-if="!wizard.stateRestored.value" class="flex items-center gap-3 py-8 text-sm text-slate-500 dark:text-slate-400">
+              <div class="h-9 w-9 shrink-0 animate-spin rounded-full border-2 border-slate-300 dark:border-slate-700 border-t-emerald-500" />
               <span>Загружаем…</span>
             </div>
 
@@ -46,7 +51,7 @@
                     <!-- Разделитель между шагами -->
                     <span
                       v-if="idx > 0"
-                      class="select-none text-slate-700"
+                      class="select-none text-slate-400 dark:text-slate-700"
                       aria-hidden="true"
                     >/</span>
 
@@ -55,7 +60,7 @@
                       v-if="crumb.step < wizard.step.value"
                       type="button"
                       class="inline-flex items-center rounded-lg px-2 py-1 text-sm font-medium
-                             text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200
+                             text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-700 dark:hover:text-slate-200
                              focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
                       @click="wizard.step.value = crumb.step as 0 | 1 | 2"
                     >
@@ -65,7 +70,7 @@
                     <!-- Текущий шаг — не кликабельный, выделен -->
                     <span
                       v-else
-                      class="inline-flex items-center rounded-lg px-2 py-1 text-sm font-semibold text-slate-100"
+                      class="inline-flex items-center rounded-lg px-2 py-1 text-sm font-semibold text-slate-800 dark:text-slate-100"
                       aria-current="step"
                     >
                       {{ crumb.label }}
@@ -83,8 +88,8 @@
                 <div class="flex items-center gap-3">
                   <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-xl ring-1 ring-emerald-500/30">🏆</span>
                   <div>
-                    <p class="font-bold text-emerald-300">Турнир завершён!</p>
-                    <p class="mt-0.5 text-sm text-slate-400">Зрители видят итоги. Когда будете готовы — запустите новый турнир.</p>
+                    <p class="font-bold text-emerald-700 dark:text-emerald-300">Турнир завершён!</p>
+                    <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Зрители видят итоги. Когда будете готовы — запустите новый турнир.</p>
                   </div>
                 </div>
                 <button
@@ -97,7 +102,7 @@
               </div>
 
               <template v-if="wizard.step.value === 0 || wizard.step.value === 1">
-                <h1 class="text-2xl font-bold text-slate-50 sm:text-3xl">
+                <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-50 sm:text-3xl">
                   {{ wizard.step.value === 0 ? 'Выберите игроков' : 'Команды' }}
                 </h1>
 

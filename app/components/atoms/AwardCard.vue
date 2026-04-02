@@ -33,7 +33,7 @@
           size="sm"
           class="shrink-0"
         />
-        <span class="min-w-0 flex-1 truncate text-[13px] font-semibold leading-tight text-slate-100">{{ winner.name }}</span>
+        <span class="min-w-0 flex-1 truncate text-[13px] font-semibold leading-tight text-slate-800 dark:text-slate-100">{{ winner.name }}</span>
         <span class="shrink-0 text-sm leading-none" aria-hidden="true">{{ winner.teamMarker }}</span>
       </div>
     </div>
@@ -67,16 +67,16 @@ const iconBgClass = computed(() => ({
 
 // Цвет подписи категории.
 const labelClass = computed(() => ({
-  emerald: 'text-emerald-500/80',
-  sky:     'text-sky-500/80',
-  violet:  'text-violet-500/80',
+  emerald: 'text-emerald-600/90 dark:text-emerald-500/80',
+  sky:     'text-sky-600/90 dark:text-sky-500/80',
+  violet:  'text-violet-600/90 dark:text-violet-500/80',
 }[props.color]))
 
-// Цвет значения показателя.
+// Цвет значения показателя — в светлой теме чуть темнее для контраста.
 const valueClass = computed(() => ({
-  emerald: 'text-emerald-300',
-  sky:     'text-sky-300',
-  violet:  'text-violet-300',
+  emerald: 'text-emerald-700 dark:text-emerald-300',
+  sky:     'text-sky-700 dark:text-sky-300',
+  violet:  'text-violet-700 dark:text-violet-300',
 }[props.color]))
 
 // Разделитель — того же цвета что и граница.

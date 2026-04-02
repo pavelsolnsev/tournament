@@ -47,14 +47,16 @@
       <div class="pt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
-          class="w-full rounded-xl px-4 py-3 font-semibold text-slate-900 transition sm:w-auto sm:min-w-[220px]"
-          :class="confirmedTeamsCount >= 2 ? 'bg-emerald-500 md:hover:bg-emerald-400 focus:outline-none' : 'bg-slate-700 text-slate-400 cursor-not-allowed focus:outline-none'"
+          class="w-full rounded-xl px-4 py-3 font-semibold transition focus:outline-none sm:w-auto sm:min-w-[220px]"
+          :class="confirmedTeamsCount >= 2
+            ? 'bg-emerald-500 text-white dark:text-slate-900 md:hover:bg-emerald-400 active:bg-emerald-600 focus-visible:ring-2 focus-visible:ring-emerald-500/50'
+            : 'border border-slate-300 dark:border-transparent bg-white dark:bg-slate-700 text-slate-400 cursor-not-allowed'"
           :disabled="confirmedTeamsCount < 2"
           @click="emit('goToStandings')"
         >
           Турнирная таблица →
         </button>
-        <p v-if="confirmedTeamsCount < 2" class="text-xs text-slate-500">
+        <p v-if="confirmedTeamsCount < 2" class="text-xs text-slate-400 dark:text-slate-500">
           Нужно минимум две команды-участника.
         </p>
       </div>

@@ -1,13 +1,13 @@
 <!-- Компонент PlayedMatchEditor: inline-редактор статистики игроков для завершённого матча. -->
 <template>
-  <div class="border-t border-slate-700/60 bg-slate-950/60">
+  <div class="border-t border-slate-200 bg-white dark:border-slate-700/60 dark:bg-slate-950/60">
     <!-- Авто-счёт: голы считаются из статистики игроков -->
     <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-3">
-      <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-500">
+      <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-500">
         {{ match.homeTeam }}
       </span>
       <div class="flex shrink-0 flex-col items-center gap-0.5">
-        <span class="text-[10px] uppercase tracking-widest text-slate-600">Счёт</span>
+        <span class="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-600">Счёт</span>
         <span
           class="rounded-md px-2 py-0.5 font-mono text-lg font-bold tabular-nums ring-1"
           :class="draftScorePillClass"
@@ -15,27 +15,27 @@
           {{ draftHomeGoals }}&nbsp;:&nbsp;{{ draftAwayGoals }}
         </span>
       </div>
-      <span class="min-w-0 truncate text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
+      <span class="min-w-0 truncate text-right text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-500">
         {{ match.awayTeam }}
       </span>
     </div>
 
     <!-- Статистика по командам -->
-    <div class="grid grid-cols-1 gap-0 divide-y divide-slate-800/60 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+    <div class="grid grid-cols-1 gap-0 divide-y divide-slate-200 dark:divide-slate-800/60 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
       <!-- Домашняя команда -->
       <div class="px-3 pb-3 pt-2">
         <!-- Заголовок команды: маркер + название — единый стиль с остальными колонками -->
         <div class="mb-2 flex min-w-0 items-center gap-1.5 px-0.5">
           <span aria-hidden="true" class="shrink-0 text-base leading-none">{{ teamMarker(match.homeTeam) }}</span>
-          <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-400">{{ match.homeTeam }}</span>
+          <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">{{ match.homeTeam }}</span>
         </div>
         <div class="space-y-1.5">
           <div v-for="p in homePlayers" :key="p.id" class="min-w-0">
             <button
               type="button"
               class="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl px-3 py-2.5
-                     text-left transition-colors md:hover:bg-slate-800/60 focus:outline-none"
-              :class="openEditPlayer === editPlayerKey('home', p.id) ? 'bg-slate-800/70' : 'bg-slate-800/40'"
+                     text-left transition-colors md:hover:bg-slate-200/90 dark:md:hover:bg-slate-800/60 focus:outline-none"
+              :class="openEditPlayer === editPlayerKey('home', p.id) ? 'bg-slate-200 dark:bg-slate-800/70' : 'bg-slate-100 dark:bg-slate-800/40'"
               @click="toggleEditPlayer('home', p.id)"
             >
               <AtomsPlayerAvatar
@@ -44,7 +44,7 @@
                 :fallback-name="p.name"
                 size="md"
               />
-              <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-100">{{ displayPlayerLabel(p) }}</span>
+              <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-800 dark:text-slate-100">{{ displayPlayerLabel(p) }}</span>
               <!-- Бейджи событий в строке превью — такой же стиль как везде -->
               <div v-if="hasAnyStat(draft.homeStats, p.id)" class="flex shrink-0 items-center gap-1">
                 <template v-for="badge in STAT_BADGES" :key="badge.key">
@@ -59,7 +59,7 @@
               </div>
               <svg
                 class="h-4 w-4 shrink-0 transition-transform duration-150"
-                :class="openEditPlayer === editPlayerKey('home', p.id) ? 'rotate-180 text-slate-400' : 'text-slate-600'"
+                :class="openEditPlayer === editPlayerKey('home', p.id) ? 'rotate-180 text-slate-500 dark:text-slate-400' : 'text-slate-500 dark:text-slate-600'"
                 viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
               >
                 <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
@@ -103,15 +103,15 @@
         <!-- Заголовок команды: маркер + название — единый стиль с остальными колонками -->
         <div class="mb-2 flex min-w-0 items-center gap-1.5 px-0.5">
           <span aria-hidden="true" class="shrink-0 text-base leading-none">{{ teamMarker(match.awayTeam) }}</span>
-          <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-400">{{ match.awayTeam }}</span>
+          <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">{{ match.awayTeam }}</span>
         </div>
         <div class="space-y-1.5">
           <div v-for="p in awayPlayers" :key="p.id" class="min-w-0">
             <button
               type="button"
               class="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl px-3 py-2.5
-                     text-left transition-colors md:hover:bg-slate-800/60 focus:outline-none"
-              :class="openEditPlayer === editPlayerKey('away', p.id) ? 'bg-slate-800/70' : 'bg-slate-800/40'"
+                     text-left transition-colors md:hover:bg-slate-200/90 dark:md:hover:bg-slate-800/60 focus:outline-none"
+              :class="openEditPlayer === editPlayerKey('away', p.id) ? 'bg-slate-200 dark:bg-slate-800/70' : 'bg-slate-100 dark:bg-slate-800/40'"
               @click="toggleEditPlayer('away', p.id)"
             >
               <AtomsPlayerAvatar
@@ -120,7 +120,7 @@
                 :fallback-name="p.name"
                 size="md"
               />
-              <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-100">{{ displayPlayerLabel(p) }}</span>
+              <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-800 dark:text-slate-100">{{ displayPlayerLabel(p) }}</span>
               <!-- Бейджи событий в строке превью — такой же стиль как везде -->
               <div v-if="hasAnyStat(draft.awayStats, p.id)" class="flex shrink-0 items-center gap-1">
                 <template v-for="badge in STAT_BADGES" :key="badge.key">
@@ -135,7 +135,7 @@
               </div>
               <svg
                 class="h-4 w-4 shrink-0 transition-transform duration-150"
-                :class="openEditPlayer === editPlayerKey('away', p.id) ? 'rotate-180 text-slate-400' : 'text-slate-600'"
+                :class="openEditPlayer === editPlayerKey('away', p.id) ? 'rotate-180 text-slate-500 dark:text-slate-400' : 'text-slate-500 dark:text-slate-600'"
                 viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
               >
                 <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
@@ -175,21 +175,23 @@
     </div>
 
     <!-- Сохранить / Отмена — h-11 = единая высота с основными кнопками сайта -->
-    <div class="flex items-center gap-2 border-t border-slate-800/60 px-3 py-2.5">
+    <div class="flex items-center gap-2 border-t border-slate-200 px-3 py-2.5 dark:border-slate-800/60">
       <button
         type="button"
-        class="inline-flex h-11 items-center rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-slate-900
-               transition-colors md:hover:bg-emerald-400 active:bg-emerald-600
-               focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+        class="inline-flex h-11 items-center rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-white
+               transition-colors md:hover:bg-emerald-600 active:bg-emerald-700
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50
+               dark:text-slate-900 dark:md:hover:bg-emerald-400 dark:active:bg-emerald-600"
         @click="save"
       >
         Сохранить
       </button>
       <button
         type="button"
-        class="inline-flex h-11 items-center rounded-xl bg-slate-700 px-5 text-sm font-medium text-slate-300
-               transition-colors md:hover:bg-slate-600
-               focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
+        class="inline-flex h-11 items-center rounded-xl bg-slate-200 px-5 text-sm font-medium text-slate-700
+               transition-colors md:hover:bg-slate-300
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/40
+               dark:bg-slate-700 dark:text-slate-300 dark:md:hover:bg-slate-600 dark:focus-visible:ring-slate-500/40"
         @click="emit('cancel')"
       >
         Отмена
@@ -252,10 +254,10 @@ const emit = defineEmits<{
 
 // Конфигурация бейджей для превью строки игрока — единый стиль с остальными списками сайта.
 const STAT_BADGES = [
-  { key: 'goals'   as StatKey, icon: '⚽', bgClass: 'bg-emerald-500/15', textClass: 'text-emerald-300' },
-  { key: 'assists' as StatKey, icon: '🎯', bgClass: 'bg-sky-500/15',     textClass: 'text-sky-300' },
-  { key: 'saves'   as StatKey, icon: '🧤', bgClass: 'bg-violet-500/15',  textClass: 'text-violet-300' },
-  { key: 'yellows' as StatKey, icon: '🟨', bgClass: 'bg-yellow-500/15',  textClass: 'text-yellow-300' },
+  { key: 'goals'   as StatKey, icon: '⚽', bgClass: 'bg-emerald-500/15', textClass: 'text-emerald-900 dark:text-emerald-300' },
+  { key: 'assists' as StatKey, icon: '🎯', bgClass: 'bg-sky-500/15',     textClass: 'text-sky-900 dark:text-sky-300' },
+  { key: 'saves'   as StatKey, icon: '🧤', bgClass: 'bg-violet-500/15',  textClass: 'text-violet-900 dark:text-violet-300' },
+  { key: 'yellows' as StatKey, icon: '🟨', bgClass: 'bg-amber-500/15',  textClass: 'text-amber-950 dark:text-yellow-300' },
 ] as const
 
 // Конфигурация полей статистики.
@@ -264,37 +266,37 @@ const STAT_DEFS = [
     key: 'goals' as StatKey,
     icon: '⚽',
     label: 'Гол',
-    bgClass: 'bg-emerald-500/15 border-emerald-500/20',
-    textClass: 'text-emerald-300',
-    removeClass: 'text-emerald-500/60 md:hover:bg-emerald-500/20 md:hover:text-emerald-300',
-    addingClass: 'text-emerald-500/60 md:hover:bg-emerald-500/20 md:hover:text-emerald-300',
+    bgClass: 'bg-emerald-50 border-emerald-200/90 dark:bg-emerald-500/15 dark:border-emerald-500/20',
+    textClass: 'text-emerald-700 dark:text-emerald-300',
+    removeClass: 'text-emerald-700 dark:text-emerald-400 md:hover:bg-emerald-100 dark:md:hover:bg-emerald-500/20 md:hover:text-emerald-800 dark:md:hover:text-emerald-300',
+    addingClass: 'text-emerald-600 dark:text-emerald-300 md:hover:bg-emerald-100 dark:md:hover:bg-emerald-500/20',
   },
   {
     key: 'assists' as StatKey,
     icon: '🎯',
     label: 'Ассист',
-    bgClass: 'bg-sky-500/15 border-sky-500/20',
-    textClass: 'text-sky-300',
-    removeClass: 'text-sky-500/60 md:hover:bg-sky-500/20 md:hover:text-sky-300',
-    addingClass: 'text-sky-500/60 md:hover:bg-sky-500/20 md:hover:text-sky-300',
+    bgClass: 'bg-sky-50 border-sky-200/90 dark:bg-sky-500/15 dark:border-sky-500/20',
+    textClass: 'text-sky-700 dark:text-sky-300',
+    removeClass: 'text-sky-700 dark:text-sky-400 md:hover:bg-sky-100 dark:md:hover:bg-sky-500/20 md:hover:text-sky-800 dark:md:hover:text-sky-300',
+    addingClass: 'text-sky-600 dark:text-sky-300 md:hover:bg-sky-100 dark:md:hover:bg-sky-500/20',
   },
   {
     key: 'saves' as StatKey,
     icon: '🧤',
     label: 'Сейв',
-    bgClass: 'bg-violet-500/15 border-violet-500/20',
-    textClass: 'text-violet-300',
-    removeClass: 'text-violet-500/60 md:hover:bg-violet-500/20 md:hover:text-violet-300',
-    addingClass: 'text-violet-500/60 md:hover:bg-violet-500/20 md:hover:text-violet-300',
+    bgClass: 'bg-violet-50 border-violet-200/90 dark:bg-violet-500/15 dark:border-violet-500/20',
+    textClass: 'text-violet-700 dark:text-violet-300',
+    removeClass: 'text-violet-700 dark:text-violet-400 md:hover:bg-violet-100 dark:md:hover:bg-violet-500/20 md:hover:text-violet-800 dark:md:hover:text-violet-300',
+    addingClass: 'text-violet-600 dark:text-violet-300 md:hover:bg-violet-100 dark:md:hover:bg-violet-500/20',
   },
   {
     key: 'yellows' as StatKey,
     icon: '🟨',
     label: 'Жёлтая',
-    bgClass: 'bg-yellow-500/15 border-yellow-500/20',
-    textClass: 'text-yellow-300',
-    removeClass: 'text-yellow-500/60 md:hover:bg-yellow-500/20 md:hover:text-yellow-300',
-    addingClass: 'text-yellow-500/60 md:hover:bg-yellow-500/20 md:hover:text-yellow-300',
+    bgClass: 'bg-amber-50 border-amber-200/90 dark:bg-yellow-500/15 dark:border-yellow-500/20',
+    textClass: 'text-amber-800 dark:text-yellow-300',
+    removeClass: 'text-amber-800 dark:text-yellow-400 md:hover:bg-amber-100 dark:md:hover:bg-yellow-500/20 md:hover:text-amber-900 dark:md:hover:text-yellow-300',
+    addingClass: 'text-amber-700 dark:text-yellow-300 md:hover:bg-amber-100 dark:md:hover:bg-yellow-500/20',
   },
 ] as const
 
