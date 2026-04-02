@@ -5,18 +5,18 @@
   >
     <!-- Строка заголовка: клик раскрывает или сворачивает содержимое. -->
     <!-- Без py на обёртке — высоту и паддинги задаёт кнопка, чтобы hover покрывал всю строку слева. -->
-    <div class="flex min-h-11 items-stretch gap-2 border-b border-slate-200/80 dark:border-slate-700/50">
+    <div class="min-h-11 border-b border-slate-200/80 dark:border-slate-700/50">
       <button
         type="button"
-        class="flex min-h-11 min-w-0 flex-1 items-center gap-2 px-3 text-left transition-colors hover:bg-slate-200/70 active:bg-slate-200/90 dark:hover:bg-slate-700/50 dark:active:bg-slate-700/70 sm:px-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500/50"
+        class="flex min-h-11 min-w-0 w-full items-center gap-2 px-3 text-left transition-colors hover:bg-slate-200/70 active:bg-slate-200/90 dark:hover:bg-slate-700/50 dark:active:bg-slate-700/70 sm:px-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500/50"
         :aria-expanded="expanded"
         aria-controls="feedback-admin-panel"
         id="feedback-admin-heading"
         @click="expanded = !expanded"
       >
-        <!-- Шеврон: поворачивается, когда блок открыт. -->
+        <!-- Шеврон в одной линии с заголовком — не по центру многострочного inline-текста. -->
         <svg
-          class="h-5 w-5 shrink-0 text-slate-500 transition-transform duration-200 dark:text-slate-400"
+          class="h-5 w-5 shrink-0 self-center text-slate-500 transition-transform duration-200 dark:text-slate-400"
           :class="expanded && 'rotate-180'"
           viewBox="0 0 24 24"
           fill="none"
@@ -28,31 +28,18 @@
         >
           <path d="m6 9 6 6 6-6" />
         </svg>
-        <span class="min-w-0">
-          <span class="text-base font-semibold text-slate-800 dark:text-slate-100">
+        <!-- Заголовок и счётчик в одном flex-ряду: бейдж не уезжает под вторую строку. -->
+        <div class="flex min-w-0 flex-1 items-center gap-2">
+          <span class="min-w-0 truncate text-base font-semibold leading-snug text-slate-800 dark:text-slate-100">
             Пожелания пользователей
           </span>
-          <!-- Счётчик пожеланий рядом с заголовком. -->
           <span
             v-if="items && items.length > 0"
-            class="ml-2 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+            class="inline-flex shrink-0 items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
           >
             {{ items.length }}
           </span>
-        </span>
-      </button>
-
-      <!-- Очистка только когда блок раскрыт и есть записи — stopPropagation чтобы не схлопнуть панель. -->
-      <button
-        v-if="expanded && items && items.length > 0"
-        type="button"
-        class="inline-flex shrink-0 items-center gap-1.5 self-stretch rounded-xl border border-red-300/60 dark:border-red-700/50 bg-red-50 dark:bg-red-900/20 px-3 text-xs font-medium text-red-600 dark:text-red-400 transition-colors hover:bg-red-100 dark:hover:bg-red-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50 sm:mr-3"
-        @click.stop="showConfirm = true"
-      >
-        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2" />
-        </svg>
-        Очистить историю
+        </div>
       </button>
     </div>
 
@@ -111,6 +98,19 @@
           </p>
         </li>
       </ul>
+
+      <!-- Очистка под списком — не загромождает шапку; клик не всплывает к раскрывающей кнопке. -->
+      <button
+        v-if="items && items.length > 0"
+        type="button"
+        class="inline-flex shrink-0 items-center gap-1.5 self-start rounded-xl border border-red-300/60 bg-red-50 px-3 py-2 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50 dark:border-red-700/50 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
+        @click.stop="showConfirm = true"
+      >
+        <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2" />
+        </svg>
+        Очистить историю
+      </button>
     </div>
   </section>
 </template>
