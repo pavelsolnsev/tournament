@@ -54,8 +54,11 @@
               <span class="shrink-0">{{ liveHomeMarker }}</span>
               <span class="truncate">{{ liveHomeTeam }}</span>
             </span>
-            <!-- Счёт по центру — крупный, красный, отражает голы текущего матча -->
-            <span class="shrink-0 min-w-[3.5rem] text-center text-base font-extrabold text-red-400 tabular-nums tracking-tight">
+            <!-- Счёт: ничья — серая плашка; лидер — в цвете команды из настроек турнира. -->
+            <span
+              class="shrink-0 inline-flex min-w-[3.5rem] items-center justify-center rounded-lg px-2 py-0.5 text-center text-base font-extrabold tabular-nums tracking-tight ring-1"
+              :class="liveScorePillClass"
+            >
               {{ liveHomeScore }}&thinsp;:&thinsp;{{ liveAwayScore }}
             </span>
             <!-- Гостевая команда: название по левому краю, маркер справа -->
@@ -153,9 +156,17 @@
           </div>
         </div>
 
-        <!-- Таблица зрителя -->
+        <!-- Итоги турнира — показываются когда турнир завершён -->
+        <OrganismsViewerTournamentSummary
+          v-else-if="matchStatus === 'finished' && tournamentSummary"
+          :summary="tournamentSummary"
+          :tournament-date="tournamentDate"
+          :team-colors="teamColors"
+        />
+
+        <!-- Таблица зрителя — показывается во время турнира -->
         <OrganismsTournamentStepStandings
-          v-else
+          v-else-if="hasViewerData"
           :key="snapshotKey"
           :tournament-name="tournamentName"
           :tournament-date="tournamentDate"
@@ -186,6 +197,7 @@ import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTeamColors } from '~/composables/useTeamColors'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
+import { useTournamentSummary } from '~/composables/useTournamentSummary'
 
 const props = defineProps<{
   state: SavedTournamentContext | null
@@ -210,12 +222,27 @@ const initialSnapshot = computed<SavedStandingsSnapshot | null>(() => props.stat
 
 // Статус матча — upcoming / live / finished. По умолчанию upcoming если данных нет.
 const matchStatus = computed(() => props.state?.matchStatus ?? 'upcoming')
+
+// Итоги турнира — вычисляем только когда есть снапшот с завершёнными матчами.
+// Используется для раздела «Итоги» при статусе finished.
+const tournamentSummary = computed(() => {
+  const snap = initialSnapshot.value
+  if (!snap || snap.playedMatchesList.length === 0) return null
+  return useTournamentSummary({
+    players: props.players,
+    assignmentByPlayerId: assignmentByPlayerId.value,
+    aggregatePlayerStats: snap.aggregatePlayerStats,
+    playedMatchesList: snap.playedMatchesList,
+    standingsRows: snap.standingsRows,
+    playerRatingDeltas: snap.playerRatingDeltas,
+  })
+})
 // Команды текущего live-матча — отображаем в шапке когда статус Live.
 const liveHomeTeam = computed(() => props.state?.liveHomeTeam ?? '')
 const liveAwayTeam = computed(() => props.state?.liveAwayTeam ?? '')
 
 // Маркеры цветов для команд live-матча — берём из teamColors через индекс.
-const { getMarkerByIndex } = useTeamColors()
+const { getMarkerByIndex, getMatchScorePillClass } = useTeamColors()
 const liveHomeMarker = computed(() => {
   // Находим индекс цвета для домашней команды, по умолчанию 0 (🔴).
   const idx = teamColors.value[liveHomeTeam.value] ?? 0
@@ -237,6 +264,19 @@ const liveAwayScore = computed(() => {
   const stats = initialSnapshot.value?.currentAwayStats ?? {}
   // Складываем голы всех гостевых игроков.
   return Object.values(stats).reduce((sum, s) => sum + (s.goals ?? 0), 0)
+})
+
+const liveScorePillClass = computed(() => {
+  const h = liveHomeTeam.value
+  const a = liveAwayTeam.value
+  if (!h || !a) return 'bg-slate-800/90 text-slate-400 ring-slate-600/40'
+  return getMatchScorePillClass(
+    liveHomeScore.value,
+    liveAwayScore.value,
+    h,
+    a,
+    (name) => teamColors.value[name] ?? 0,
+  )
 })
 
 // Конфигурация бейджей событий — те же цвета и иконки что в менеджере матча.

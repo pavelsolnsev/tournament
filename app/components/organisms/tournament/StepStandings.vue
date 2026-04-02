@@ -210,6 +210,7 @@
             <OrganismsTournamentStepStandingsPlayedMatches
               :played-matches-list="playedMatchesList"
               :team-marker="teamMarker"
+              :team-color-by-name="effectiveTeamColors"
               :players-by-team="playersByTeam"
               :display-player-label="displayPlayerLabelWithoutRating"
               :player-avatars-by-id="playerAvatarsById"

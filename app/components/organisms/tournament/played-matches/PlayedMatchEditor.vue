@@ -8,7 +8,10 @@
       </span>
       <div class="flex shrink-0 flex-col items-center gap-0.5">
         <span class="text-[10px] uppercase tracking-widest text-slate-600">Счёт</span>
-        <span class="font-mono text-lg font-bold tabular-nums text-slate-100">
+        <span
+          class="rounded-md px-2 py-0.5 font-mono text-lg font-bold tabular-nums ring-1"
+          :class="draftScorePillClass"
+        >
           {{ draftHomeGoals }}&nbsp;:&nbsp;{{ draftAwayGoals }}
         </span>
       </div>
@@ -198,6 +201,7 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import type { PlayerMatchStats, StatKey } from '~/composables/tournament-standings/types'
+import { useTeamColors } from '~/composables/useTeamColors'
 import { computed, ref } from 'vue'
 
 type DraftState = {
@@ -224,19 +228,23 @@ type PlayedMatch = {
   awayStats: Record<number, PlayerMatchStats>
 }
 
-const props = defineProps<{
-  match: PlayedMatch
-  teamMarker: (teamName: string) => string
-  playersByTeam: (teamName: string) => Player[]
-  displayPlayerLabel: (player: Player) => string
-  updatePlayedMatch: (
-    matchNumber: number,
-    homeGoals: number,
-    awayGoals: number,
-    homeStats: Record<number, PlayerMatchStats>,
-    awayStats: Record<number, PlayerMatchStats>,
-  ) => void
-}>()
+const props = withDefaults(
+  defineProps<{
+    match: PlayedMatch
+    teamMarker: (teamName: string) => string
+    teamColorByName?: Record<string, number>
+    playersByTeam: (teamName: string) => Player[]
+    displayPlayerLabel: (player: Player) => string
+    updatePlayedMatch: (
+      matchNumber: number,
+      homeGoals: number,
+      awayGoals: number,
+      homeStats: Record<number, PlayerMatchStats>,
+      awayStats: Record<number, PlayerMatchStats>,
+    ) => void
+  }>(),
+  { teamColorByName: () => ({}) },
+)
 
 const emit = defineEmits<{
   cancel: []
@@ -305,6 +313,19 @@ const draftHomeGoals = computed(() =>
 )
 const draftAwayGoals = computed(() =>
   Object.values(draft.value.awayStats).reduce((s, st) => s + st.goals, 0),
+)
+
+const { getMatchScorePillClass } = useTeamColors()
+
+// Черновой счёт подкрашиваем так же, как зафиксированный — видно, кто ведёт.
+const draftScorePillClass = computed(() =>
+  getMatchScorePillClass(
+    draftHomeGoals.value,
+    draftAwayGoals.value,
+    props.match.homeTeam,
+    props.match.awayTeam,
+    (name) => props.teamColorByName[name] ?? 0,
+  ),
 )
 
 const homePlayers = computed(() => props.playersByTeam(props.match.homeTeam))

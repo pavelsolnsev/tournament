@@ -10,7 +10,7 @@
   <div
     id="scroll-root"
     class="bg-slate-900 text-slate-100 h-full"
-    style="position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:none;"
+    style="position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:none;scrollbar-gutter:stable;"
   >
     <NuxtLayout>
       <NuxtPage />

@@ -47,8 +47,8 @@
           </div>
           <div class="flex shrink-0 flex-col items-center gap-0.5">
             <span
-              class="rounded-md px-3 py-1 font-mono text-base font-bold tabular-nums"
-              :class="getScoreClass(m)"
+              class="rounded-md px-3 py-1 font-mono text-base font-bold tabular-nums ring-1"
+              :class="scorePillClass(m)"
             >
               {{ m.homeGoals }}&nbsp;:&nbsp;{{ m.awayGoals }}
             </span>
@@ -164,6 +164,7 @@
             v-if="!props.readonly && editMatch === m.matchNumber"
             :match="m"
             :team-marker="teamMarker"
+            :team-color-by-name="props.teamColorByName"
             :players-by-team="playersByTeam"
             :display-player-label="displayPlayerLabel"
             :update-played-match="updatePlayedMatch"
@@ -180,6 +181,7 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import type { PlayerMatchStats } from '~/composables/tournament-standings/types'
+import { useTeamColors } from '~/composables/useTeamColors'
 import OrganismsTournamentPlayedMatchesPlayedMatchDetails from '~/components/organisms/tournament/played-matches/PlayedMatchDetails.vue'
 import OrganismsTournamentPlayedMatchesPlayedMatchEditor from '~/components/organisms/tournament/played-matches/PlayedMatchEditor.vue'
 
@@ -201,9 +203,12 @@ type PlayedMatch = {
   awayStats: Record<number, PlayerMatchStats>
 }
 
-const props = defineProps<{
+const props = withDefaults(
+  defineProps<{
   playedMatchesList: PlayedMatch[]
   teamMarker: (teamName: string) => string
+  /** Индекс цвета команды — как в мастере; нужен для тона плашки счёта. */
+  teamColorByName?: Record<string, number>
   playersByTeam: (teamName: string) => Player[]
   displayPlayerLabel: (player: Player) => string
   /** id игрока → фото и имя для аватаров в блоке «Детали». */
@@ -220,7 +225,11 @@ const props = defineProps<{
   showHeading?: boolean
   /** true — режим только просмотра, без редактирования и удаления. */
   readonly?: boolean
-}>()
+}>(),
+  { teamColorByName: () => ({}) },
+)
+
+const { getMatchScorePillClass } = useTeamColors()
 
 // По умолчанию заголовок показывается.
 const showHeading = computed(() => props.showHeading ?? true)
@@ -285,9 +294,14 @@ function awayPlayers(m: PlayedMatch): Player[] {
   return props.playersByTeam(m.awayTeam)
 }
 
-function getScoreClass(m: PlayedMatch): string {
-  if (m.homeGoals > m.awayGoals) return 'bg-sky-500/15 text-sky-200'
-  if (m.awayGoals > m.homeGoals) return 'bg-emerald-500/15 text-emerald-200'
-  return 'bg-slate-800/80 text-slate-100'
+// Плашка счёта: ничья — серая; победа — цвет победителя из teamColorByName.
+function scorePillClass(m: PlayedMatch): string {
+  return getMatchScorePillClass(
+    m.homeGoals,
+    m.awayGoals,
+    m.homeTeam,
+    m.awayTeam,
+    (name) => props.teamColorByName[name] ?? 0,
+  )
 }
 </script>

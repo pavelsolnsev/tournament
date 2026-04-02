@@ -35,8 +35,8 @@
             </div>
 
             <section v-else class="flex w-full flex-col gap-6 py-5 sm:py-8">
-              <!-- Хлебная крошка: показывает пройденный путь по шагам -->
-              <nav aria-label="Шаги мастера">
+              <!-- На шаге 0 крошку не показываем: заголовок уже «Выберите игроков», подпись «Игроки» лишняя. -->
+              <nav v-if="wizard.step.value > 0" aria-label="Шаги мастера">
                 <ol class="flex min-w-0 flex-wrap items-center gap-1">
                   <li
                     v-for="(crumb, idx) in breadcrumbs.filter(c => c.step <= wizard.step.value)"
@@ -73,6 +73,28 @@
                   </li>
                 </ol>
               </nav>
+
+              <!-- Баннер «Турнир завершён» — появляется на шаге 0 после финиша турнира -->
+              <!-- Даёт администратору возможность запустить новый турнир, не мешая зрителям видеть итоги -->
+              <div
+                v-if="wizard.step.value === 0 && wizard.matchStatus.value === 'finished'"
+                class="flex flex-col gap-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-5 py-5"
+              >
+                <div class="flex items-center gap-3">
+                  <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-xl ring-1 ring-emerald-500/30">🏆</span>
+                  <div>
+                    <p class="font-bold text-emerald-300">Турнир завершён!</p>
+                    <p class="mt-0.5 text-sm text-slate-400">Зрители видят итоги. Когда будете готовы — запустите новый турнир.</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="self-start inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 active:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  @click="wizard.resetWizard()"
+                >
+                  Начать новый турнир
+                </button>
+              </div>
 
               <template v-if="wizard.step.value === 0 || wizard.step.value === 1">
                 <h1 class="text-2xl font-bold text-slate-50 sm:text-3xl">
@@ -128,7 +150,7 @@
                 :initial-snapshot="wizard.standingsSnapshot.value"
                 @update:snapshot="wizard.saveStandingsSnapshot"
                 @update:match-status="wizard.updateMatchStatus"
-                @tournament-finished="wizard.resetWizard()"
+                @tournament-finished="wizard.step.value = 0"
                 @tournament-cleared="wizard.resetWizard()"
               />
             </section>

@@ -1,46 +1,33 @@
-<!-- Компонент StepPlayersLibraryPanel: список игроков, поиск и создание — на общих атомах турнира. -->
+<!-- Компонент StepPlayersLibraryPanel: создание игрока, поиск, список — на общих атомах турнира. -->
 <template>
   <AtomsTournamentPanel as="section" root-class="lg:col-span-3">
-    <!-- Блок поиска — отдельно от формы добавления -->
-    <AtomsTournamentTextInput
-      :model-value="playerSearch"
-      variant="search"
-      size="xs"
-      placeholder="Поиск…"
-      @update:model-value="emit('update:playerSearch', $event)"
-    />
-
-    <!-- Разделитель между поиском и формой добавления -->
-    <div class="border-t border-slate-700/40" />
-
-    <!-- Блок добавления нового игрока — три поля в отдельной секции -->
-    <form class="flex flex-col gap-2" @submit.prevent="onCreatePlayer">
+    <!-- Сначала добавление игрока, ниже поиск по списку — так порядок действий сверху вниз. -->
+    <form class="flex w-full min-w-0 flex-col gap-2" @submit.prevent="onCreatePlayer">
       <p class="text-xs font-medium text-slate-400">Новый игрок</p>
 
-      <!-- Имя -->
       <AtomsTournamentTextInput
         v-model="newName"
         variant="field"
         size="sm"
         placeholder="Имя"
+        input-class="h-12"
       />
 
-      <!-- Username + кнопка «+» в одну строку, одна высота -->
-      <div class="flex items-center gap-2">
-        <AtomsTournamentTextInput
-          v-model="newUsername"
-          variant="field"
-          size="sm"
-          placeholder="@username"
-        />
-        <AtomsPrimaryButton
-          native-type="submit"
-          size="md"
-          :disabled="!newName.trim() || creating"
-        >
-          {{ creating ? '…' : '+' }}
-        </AtomsPrimaryButton>
-      </div>
+      <AtomsTournamentTextInput
+        v-model="newUsername"
+        variant="field"
+        size="sm"
+        placeholder="@username"
+        input-class="h-12"
+      />
+
+      <AtomsPrimaryButton
+        native-type="submit"
+        size="block"
+        :disabled="!newName.trim() || creating"
+      >
+        {{ creating ? 'Добавляем…' : 'Добавить' }}
+      </AtomsPrimaryButton>
     </form>
 
     <p v-if="createError" class="text-[11px] text-red-400">
@@ -50,7 +37,18 @@
       {{ resetError }}
     </p>
 
-    <!-- Разделитель между формой и списком -->
+    <!-- Разделитель между формой и поиском -->
+    <div class="border-t border-slate-700/40" />
+
+    <AtomsTournamentTextInput
+      :model-value="playerSearch"
+      variant="search"
+      size="xs"
+      placeholder="Поиск…"
+      @update:model-value="emit('update:playerSearch', $event)"
+    />
+
+    <!-- Разделитель между поиском и списком -->
     <div class="border-t border-slate-700/40" />
 
     <p v-if="!players?.length" class="text-slate-500 text-xs">
@@ -72,8 +70,8 @@
       Ничего не найдено.
     </p>
 
-    <!-- Reset в самом низу: спокойная второстепенная кнопка. -->
-    <div class="mt-6 flex flex-col items-center">
+    <!-- Reset только на lg+: на телефоне кнопку не показываем — реже случайное нажатие. -->
+    <div class="mt-6 hidden flex-col items-center lg:flex">
       <button
         type="button"
         class="inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-800/60 hover:text-slate-300 active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-40"

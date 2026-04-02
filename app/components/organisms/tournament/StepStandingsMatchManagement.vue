@@ -87,7 +87,10 @@
         </p>
 
         <div class="text-center">
-          <p class="font-mono text-xl font-semibold tabular-nums text-slate-50">
+          <p
+            class="inline-block rounded-md px-3 py-1 font-mono text-xl font-semibold tabular-nums ring-1"
+            :class="boardScorePillClass"
+          >
             {{ homeGoals }}&nbsp;:&nbsp;{{ awayGoals }}
           </p>
         </div>
@@ -334,7 +337,9 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import type { StatKey } from '~/composables/tournament-standings/types'
+import { computed } from 'vue'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
+import { useTeamColors } from '~/composables/useTeamColors'
 import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
 
 type Side = 'home' | 'away'
@@ -379,6 +384,19 @@ defineEmits<{
   'update:homeTeam': [value: string]
   'update:awayTeam': [value: string]
 }>()
+
+const { getMatchScorePillClass } = useTeamColors()
+
+// Табло: ничья — серая плашка; лидер — в цвете его команды.
+const boardScorePillClass = computed(() =>
+  getMatchScorePillClass(
+    props.homeGoals,
+    props.awayGoals,
+    props.homeTeam,
+    props.awayTeam,
+    (name) => props.effectiveTeamColors[name] ?? 0,
+  ),
+)
 
 const uid = useId?.() ?? Math.random().toString(36).slice(2)
 
