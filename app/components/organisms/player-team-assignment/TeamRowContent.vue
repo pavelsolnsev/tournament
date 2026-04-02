@@ -1,0 +1,135 @@
+<!-- Внутренний компонент: одна строка команды в панели. -->
+<template>
+  <!-- Одна строка: маркер + имя + бейдж | кнопки справа — всё на одной высоте. -->
+  <div class="flex min-h-[2.5rem] items-center gap-2">
+
+    <!-- Левая часть: кнопка выбора команды (маркер + имя + статус) -->
+    <button
+      type="button"
+      class="flex min-w-0 flex-1 items-center gap-2 rounded text-left focus:outline-none"
+      @click="emit('select')"
+    >
+      <!-- Маркер цвета -->
+      <span aria-hidden="true" class="shrink-0 text-base leading-none">{{ teamMarker(name) }}</span>
+
+      <!-- Имя + бейдж «Участвует» в одну строку, без переноса -->
+      <span class="flex min-w-0 items-center gap-1.5">
+        <span class="min-w-0 truncate text-sm font-medium text-slate-100">{{ name }}</span>
+        <span
+          v-if="isTeamConfirmed(name)"
+          class="shrink-0 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[11px] leading-none text-emerald-300"
+        >
+          ✓
+        </span>
+      </span>
+    </button>
+
+    <!-- Правая часть: счётчик игроков + select цвета + кнопка действия + удалить -->
+    <div class="flex shrink-0 items-center gap-1">
+
+      <!-- Количество игроков — небольшой текст, не растягивает строку -->
+      <span class="w-6 text-center text-xs tabular-nums text-slate-500">
+        {{ teamPlayerCounts[name] ?? 0 }}
+      </span>
+
+      <!-- Select цвета — компактный, только эмодзи -->
+      <select
+        :value="String(getTeamColor(name))"
+        class="h-8 w-10 rounded-lg border border-slate-700/60 bg-slate-900/70 text-center text-sm
+               transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+        title="Цвет команды"
+        @change="emit('set-color', Number(($event.target as HTMLSelectElement).value))"
+      >
+        <option
+          v-for="(m, idx) in teamMarkers"
+          :key="idx"
+          class="bg-slate-900 text-slate-100"
+          :value="String(idx)"
+        >
+          {{ m }}
+        </option>
+      </select>
+
+      <!-- Подтвердить участие — показывается если команда НЕ подтверждена и есть игроки -->
+      <button
+        v-if="(teamPlayerCounts[name] ?? 0) > 0 && !isTeamConfirmed(name)"
+        type="button"
+        class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/15 text-sm font-medium text-emerald-300
+               transition-colors md:hover:bg-emerald-500/25
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+        title="Подтвердить участие в турнире"
+        @click="emit('confirm')"
+      >
+        ✓
+      </button>
+
+      <!-- Убрать из участников — показывается если команда подтверждена -->
+      <button
+        v-else-if="isTeamConfirmed(name)"
+        type="button"
+        class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-700/40 text-sm font-medium text-slate-400
+               transition-colors md:hover:bg-slate-700/60 md:hover:text-slate-200
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
+        title="Убрать из участников"
+        @click="emit('unconfirm')"
+      >
+        ↩
+      </button>
+
+      <!-- Пустой спейсер — держит ширину когда ни одна из двух кнопок не видна -->
+      <span v-else class="inline-flex h-8 w-8" aria-hidden="true" />
+
+      <!-- Удалить команду -->
+      <button
+        type="button"
+        class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-600
+               transition-colors md:hover:bg-red-500/10 md:hover:text-red-400
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
+        title="Удалить команду"
+        @click="emit('open-remove')"
+      >
+        ✕
+      </button>
+    </div>
+  </div>
+
+  <!-- Подтверждение удаления — появляется под строкой -->
+  <MoleculesConfirmInline
+    class="mt-1.5"
+    :open="removeConfirmTeamName === name"
+    :busy="false"
+    tone="danger"
+    aria-label="Подтверждение удаления команды"
+    title="Удалить команду?"
+    :subtitle="`Команда «${name}» будет удалена.`"
+    cancel-text="Отмена"
+    confirm-text="Удалить"
+    @cancel="emit('cancel-remove')"
+    @confirm="emit('confirm-remove')"
+  />
+</template>
+
+<script setup lang="ts">
+import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
+
+defineProps<{
+  name: string
+  selectedTeamName: string
+  teamPlayerCounts: Record<string, number>
+  isTeamConfirmed: (name: string) => boolean
+  getTeamColor: (teamName: string) => number
+  teamMarker: (teamName: string) => string
+  teamMarkers: readonly string[]
+  removeConfirmTeamName: string | null
+}>()
+
+const emit = defineEmits<{
+  select: []
+  confirm: []
+  unconfirm: []
+  'set-color': [colorIndex: number]
+  'open-remove': []
+  'confirm-remove': []
+  'cancel-remove': []
+}>()
+</script>

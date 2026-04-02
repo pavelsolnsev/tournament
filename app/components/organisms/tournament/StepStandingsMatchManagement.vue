@@ -76,7 +76,7 @@
     <!-- Карточка матча — показывается только когда выбраны обе команды -->
     <div
       v-if="homeTeam && awayTeam"
-      class="overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900"
+      class="rounded-2xl border border-slate-700/60 bg-slate-900"
     >
 
       <!-- Табло -->

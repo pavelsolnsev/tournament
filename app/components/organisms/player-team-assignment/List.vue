@@ -7,6 +7,7 @@
       :selected-team-name="selectedTeamName"
       :team-player-counts="teamPlayerCounts"
       :is-team-confirmed="isTeamConfirmed"
+      :is-auto-team="isAutoTeam"
       :get-team-color="getTeamColor"
       :team-marker="teamMarker"
       @update:new-team-name="emit('update:newTeamName', $event)"
@@ -44,6 +45,8 @@ const props = defineProps<{
   newTeamName: MaybeRef<string> | Ref<string>
   confirmedTeamNames: MaybeRef<Set<string>>
   getTeamColor: (teamName: string) => number
+  // Набор имён команд, созданных авто-распределением — для визуального разделения.
+  autoDistributedNames?: MaybeRef<Set<string>>
 }>()
 
 const emit = defineEmits<{
@@ -78,6 +81,12 @@ const confirmedSet = computed(() => unref(props.confirmedTeamNames) ?? new Set<s
 
 const isTeamConfirmed = (name: string) => confirmedSet.value.has(normalizeTeamName(name))
 // Это быстрая проверка: команда уже участвует или ещё нет.
+
+const autoSet = computed(() => unref(props.autoDistributedNames) ?? new Set<string>())
+// Это набор авто-команд — используем для разделения списка в TeamsPanel.
+
+const isAutoTeam = (name: string) => autoSet.value.has(normalizeTeamName(name))
+// Команда создана авто-распределением, если её нормализованное имя есть в autoSet.
 
 const allTeams = computed(() => {
   const list = dedupeTeamNamesPreservingOrder(teamOptionsList.value)

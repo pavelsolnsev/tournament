@@ -88,6 +88,7 @@
                   :new-team-name="wizard.assignment.newTeamName"
                   :confirmed-team-names="wizard.assignment.confirmedTeamNames"
                   :confirmed-teams-count="wizard.confirmedTeamsList.value.length"
+                  :auto-distributed-names="wizard.assignment.autoDistributedNames"
                   @update:new-team-name="(v) => { wizard.assignment.newTeamName.value = v }"
                   @set-team="wizard.assignment.setTeam"
                   @set-team-color="wizard.assignment.setTeamColor"
@@ -98,6 +99,7 @@
                   @remove-team="wizard.assignment.removeTeam"
                   @back-to-players="wizard.step.value = 0"
                   @go-to-standings="wizard.step.value = 2"
+                  @auto-distribute="(count) => wizard.assignment.autoDistribute(wizard.selectedPlayers.value, count)"
                 />
 
                 <OrganismsTournamentStepPlayers

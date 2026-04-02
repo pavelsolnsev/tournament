@@ -1,7 +1,9 @@
 // Этот файл: composable для цветов/маркеров команд.
 // Он нужен, чтобы показывать командам одинаковые маркеры по индексу цвета.
 export function useTeamColors() {
-  const teamMarkers = ['🔴', '🟢', '🔵', '🟡', '⚪', '⚫'] as const
+  // Порядок маркеров: индекс совпадает с номером команды минус 1.
+  // Команда 1 → 🔴 (0), Команда 2 → 🔵 (1), Команда 3 → 🟢 (2), Команда 4 → 🟡 (3).
+  const teamMarkers = ['🔴', '🔵', '🟢', '🟡', '⚪', '⚫'] as const
 
   function getMarkerByIndex(index: number): string {
     const safeIndex = Number.isFinite(index) ? index : 0

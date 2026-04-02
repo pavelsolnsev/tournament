@@ -18,6 +18,15 @@
       <p class="text-slate-400 text-sm mb-2">
         Создайте команды и добавляйте в них игроков.
       </p>
+
+      <!-- Панель авто-распределения по рейтингу -->
+      <MoleculesRatingDistributionControls
+        v-model="teamCountForDistribution"
+        :free-players="freePlayers"
+        class="mb-3"
+        @distribute="onDistribute"
+      />
+
       <OrganismsPlayerTeamAssignmentList
         :players="selectedPlayers"
         :team-options="teamOptions"
@@ -25,6 +34,7 @@
         :get-team-color="getTeamColor"
         :new-team-name="newTeamName"
         :confirmed-team-names="confirmedTeamNames"
+        :auto-distributed-names="autoDistributedNames"
         @update:new-team-name="(v) => emit('update:newTeamName', v)"
         @set-team="(playerId, teamName) => emit('setTeam', playerId, teamName)"
         @set-team-color="(teamName, colorIndex) => emit('setTeamColor', teamName, colorIndex)"
@@ -55,6 +65,7 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import type { MaybeRef, ComputedRef, Ref } from 'vue'
+import { ref, computed, unref } from 'vue'
 
 // Этот шаг распределяет игроков по командам.
 const props = defineProps<{
@@ -65,6 +76,8 @@ const props = defineProps<{
   newTeamName: MaybeRef<string> | Ref<string>
   confirmedTeamNames: MaybeRef<Set<string>>
   confirmedTeamsCount: number
+  // Имена команд, созданных авто-распределением — для визуального разделения.
+  autoDistributedNames?: MaybeRef<Set<string>>
 }>()
 
 const emit = defineEmits<{
@@ -78,6 +91,20 @@ const emit = defineEmits<{
   removeTeam: [teamName: string]
   backToPlayers: []
   goToStandings: []
+  autoDistribute: [teamCount: number]
 }>()
+
+// Количество команд для авто-распределения (2–4).
+const teamCountForDistribution = ref(2)
+
+// Свободные игроки — те, кто ещё не попал ни в одну команду.
+const freePlayers = computed(() =>
+  props.selectedPlayers.filter((p) => !props.getTeam(p.id)),
+)
+
+// Запускаем авто-распределение — пробрасываем наверх с выбранным количеством команд.
+function onDistribute() {
+  emit('autoDistribute', teamCountForDistribution.value)
+}
 </script>
 

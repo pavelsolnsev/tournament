@@ -7,6 +7,8 @@ import {
   normalizeTeamName,
   teamNameCollides,
 } from '~/utils/teamNames'
+import { distributePlayersByRating } from '~/utils/distributeByRating'
+import type { Player } from '~/types/tournament'
 
 // Логика назначения игроков в команды и работы с командами.
 export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef<string[]>) {
@@ -29,6 +31,8 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
   const confirmedTeamNames = ref<Set<string>>(new Set())
   /** Цвета команд по имени (индекс 0–5). */
   const teamColors = ref<Record<string, number>>({})
+  /** Имена команд, созданных авто-распределением — нужны для визуального разделения в UI. */
+  const autoDistributedNames = ref<Set<string>>(new Set())
 
   /** Список имён уже в опциях (БД + новые), для проверки перед добавлением. */
   function listedTeamNamesRaw(): string[] {
@@ -110,6 +114,59 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
     assignment.value = next
   }
 
+  /**
+   * Автоматически распределяет игроков по рейтингу.
+   * Создаёт teamCount новых команд и назначает игроков так, чтобы суммы рейтингов были близки.
+   * Перед этим сбрасывает текущие назначения и команды — чистый старт.
+   */
+  function autoDistribute(players: Player[], teamCount: number) {
+    // Считаем распределение по алгоритму greedy.
+    const { teamAssignments, teamRatings: _ } = distributePlayersByRating(players, teamCount)
+
+    // Сбрасываем текущие назначения, команды и метки авто-распределения — пишем с нуля.
+    assignment.value = {}
+    confirmedTeamNames.value = new Set()
+    teamColors.value = {}
+    autoDistributedNames.value = new Set()
+    // Удаляем только пользовательские команды из предыдущих авто-запусков.
+    const teamNamesGenerated = Array.from(
+      { length: Math.min(4, Math.max(2, teamCount)) },
+      (_, i) => `Команда ${i + 1}`,
+    )
+    newTeamNames.value = newTeamNames.value.filter(
+      (n) => !teamNamesGenerated.some((g) => normalizeTeamName(g) === normalizeTeamName(n)),
+    )
+
+    // Добавляем новые сгенерированные команды в список, если их ещё нет.
+    const existing = listedTeamNamesRaw()
+    const toAdd = teamNamesGenerated.filter(
+      (name) => !teamNameCollides(name, existing),
+    )
+    newTeamNames.value = [...newTeamNames.value, ...toAdd]
+
+    // Назначаем игроков, подтверждаем команды и присваиваем цвет по индексу.
+    // Команда 1 → индекс 0 (🔴), Команда 2 → 1 (🔵), Команда 3 → 2 (🟢), Команда 4 → 3 (🟡).
+    const nextAssignment: Record<number, string> = {}
+    const nextColors: Record<string, number> = {}
+    const nextConfirmed = new Set<string>()
+
+    teamNamesGenerated.forEach((teamName, idx) => {
+      const playerIds = teamAssignments[teamName] ?? []
+      for (const id of playerIds) {
+        nextAssignment[id] = teamName
+      }
+      // Цвет совпадает с порядковым номером команды (0-based).
+      nextColors[normalizeTeamName(teamName)] = idx
+      nextConfirmed.add(normalizeTeamName(teamName))
+    })
+
+    assignment.value = nextAssignment
+    teamColors.value = nextColors
+    confirmedTeamNames.value = nextConfirmed
+    // Запоминаем нормализованные имена авто-команд — чтобы UI мог их выделить отдельно.
+    autoDistributedNames.value = new Set(teamNamesGenerated.map(normalizeTeamName))
+  }
+
   function removeTeam(teamName: string) {
     const normalized = normalizeTeamName(teamName)
     if (!normalized) return
@@ -140,6 +197,11 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
       if (normalizeTeamName(k) === normalized) delete nextColors[k]
     }
     teamColors.value = nextColors
+
+    // При удалении команды убираем её из списка авто-команд.
+    const nextAuto = new Set(autoDistributedNames.value)
+    nextAuto.delete(normalized)
+    autoDistributedNames.value = nextAuto
   }
 
   return {
@@ -163,5 +225,7 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
     isTeamConfirmed,
     setTeamColor,
     getTeamColor,
+    autoDistribute,
+    autoDistributedNames,
   }
 }
