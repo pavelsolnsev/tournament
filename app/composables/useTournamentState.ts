@@ -1,46 +1,83 @@
 // Composable для синхронизации состояния турнира с базой данных через API.
-// Заменяет cookie-персистентность — теперь состояние доступно с любого устройства.
-import { useQuery } from '@tanstack/vue-query'
+// useFetch с фиксированным key — Nuxt один раз тянет state на SSR и передаёт payload на клиент без второго GET при обновлении страницы.
 import type { SavedTournamentContext } from '~/composables/useTournamentWizard'
 
 // Debounce-задержка: не сохраняем после каждой клавиши — ждём паузы в 800мс.
 const SAVE_DEBOUNCE_MS = 800
 
-// Поллинг GET /state только пока матч в эфире — в ожидании и после финала запросы по таймеру не крутятся.
+// Интервал поллинга в live-режиме — каждые 15 секунд.
 const STATE_REFETCH_LIVE_MS = 15_000
 
-// Смотрим последний ответ query: если матч live — раз в 15 с подтягиваем state, иначе таймер выключаем.
-function refetchIntervalForState(query: { state: { data: unknown } }): number | false {
-  const payload = query.state.data as { state: SavedTournamentContext | null } | undefined
-  if (payload?.state?.matchStatus === 'live') return STATE_REFETCH_LIVE_MS
-  return false
+// Интервал поллинга когда матч ещё не начат или уже завершён.
+// Реже, чтобы не нагружать сервер, но зритель всё равно получит переход в live.
+const STATE_REFETCH_IDLE_MS = 10_000
+
+/** Ключ Nuxt useFetch / refreshNuxtData — один и тот же, чтобы принудительное обновление попадало в тот же кэш. */
+export const TOURNAMENT_STATE_NUXT_KEY = 'tournament-state'
+
+// Что нужно мастеру турнира: один раз создаём useTournamentState() и передаём сюда — без второго подключения к тому же API.
+export type TournamentStateSyncApi = {
+  serverState: ComputedRef<SavedTournamentContext | null>
+  isLoading: Ref<boolean>
+  saveTournamentState: (state: SavedTournamentContext) => void
+  saveTournamentStateNow: (state: SavedTournamentContext) => Promise<void>
 }
 
 export function useTournamentState() {
-  // saveTimer живёт внутри composable — очищается при unmount компонента.
-  // Раньше был на уровне модуля и утекал между перезагрузками/переходами.
   let saveTimer: ReturnType<typeof setTimeout> | null = null
 
-  // Загружаем состояние турнира с сервера.
-  const query = useQuery({
-    queryKey: ['tournament-state'],
-    queryFn: () => $fetch<{ state: SavedTournamentContext | null }>('/api/tournament/state'),
-    // Интервал только в live; до старта и после финала — без поллинга (обновление ещё по фокусу вкладки).
-    refetchInterval: refetchIntervalForState,
-    // При возврате на вкладку сразу обновляем — подхватить переход upcoming → live без ожидания интервала.
-    refetchOnWindowFocus: true,
+  const { data, pending, refresh } = useFetch<{ state: SavedTournamentContext | null }>('/api/tournament/state', {
+    key: TOURNAMENT_STATE_NUXT_KEY,
+    default: () => ({ state: null }),
   })
 
-  // Очищаем pending-таймер при уничтожении компонента, чтобы не было "ghostwrite" запросов.
+  const serverState = computed(() => data.value?.state ?? null)
+
+  // Постоянный поллинг на клиенте — зритель всегда получает актуальный state.
+  // В live — каждые 15 с, в остальных статусах — каждые 10 с (реже, но переход upcoming→live не пропустим).
+  let pollTimer: ReturnType<typeof setInterval> | null = null
+
+  function startPoll() {
+    if (pollTimer) clearInterval(pollTimer)
+    const interval = serverState.value?.matchStatus === 'live'
+      ? STATE_REFETCH_LIVE_MS
+      : STATE_REFETCH_IDLE_MS
+    pollTimer = setInterval(() => {
+      void refresh()
+    }, interval)
+  }
+
+  if (import.meta.client) {
+    onMounted(() => {
+      // Запускаем поллинг сразу при монтировании — не ждём live.
+      startPoll()
+
+      // Когда статус меняется (например upcoming → live) — перезапускаем таймер с нужным интервалом.
+      watch(() => serverState.value?.matchStatus, () => {
+        startPoll()
+      })
+
+      // При возврате на вкладку — немедленный refresh + перезапуск таймера.
+      const onFocus = () => {
+        void refresh()
+        startPoll()
+      }
+      window.addEventListener('focus', onFocus)
+      onUnmounted(() => window.removeEventListener('focus', onFocus))
+    })
+  }
+
   onUnmounted(() => {
+    if (pollTimer) {
+      clearInterval(pollTimer)
+      pollTimer = null
+    }
     if (saveTimer) {
       clearTimeout(saveTimer)
       saveTimer = null
     }
   })
 
-  // Сохраняет состояние турнира на сервер.
-  // Вызывается с debounce, чтобы не перегружать API.
   function saveTournamentState(state: SavedTournamentContext) {
     if (saveTimer) clearTimeout(saveTimer)
 
@@ -56,7 +93,6 @@ export function useTournamentState() {
     }, SAVE_DEBOUNCE_MS)
   }
 
-  // Немедленно сохраняет состояние (без debounce) — для критических моментов.
   async function saveTournamentStateNow(state: SavedTournamentContext) {
     if (saveTimer) {
       clearTimeout(saveTimer)
@@ -73,12 +109,10 @@ export function useTournamentState() {
   }
 
   return {
-    // Текущее состояние, загруженное с сервера.
-    serverState: computed(() => query.data.value?.state ?? null),
-    // Идёт ли загрузка состояния.
-    isLoading: query.isLoading,
-    query,
+    serverState,
+    isLoading: pending,
     saveTournamentState,
     saveTournamentStateNow,
+    refresh,
   }
 }

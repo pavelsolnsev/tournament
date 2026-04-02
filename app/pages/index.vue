@@ -216,10 +216,9 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
-import { useQueryClient } from '@tanstack/vue-query'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTournamentWizard } from '~/composables/useTournamentWizard'
-import { useTournamentState } from '~/composables/useTournamentState'
+import { TOURNAMENT_STATE_NUXT_KEY, useTournamentState } from '~/composables/useTournamentState'
 
 definePageMeta({ layout: 'landing' })
 
@@ -237,12 +236,15 @@ onMounted(() => {
   clientReady.value = true
 })
 
-const { serverState, query: stateQuery } = useTournamentState()
-await stateQuery.suspense()
+const tournamentState = useTournamentState()
+const wizard = useTournamentWizard({
+  serverState: tournamentState.serverState,
+  isLoading: tournamentState.isLoading,
+  saveTournamentState: tournamentState.saveTournamentState,
+  saveTournamentStateNow: tournamentState.saveTournamentStateNow,
+})
 
-const viewerState = computed(() => serverState.value)
-const wizard = useTournamentWizard()
-const queryClient = useQueryClient()
+const viewerState = computed(() => tournamentState.serverState.value)
 
 // Панель «Очистить данные» — обратный отсчёт как у очистки пожеланий.
 const showClearTournamentConfirm = ref(false)
@@ -284,7 +286,7 @@ async function confirmClearTournament() {
   clearTournamentBusy.value = true
   try {
     await wizard.resetWizard()
-    await queryClient.invalidateQueries({ queryKey: ['tournament-state'] })
+    await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
   } finally {
     clearTournamentBusy.value = false
     showClearTournamentConfirm.value = false
@@ -307,6 +309,6 @@ const breadcrumbs = [
 async function goToStandings() {
   wizard.step.value = 2
   // Принудительно инвалидируем кэш state — следующий опрос зрителя вернёт свежие данные.
-  await queryClient.invalidateQueries({ queryKey: ['tournament-state'] })
+  await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
 }
 </script>

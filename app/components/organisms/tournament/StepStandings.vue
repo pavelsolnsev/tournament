@@ -269,10 +269,7 @@ import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { useTournamentStandingsRefactored } from '~/composables/useTournamentStandingsRefactored'
 import { useFinishTournament } from '~/composables/useFinishTournament'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
-import { useQueryClient } from '@tanstack/vue-query'
-
-// Клиент TanStack Query — нужен для принудительного обновления state у зрителя.
-const queryClient = useQueryClient()
+import { TOURNAMENT_STATE_NUXT_KEY } from '~/composables/useTournamentState'
 
 // Этот шаг показывает матчи и турнирную таблицу.
 const props = defineProps<{
@@ -375,8 +372,8 @@ async function handleUpdateHomeTeam(next: string) {
   // Если обе команды выбраны — матч идёт сейчас. Иначе — ожидается.
   if (homeTeam.value && awayTeam.value) {
     emit('update:matchStatus', 'live', homeTeam.value, awayTeam.value)
-    // Сразу инвалидируем кэш state — зритель без задержки увидит выбранную пару команд.
-    await queryClient.invalidateQueries({ queryKey: ['tournament-state'] })
+    // Сразу обновляем payload state — зритель без задержки увидит выбранную пару команд.
+    await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
   } else {
     emit('update:matchStatus', 'upcoming', '', '')
   }
@@ -388,15 +385,15 @@ async function handleUpdateAwayTeam(next: string) {
   // Если обе команды выбраны — матч идёт сейчас. Иначе — ожидается.
   if (homeTeam.value && awayTeam.value) {
     emit('update:matchStatus', 'live', homeTeam.value, awayTeam.value)
-    // Сразу инвалидируем кэш state — зритель без задержки увидит выбранную пару команд.
-    await queryClient.invalidateQueries({ queryKey: ['tournament-state'] })
+    // Сразу обновляем payload state — зритель без задержки увидит выбранную пару команд.
+    await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
   } else {
     emit('update:matchStatus', 'upcoming', '', '')
   }
 }
 // Это обновляет гостевую команду, когда пользователь меняет select в дочернем UI.
 
-function handleFinishMatch() {
+async function handleFinishMatch() {
   // Ставим статус finished ДО сброса команд внутри finishMatch(), чтобы зритель успел увидеть «Завершён».
   if (homeTeam.value && awayTeam.value) {
     emit('update:matchStatus', 'finished', homeTeam.value, awayTeam.value)
@@ -404,11 +401,13 @@ function handleFinishMatch() {
     emit('update:matchStatus', 'finished', '', '')
   }
   finishMatch()
+  // Сразу отдаём зрителю результат матча — не ждём очередного поллинга.
+  await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
 }
 // Этот обработчик централизует статус: после нажатия «Завершить матч» он остаётся finished,
 // даже если админский UI очищает выбранные команды.
 
-function handleGoToNextMatch() {
+async function handleGoToNextMatch() {
   // Переходим к следующему матчу (может автоматически завершить текущий).
   goToNextMatch()
   // После подбора следующей пары проверяем команды и обновляем статус для зрителя.
@@ -417,6 +416,8 @@ function handleGoToNextMatch() {
   } else {
     emit('update:matchStatus', 'upcoming', '', '')
   }
+  // Сразу показываем зрителю новую пару команд — не ждём поллинга.
+  await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
 }
 // Этот обработчик даёт зрителю максимально актуальный статус после «Следующий матч».
 
@@ -440,6 +441,8 @@ async function handleFinishTournament() {
   if (finishStatus.value === 'success') {
     emit('update:matchStatus', 'finished', '', '')
     emit('tournament-finished')
+    // Сразу показываем зрителю итоги турнира — не ждём поллинга.
+    await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
   }
 }
 </script>

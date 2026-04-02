@@ -5,7 +5,7 @@ import type { Player, Team, MatchStatus } from '~/types/tournament'
 import type { PlayedMatch, PlayerMatchStats } from '~/composables/tournament-standings/types'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 import { useTeamAssignment } from '~/composables/useTeamAssignment'
-import { useTournamentState } from '~/composables/useTournamentState'
+import type { TournamentStateSyncApi } from '~/composables/useTournamentState'
 import { dedupeTeamNamesPreservingOrder, normalizeTeamName } from '~/utils/teamNames'
 
 // Снапшот состояния турнирной таблицы — сохраняется отдельно при каждом изменении матчей.
@@ -38,7 +38,7 @@ export type SavedTournamentContext = {
   teamColors: Record<string, number>
   // Снапшот таблицы и матчей — восстанавливается при старте шага "Таблица".
   standingsSnapshot: SavedStandingsSnapshot | null
-  // Текущий статус матча — транслируется зрителям через polling каждые 5 сек.
+  // Текущий статус матча — зрители подтягивают через useFetch + опрос в live на клиенте.
   matchStatus: MatchStatus
   // Текущие команды матча — показываем зрителям название командд в статусе Live.
   liveHomeTeam: string
@@ -47,7 +47,8 @@ export type SavedTournamentContext = {
 
 // Управляет мастером создания турнира:
 // шаги, загрузка данных, выбор игроков/команд и сохранение состояния в базу данных.
-export function useTournamentWizard() {
+// stateSync передаётся снаружи — один useTournamentState() на странице, без второго параллельного GET.
+export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   // Текущий шаг: 0 — игроки, 1 — команды, 2 — турнирная таблица.
   const step = ref<0 | 1 | 2>(0)
   const tournamentName = ref('')
@@ -140,8 +141,7 @@ export function useTournamentWizard() {
   // Флаг: было ли уже восстановлено состояние из базы.
   const stateRestored = ref(false)
 
-  // Синхронизация с базой данных через composable.
-  const { serverState, isLoading, saveTournamentState, saveTournamentStateNow } = useTournamentState()
+  const { serverState, isLoading, saveTournamentState, saveTournamentStateNow } = stateSync
 
   // Восстанавливаем состояние из базы, когда оно загрузится.
   // Срабатывает один раз после первой загрузки — даже если state = null (турнир ещё не начат).
