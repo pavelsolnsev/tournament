@@ -126,7 +126,7 @@
                   @unconfirm-team="wizard.assignment.unconfirmTeam"
                   @remove-team="wizard.assignment.removeTeam"
                   @back-to-players="wizard.step.value = 0"
-                  @go-to-standings="wizard.step.value = 2"
+                  @go-to-standings="goToStandings"
                   @auto-distribute="(count) => wizard.assignment.autoDistribute(wizard.selectedPlayers.value, count)"
                 />
 
@@ -157,13 +157,23 @@
                 :players="wizard.players.value ?? []"
                 :assignment-by-player-id="wizard.assignment.assignment.value"
                 :initial-snapshot="wizard.standingsSnapshot.value"
+                :show-clear-tournament-confirm="showClearTournamentConfirm"
+                :clear-tournament-seconds-left="clearTournamentSeconds"
+                :clear-tournament-busy="clearTournamentBusy"
                 @update:snapshot="wizard.saveStandingsSnapshot"
                 @update:match-status="wizard.updateMatchStatus"
                 @tournament-finished="wizard.step.value = 0"
+                @clear-tournament="showClearTournamentConfirm = true"
+                @cancel-clear-tournament="cancelClearTournament"
+                @confirm-clear-tournament="confirmClearTournament"
               />
 
-              <!-- Сброс турнира внизу страницы мастера — после контента шага, с разделителем. -->
-              <div class="mt-8 flex flex-col gap-2 border-t border-slate-200 pt-6 dark:border-slate-700 sm:items-end">
+              <!-- Сброс турнира — показываем внизу только на шагах 0 и 1.
+                   На шаге 2 (Таблица) кнопка «Очистить данные» перенесена внутрь блока «Управление». -->
+              <div
+                v-if="wizard.step.value !== 2"
+                class="mt-8 flex flex-col gap-2 border-t border-slate-200 pt-6 dark:border-slate-700 sm:items-end"
+              >
                 <button
                   v-if="!showClearTournamentConfirm"
                   type="button"
@@ -291,4 +301,12 @@ const breadcrumbs = [
   { step: 1, label: 'Команды' },
   { step: 2, label: 'Таблица' },
 ] as const
+
+// Переход на шаг «Турнирная таблица» с немедленным обновлением state у зрителя.
+// Вызывается при клике на кнопку «Турнирная таблица →» — так зритель сразу видит актуальные команды и составы.
+async function goToStandings() {
+  wizard.step.value = 2
+  // Принудительно инвалидируем кэш state — следующий опрос зрителя вернёт свежие данные.
+  await queryClient.invalidateQueries({ queryKey: ['tournament-state'] })
+}
 </script>

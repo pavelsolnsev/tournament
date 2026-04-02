@@ -7,9 +7,9 @@ import type { SavedTournamentContext } from '~/composables/useTournamentWizard'
 const SAVE_DEBOUNCE_MS = 800
 
 // Поллинг GET /state только пока матч в эфире — в ожидании и после финала запросы по таймеру не крутятся.
-const STATE_REFETCH_LIVE_MS = 20_000
+const STATE_REFETCH_LIVE_MS = 15_000
 
-// Смотрим последний ответ query: если матч live — раз в 20 с подтягиваем state, иначе таймер выключаем.
+// Смотрим последний ответ query: если матч live — раз в 15 с подтягиваем state, иначе таймер выключаем.
 function refetchIntervalForState(query: { state: { data: unknown } }): number | false {
   const payload = query.state.data as { state: SavedTournamentContext | null } | undefined
   if (payload?.state?.matchStatus === 'live') return STATE_REFETCH_LIVE_MS

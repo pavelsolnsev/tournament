@@ -249,8 +249,14 @@
         :finish-tournament-status="finishStatus"
         :finish-tournament-error="finishErrorMessage"
         :on-finish-tournament="handleFinishTournament"
+        :show-clear-tournament-confirm="props.showClearTournamentConfirm"
+        :clear-tournament-seconds-left="props.clearTournamentSecondsLeft"
+        :clear-tournament-busy="props.clearTournamentBusy"
         @update:home-team="handleUpdateHomeTeam"
         @update:away-team="handleUpdateAwayTeam"
+        @clear-tournament="emit('clear-tournament')"
+        @cancel-clear-tournament="emit('cancel-clear-tournament')"
+        @confirm-clear-tournament="emit('confirm-clear-tournament')"
       />
 
     </section>
@@ -263,6 +269,10 @@ import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { useTournamentStandingsRefactored } from '~/composables/useTournamentStandingsRefactored'
 import { useFinishTournament } from '~/composables/useFinishTournament'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
+import { useQueryClient } from '@tanstack/vue-query'
+
+// Клиент TanStack Query — нужен для принудительного обновления state у зрителя.
+const queryClient = useQueryClient()
 
 // Этот шаг показывает матчи и турнирную таблицу.
 const props = defineProps<{
@@ -276,6 +286,10 @@ const props = defineProps<{
   initialSnapshot?: SavedStandingsSnapshot | null
   // Режим только чтения: одинаковый UI без действий управления.
   readonly?: boolean
+  // Данные для кнопки «Очистить данные» внутри блока Управление.
+  showClearTournamentConfirm: boolean
+  clearTournamentSecondsLeft: number
+  clearTournamentBusy: boolean
 }>()
 
 const emit = defineEmits<{
@@ -285,6 +299,10 @@ const emit = defineEmits<{
   'tournament-finished': []
   // Статус матча изменился — родитель (wizard) должен сохранить его в БД.
   'update:matchStatus': [status: MatchStatus, homeTeam: string, awayTeam: string]
+  // Пробрасываем события сброса турнира от MatchManagement наверх к index.vue.
+  'clear-tournament': []
+  'cancel-clear-tournament': []
+  'confirm-clear-tournament': []
 }>()
 
 const {
@@ -352,22 +370,26 @@ const isStandingsBlockOpen = ref(props.readonly === true)
 const isRosterTotalsOpen = ref(false)
 const isPlayedMatchesOpen = ref(false)
 
-function handleUpdateHomeTeam(next: string) {
+async function handleUpdateHomeTeam(next: string) {
   homeTeam.value = next
   // Если обе команды выбраны — матч идёт сейчас. Иначе — ожидается.
   if (homeTeam.value && awayTeam.value) {
     emit('update:matchStatus', 'live', homeTeam.value, awayTeam.value)
+    // Сразу инвалидируем кэш state — зритель без задержки увидит выбранную пару команд.
+    await queryClient.invalidateQueries({ queryKey: ['tournament-state'] })
   } else {
     emit('update:matchStatus', 'upcoming', '', '')
   }
 }
 // Это обновляет домашнюю команду, когда пользователь меняет select в дочернем UI.
 
-function handleUpdateAwayTeam(next: string) {
+async function handleUpdateAwayTeam(next: string) {
   awayTeam.value = next
   // Если обе команды выбраны — матч идёт сейчас. Иначе — ожидается.
   if (homeTeam.value && awayTeam.value) {
     emit('update:matchStatus', 'live', homeTeam.value, awayTeam.value)
+    // Сразу инвалидируем кэш state — зритель без задержки увидит выбранную пару команд.
+    await queryClient.invalidateQueries({ queryKey: ['tournament-state'] })
   } else {
     emit('update:matchStatus', 'upcoming', '', '')
   }

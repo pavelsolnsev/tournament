@@ -297,6 +297,36 @@
               : 'Завершить турнир'
             }}</span>
           </button>
+
+          <!-- Разделитель перед опасной зоной сброса -->
+          <div class="border-t border-slate-200 dark:border-slate-700/60" />
+
+          <!-- Кнопка «Очистить данные» — сбрасывает турнир полностью -->
+          <button
+            v-if="!showClearTournamentConfirm"
+            type="button"
+            class="inline-flex h-10 w-full items-center justify-center rounded-xl border border-red-300/70 bg-red-50
+                   px-4 text-sm font-semibold text-red-700 transition-colors
+                   hover:bg-red-100 dark:border-red-800/60 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-950/50
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50"
+            @click="$emit('clear-tournament')"
+          >
+            Очистить данные
+          </button>
+          <!-- Инлайн-подтверждение сброса с обратным отсчётом — защита от случайного клика -->
+          <MoleculesDangerConfirmInline
+            v-else
+            :open="true"
+            :seconds-left="clearTournamentSecondsLeft"
+            :busy="clearTournamentBusy"
+            title="Сбросить турнир? Игроки в турнире, команды, таблица и статус матча обнулятся. Список игроков в базе не трогаем."
+            cancel-text="Отмена"
+            confirm-text="Очистить всё"
+            busy-text="Очищаем…"
+            aria-label="Подтверждение полного сброса турнира"
+            @cancel="$emit('cancel-clear-tournament')"
+            @confirm="$emit('confirm-clear-tournament')"
+          />
         </div>
       </Transition>
     </div>
@@ -311,6 +341,7 @@ import { computed } from 'vue'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 import { useTeamColors } from '~/composables/useTeamColors'
 import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
+import MoleculesDangerConfirmInline from '~/components/molecules/DangerConfirmInline.vue'
 
 type Side = 'home' | 'away'
 
@@ -346,11 +377,19 @@ const props = defineProps<{
   finishTournamentStatus: 'idle' | 'loading' | 'success' | 'error'
   finishTournamentError: string | null
   onFinishTournament: () => void
+  // Данные для кнопки «Очистить данные» — управляются родителем.
+  showClearTournamentConfirm: boolean
+  clearTournamentSecondsLeft: number
+  clearTournamentBusy: boolean
 }>()
 
 defineEmits<{
   'update:homeTeam': [value: string]
   'update:awayTeam': [value: string]
+  // Три события для управления сбросом турнира из родителя.
+  'clear-tournament': []
+  'cancel-clear-tournament': []
+  'confirm-clear-tournament': []
 }>()
 
 const { getMatchScorePillClass } = useTeamColors()
