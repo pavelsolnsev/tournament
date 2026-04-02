@@ -11,7 +11,13 @@ function round1(n: number): number {
   return Math.round(n * 10) / 10
 }
 
+// Только администратор может обновлять рейтинги игроков.
 export default defineEventHandler(async (event) => {
+  const session = getCookie(event, 'admin_session')
+  if (session !== 'true') {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
+  }
+
   const body = await readBody<{ updates?: RatingUpdate[] }>(event)
 
   if (!Array.isArray(body?.updates) || body.updates.length === 0) {

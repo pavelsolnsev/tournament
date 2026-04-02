@@ -11,7 +11,13 @@ type FinishTournamentBody = {
 
 // Завершение турнира: сохраняем игроков и команды в одной транзакции.
 // Если что-то упадёт — откатываем всё целиком (данные не запишутся частично).
+// Только администратор может завершить турнир.
 export default defineEventHandler(async (event) => {
+  const session = getCookie(event, 'admin_session')
+  if (session !== 'true') {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
+  }
+
   const body = await readBody<FinishTournamentBody>(event)
 
   // Проверяем входные данные перед тем как открывать транзакцию.

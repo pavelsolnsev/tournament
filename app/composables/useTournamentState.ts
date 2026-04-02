@@ -6,11 +6,13 @@ import type { SavedTournamentContext } from '~/composables/useTournamentWizard'
 // Debounce-задержка: не сохраняем после каждой клавиши — ждём паузы в 800мс.
 const SAVE_DEBOUNCE_MS = 800
 
-let saveTimer: ReturnType<typeof setTimeout> | null = null
+export function useTournamentState() {
+  // saveTimer живёт внутри composable — очищается при unmount компонента.
+  // Раньше был на уровне модуля и утекал между перезагрузками/переходами.
+  let saveTimer: ReturnType<typeof setTimeout> | null = null
 
-// Загружает состояние турнира с сервера.
-function fetchTournamentState() {
-  return useQuery({
+  // Загружаем состояние турнира с сервера.
+  const query = useQuery({
     queryKey: ['tournament-state'],
     queryFn: () => $fetch<{ state: SavedTournamentContext | null }>('/api/tournament/state'),
     // Повторно проверяем состояние каждые 5 секунд — зритель видит изменения быстро.
@@ -18,44 +20,47 @@ function fetchTournamentState() {
     // При возврате на вкладку сразу обновляем — важно если пользователь долго не смотрел.
     refetchOnWindowFocus: true,
   })
-}
 
-// Сохраняет состояние турнира на сервер.
-// Вызывается с debounce, чтобы не перегружать API.
-async function saveTournamentState(state: SavedTournamentContext) {
-  if (saveTimer) clearTimeout(saveTimer)
+  // Очищаем pending-таймер при уничтожении компонента, чтобы не было "ghostwrite" запросов.
+  onUnmounted(() => {
+    if (saveTimer) {
+      clearTimeout(saveTimer)
+      saveTimer = null
+    }
+  })
 
-  saveTimer = setTimeout(async () => {
+  // Сохраняет состояние турнира на сервер.
+  // Вызывается с debounce, чтобы не перегружать API.
+  function saveTournamentState(state: SavedTournamentContext) {
+    if (saveTimer) clearTimeout(saveTimer)
+
+    saveTimer = setTimeout(async () => {
+      try {
+        await $fetch('/api/tournament/state', {
+          method: 'PUT',
+          body: { state },
+        })
+      } catch (err) {
+        console.error('Failed to save tournament state:', err)
+      }
+    }, SAVE_DEBOUNCE_MS)
+  }
+
+  // Немедленно сохраняет состояние (без debounce) — для критических моментов.
+  async function saveTournamentStateNow(state: SavedTournamentContext) {
+    if (saveTimer) {
+      clearTimeout(saveTimer)
+      saveTimer = null
+    }
     try {
       await $fetch('/api/tournament/state', {
         method: 'PUT',
         body: { state },
       })
     } catch (err) {
-      console.error('Failed to save tournament state:', err)
+      console.error('Failed to save tournament state (immediate):', err)
     }
-  }, SAVE_DEBOUNCE_MS)
-}
-
-// Немедленно сохраняет состояние (без debounce) — для критических моментов.
-async function saveTournamentStateNow(state: SavedTournamentContext) {
-  if (saveTimer) {
-    clearTimeout(saveTimer)
-    saveTimer = null
   }
-  try {
-    await $fetch('/api/tournament/state', {
-      method: 'PUT',
-      body: { state },
-    })
-  } catch (err) {
-    console.error('Failed to save tournament state (immediate):', err)
-  }
-}
-
-export function useTournamentState() {
-  // Создаём запрос для загрузки состояния.
-  const query = fetchTournamentState()
 
   return {
     // Текущее состояние, загруженное с сервера.

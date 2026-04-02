@@ -1,4 +1,5 @@
-import { getPool } from '../utils/db'
+import { queryWithRetry } from '../utils/db'
+import { ensureTablesExist } from '../utils/initDb'
 import { normalizePlayerUsername } from '../utils/normalizePlayerUsername'
 
 const EMOJI_REGEX =
@@ -9,7 +10,15 @@ function removeEmoji(text: string | null | undefined): string {
   return text.replace(EMOJI_REGEX, '').trim() || ''
 }
 
+// Только администратор может добавлять игроков в систему.
 export default defineEventHandler(async (event) => {
+  await ensureTablesExist()
+
+  const session = getCookie(event, 'admin_session')
+  if (session !== 'true') {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
+  }
+
   const body = await readBody<{ name?: string; username?: string }>(event)
   const rawName = body?.name
   const rawUsername = body?.username
@@ -27,11 +36,10 @@ export default defineEventHandler(async (event) => {
   const id = Date.now()
 
   try {
-    const pool = getPool()
-    await pool.query(
+    await queryWithRetry(
       `INSERT INTO players (id, name, username, goals, assists, saves, gamesPlayed, wins, draws, losses, rating, mvp, yellow_cards)
        VALUES (?, ?, ?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)`,
-      [id, name, username ?? null]
+      [id, name, username ?? null],
     )
     return { id, name, username }
   } catch (err) {

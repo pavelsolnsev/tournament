@@ -1,9 +1,9 @@
-import { getPool } from '../utils/db'
+import { queryWithRetry } from '../utils/db'
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async () => {
   try {
-    const pool = getPool()
-    const [rows] = await pool.query(
+    // Используем queryWithRetry — переподключается при обрыве соединения с MySQL.
+    const rows = await queryWithRetry<unknown[]>(
       'SELECT id, name, username, photo, goals, assists, saves, gamesPlayed, wins, draws, losses, rating, mvp, yellow_cards FROM players ORDER BY name',
     )
     return Array.isArray(rows) ? rows : []

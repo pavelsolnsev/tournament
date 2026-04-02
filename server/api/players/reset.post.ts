@@ -1,6 +1,12 @@
 import { getPool } from '../../utils/db'
 
-export default defineEventHandler(async () => {
+// Только администратор может сбрасывать статистику — это необратимая операция.
+export default defineEventHandler(async (event) => {
+  const session = getCookie(event, 'admin_session')
+  if (session !== 'true') {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
+  }
+
   try {
     const pool = getPool()
 
