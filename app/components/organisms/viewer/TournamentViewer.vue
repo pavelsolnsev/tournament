@@ -4,33 +4,48 @@
   <div class="flex min-h-full flex-col bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
     <!-- Шапка: absolute + safe-area сверху, не двигает контент -->
     <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)]">
-      <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6 h-14">
-        <div class="min-w-0 flex-1 flex items-center gap-2.5">
-          <div class="min-w-0">
-            <h1 class="truncate text-base font-bold text-slate-800 dark:text-slate-50 sm:text-lg leading-tight">
-              {{ tournamentName || 'Турнир' }}
-            </h1>
-            <p v-if="tournamentDate" class="truncate text-xs text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
-              {{ tournamentDate }}
-            </p>
-          </div>
-
-          <!-- Бейдж статуса — сразу видно идёт ли матч сейчас -->
-          <AtomsMatchStatusBadge
-            v-if="matchStatus"
-            :status="matchStatus"
-            class="shrink-0"
+      <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6 h-14">
+        <!-- Лого снаружи min-w-0 — иначе на узком экране flex сжимает колонку с заголовком и картинка пропадает. -->
+        <!-- Между лого и текстом/бейджем узкий зазор — визуально одна группа. -->
+        <div class="flex min-w-0 min-h-0 flex-1 items-center gap-1 sm:gap-1.5">
+          <img
+            src="/favicon-96x96.png"
+            srcset="/favicon-96x96.png 1x, /icon-192.png 2x"
+            alt=""
+            width="36"
+            height="36"
+            decoding="async"
+            class="h-8 w-8 shrink-0 flex-none object-contain sm:h-9 sm:w-9"
           />
+          <div class="flex min-w-0 min-h-0 flex-1 items-center gap-1.5 sm:gap-2">
+            <!-- Без названия не даём колонке flex-1 — иначе пустое место раздвигает лого и бейдж. -->
+            <div class="min-w-0" :class="tournamentName ? 'flex-1' : 'shrink-0'">
+              <h1 class="truncate text-base font-bold text-slate-800 dark:text-slate-50 sm:text-lg leading-tight">
+                <span v-if="tournamentName">{{ tournamentName }}</span>
+                <span v-else class="sr-only">Турнир</span>
+              </h1>
+              <p v-if="tournamentDate" class="truncate text-xs text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                {{ tournamentDate }}
+              </p>
+            </div>
+
+            <!-- Бейдж статуса — сразу видно идёт ли матч сейчас -->
+            <AtomsMatchStatusBadge
+              v-if="matchStatus"
+              :status="matchStatus"
+              class="shrink-0"
+            />
+          </div>
         </div>
 
-        <!-- Кнопки шапки: переключатель темы + пожелания + войти. -->
-        <div class="flex shrink-0 items-center gap-1">
+        <!-- Кнопки шапки: плотнее иконки, тач-зона у кнопок как была (атомы). -->
+        <div class="flex shrink-0 items-center gap-0.5 sm:gap-1">
           <AtomsFeedbackButton />
           <AtomsThemeToggle />
         <!-- Кнопка «Войти»: спокойная (для владельца), но с нормальной тач-зоной -->
         <button
           type="button"
-          class="inline-flex h-11 items-center gap-2 rounded-xl px-3 text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          class="inline-flex h-11 items-center gap-1 rounded-xl px-2 text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:gap-2 sm:px-3"
           aria-label="Войти как администратор"
           @click="onAdminEnter"
         >

@@ -56,11 +56,12 @@ const props = defineProps<{
   status: MatchStatus
 }>()
 
-// Текст для каждого статуса — понятен зрителю без пояснений.
+// Текст для каждого статуса — коротко, чтобы бейдж не раздувал шапку на телефоне.
 const label = computed(() => {
   if (props.status === 'live') return 'Live'
   if (props.status === 'finished') return 'Завершён'
-  return 'Ожидается'
+  // upcoming: английская подпись в одном стиле с Live.
+  return 'Pending'
 })
 
 // Цветовые классы по статусу — Live красный, finished зелёный, upcoming серый.
