@@ -223,23 +223,23 @@
             <div class="flex flex-col gap-1.5">
               <p class="text-base font-semibold text-slate-700 dark:text-slate-300">Турнир ещё не начался</p>
               <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                Страница обновится автоматически, когда организатор запустит турнир.
+                Обновится после старта турнира организатором.
               </p>
             </div>
 
-            <!-- Что зритель увидит и может делать -->
+            <!-- Что появится на странице — те же пункты, короче формулировки. -->
             <ul class="w-full flex flex-col gap-2 text-left text-sm text-slate-500 dark:text-slate-400">
               <li class="flex items-start gap-2">
                 <span class="shrink-0 mt-0.5" aria-hidden="true">🔴</span>
-                <span>Счёт текущего матча в реальном времени</span>
+                <span>Счёт матча в реальном времени</span>
               </li>
               <li class="flex items-start gap-2">
                 <span class="shrink-0 mt-0.5" aria-hidden="true">📊</span>
-                <span>Турнирная таблица с очками команд</span>
+                <span>Таблица с очками команд</span>
               </li>
               <li class="flex items-start gap-2">
                 <span class="shrink-0 mt-0.5" aria-hidden="true">⚽</span>
-                <span>Результаты всех сыгранных матчей</span>
+                <span>Результаты сыгранных матчей</span>
               </li>
               <li class="flex items-start gap-2">
                 <span class="shrink-0 mt-0.5" aria-hidden="true">🏅</span>
@@ -247,38 +247,31 @@
               </li>
               <li class="flex items-start gap-2">
                 <span class="shrink-0 mt-0.5" aria-hidden="true">🏆</span>
-                <span>Итоги и награды после завершения</span>
+                <span>Итоги и награды после финала</span>
               </li>
 
-              <!-- Разделитель — переход к настройкам интерфейса -->
               <li class="pt-1 border-t border-slate-200 dark:border-slate-700/50" aria-hidden="true" />
 
-              <!-- Переключение темы — иконка луны/солнца как в настоящей кнопке -->
               <li class="flex items-center gap-2">
                 <svg class="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                 </svg>
-                <span>Тёмная и светлая тема — кнопка в шапке справа</span>
+                <span>Светлая и тёмная тема — в шапке справа</span>
               </li>
-
-              <!-- Фидбек — иконка чата как в настоящей кнопке -->
               <li class="flex items-center gap-2">
                 <svg class="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
-                <span>Есть идея или заметили баг — напишите через иконку чата в шапке</span>
+                <span>Идея или баг — через чат в шапке</span>
               </li>
-
-              <!-- Вход для администратора — замок в шапке справа -->
               <li class="flex items-center gap-2">
                 <span class="shrink-0 text-base leading-none" aria-hidden="true">🔐</span>
-                <span>Организатор турнира — кнопка <strong class="font-semibold text-slate-600 dark:text-slate-300">Войти</strong> в шапке справа</span>
+                <span>Организатору — <strong class="font-semibold text-slate-600 dark:text-slate-300">Войти</strong> в шапке справа</span>
               </li>
             </ul>
 
-            <!-- Подсказка для участников — что делать прямо сейчас -->
             <p class="text-xs text-slate-400 dark:text-slate-600">
-              Ждите начала — или нажмите кнопку обновить в шапке.
+              Ждите старта или нажмите «обновить» в шапке.
             </p>
           </div>
         </div>
