@@ -224,26 +224,24 @@ import { TOURNAMENT_STATE_NUXT_KEY, useTournamentState } from '~/composables/use
 
 definePageMeta({ layout: 'landing' })
 
-// Абсолютный адрес страницы на сервере и клиенте — нужен для og:url, canonical и картинки в соцсетях.
+// Абсолютный URL страницы — для og:url и canonical (картинки в шаринге не задаём — только текст).
 const requestURL = useRequestURL()
 const canonicalHref = requestURL.href.split('#')[0]
-const ogImageUrl = `${requestURL.origin}/icon-512.png`
 
-// Мета для поиска и шаринга: описание, Open Graph и Twitter (превью в мессенджерах).
+// Мета для поиска и шаринга: описание и Open Graph/Twitter без og:image — превью в соцсетях текстовое.
 useSeoMeta({
   title: 'РФОИ',
   description:
     'Веб-приложение для футбольных турниров: распределение игроков по командам, матчи и турнирная таблица. Режим администратора и просмотр для зрителей.',
-  ogSiteName: 'Footboal',
-  ogTitle: 'Footboal — турниры, команды и таблица',
+  ogSiteName: 'РФОИ',
+  ogTitle: 'РФОИ — турниры, команды и таблица',
   ogDescription:
     'Составы команд, матчи и турнирная таблица в одном месте — для организатора и зрителей.',
   ogType: 'website',
   ogUrl: canonicalHref,
-  ogImage: ogImageUrl,
   ogLocale: 'ru_RU',
-  twitterCard: 'summary_large_image',
-  twitterTitle: 'Footboal — турниры, команды и таблица',
+  twitterCard: 'summary',
+  twitterTitle: 'РФОИ — турниры, команды и таблица',
   twitterDescription:
     'Составы команд, матчи и турнирная таблица — для организатора и зрителей.',
   // Разрешаем индексацию главной и обход ссылок ботами (если позже закроете сайт — поменяйте на noindex).
