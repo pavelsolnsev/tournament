@@ -9,9 +9,10 @@
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
+      <!-- На телефоне и на десктопе окно по центру экрана (раньше снизу было только на узком экране). -->
       <div
         v-if="isOpen"
-        class="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="feedback-modal-title"
