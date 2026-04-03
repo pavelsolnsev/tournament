@@ -173,7 +173,7 @@
               <div
                 v-if="wizard.step.value !== 2"
                 ref="clearTournamentBottomAnchor"
-                class="mt-8 flex flex-col gap-2 border-t border-slate-200 pt-6 dark:border-slate-700 sm:items-end"
+                class="flex flex-col gap-2 dark:border-slate-700 sm:items-end"
               >
                 <button
                   v-if="!showClearTournamentConfirm"
@@ -320,7 +320,7 @@ const breadcrumbs = [
 ] as const
 
 // Переход на шаг «Турнирная таблица» с немедленным обновлением state у зрителя.
-// Вызывается при клике на кнопку «Турнирная таблица →» — так зритель сразу видит актуальные команды и составы.
+// Вызывается при клике на кнопку «Переход к турниру» — так зритель сразу видит актуальные команды и составы.
 async function goToStandings() {
   wizard.step.value = 2
   // Принудительно инвалидируем кэш state — следующий опрос зрителя вернёт свежие данные.

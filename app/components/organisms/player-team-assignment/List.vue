@@ -1,32 +1,43 @@
-<!-- Компонент PlayerTeamAssignmentList: контейнер, который показывает команды и состав игроков выбранной команды. -->
+<!-- Компонент PlayerTeamAssignmentList: две колонки — список команд слева, состав справа. -->
 <template>
-  <div class="grid min-w-0 gap-4 lg:grid-cols-5">
-    <OrganismsPlayerTeamAssignmentTeamsPanel
-      :new-team-name-value="newTeamNameValue"
-      :all-teams="allTeams"
-      :selected-team-name="selectedTeamName"
-      :team-player-counts="teamPlayerCounts"
-      :is-team-confirmed="isTeamConfirmed"
-      :is-auto-team="isAutoTeam"
-      :get-team-color="getTeamColor"
-      :team-marker="teamMarker"
-      @update:new-team-name="emit('update:newTeamName', $event)"
-      @add-new-team="emit('addNewTeam')"
-      @select-team="selectedTeamName = $event"
-      @confirm-team="emit('confirmTeam', $event)"
-      @unconfirm-team="emit('unconfirmTeam', $event)"
-      @set-team-color="(teamName, colorIndex) => emit('setTeamColor', teamName, colorIndex)"
-      @remove-team="onRemoveTeam($event)"
-    />
+  <!-- На мобиле — стек; на lg — одинаковая высота колонок, слева шире, чтобы имена команд читались. -->
+  <div class="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-stretch">
 
-    <OrganismsPlayerTeamAssignmentRosterPanel
-      :selected-team-name="selectedTeamName"
-      :players="players"
-      :get-team="getTeam"
-      :team-marker="teamMarker"
-      @remove-from-team="emit('removeFromTeam', $event)"
-      @set-team="(playerId, teamName) => emit('setTeam', playerId, teamName)"
-    />
+    <!-- Левая зона: min 22rem, до ~28rem / 36% ширины — раньше w-64 резало названия до «E..» -->
+    <div class="min-w-0 lg:flex lg:min-h-0 lg:w-[36%] lg:max-w-[28rem] lg:min-w-[22rem] lg:shrink-0 lg:flex-col">
+      <OrganismsPlayerTeamAssignmentTeamsPanel
+        class="lg:min-h-0 lg:flex-1"
+        :new-team-name-value="newTeamNameValue"
+        :all-teams="allTeams"
+        :selected-team-name="selectedTeamName"
+        :team-player-counts="teamPlayerCounts"
+        :is-team-confirmed="isTeamConfirmed"
+        :is-auto-team="isAutoTeam"
+        :get-team-color="getTeamColor"
+        :team-marker="teamMarker"
+        @update:new-team-name="emit('update:newTeamName', $event)"
+        @add-new-team="emit('addNewTeam')"
+        @select-team="selectedTeamName = $event"
+        @confirm-team="emit('confirmTeam', $event)"
+        @unconfirm-team="emit('unconfirmTeam', $event)"
+        @set-team-color="(teamName, colorIndex) => emit('setTeamColor', teamName, colorIndex)"
+        @remove-team="onRemoveTeam($event)"
+      />
+    </div>
+
+    <!-- Правая зона: тянется по высоте вместе с левой колонкой -->
+    <div class="min-w-0 flex-1 lg:flex lg:min-h-0 lg:flex-col">
+      <OrganismsPlayerTeamAssignmentRosterPanel
+        class="lg:min-h-0 lg:flex-1"
+        :selected-team-name="selectedTeamName"
+        :players="players"
+        :get-team="getTeam"
+        :team-marker="teamMarker"
+        @remove-from-team="emit('removeFromTeam', $event)"
+        @set-team="(playerId, teamName) => emit('setTeam', playerId, teamName)"
+      />
+    </div>
+
   </div>
 </template>
 

@@ -1,20 +1,11 @@
-<!-- Внутренний компонент: одна строка команды в панели. -->
+<!-- Внутренний компонент: одна строка команды в панели. Выбор строки — на уровне li в TeamsPanel. -->
 <template>
-  <!-- Одна строка: маркер + имя + бейдж | кнопки справа — всё на одной высоте. -->
-  <div class="flex min-h-[2.5rem] items-center gap-2">
-
-    <!-- Левая часть: кнопка выбора команды (маркер + имя + статус) -->
-    <button
-      type="button"
-      class="flex min-w-0 flex-1 items-center gap-2 rounded text-left focus:outline-none"
-      @click="emit('select')"
-    >
-      <!-- Маркер цвета -->
-      <span aria-hidden="true" class="shrink-0 text-base leading-none">{{ teamMarker(name) }}</span>
-
-      <!-- Имя + бейдж «Участвует» в одну строку, без переноса -->
-      <span class="flex min-w-0 items-center gap-1.5">
-        <span class="min-w-0 truncate text-sm font-medium text-slate-800 dark:text-slate-100">{{ name }}</span>
+  <div class="flex min-h-[2.5rem] items-start gap-2 lg:items-center">
+    <!-- Маркер + имя + бейдж: до 2 строк на узкой колонке, без обрезки в одну букву -->
+    <div class="flex min-w-0 flex-1 items-start gap-2 lg:items-center">
+      <span aria-hidden="true" class="shrink-0 pt-0.5 text-base leading-none lg:pt-0">{{ teamMarker(name) }}</span>
+      <span class="flex min-w-0 items-start gap-1.5 lg:items-center">
+        <span class="min-w-0 break-words text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 line-clamp-2">{{ name }}</span>
         <span
           v-if="isTeamConfirmed(name)"
           class="shrink-0 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[11px] leading-none text-emerald-700 dark:text-emerald-300"
@@ -22,35 +13,22 @@
           ✓
         </span>
       </span>
-    </button>
+    </div>
 
-    <!-- Правая часть: счётчик игроков + select цвета + кнопка действия + удалить -->
-    <div class="flex shrink-0 items-center gap-1">
+    <span class="w-6 shrink-0 text-center text-xs tabular-nums text-slate-400 dark:text-slate-500">
+      {{ teamPlayerCounts[name] ?? 0 }}
+    </span>
 
-      <!-- Количество игроков — небольшой текст, не растягивает строку -->
-      <span class="w-6 text-center text-xs tabular-nums text-slate-400 dark:text-slate-500">
-        {{ teamPlayerCounts[name] ?? 0 }}
-      </span>
+    <!-- Клики здесь не должны всплывать до li (выбор команды) -->
+    <div data-team-row-stop class="flex shrink-0 items-center gap-1">
 
-      <!-- Select цвета — компактный, только эмодзи.
-           text-slate-800 на самом select — без этого Safari/Chrome показывает системный серый. -->
-      <select
-        :value="String(getTeamColor(name))"
-        class="h-8 w-10 rounded-lg border border-slate-300 dark:border-slate-700/60 bg-white dark:bg-slate-900/70 text-center text-sm text-slate-800 dark:text-slate-100
-               cursor-pointer transition-colors hover:border-slate-400 dark:hover:border-slate-500
-               focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+      <!-- Выбор цвета (маркер): кастомный список вместо нативного select — единая стилистика с выпадашками матчей. -->
+      <MoleculesDropdownSelect
+        :model-value="getTeamColor(name)"
         title="Цвет команды"
-        @change="emit('set-color', Number(($event.target as HTMLSelectElement).value))"
-      >
-        <option
-          v-for="(m, idx) in teamMarkers"
-          :key="idx"
-          class="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-          :value="String(idx)"
-        >
-          {{ m }}
-        </option>
-      </select>
+        :options="teamMarkers.map((m, idx) => ({ value: idx, label: m }))"
+        @update:model-value="emit('set-color', Number($event))"
+      />
 
       <!-- Подтвердить участие — показывается если команда НЕ подтверждена и есть игроки -->
       <button
@@ -95,8 +73,8 @@
     </div>
   </div>
 
-  <!-- Подтверждение удаления — якорь для прокрутки к кнопкам подтверждения -->
-  <div ref="removeConfirmAnchor">
+  <!-- Подтверждение удаления — внутри li; клики не должны выбирать команду -->
+  <div ref="removeConfirmAnchor" data-team-row-stop>
     <MoleculesConfirmInline
       class="mt-1.5"
       :open="removeConfirmTeamName === name"
@@ -143,7 +121,6 @@ watch(
 )
 
 const emit = defineEmits<{
-  select: []
   confirm: []
   unconfirm: []
   'set-color': [colorIndex: number]

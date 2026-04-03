@@ -1,32 +1,31 @@
 <!-- Компонент StepTeams: шаг распределения выбранных игроков по командам. -->
 <template>
-  <div class="min-w-0">
+  <div class="min-w-0 flex flex-col gap-4">
+
+    <!-- Пустое состояние — нет выбранных игроков -->
     <p
       v-if="selectedPlayers.length === 0"
-      class="rounded-xl bg-slate-800/50 p-4 text-slate-500 text-sm"
+      class="rounded-xl border border-slate-200 dark:border-slate-700/40 bg-slate-50 dark:bg-slate-800/30 p-4 text-slate-500 text-sm"
     >
       Нет выбранных игроков.
       <button
         type="button"
-        class="text-emerald-400 underline transition md:hover:text-emerald-300 focus:outline-none rounded"
+        class="text-emerald-600 dark:text-emerald-400 underline transition hover:text-emerald-700 dark:hover:text-emerald-300 focus:outline-none rounded"
         @click="emit('backToPlayers')"
       >
         Вернуться к выбору игроков
       </button>.
     </p>
-    <template v-else>
-      <p class="text-slate-400 text-sm mb-2">
-        Создайте команды и добавляйте в них игроков.
-      </p>
 
-      <!-- Панель авто-распределения по рейтингу -->
+    <template v-else>
+      <!-- Авто-распределение — компактная верхняя полоса -->
       <MoleculesRatingDistributionControls
         v-model="teamCountForDistribution"
         :free-players="freePlayers"
-        class="mb-3"
         @distribute="onDistribute"
       />
 
+      <!-- Основная зона: команды + состав -->
       <OrganismsPlayerTeamAssignmentList
         :players="selectedPlayers"
         :team-options="teamOptions"
@@ -44,23 +43,21 @@
         @unconfirm-team="emit('unconfirmTeam', $event)"
         @remove-team="emit('removeTeam', $event)"
       />
-      <div class="pt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <button
-          type="button"
-          class="w-full rounded-xl px-4 py-3 font-semibold transition focus:outline-none sm:w-auto sm:min-w-[220px]"
-          :class="confirmedTeamsCount >= 2
-            ? 'bg-emerald-500 text-white dark:text-slate-900 md:hover:bg-emerald-400 active:bg-emerald-600 focus-visible:ring-2 focus-visible:ring-emerald-500/50'
-            : 'border border-slate-300 dark:border-transparent bg-white dark:bg-slate-700 text-slate-400 cursor-not-allowed'"
-          :disabled="confirmedTeamsCount < 2"
-          @click="emit('goToStandings')"
-        >
-          Турнирная таблица →
-        </button>
-        <p v-if="confirmedTeamsCount < 2" class="text-xs text-slate-400 dark:text-slate-500">
-          Нужно минимум две команды-участника.
-        </p>
-      </div>
+
+      <!-- Кнопка перехода к турниру — на всю ширину, активна при 2+ подтверждённых командах -->
+      <button
+        type="button"
+        class="w-full rounded-xl px-5 py-3 text-sm font-semibold transition focus:outline-none"
+        :class="confirmedTeamsCount >= 2
+          ? 'bg-emerald-500 text-white dark:text-slate-900 md:hover:bg-emerald-400 active:bg-emerald-600 focus-visible:ring-2 focus-visible:ring-emerald-500/50'
+          : 'border border-slate-200 dark:border-transparent bg-slate-100 dark:bg-slate-700/50 text-slate-400 cursor-not-allowed'"
+        :disabled="confirmedTeamsCount < 2"
+        @click="emit('goToStandings')"
+      >
+        Переход к турниру
+      </button>
     </template>
+
   </div>
 </template>
 

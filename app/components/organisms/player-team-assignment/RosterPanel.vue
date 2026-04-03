@@ -1,86 +1,100 @@
-<!-- Компонент RosterPanel: состав и свободные игроки на общих атомах списка и полей. -->
+<!-- Компонент RosterPanel: состав выбранной команды и пул свободных игроков. -->
 <template>
-  <AtomsTournamentPanel as="section" root-class="min-w-0 lg:col-span-3">
+  <AtomsTournamentPanel
+    as="section"
+    root-class="min-w-0 lg:flex lg:h-full lg:min-h-0 lg:flex-col"
+  >
 
-    <!-- Пустое состояние — ни одна команда не выбрана -->
-    <AtomsEmptyStateBox v-if="!selectedTeamName" align="center" size="sm" root-class="py-8">
-      ← Выберите команду
+    <!-- Пустое состояние — никакая команда не выбрана -->
+    <AtomsEmptyStateBox
+      v-if="!selectedTeamName"
+      align="center"
+      size="sm"
+      root-class="py-10 lg:flex lg:flex-1 lg:items-center lg:justify-center"
+    >
+      ← Выберите команду слева
     </AtomsEmptyStateBox>
 
     <template v-else>
-      <!-- Заголовок: маркер + название выбранной команды слева, счётчик игроков справа -->
-      <div class="mb-4 flex min-w-0 items-center justify-between gap-3">
-        <p class="min-w-0 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
+      <div class="flex min-h-0 flex-1 flex-col gap-4 lg:min-h-0">
+
+      <!-- Шапка панели: маркер + имя команды + счётчик игроков -->
+      <div class="flex min-w-0 shrink-0 items-center justify-between gap-3">
+        <h2 class="min-w-0 text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100 line-clamp-2 break-words">
           {{ teamMarker(selectedTeamName) }} {{ selectedTeamName }}
-        </p>
-        <span class="shrink-0 rounded-full bg-slate-200 dark:bg-slate-800/60 px-2.5 py-0.5 text-xs text-slate-500 dark:text-slate-400">
-          {{ playersInTeam.length }} / {{ players.length }}
+        </h2>
+        <span class="shrink-0 rounded-full bg-slate-200 dark:bg-slate-700/60 px-2.5 py-0.5 text-xs tabular-nums text-slate-500 dark:text-slate-400">
+          {{ playersInTeam.length }}&thinsp;/&thinsp;{{ players.length }}
         </span>
       </div>
 
-      <!-- Два столбца: «В команде» и «Свободные игроки» -->
-      <div class="grid gap-4 sm:grid-cols-2">
+      <!-- Два столбца: на lg тянутся по высоте, списки скроллятся внутри -->
+      <div class="grid min-h-0 flex-1 gap-3 sm:grid-cols-2 lg:min-h-0">
 
-        <!-- Левый блок: игроки, назначенные в эту команду -->
-        <div class="flex flex-col gap-2 rounded-xl border border-slate-300 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/30 p-3">
-          <div class="flex items-center justify-between gap-2">
-            <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">В команде</h4>
+        <!-- Левый блок: игроки в команде -->
+        <div class="flex min-h-[12rem] flex-col gap-2 lg:min-h-0 lg:h-full">
+          <!-- Заголовок блока с цифрой -->
+          <div class="flex shrink-0 items-center justify-between gap-2 px-0.5">
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">В команде</h3>
             <span class="text-xs tabular-nums text-slate-400 dark:text-slate-500">{{ playersInTeam.length }}</span>
           </div>
 
-          <AtomsPlayerListUl v-if="playersInTeam.length > 0">
-            <MoleculesPlayerListRow
-              v-for="p in playersInTeam"
-              :key="p.id"
-              v-bind="rosterRowBind(p, 'Убрать из команды: ')"
-              action="remove"
-              @activate="emit('removeFromTeam', p.id)"
-            />
-          </AtomsPlayerListUl>
-
-          <!-- Подсказка при пустой команде — приглашение добавить -->
-          <p v-else class="flex-1 rounded-lg bg-slate-100 dark:bg-slate-800/20 px-3 py-4 text-center text-xs text-slate-400 dark:text-slate-500">
-            Добавьте игроков →
-          </p>
+          <!-- Список или подсказка -->
+          <div class="min-h-0 flex-1 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/30 p-2">
+            <AtomsPlayerListUl v-if="playersInTeam.length > 0">
+              <MoleculesPlayerListRow
+                v-for="p in playersInTeam"
+                :key="p.id"
+                v-bind="rosterRowBind(p, 'Убрать из команды: ')"
+                action="remove"
+                @activate="emit('removeFromTeam', p.id)"
+              />
+            </AtomsPlayerListUl>
+            <p v-else class="px-2 py-4 text-center text-xs text-slate-400 dark:text-slate-500">
+              Добавьте игроков
+            </p>
+          </div>
         </div>
 
         <!-- Правый блок: нераспределённые игроки с поиском -->
-        <div class="flex flex-col gap-2 rounded-xl border border-slate-300 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/30 p-3">
-          <div class="flex items-center justify-between gap-2">
-            <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Свободные</h4>
+        <div class="flex min-h-[12rem] flex-col gap-2 lg:min-h-0 lg:h-full">
+          <!-- Заголовок блока с цифрой -->
+          <div class="flex shrink-0 items-center justify-between gap-2 px-0.5">
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Свободные</h3>
             <span class="text-xs tabular-nums text-slate-400 dark:text-slate-500">{{ unassignedPlayers.length }}</span>
           </div>
 
-          <!-- Поиск только когда есть из кого выбирать -->
+          <!-- Поиск — показываем только когда есть кто-то свободный -->
           <AtomsTournamentTextInput
             v-if="unassignedPlayers.length > 0"
             v-model="unassignedSearch"
             variant="search"
             size="xs"
             placeholder="Поиск…"
+            class="shrink-0"
           />
 
-          <AtomsPlayerListUl v-if="filteredUnassignedPlayers.length > 0">
-            <MoleculesPlayerListRow
-              v-for="p in filteredUnassignedPlayers"
-              :key="p.id"
-              v-bind="rosterRowBind(p, 'Добавить в команду: ')"
-              action="add"
-              @activate="emit('setTeam', p.id, selectedTeamName)"
-            />
-          </AtomsPlayerListUl>
-
-          <!-- Пустое состояние: нет результатов поиска -->
-          <p v-else-if="unassignedSearch" class="flex-1 rounded-lg bg-slate-100 dark:bg-slate-800/20 px-3 py-4 text-center text-xs text-slate-400 dark:text-slate-500">
-            Никого не найдено.
-          </p>
-
-          <!-- Пустое состояние: все распределены -->
-          <p v-else class="flex-1 rounded-lg bg-slate-100 dark:bg-slate-800/20 px-3 py-4 text-center text-xs text-slate-400 dark:text-slate-500">
-            Все игроки распределены.
-          </p>
+          <!-- Список свободных или текстовые состояния -->
+          <div class="min-h-0 flex-1 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/30 p-2">
+            <AtomsPlayerListUl v-if="filteredUnassignedPlayers.length > 0">
+              <MoleculesPlayerListRow
+                v-for="p in filteredUnassignedPlayers"
+                :key="p.id"
+                v-bind="rosterRowBind(p, 'Добавить в команду: ')"
+                action="add"
+                @activate="emit('setTeam', p.id, selectedTeamName)"
+              />
+            </AtomsPlayerListUl>
+            <p v-else-if="unassignedSearch" class="px-2 py-4 text-center text-xs text-slate-400 dark:text-slate-500">
+              Никого не найдено
+            </p>
+            <p v-else class="px-2 py-4 text-center text-xs text-slate-400 dark:text-slate-500">
+              Все игроки распределены
+            </p>
+          </div>
         </div>
 
+      </div>
       </div>
     </template>
   </AtomsTournamentPanel>
