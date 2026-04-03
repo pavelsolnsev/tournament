@@ -241,15 +241,14 @@
             Завершить матч
           </button>
 
-          <!-- Подтверждение "Завершить матч" — обёртка для прокрутки к панели подтверждения -->
+          <!-- Подтверждение «Завершить матч» — 3 секунды до кнопки подтверждения, как при сбросе турнира -->
           <div ref="finishConfirmAnchor">
-            <MoleculesConfirmInline
+            <MoleculesDangerConfirmInline
               :open="isActionConfirmOpen && pendingAction === 'finish'"
+              :seconds-left="finishMatchSecondsLeft"
               :busy="false"
-              tone="danger"
               aria-label="Подтверждение завершения матча"
-              title="Завершить матч?"
-              subtitle="Это зафиксирует результат текущего матча."
+              title="Завершить матч? Результат текущего матча будет записан в историю."
               cancel-text="Отмена"
               confirm-text="Завершить"
               @cancel="closeActionConfirm"
@@ -275,7 +274,7 @@
             <span>{{ finishTournamentError }}</span>
           </div>
 
-          <!-- Завершить турнир — активна только когда есть сыгранные матчи -->
+          <!-- Завершить турнир — сначала панель с отсчётом 3 сек, потом сохранение в БД -->
           <button
             type="button"
             class="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border px-4
@@ -287,8 +286,8 @@
               : finishTournamentStatus === 'loading'
                 ? 'border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                 : 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 md:hover:bg-amber-500/20 md:hover:border-amber-500/50'"
-            :disabled="!hasPlayedMatches || finishTournamentStatus === 'loading' || finishTournamentStatus === 'success'"
-            @click="onFinishTournament"
+            :disabled="!hasPlayedMatches || finishTournamentStatus === 'loading' || finishTournamentStatus === 'success' || showFinishTournamentConfirm"
+            @click="openFinishTournamentConfirm"
           >
             <span
               v-if="finishTournamentStatus === 'loading'"
@@ -304,6 +303,21 @@
               : 'Завершить турнир'
             }}</span>
           </button>
+
+          <div ref="finishTournamentConfirmAnchor">
+            <MoleculesDangerConfirmInline
+              :open="showFinishTournamentConfirm"
+              :seconds-left="finishTournamentConfirmSecondsLeft"
+              :busy="finishTournamentStatus === 'loading'"
+              aria-label="Подтверждение завершения турнира"
+              title="Завершить турнир? Статистика игроков и команд будет сохранена в базу."
+              cancel-text="Отмена"
+              confirm-text="Сохранить и завершить"
+              busy-text="Сохранение…"
+              @cancel="closeFinishTournamentConfirm"
+              @confirm="confirmFinishTournament"
+            />
+          </div>
 
           <!-- Разделитель перед опасной зоной сброса -->
           <div class="border-t border-slate-200 dark:border-slate-700/60" />
@@ -345,7 +359,7 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import type { StatKey } from '~/composables/tournament-standings/types'
-import { computed, nextTick, watch } from 'vue'
+import { computed, nextTick, onUnmounted, watch } from 'vue'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 import { useTeamColors } from '~/composables/useTeamColors'
 import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
@@ -438,9 +452,89 @@ const isMgmtOpen = ref(false)
 const pendingAction = ref<'next' | 'finish' | null>(null)
 const isActionConfirmOpen = computed(() => pendingAction.value !== null)
 
+// Отсчёт 3 секунды перед «Завершить матч» — та же идея что у «Очистить данные».
+const finishMatchSecondsLeft = ref(3)
+let finishMatchCountdown: ReturnType<typeof setInterval> | null = null
+
+function startFinishMatchCountdown() {
+  finishMatchSecondsLeft.value = 3
+  if (finishMatchCountdown) clearInterval(finishMatchCountdown)
+  finishMatchCountdown = setInterval(() => {
+    finishMatchSecondsLeft.value -= 1
+    if (finishMatchSecondsLeft.value <= 0 && finishMatchCountdown) {
+      clearInterval(finishMatchCountdown)
+      finishMatchCountdown = null
+    }
+  }, 1000)
+}
+
+function stopFinishMatchCountdown() {
+  if (finishMatchCountdown) {
+    clearInterval(finishMatchCountdown)
+    finishMatchCountdown = null
+  }
+  finishMatchSecondsLeft.value = 3
+}
+
+watch(pendingAction, (action) => {
+  if (action === 'finish') startFinishMatchCountdown()
+  else stopFinishMatchCountdown()
+})
+
+// Подтверждение «Завершить турнир» с отсчётом 3 секунды перед сохранением в БД.
+const showFinishTournamentConfirm = ref(false)
+const finishTournamentConfirmSecondsLeft = ref(3)
+let finishTournamentConfirmCountdown: ReturnType<typeof setInterval> | null = null
+
+function startFinishTournamentConfirmCountdown() {
+  finishTournamentConfirmSecondsLeft.value = 3
+  if (finishTournamentConfirmCountdown) clearInterval(finishTournamentConfirmCountdown)
+  finishTournamentConfirmCountdown = setInterval(() => {
+    finishTournamentConfirmSecondsLeft.value -= 1
+    if (finishTournamentConfirmSecondsLeft.value <= 0 && finishTournamentConfirmCountdown) {
+      clearInterval(finishTournamentConfirmCountdown)
+      finishTournamentConfirmCountdown = null
+    }
+  }, 1000)
+}
+
+function stopFinishTournamentConfirmCountdown() {
+  if (finishTournamentConfirmCountdown) {
+    clearInterval(finishTournamentConfirmCountdown)
+    finishTournamentConfirmCountdown = null
+  }
+  finishTournamentConfirmSecondsLeft.value = 3
+}
+
+function openFinishTournamentConfirm() {
+  showFinishTournamentConfirm.value = true
+  startFinishTournamentConfirmCountdown()
+}
+
+function closeFinishTournamentConfirm() {
+  if (props.finishTournamentStatus === 'loading') return
+  showFinishTournamentConfirm.value = false
+  stopFinishTournamentConfirmCountdown()
+}
+
+function confirmFinishTournament() {
+  props.onFinishTournament()
+}
+
+watch(
+  () => props.finishTournamentStatus,
+  (s) => {
+    if (s === 'success') {
+      showFinishTournamentConfirm.value = false
+      stopFinishTournamentConfirmCountdown()
+    }
+  },
+)
+
 // Якоря под панели подтверждения — после клика прокручиваем, чтобы кнопки были в зоне видимости.
 const nextConfirmAnchor = useTemplateRef<HTMLDivElement>('nextConfirmAnchor')
 const finishConfirmAnchor = useTemplateRef<HTMLDivElement>('finishConfirmAnchor')
+const finishTournamentConfirmAnchor = useTemplateRef<HTMLDivElement>('finishTournamentConfirmAnchor')
 const clearDataConfirmAnchor = useTemplateRef<HTMLDivElement>('clearDataConfirmAnchor')
 const matchCardRef = useTemplateRef<HTMLElement>('matchCardRef')
 
@@ -452,7 +546,8 @@ function scrollConfirmIntoView(el: HTMLElement | null | undefined) {
 }
 
 function closeActionConfirm() {
-  // Закрываем подтверждение, чтобы случайный клик не выполнил действие позже.
+  // Закрываем подтверждение и сбрасываем таймер «Завершить матч».
+  stopFinishMatchCountdown()
   pendingAction.value = null
 }
 
@@ -486,6 +581,19 @@ watch(
   // После отрисовки v-else с ref — иначе якорь ещё null в том же тике.
   { flush: 'post' },
 )
+
+watch(
+  () => showFinishTournamentConfirm.value,
+  (open) => {
+    if (open) scrollConfirmIntoView(finishTournamentConfirmAnchor.value)
+  },
+  { flush: 'post' },
+)
+
+onUnmounted(() => {
+  stopFinishMatchCountdown()
+  stopFinishTournamentConfirmCountdown()
+})
 
 // Только что выбрали вторую команду: сворачиваем «Команды (дом/гость)» и крутим скролл к карточке матча.
 watch(
