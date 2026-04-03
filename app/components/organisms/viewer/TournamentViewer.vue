@@ -29,6 +29,7 @@
               </p>
             </div>
 
+            <!-- Бейдж статуса — сразу видно идёт ли матч сейчас -->
             <AtomsMatchStatusBadge
               v-if="matchStatus"
               :status="matchStatus"

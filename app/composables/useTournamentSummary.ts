@@ -5,7 +5,6 @@ import type { PlayedMatch, PlayerMatchStats } from '~/composables/tournament-sta
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 import { useTeamColors } from '~/composables/useTeamColors'
-import { selectMvp, type MvpCandidate, type MvpTeamStat } from '~/composables/tournament-standings/mvp'
 
 // Один игрок-победитель в категории (может быть несколько при одинаковом показателе).
 export type AwardWinner = {
@@ -53,7 +52,6 @@ export type YellowCardPlayer = {
 
 // Итог турнира — все данные для отображения раздела.
 export type TournamentSummary = {
-  // MVP турнира — максимум один игрок (логика совпадает с selectMvp при завершении турнира).
   mvp: AwardWinner[]
   topScorers: AwardWinner[]
   topAssisters: AwardWinner[]
@@ -160,92 +158,113 @@ function findTeamMvp(
   }, null)
 }
 
-// Считает победы/ничьи/поражения игрока по сыгранным матчам — как в useFinishTournament (для selectMvp).
-function buildPlayerWdlFromMatches(playedMatchesList: PlayedMatch[]) {
-  const playerWDL: Record<number, { wins: number; draws: number; losses: number; games: number }> = {}
-
-  for (const match of playedMatchesList) {
-    const homeWin = match.homeGoals > match.awayGoals
-    const draw = match.homeGoals === match.awayGoals
-
-    for (const playerId of Object.keys(match.homeStats).map(Number)) {
-      if (!playerWDL[playerId]) playerWDL[playerId] = { wins: 0, draws: 0, losses: 0, games: 0 }
-      playerWDL[playerId].games += 1
-      if (homeWin) playerWDL[playerId].wins += 1
-      else if (draw) playerWDL[playerId].draws += 1
-      else playerWDL[playerId].losses += 1
-    }
-
-    for (const playerId of Object.keys(match.awayStats).map(Number)) {
-      if (!playerWDL[playerId]) playerWDL[playerId] = { wins: 0, draws: 0, losses: 0, games: 0 }
-      playerWDL[playerId].games += 1
-      if (!homeWin && !draw) playerWDL[playerId].wins += 1
-      else if (draw) playerWDL[playerId].draws += 1
-      else playerWDL[playerId].losses += 1
-    }
-  }
-
-  return playerWDL
-}
-
-// Один MVP турнира — та же логика, что selectMvp при завершении турнира (один человек, детерминированно).
+// Определяем MVP всего турнира — игрок с лучшей суммарной статистикой.
+// Логика такая же как в useFinishTournament, чтобы не расходиться с реальными данными.
 function findTournamentMvp(
   players: Player[],
   assignmentByPlayerId: Record<number, string>,
   aggregateStats: Record<number, PlayerMatchStats>,
   playerRatingDeltas: Record<number, number>,
   standingsRows: StandingsRow[],
-  playedMatchesList: PlayedMatch[],
   getMarkerByIndex: (i: number) => string,
 ): AwardWinner[] {
   if (players.length === 0) return []
 
-  const playerWDL = buildPlayerWdlFromMatches(playedMatchesList)
+  // Строим карту очков команды для критерия приоритета.
+  const teamPointsMap: Record<string, number> = {}
+  for (const row of standingsRows) {
+    teamPointsMap[row.teamName] = row.points
+  }
 
-  const mvpCandidates: MvpCandidate[] = players.map((p) => {
-    const stats = aggregateStats[p.id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0 }
-    const wdl = playerWDL[p.id] ?? { wins: 0, draws: 0, losses: 0, games: 0 }
+  // Оцениваем каждого игрока.
+  const scored = players.map((p) => {
+    const s = aggregateStats[p.id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0 }
+    const teamName = assignmentByPlayerId[p.id] ?? ''
+    const teamPoints = teamPointsMap[teamName] ?? 0
+    const ratingDelta = playerRatingDeltas[p.id] ?? 0
     return {
-      id: p.id,
-      goals: stats.goals,
-      assists: stats.assists,
-      saves: stats.saves,
-      wins: wdl.wins,
-      yellows: stats.yellows,
-      ratingDelta: playerRatingDeltas[p.id] ?? 0,
-      baseRating: Number(p.rating ?? 0),
+      playerId: p.id,
+      name: displayPlayerLabelWithoutRating(p),
+      photo: p.photo ?? null,
+      teamName,
+      teamMarker: resolveTeamMarker(teamName, standingsRows, getMarkerByIndex),
+      value: s.goals + s.assists,
+      goals: s.goals,
+      assists: s.assists,
+      saves: s.saves,
+      yellows: s.yellows,
+      mark: s.goals + s.assists + s.saves * 0.75,
+      teamPoints,
+      ratingDelta,
     }
   })
 
-  const teamStats: MvpTeamStat[] = standingsRows.map((row) => ({
-    teamName: row.teamName,
-    wins: row.wins,
-    draws: row.draws,
-    goalsFor: row.goalsFor,
-    goalsAgainst: row.goalsAgainst,
-  }))
+  // Находим максимальный балл.
+  const topMark = Math.max(...scored.map((s) => s.mark))
 
-  const winner = selectMvp(mvpCandidates, {
-    assignmentByPlayerId,
-    teamStats,
+  // Если у всех игроков нулевая статистика — выбираем случайного из всех.
+  // MVP должен быть всегда, даже если матчи прошли без голов, пасов и сейвов.
+  if (topMark <= 0) {
+    const fallback = scored[Math.floor(Math.random() * scored.length)]!
+    return [{
+      playerId: fallback.playerId,
+      name: fallback.name,
+      photo: fallback.photo,
+      teamName: fallback.teamName,
+      teamMarker: fallback.teamMarker,
+      value: 0,
+      tournamentStats: { goals: 0, assists: 0, saves: 0, yellows: 0 },
+    }]
+  }
+
+  // Фильтруем кандидатов с максимальным баллом.
+  let topCandidates = scored.filter((s) => s.mark === topMark)
+
+  // Если один — возвращаем сразу.
+  if (topCandidates.length === 1) {
+    const c = topCandidates[0]!
+    return [{
+      playerId: c.playerId,
+      name: c.name,
+      photo: c.photo,
+      teamName: c.teamName,
+      teamMarker: c.teamMarker,
+      value: c.goals,
+      tournamentStats: { goals: c.goals, assists: c.assists, saves: c.saves, yellows: c.yellows },
+    }]
+  }
+
+  // Если несколько — сортируем по дополнительным критериям.
+  topCandidates.sort((a, b) => {
+    if (b.goals !== a.goals) return b.goals - a.goals
+    if (b.teamPoints !== a.teamPoints) return b.teamPoints - a.teamPoints
+    if (b.ratingDelta !== a.ratingDelta) return b.ratingDelta - a.ratingDelta
+    return a.playerId - b.playerId
   })
 
-  if (!winner) return []
+  // Берём лучшего и всех с точно таким же полным набором показателей.
+  const best = topCandidates[0]!
+  const tied = topCandidates.filter(
+    (c) =>
+      c.goals === best.goals &&
+      c.teamPoints === best.teamPoints &&
+      c.ratingDelta === best.ratingDelta,
+  )
 
-  const p = players.find((pl) => pl.id === winner.id)
-  if (!p) return []
-
-  const s = aggregateStats[winner.id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0 }
-  const teamName = assignmentByPlayerId[winner.id] ?? ''
+  // Если несколько игроков с одинаковыми показателями — выбираем случайного.
+  // Так всегда показывается ровно один MVP, даже при полном равенстве.
+  const winner = tied.length === 1
+    ? tied[0]!
+    : tied[Math.floor(Math.random() * tied.length)]!
 
   return [{
-    playerId: winner.id,
-    name: displayPlayerLabelWithoutRating(p),
-    photo: p.photo ?? null,
-    teamName,
-    teamMarker: resolveTeamMarker(teamName, standingsRows, getMarkerByIndex),
-    value: s.goals,
-    tournamentStats: { goals: s.goals, assists: s.assists, saves: s.saves, yellows: s.yellows },
+    playerId: winner.playerId,
+    name: winner.name,
+    photo: winner.photo,
+    teamName: winner.teamName,
+    teamMarker: winner.teamMarker,
+    value: winner.goals,
+    tournamentStats: { goals: winner.goals, assists: winner.assists, saves: winner.saves, yellows: winner.yellows },
   }]
 }
 
@@ -260,7 +279,6 @@ export function useTournamentSummary(params: SummaryParams): TournamentSummary {
     params.aggregatePlayerStats,
     params.playerRatingDeltas,
     params.standingsRows,
-    params.playedMatchesList,
     getMarkerByIndex,
   )
 

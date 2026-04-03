@@ -83,7 +83,8 @@
     <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 2. ИНДИВИДУАЛЬНЫЕ НАГРАДЫ ─────────────────────────── -->
-    <div class="px-4 pt-5 pb-5 sm:px-6">
+    <!-- Показываем только если есть хотя бы один гол, пас, сейв или жёлтая карточка -->
+    <div v-if="hasAnyStats" class="px-4 pt-5 pb-5 sm:px-6">
       <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">🎖️ Индивидуальные награды</p>
 
       <!-- На мобиле — вертикальный стек, на SM+ — три колонки -->
@@ -419,6 +420,15 @@ function rosterPlayersByTeam(teamName: string): Player[] {
 
 // Показываем раздел «Составы» только если переданы игроки.
 const hasRosterData = computed(() => (props.players?.length ?? 0) > 0)
+
+// Блок «Индивидуальные награды» нужен только если хоть у кого-то есть статистика.
+// Если все матчи прошли без голов/пасов/сейвов/карточек — этот блок скрываем.
+const hasAnyStats = computed(() =>
+  props.summary.topScorers.length > 0 ||
+  props.summary.topAssisters.length > 0 ||
+  props.summary.topGoalkeepers.length > 0 ||
+  props.summary.yellowCards.length > 0,
+)
 
 // Склонение: голы.
 function pluralGoals(n: number): string {
