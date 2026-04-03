@@ -172,6 +172,7 @@
                    На шаге 2 (Таблица) кнопка «Очистить данные» перенесена внутрь блока «Управление». -->
               <div
                 v-if="wizard.step.value !== 2"
+                ref="clearTournamentBottomAnchor"
                 class="mt-8 flex flex-col gap-2 border-t border-slate-200 pt-6 dark:border-slate-700 sm:items-end"
               >
                 <button
@@ -236,6 +237,8 @@ onMounted(() => {
   clientReady.value = true
 })
 
+const clearTournamentBottomAnchor = useTemplateRef<HTMLDivElement>('clearTournamentBottomAnchor')
+
 const tournamentState = useTournamentState()
 const wizard = useTournamentWizard({
   serverState: tournamentState.serverState,
@@ -273,6 +276,18 @@ watch(showClearTournamentConfirm, (open) => {
     clearTournamentSeconds.value = 3
   }
 })
+
+// На шагах 0–1 после «Очистить данные» прокручиваем к панели подтверждения внизу страницы.
+watch(
+  showClearTournamentConfirm,
+  (open) => {
+    if (!open || wizard.step.value === 2) return
+    void nextTick(() => {
+      clearTournamentBottomAnchor.value?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+    })
+  },
+  { flush: 'post' },
+)
 
 onUnmounted(() => {
   if (clearTournamentCountdown) clearInterval(clearTournamentCountdown)

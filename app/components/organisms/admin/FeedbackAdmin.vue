@@ -43,29 +43,31 @@
       </button>
     </div>
 
-    <!-- Содержимое: показываем только в раскрытом состоянии. -->
+    <!-- Содержимое: показываем только в раскрытом состоянии; ref — прокрутка к панели после раскрытия. -->
     <div
       v-show="expanded"
       id="feedback-admin-panel"
+      ref="feedbackExpandedPanelRef"
       class="flex flex-col gap-4 p-3 sm:p-4"
       role="region"
       aria-labelledby="feedback-admin-heading"
     >
-      <!-- Подтверждение перед очисткой — рендерим только когда оно открыто. -->
-      <MoleculesDangerConfirmInline
-        v-if="showConfirm"
-        :open="showConfirm"
-        :seconds-left="confirmSeconds"
-        :busy="clearing"
-        title="Удалить все пожелания?"
-        subtitle="Это действие нельзя отменить."
-        cancel-text="Отмена"
-        confirm-text="Удалить всё"
-        busy-text="Удаляем…"
-        aria-label="Подтверждение удаления пожеланий"
-        @cancel="cancelClear"
-        @confirm="confirmClear"
-      />
+      <!-- Подтверждение перед очисткой — якорь для прокрутки с кнопки внизу списка -->
+      <div v-if="showConfirm" ref="feedbackClearConfirmAnchor">
+        <MoleculesDangerConfirmInline
+          :open="showConfirm"
+          :seconds-left="confirmSeconds"
+          :busy="clearing"
+          title="Удалить все пожелания?"
+          subtitle="Это действие нельзя отменить."
+          cancel-text="Отмена"
+          confirm-text="Удалить всё"
+          busy-text="Удаляем…"
+          aria-label="Подтверждение удаления пожеланий"
+          @cancel="cancelClear"
+          @confirm="confirmClear"
+        />
+      </div>
 
       <!-- Ошибка очистки — если что-то пошло не так. -->
       <p v-if="clearError" class="rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-500 dark:text-red-400">
@@ -116,7 +118,9 @@
 </template>
 
 <script setup lang="ts">
+import { nextTick, watch } from 'vue'
 import { useFeedbackAdmin } from '~/composables/useFeedback'
+import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
 
 // Получаем список пожеланий и методы управления из composable.
 // Запрос выполняется только на клиенте — suspense не нужен, используем isLoading.
@@ -124,6 +128,21 @@ const { items, isLoading, clearing, clearError, clearAll } = useFeedbackAdmin()
 
 // Раскрыт ли блок со списком — по умолчанию свёрнут, чтобы не занимать место на шаге «Игроки».
 const expanded = ref(false)
+
+const feedbackExpandedPanelRef = useTemplateRef<HTMLDivElement>('feedbackExpandedPanelRef')
+
+// После раскрытия панели пожеланий прокручиваем к её контенту (v-show, без Transition — через watch).
+watch(
+  expanded,
+  (open) => {
+    if (!open) return
+    void nextTick(() => {
+      const el = feedbackExpandedPanelRef.value
+      if (el) scrollExpandedPanelIntoView(el)
+    })
+  },
+  { flush: 'post' },
+)
 
 // Показывать ли подтверждение удаления.
 const showConfirm = ref(false)
@@ -143,14 +162,24 @@ function startCountdown() {
   }, 1000)
 }
 
-// Показываем подтверждение и запускаем отсчёт.
-watch(showConfirm, (val) => {
-  if (val) startCountdown()
-  else {
-    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null }
-    confirmSeconds.value = 3
-  }
-})
+const feedbackClearConfirmAnchor = useTemplateRef<HTMLDivElement>('feedbackClearConfirmAnchor')
+
+// Подтверждение: отсчёт + прокрутка к панели (кнопка «Очистить историю» внизу списка).
+watch(
+  showConfirm,
+  (val) => {
+    if (val) {
+      startCountdown()
+      void nextTick(() => {
+        feedbackClearConfirmAnchor.value?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+      })
+    } else {
+      if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null }
+      confirmSeconds.value = 3
+    }
+  },
+  { flush: 'post' },
+)
 
 // Отменяем удаление — закрываем подтверждение.
 function cancelClear() {

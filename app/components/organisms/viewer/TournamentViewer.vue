@@ -63,6 +63,7 @@
         leave-active-class="transition-all duration-200 ease-in overflow-hidden"
         leave-from-class="max-h-40 opacity-100"
         leave-to-class="max-h-0 opacity-0"
+        @after-enter="scrollExpandedPanelIntoView"
       >
         <div
           v-if="matchStatus === 'live' && liveHomeTeam && liveAwayTeam"
@@ -259,6 +260,7 @@ import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTeamColors } from '~/composables/useTeamColors'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 import { useTournamentSummary } from '~/composables/useTournamentSummary'
+import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
 
 const props = defineProps<{
   state: SavedTournamentContext | null

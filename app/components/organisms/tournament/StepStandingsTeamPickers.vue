@@ -44,11 +44,12 @@
           leave-active-class="transition-all duration-100 ease-in"
           leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 translate-y-1"
+          @after-enter="onHomeListAfterEnter"
         >
           <ul
             v-if="homeOpen"
             ref="homeListRef"
-            class="fixed z-[100] max-h-[min(70vh,22rem)] overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 py-1 shadow-xl"
+            class="fixed z-[100] min-h-0 touch-manipulation overflow-y-auto overscroll-y-contain rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 py-1 shadow-xl [-webkit-overflow-scrolling:touch]"
             :style="homeListStyle"
             role="listbox"
           >
@@ -127,11 +128,12 @@
           leave-active-class="transition-all duration-100 ease-in"
           leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 translate-y-1"
+          @after-enter="onAwayListAfterEnter"
         >
           <ul
             v-if="awayOpen"
             ref="awayListRef"
-            class="fixed z-[100] max-h-[min(70vh,22rem)] overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 py-1 shadow-xl"
+            class="fixed z-[100] min-h-0 touch-manipulation overflow-y-auto overscroll-y-contain rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 py-1 shadow-xl [-webkit-overflow-scrolling:touch]"
             :style="awayListStyle"
             role="listbox"
           >
@@ -200,31 +202,86 @@ const awayListRef = useTemplateRef<HTMLElement>('awayListRef')
 const homeListStyle = ref<Record<string, string>>({})
 const awayListStyle = ref<Record<string, string>>({})
 
+/** Отступ от краёв экрана — чтобы панель не залезала под вырез / домой. */
+const VIEW_EDGE_PAD = 10
+/** Зазор между кнопкой и списком. */
+const DROPDOWN_GAP_PX = 4
+// Видимая область (Safari с нижней панелью — visualViewport уже меньше innerHeight).
+function visibleBand(): { top: number; bottom: number; height: number } {
+  const vv = window.visualViewport
+  if (!vv) {
+    const h = window.innerHeight
+    return { top: 0, bottom: h, height: h }
+  }
+  const top = vv.offsetTop
+  const height = vv.height
+  return { top, bottom: top + height, height }
+}
+
+/** Потолок высоты списка (~min(70vh, 22rem)), от реальной видимой высоты. */
+function idealDropdownMaxHeightPx(visibleHeight: number): number {
+  return Math.min(visibleHeight * 0.72, 22 * 16)
+}
+
+// Считаем top/bottom + maxHeight так, чтобы панель целиком попадала в видимую полосу экрана.
+function dropdownStyleForTrigger(r: DOMRect): Record<string, string> {
+  const { top: vTop, bottom: vBottom, height: vH } = visibleBand()
+  const spaceBelow = vBottom - r.bottom - DROPDOWN_GAP_PX - VIEW_EDGE_PAD
+  const spaceAbove = r.top - vTop - DROPDOWN_GAP_PX - VIEW_EDGE_PAD
+  const ideal = idealDropdownMaxHeightPx(vH)
+  const openDown = spaceBelow >= spaceAbove
+  const rawMax = openDown ? spaceBelow : spaceAbove
+  const maxH = Math.max(64, Math.min(ideal, Math.max(0, rawMax)))
+  const base = {
+    left: `${r.left}px`,
+    width: `${r.width}px`,
+    maxHeight: `${Math.floor(maxH)}px`,
+  }
+  const ih = window.innerHeight
+  if (openDown) {
+    return {
+      ...base,
+      top: `${r.bottom + DROPDOWN_GAP_PX}px`,
+      bottom: 'auto',
+    }
+  }
+  return {
+    ...base,
+    top: 'auto',
+    bottom: `${ih - r.top + DROPDOWN_GAP_PX}px`,
+  }
+}
+
 function syncHomeListPosition() {
   const btn = homeTriggerRef.value
   if (!btn) return
-  const r = btn.getBoundingClientRect()
-  homeListStyle.value = {
-    top: `${r.bottom + 4}px`,
-    left: `${r.left}px`,
-    width: `${r.width}px`,
-  }
+  homeListStyle.value = dropdownStyleForTrigger(btn.getBoundingClientRect())
 }
 
 function syncAwayListPosition() {
   const btn = awayTriggerRef.value
   if (!btn) return
-  const r = btn.getBoundingClientRect()
-  awayListStyle.value = {
-    top: `${r.bottom + 4}px`,
-    left: `${r.left}px`,
-    width: `${r.width}px`,
-  }
+  awayListStyle.value = dropdownStyleForTrigger(btn.getBoundingClientRect())
 }
 
 function syncOpenDropdownPositions() {
   if (homeOpen.value) syncHomeListPosition()
   if (awayOpen.value) syncAwayListPosition()
+}
+
+// После анимации входа ещё раз меряем — к этому моменту список в DOM, границы окна актуальны.
+function onHomeListAfterEnter() {
+  if (import.meta.server) return
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => syncHomeListPosition())
+  })
+}
+
+function onAwayListAfterEnter() {
+  if (import.meta.server) return
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => syncAwayListPosition())
+  })
 }
 
 watch(homeOpen, (open) => {
@@ -235,17 +292,36 @@ watch(awayOpen, (open) => {
   if (open) homeOpen.value = false
 })
 
-// Пока открыт любой список — слушаем скролл/resize; снимаем только когда оба закрыты.
+// Открыли список: сначала крутим #scroll-root к кнопке (center), потом maxHeight/top/bottom — иначе панель уезжает за экран.
 watch(
   () => homeOpen.value || awayOpen.value,
   async (anyOpen) => {
     await nextTick()
-    syncOpenDropdownPositions()
     window.removeEventListener('scroll', syncOpenDropdownPositions, true)
     window.removeEventListener('resize', syncOpenDropdownPositions)
+    const vv = window.visualViewport
+    if (vv) {
+      vv.removeEventListener('resize', syncOpenDropdownPositions)
+      vv.removeEventListener('scroll', syncOpenDropdownPositions)
+    }
     if (anyOpen) {
       window.addEventListener('scroll', syncOpenDropdownPositions, true)
       window.addEventListener('resize', syncOpenDropdownPositions)
+      if (vv) {
+        vv.addEventListener('resize', syncOpenDropdownPositions)
+        vv.addEventListener('scroll', syncOpenDropdownPositions)
+      }
+      requestAnimationFrame(() => {
+        if (homeOpen.value) {
+          homeTriggerRef.value?.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' })
+        } else if (awayOpen.value) {
+          awayTriggerRef.value?.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' })
+        }
+        requestAnimationFrame(() => {
+          if (homeOpen.value) syncHomeListPosition()
+          else if (awayOpen.value) syncAwayListPosition()
+        })
+      })
     }
   },
 )
@@ -289,5 +365,10 @@ onUnmounted(() => {
   document.removeEventListener('click', onDocClick)
   window.removeEventListener('scroll', syncOpenDropdownPositions, true)
   window.removeEventListener('resize', syncOpenDropdownPositions)
+  const vv = window.visualViewport
+  if (vv) {
+    vv.removeEventListener('resize', syncOpenDropdownPositions)
+    vv.removeEventListener('scroll', syncOpenDropdownPositions)
+  }
 })
 </script>

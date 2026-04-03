@@ -143,6 +143,7 @@
           leave-active-class="transition-all duration-150 ease-in overflow-hidden"
           leave-from-class="max-h-96 opacity-100"
           leave-to-class="max-h-0 opacity-0"
+          @after-enter="scrollExpandedPanelIntoView"
         >
           <OrganismsTournamentPlayedMatchesPlayedMatchDetails
             v-if="openMatch === m.matchNumber && editMatch !== m.matchNumber"
@@ -160,6 +161,7 @@
           leave-active-class="transition-all duration-150 ease-in overflow-hidden"
           leave-from-class="max-h-[800px] opacity-100"
           leave-to-class="max-h-0 opacity-0"
+          @after-enter="scrollExpandedPanelIntoView"
         >
           <OrganismsTournamentPlayedMatchesPlayedMatchEditor
             v-if="!props.readonly && editMatch === m.matchNumber"
@@ -185,6 +187,7 @@ import type { PlayerMatchStats } from '~/composables/tournament-standings/types'
 import { useTeamColors } from '~/composables/useTeamColors'
 import OrganismsTournamentPlayedMatchesPlayedMatchDetails from '~/components/organisms/tournament/played-matches/PlayedMatchDetails.vue'
 import OrganismsTournamentPlayedMatchesPlayedMatchEditor from '~/components/organisms/tournament/played-matches/PlayedMatchEditor.vue'
+import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
 
 type MarkedPlayer = {
   playerId: number

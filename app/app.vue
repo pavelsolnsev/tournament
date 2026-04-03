@@ -11,8 +11,8 @@
   <!-- Светлая тема: bg-slate-50, text-slate-900. Тёмная тема: dark: классы. -->
   <div
     id="scroll-root"
-    class="touch-manipulation bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100 h-full transition-colors duration-200"
-    style="position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:none;scrollbar-gutter:stable;"
+    class="touch-pan-y bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100 h-full transition-colors duration-200"
+    style="position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:none;scrollbar-gutter:stable;touch-action:pan-y;-webkit-overflow-scrolling:touch;"
   >
     <NuxtLayout>
       <NuxtPage />

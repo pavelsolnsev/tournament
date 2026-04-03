@@ -53,6 +53,7 @@
         leave-active-class="transition-all duration-150 ease-in overflow-hidden"
         leave-from-class="max-h-[120rem] opacity-100"
         leave-to-class="max-h-0 opacity-0"
+        @after-enter="scrollExpandedPanelIntoView"
       >
         <div
           v-if="isTeamPickersOpen"
@@ -73,9 +74,10 @@
       </Transition>
     </div>
 
-    <!-- Карточка матча — показывается только когда выбраны обе команды -->
+    <!-- Карточка матча — только при двух командах; ref — прокрутка сюда после выбора пары. -->
     <div
       v-if="homeTeam && awayTeam"
+      ref="matchCardRef"
       class="rounded-2xl border border-slate-300 dark:border-slate-700/60 bg-slate-50 dark:bg-slate-900"
     >
 
@@ -148,20 +150,22 @@
         </button>
       </div>
 
-      <!-- Подтверждение для "Следующий матч" -->
-      <MoleculesConfirmInline
-        class="border-t border-slate-200 dark:border-slate-700/60 px-3 py-2.5"
-        :open="isActionConfirmOpen && pendingAction === 'next'"
-        :busy="false"
-        tone="neutral"
-        aria-label="Подтверждение следующего матча"
-        title="Перейти к следующему матчу?"
-        subtitle="Если матч не завершён, он будет завершён автоматически."
-        cancel-text="Отмена"
-        confirm-text="Да, следующий"
-        @cancel="closeActionConfirm"
-        @confirm="confirmPendingAction"
-      />
+      <!-- Подтверждение для "Следующий матч" — обёртка для scrollIntoView к кнопкам подтверждения -->
+      <div ref="nextConfirmAnchor" class="border-t border-slate-200 dark:border-slate-700/60">
+        <MoleculesConfirmInline
+          class="px-3 py-2.5"
+          :open="isActionConfirmOpen && pendingAction === 'next'"
+          :busy="false"
+          tone="neutral"
+          aria-label="Подтверждение следующего матча"
+          title="Перейти к следующему матчу?"
+          subtitle="Если матч не завершён, он будет завершён автоматически."
+          cancel-text="Отмена"
+          confirm-text="Да, следующий"
+          @cancel="closeActionConfirm"
+          @confirm="confirmPendingAction"
+        />
+      </div>
 
       <!-- Подсказка когда все пары сыграли -->
       <p
@@ -215,6 +219,7 @@
         leave-active-class="transition-all duration-150 ease-in overflow-hidden"
         leave-from-class="max-h-[32rem] opacity-100"
         leave-to-class="max-h-0 opacity-0"
+        @after-enter="scrollExpandedPanelIntoView"
       >
         <div
           v-if="isMgmtOpen"
@@ -236,19 +241,21 @@
             Завершить матч
           </button>
 
-          <!-- Подтверждение "Завершить матч" -->
-          <MoleculesConfirmInline
-            :open="isActionConfirmOpen && pendingAction === 'finish'"
-            :busy="false"
-            tone="danger"
-            aria-label="Подтверждение завершения матча"
-            title="Завершить матч?"
-            subtitle="Это зафиксирует результат текущего матча."
-            cancel-text="Отмена"
-            confirm-text="Завершить"
-            @cancel="closeActionConfirm"
-            @confirm="confirmPendingAction"
-          />
+          <!-- Подтверждение "Завершить матч" — обёртка для прокрутки к панели подтверждения -->
+          <div ref="finishConfirmAnchor">
+            <MoleculesConfirmInline
+              :open="isActionConfirmOpen && pendingAction === 'finish'"
+              :busy="false"
+              tone="danger"
+              aria-label="Подтверждение завершения матча"
+              title="Завершить матч?"
+              subtitle="Это зафиксирует результат текущего матча."
+              cancel-text="Отмена"
+              confirm-text="Завершить"
+              @cancel="closeActionConfirm"
+              @confirm="confirmPendingAction"
+            />
+          </div>
 
           <div class="border-t border-slate-200 dark:border-slate-700/60" />
 
@@ -313,20 +320,21 @@
           >
             Очистить данные
           </button>
-          <!-- Инлайн-подтверждение сброса с обратным отсчётом — защита от случайного клика -->
-          <MoleculesDangerConfirmInline
-            v-else
-            :open="true"
-            :seconds-left="clearTournamentSecondsLeft"
-            :busy="clearTournamentBusy"
-            title="Сбросить турнир? Игроки в турнире, команды, таблица и статус матча обнулятся. Список игроков в базе не трогаем."
-            cancel-text="Отмена"
-            confirm-text="Очистить всё"
-            busy-text="Очищаем…"
-            aria-label="Подтверждение полного сброса турнира"
-            @cancel="$emit('cancel-clear-tournament')"
-            @confirm="$emit('confirm-clear-tournament')"
-          />
+          <!-- Инлайн-подтверждение сброса — обёртка для прокрутки к отсчёту и кнопкам -->
+          <div v-else ref="clearDataConfirmAnchor">
+            <MoleculesDangerConfirmInline
+              :open="true"
+              :seconds-left="clearTournamentSecondsLeft"
+              :busy="clearTournamentBusy"
+              title="Сбросить турнир? Игроки в турнире, команды, таблица и статус матча обнулятся. Список игроков в базе не трогаем."
+              cancel-text="Отмена"
+              confirm-text="Очистить всё"
+              busy-text="Очищаем…"
+              aria-label="Подтверждение полного сброса турнира"
+              @cancel="$emit('cancel-clear-tournament')"
+              @confirm="$emit('confirm-clear-tournament')"
+            />
+          </div>
         </div>
       </Transition>
     </div>
@@ -337,11 +345,12 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import type { StatKey } from '~/composables/tournament-standings/types'
-import { computed } from 'vue'
+import { computed, nextTick, watch } from 'vue'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 import { useTeamColors } from '~/composables/useTeamColors'
 import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
 import MoleculesDangerConfirmInline from '~/components/molecules/DangerConfirmInline.vue'
+import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
 
 type Side = 'home' | 'away'
 
@@ -420,14 +429,28 @@ const isMgmtOpen = ref(false)
 const pendingAction = ref<'next' | 'finish' | null>(null)
 const isActionConfirmOpen = computed(() => pendingAction.value !== null)
 
+// Якоря под панели подтверждения — после клика прокручиваем, чтобы кнопки были в зоне видимости.
+const nextConfirmAnchor = useTemplateRef<HTMLDivElement>('nextConfirmAnchor')
+const finishConfirmAnchor = useTemplateRef<HTMLDivElement>('finishConfirmAnchor')
+const clearDataConfirmAnchor = useTemplateRef<HTMLDivElement>('clearDataConfirmAnchor')
+const matchCardRef = useTemplateRef<HTMLElement>('matchCardRef')
+
+function scrollConfirmIntoView(el: HTMLElement | null | undefined) {
+  // Ждём кадр: v-if внутри Confirm отрисовал панель, иначе scroll может не попасть в нужную высоту.
+  void nextTick(() => {
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+  })
+}
+
 function closeActionConfirm() {
   // Закрываем подтверждение, чтобы случайный клик не выполнил действие позже.
   pendingAction.value = null
 }
 
 function openActionConfirm(action: 'next' | 'finish') {
-  // Защита от случайного нажатия: подтверждение активируется через 2 секунды.
   pendingAction.value = action
+  const el = action === 'next' ? nextConfirmAnchor.value : finishConfirmAnchor.value
+  scrollConfirmIntoView(el)
 }
 
 function confirmPendingAction() {
@@ -443,4 +466,30 @@ function confirmPendingAction() {
     props.goToNextMatch()
   }
 }
+
+// «Очистить данные» открывает подтверждение в родителе — прокручиваем к красной панели.
+watch(
+  () => props.showClearTournamentConfirm,
+  (open) => {
+    if (!open) return
+    scrollConfirmIntoView(clearDataConfirmAnchor.value)
+  },
+  // После отрисовки v-else с ref — иначе якорь ещё null в том же тике.
+  { flush: 'post' },
+)
+
+// Только что выбрали вторую команду: сворачиваем «Команды (дом/гость)» и крутим скролл к карточке матча.
+watch(
+  () => [props.homeTeam, props.awayTeam] as const,
+  async ([home, away], prevPair) => {
+    const both = !!(home && away)
+    const hadBothBefore = !!(prevPair?.[0] && prevPair?.[1])
+    if (!both || hadBothBefore) return
+    isTeamPickersOpen.value = false
+    await nextTick()
+    const el = matchCardRef.value
+    if (el) scrollExpandedPanelIntoView(el)
+  },
+  { flush: 'post' },
+)
 </script>

@@ -2,3 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Мобильные браузеры (особенно Safari): без двойного тапа для зума и без pinch на странице. */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    /* Двойной тап не увеличивает страницу — WebKit ждёт «клик» только один раз. */
+    touch-action: manipulation;
+  }
+
+  /* Скролл только здесь: вертикальный pan, без pinch-zoom на самом контейнере. */
+  #scroll-root {
+    touch-action: pan-y;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* iOS Safari: при font-size < 16px на input зумит при фокусе — убираем этот зум. */
+  @media (max-width: 640px) {
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+    select,
+    textarea {
+      font-size: 1rem;
+    }
+  }
+}
+

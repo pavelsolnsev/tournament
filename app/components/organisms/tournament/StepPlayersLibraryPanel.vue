@@ -71,7 +71,7 @@
     </p>
 
     <!-- Reset только на lg+: на телефоне кнопку не показываем — реже случайное нажатие. -->
-    <div class="mt-6 hidden flex-col items-center lg:flex">
+    <div ref="resetConfirmAnchor" class="mt-6 hidden flex-col items-center lg:flex">
       <button
         type="button"
         class="inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-300 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-40"
@@ -100,7 +100,7 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
-import { ref } from 'vue'
+import { nextTick, ref, useTemplateRef } from 'vue'
 import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
 import MoleculesDangerConfirmInline from '~/components/molecules/DangerConfirmInline.vue'
 
@@ -137,6 +137,8 @@ function libraryPlayerRowBind(p: Player) {
 
 const resetting = ref(false)
 const resetError = ref('')
+
+const resetConfirmAnchor = useTemplateRef<HTMLDivElement>('resetConfirmAnchor')
 
 const isResetConfirmOpen = ref(false)
 const resetConfirmSecondsLeft = ref(0)
@@ -196,6 +198,11 @@ function openResetConfirm() {
       resetConfirmIntervalId.value = null
     }
   }, 1000)
+
+  // Прокручиваем к панели подтверждения — на больших экранах блок с Reset внизу панели.
+  void nextTick(() => {
+    resetConfirmAnchor.value?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+  })
 }
 
 async function confirmResetPlayers() {

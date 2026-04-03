@@ -81,6 +81,7 @@
           leave-active-class="transition-all duration-100 ease-in"
           leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 -translate-y-1"
+          @after-enter="scrollExpandedPanelIntoView"
         >
           <div
             v-if="isActivePlayer(side, p.id)"
@@ -144,6 +145,7 @@
 import type { Player } from '~/types/tournament'
 import type { StatKey } from '~/composables/tournament-standings/types'
 import { playerLabelRatingParts } from '~/composables/usePlayerDisplay'
+import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
 
 type Side = 'home' | 'away'
 // Сторона матча: домашняя или гостевая.

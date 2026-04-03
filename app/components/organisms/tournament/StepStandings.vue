@@ -57,6 +57,7 @@
         leave-active-class="transition-all duration-150 ease-in overflow-hidden"
         leave-from-class="max-h-[120rem] opacity-100"
         leave-to-class="max-h-0 opacity-0"
+        @after-enter="scrollExpandedPanelIntoView"
       >
         <div
           v-if="isStandingsBlockOpen"
@@ -123,6 +124,7 @@
         leave-active-class="transition-all duration-150 ease-in overflow-hidden"
         leave-from-class="max-h-[120rem] opacity-100"
         leave-to-class="max-h-0 opacity-0"
+        @after-enter="scrollExpandedPanelIntoView"
       >
         <div
           v-if="isRosterTotalsOpen"
@@ -199,6 +201,7 @@
           leave-active-class="transition-all duration-150 ease-in overflow-hidden"
           leave-from-class="max-h-[120rem] opacity-100"
           leave-to-class="max-h-0 opacity-0"
+          @after-enter="scrollExpandedPanelIntoView"
         >
           <div
             v-if="isPlayedMatchesOpen"
@@ -270,6 +273,7 @@ import { useTournamentStandingsRefactored } from '~/composables/useTournamentSta
 import { useFinishTournament } from '~/composables/useFinishTournament'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 import { TOURNAMENT_STATE_NUXT_KEY } from '~/composables/useTournamentState'
+import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
 
 // Этот шаг показывает матчи и турнирную таблицу.
 const props = defineProps<{

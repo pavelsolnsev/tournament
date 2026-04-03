@@ -95,26 +95,29 @@
     </div>
   </div>
 
-  <!-- Подтверждение удаления — появляется под строкой -->
-  <MoleculesConfirmInline
-    class="mt-1.5"
-    :open="removeConfirmTeamName === name"
-    :busy="false"
-    tone="danger"
-    aria-label="Подтверждение удаления команды"
-    title="Удалить команду?"
-    :subtitle="`Команда «${name}» будет удалена.`"
-    cancel-text="Отмена"
-    confirm-text="Удалить"
-    @cancel="emit('cancel-remove')"
-    @confirm="emit('confirm-remove')"
-  />
+  <!-- Подтверждение удаления — якорь для прокрутки к кнопкам подтверждения -->
+  <div ref="removeConfirmAnchor">
+    <MoleculesConfirmInline
+      class="mt-1.5"
+      :open="removeConfirmTeamName === name"
+      :busy="false"
+      tone="danger"
+      aria-label="Подтверждение удаления команды"
+      title="Удалить команду?"
+      :subtitle="`Команда «${name}» будет удалена.`"
+      cancel-text="Отмена"
+      confirm-text="Удалить"
+      @cancel="emit('cancel-remove')"
+      @confirm="emit('confirm-remove')"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
+import { nextTick, watch } from 'vue'
 import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
 
-defineProps<{
+const props = defineProps<{
   name: string
   selectedTeamName: string
   teamPlayerCounts: Record<string, number>
@@ -124,6 +127,20 @@ defineProps<{
   teamMarkers: readonly string[]
   removeConfirmTeamName: string | null
 }>()
+
+const removeConfirmAnchor = useTemplateRef<HTMLDivElement>('removeConfirmAnchor')
+
+// Когда открыто подтверждение удаления именно этой строки — прокручиваем к панели.
+watch(
+  () => props.removeConfirmTeamName,
+  (v) => {
+    if (v !== props.name) return
+    void nextTick(() => {
+      removeConfirmAnchor.value?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+    })
+  },
+  { flush: 'post' },
+)
 
 const emit = defineEmits<{
   select: []
