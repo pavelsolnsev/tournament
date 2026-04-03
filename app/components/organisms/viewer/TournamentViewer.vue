@@ -40,6 +40,29 @@
 
         <!-- Кнопки шапки: плотнее иконки, тач-зона у кнопок как была (атомы). -->
         <div class="flex shrink-0 items-center gap-0.5 sm:gap-1">
+          <!-- Кнопка обновить — зритель может вручную получить свежие данные в любой момент. -->
+          <button
+            type="button"
+            class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+            :class="isRefreshing && 'pointer-events-none'"
+            aria-label="Обновить"
+            @click="handleRefresh"
+          >
+            <svg
+              class="h-5 w-5 transition-transform duration-500"
+              :class="isRefreshing && 'animate-spin'"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+              <path d="M21 3v5h-5" />
+            </svg>
+          </button>
           <AtomsFeedbackButton />
           <AtomsThemeToggle />
         <!-- Кнопка «Войти»: спокойная (для владельца), но с нормальной тач-зоной -->
@@ -223,7 +246,8 @@
           />
         </div>
 
-        <!-- Таблица зрителя — показывается во время турнира -->
+        <!-- Таблица зрителя — показывается во время турнира.
+             Пропы clearTournament* обязательны в StepStandings, в readonly-режиме не используются — передаём заглушки. -->
         <OrganismsTournamentStepStandings
           v-else-if="hasViewerData"
           :key="snapshotKey"
@@ -235,6 +259,9 @@
           :assignment-by-player-id="assignmentByPlayerId"
           :initial-snapshot="initialSnapshot"
           :readonly="true"
+          :show-clear-tournament-confirm="false"
+          :clear-tournament-seconds-left="0"
+          :clear-tournament-busy="false"
           @update:snapshot="onViewerSnapshotUpdate"
           @tournament-finished="onViewerTournamentFinished"
         />
@@ -265,6 +292,7 @@ import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView
 const props = defineProps<{
   state: SavedTournamentContext | null
   players: Player[]
+  onRefresh: () => void
 }>()
 
 const showLoginModal = ref(false)
@@ -274,6 +302,21 @@ function onAdminEnter() {
   // Если сессия уже есть — входим сразу, без пароля.
   if (restoreSession()) return
   showLoginModal.value = true
+}
+
+// Крутим иконку пока идёт запрос — даём зрителю визуальный отклик.
+const isRefreshing = ref(false)
+
+async function handleRefresh() {
+  if (isRefreshing.value) return
+  isRefreshing.value = true
+  try {
+    await props.onRefresh()
+  } finally {
+    // Минимум 600мс анимации — иначе иконка мигает и не успевает прокрутиться.
+    await new Promise((r) => setTimeout(r, 600))
+    isRefreshing.value = false
+  }
 }
 
 const tournamentName = computed(() => props.state?.tournamentName ?? '')

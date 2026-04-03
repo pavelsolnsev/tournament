@@ -5,12 +5,9 @@ import type { SavedTournamentContext } from '~/composables/useTournamentWizard'
 // Debounce-задержка: не сохраняем после каждой клавиши — ждём паузы в 800мс.
 const SAVE_DEBOUNCE_MS = 800
 
-// Интервал поллинга в live-режиме — каждые 15 секунд.
-const STATE_REFETCH_LIVE_MS = 15_000
-
-// Интервал поллинга когда матч ещё не начат или уже завершён.
-// Реже, чтобы не нагружать сервер, но зритель всё равно получит переход в live.
-const STATE_REFETCH_IDLE_MS = 10_000
+// Поллинг запускается только после того как турнир запущен (state не null и не finished).
+// До нажатия кнопки «Переход к турниру» поллинга нет — зритель сам обновил страницу и увидел данные.
+const STATE_REFETCH_ACTIVE_MS = 15_000
 
 /** Ключ Nuxt useFetch / refreshNuxtData — один и тот же, чтобы принудительное обновление попадало в тот же кэш. */
 export const TOURNAMENT_STATE_NUXT_KEY = 'tournament-state'
@@ -33,34 +30,47 @@ export function useTournamentState() {
 
   const serverState = computed(() => data.value?.state ?? null)
 
-  // Постоянный поллинг на клиенте — зритель всегда получает актуальный state.
-  // В live — каждые 15 с, в остальных статусах — каждые 10 с (реже, но переход upcoming→live не пропустим).
   let pollTimer: ReturnType<typeof setInterval> | null = null
 
-  function startPoll() {
-    if (pollTimer) clearInterval(pollTimer)
-    const interval = serverState.value?.matchStatus === 'live'
-      ? STATE_REFETCH_LIVE_MS
-      : STATE_REFETCH_IDLE_MS
+  function stopPoll() {
+    // Останавливаем таймер, чтобы не делать лишних запросов.
+    if (pollTimer) {
+      clearInterval(pollTimer)
+      pollTimer = null
+    }
+  }
+
+  function startPoll(interval: number) {
+    // Чистим старый таймер — не запускаем двойной поллинг.
+    stopPoll()
     pollTimer = setInterval(() => {
       void refresh()
     }, interval)
   }
 
+  function syncPoll() {
+    // Поллинг только когда идёт live-матч — зритель видит изменения счёта и статистики в реальном времени.
+    // upcoming / finished / null — поллинга нет, данные не меняются часто или страница только что открыта.
+    if (serverState.value?.matchStatus === 'live') {
+      startPoll(STATE_REFETCH_ACTIVE_MS)
+    } else {
+      stopPoll()
+    }
+  }
+
   if (import.meta.client) {
     onMounted(() => {
-      // Запускаем поллинг сразу при монтировании — не ждём live.
-      startPoll()
+      // immediate: true — запускаем поллинг сразу при монтировании с нужным интервалом.
+      watch(
+        () => serverState.value?.matchStatus ?? null,
+        () => syncPoll(),
+        { immediate: true },
+      )
 
-      // Когда статус меняется (например upcoming → live) — перезапускаем таймер с нужным интервалом.
-      watch(() => serverState.value?.matchStatus, () => {
-        startPoll()
-      })
-
-      // При возврате на вкладку — немедленный refresh + перезапуск таймера.
+      // При возврате на вкладку — немедленный refresh + пересинхронизация таймера.
       const onFocus = () => {
         void refresh()
-        startPoll()
+        syncPoll()
       }
       window.addEventListener('focus', onFocus)
       onUnmounted(() => window.removeEventListener('focus', onFocus))
@@ -68,10 +78,7 @@ export function useTournamentState() {
   }
 
   onUnmounted(() => {
-    if (pollTimer) {
-      clearInterval(pollTimer)
-      pollTimer = null
-    }
+    stopPoll()
     if (saveTimer) {
       clearTimeout(saveTimer)
       saveTimer = null

@@ -209,6 +209,7 @@
         v-else
         :state="viewerState"
         :players="allPlayers"
+        :on-refresh="tournamentState.refresh"
       />
     </template>
 
