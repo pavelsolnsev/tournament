@@ -45,17 +45,28 @@
       />
 
       <!-- Кнопка перехода к турниру — на всю ширину, активна при 2+ подтверждённых командах -->
-      <button
-        type="button"
-        class="w-full rounded-xl px-5 py-3 text-sm font-semibold transition focus:outline-none"
-        :class="confirmedTeamsCount >= 2
-          ? 'bg-emerald-500 text-white dark:text-slate-900 md:hover:bg-emerald-400 active:bg-emerald-600 focus-visible:ring-2 focus-visible:ring-emerald-500/50'
-          : 'border border-slate-200 dark:border-transparent bg-slate-100 dark:bg-slate-700/50 text-slate-400 cursor-not-allowed'"
-        :disabled="confirmedTeamsCount < 2"
-        @click="emit('goToStandings')"
-      >
-        Переход к турниру
-      </button>
+      <div class="flex flex-col gap-1.5">
+        <button
+          type="button"
+          class="w-full rounded-xl px-5 py-3 text-sm font-semibold transition focus:outline-none"
+          :class="confirmedTeamsCount >= 2
+            ? 'bg-emerald-500 text-white dark:text-slate-900 md:hover:bg-emerald-400 active:bg-emerald-600 focus-visible:ring-2 focus-visible:ring-emerald-500/50'
+            : 'border border-slate-200 dark:border-transparent bg-slate-100 dark:bg-slate-700/50 text-slate-400 cursor-not-allowed'"
+          :disabled="confirmedTeamsCount < 2"
+          @click="emit('goToStandings')"
+        >
+          Переход к турниру
+        </button>
+        <!-- Подсказка: показываем только когда кнопка задизейблена — объясняем что нужно сделать -->
+        <p
+          v-if="confirmedTeamsCount < 2"
+          class="text-center text-xs text-slate-400 dark:text-slate-500"
+        >
+          Подтвердите минимум 2 команды чтобы начать турнир
+          <span v-if="confirmedTeamsCount === 1">(ещё одну)</span>
+          <span v-else-if="confirmedTeamsCount === 0">(пока ни одной)</span>
+        </p>
+      </div>
     </template>
 
   </div>

@@ -61,7 +61,6 @@
           >
             <OrganismsPlayerTeamAssignmentTeamRowContent
               :name="name"
-              :selected-team-name="selectedTeamName"
               :team-player-counts="teamPlayerCounts"
               :is-team-confirmed="isTeamConfirmed"
               :get-team-color="getTeamColor"
@@ -103,7 +102,6 @@
         >
           <OrganismsPlayerTeamAssignmentTeamRowContent
             :name="name"
-            :selected-team-name="selectedTeamName"
             :team-player-counts="teamPlayerCounts"
             :is-team-confirmed="isTeamConfirmed"
             :get-team-color="getTeamColor"

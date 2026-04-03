@@ -216,16 +216,70 @@
           v-if="!hasViewerData"
           class="flex flex-col items-center justify-center"
         >
-          <div class="flex w-full max-w-sm flex-col items-center gap-4 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/60 px-6 py-16 text-center">
-            <svg class="h-10 w-10 text-slate-300 dark:text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-              <path d="M2 12h20" />
-            </svg>
-            <div>
-              <p class="font-medium text-slate-500 dark:text-slate-400">Турнир ещё не начался</p>
-              <p class="mt-1 text-sm text-slate-400 dark:text-slate-600">Данные появятся здесь, когда администратор запустит турнир.</p>
+          <div class="flex w-full max-w-sm flex-col items-center gap-6 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/60 px-6 py-12 text-center">
+            <!-- Иконка футбольного мяча -->
+            <span class="text-5xl" aria-hidden="true">⚽</span>
+
+            <div class="flex flex-col gap-1.5">
+              <p class="text-base font-semibold text-slate-700 dark:text-slate-300">Турнир ещё не начался</p>
+              <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                Страница обновится автоматически, когда организатор запустит турнир.
+              </p>
             </div>
+
+            <!-- Что зритель увидит и может делать -->
+            <ul class="w-full flex flex-col gap-2 text-left text-sm text-slate-500 dark:text-slate-400">
+              <li class="flex items-start gap-2">
+                <span class="shrink-0 mt-0.5" aria-hidden="true">🔴</span>
+                <span>Счёт текущего матча в реальном времени</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="shrink-0 mt-0.5" aria-hidden="true">📊</span>
+                <span>Турнирная таблица с очками команд</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="shrink-0 mt-0.5" aria-hidden="true">⚽</span>
+                <span>Результаты всех сыгранных матчей</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="shrink-0 mt-0.5" aria-hidden="true">🏅</span>
+                <span>Составы и статистика игроков</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="shrink-0 mt-0.5" aria-hidden="true">🏆</span>
+                <span>Итоги и награды после завершения</span>
+              </li>
+
+              <!-- Разделитель — переход к настройкам интерфейса -->
+              <li class="pt-1 border-t border-slate-200 dark:border-slate-700/50" aria-hidden="true" />
+
+              <!-- Переключение темы — иконка луны/солнца как в настоящей кнопке -->
+              <li class="flex items-center gap-2">
+                <svg class="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+                <span>Тёмная и светлая тема — кнопка в шапке справа</span>
+              </li>
+
+              <!-- Фидбек — иконка чата как в настоящей кнопке -->
+              <li class="flex items-center gap-2">
+                <svg class="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                <span>Есть идея или заметили баг — напишите через иконку чата в шапке</span>
+              </li>
+
+              <!-- Вход для администратора — замок в шапке справа -->
+              <li class="flex items-center gap-2">
+                <span class="shrink-0 text-base leading-none" aria-hidden="true">🔐</span>
+                <span>Организатор турнира — кнопка <strong class="font-semibold text-slate-600 dark:text-slate-300">Войти</strong> в шапке справа</span>
+              </li>
+            </ul>
+
+            <!-- Подсказка для участников — что делать прямо сейчас -->
+            <p class="text-xs text-slate-400 dark:text-slate-600">
+              Ждите начала — или нажмите кнопку обновить в шапке.
+            </p>
           </div>
         </div>
 

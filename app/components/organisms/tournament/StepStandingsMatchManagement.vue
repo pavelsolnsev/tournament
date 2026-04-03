@@ -159,7 +159,7 @@
           tone="neutral"
           aria-label="Подтверждение следующего матча"
           title="Перейти к следующему матчу?"
-          subtitle="Если матч не завершён, он будет завершён автоматически."
+          :subtitle="nextMatchConfirmSubtitle"
           cancel-text="Отмена"
           confirm-text="Да, следующий"
           @cancel="closeActionConfirm"
@@ -413,6 +413,15 @@ const boardScorePillClass = computed(() =>
     (name) => props.effectiveTeamColors[name] ?? 0,
   ),
 )
+
+// Подпись в диалоге «Следующий матч»: предупреждаем о счёте 0:0 чтобы не записать пустой матч случайно.
+const nextMatchConfirmSubtitle = computed(() => {
+  const isZeroZero = props.homeGoals === 0 && props.awayGoals === 0
+  if (isZeroZero) {
+    return `Внимание: счёт ${props.homeGoals}:${props.awayGoals}. Матч будет записан с нулевым счётом.`
+  }
+  return 'Текущий матч будет завершён и записан в историю.'
+})
 
 const uid = useId?.() ?? Math.random().toString(36).slice(2)
 

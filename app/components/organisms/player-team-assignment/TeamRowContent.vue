@@ -97,7 +97,6 @@ import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
 
 const props = defineProps<{
   name: string
-  selectedTeamName: string
   teamPlayerCounts: Record<string, number>
   isTeamConfirmed: (name: string) => boolean
   getTeamColor: (teamName: string) => number

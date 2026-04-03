@@ -96,8 +96,8 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     const list = availablePlayers.value
     const term = playerSearch.value.trim().toLowerCase()
 
-    // Чтобы не делать фильтрацию по коротким строкам, ждём 3+ символа.
-    if (term.length < 3) return list
+    // Показываем все доступные игроки при пустом запросе, фильтруем от 1 символа.
+    if (term.length < 1) return list
 
     // Убираем ведущие @, чтобы поиск работал и по username.
     const normalized = term.replace(/^@/, '')
