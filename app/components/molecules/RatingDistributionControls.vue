@@ -11,12 +11,12 @@
       <span class="text-sm font-medium text-slate-600 dark:text-slate-300">
         <template v-if="freePlayers.length > 0">
           Свободные игроки
-          <span class="ml-1 rounded bg-slate-200 dark:bg-slate-700/80 px-1.5 py-0.5 text-xs tabular-nums text-slate-500 dark:text-slate-400">
+          <span class="ml-1 rounded bg-slate-200 dark:bg-slate-700/80 px-1.5 py-0.5 text-xs tabular-nums text-slate-600 dark:text-slate-400">
             {{ freePlayers.length }}
           </span>
         </template>
         <template v-else>
-          <span class="text-slate-400 dark:text-slate-500">Все игроки распределены</span>
+          <span class="text-slate-600 dark:text-slate-500">Все игроки распределены</span>
         </template>
       </span>
 
@@ -36,7 +36,7 @@
           </span>
           <span
             v-if="p.rating != null"
-            class="shrink-0 text-[11px] tabular-nums text-slate-400 dark:text-slate-500"
+            class="shrink-0 text-[11px] tabular-nums text-slate-600 dark:text-slate-500"
           >
             {{ ratingTierEmoji(Math.round(p.rating)) }} {{ Math.round(p.rating) }}
           </span>
@@ -95,7 +95,7 @@
             {{ n }}
           </span>
           <!-- ~N игр/к — не переносится, уменьшается вместе с экраном -->
-          <span class="mt-0.5 text-[11px] font-normal text-slate-500">
+          <span class="mt-0.5 text-[11px] font-normal text-slate-600 dark:text-slate-400">
             ~{{ Math.ceil(freePlayers.length / n) }}&nbsp;игр/к
           </span>
         </button>
@@ -105,7 +105,7 @@
       <div class="flex flex-col gap-2 sm:flex-row">
         <button
           type="button"
-          class="min-h-[2.75rem] flex-1 rounded-xl border border-slate-300 dark:border-slate-700/60 px-4 text-sm font-medium text-slate-500 dark:text-slate-400
+          class="min-h-[2.75rem] flex-1 rounded-xl border border-slate-300 dark:border-slate-700/60 px-4 text-sm font-medium text-slate-600 dark:text-slate-400
                  transition-colors md:hover:border-slate-400 dark:md:hover:border-slate-600 md:hover:text-slate-700 dark:md:hover:text-slate-200
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
           @click="open = false"

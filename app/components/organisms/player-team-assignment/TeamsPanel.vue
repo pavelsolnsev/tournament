@@ -7,10 +7,10 @@
 
     <!-- Заголовок секции + счётчик команд -->
     <div class="flex shrink-0 items-center justify-between gap-2">
-      <h2 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Команды</h2>
+      <h2 class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">Команды</h2>
       <span
         v-if="allTeams.length > 0"
-        class="rounded-full bg-slate-200 dark:bg-slate-700/60 px-2 py-0.5 text-xs tabular-nums text-slate-500 dark:text-slate-400"
+        class="rounded-full bg-slate-200 dark:bg-slate-700/60 px-2 py-0.5 text-xs tabular-nums text-slate-600 dark:text-slate-400"
       >
         {{ allTeams.length }}
       </span>
@@ -46,7 +46,7 @@
 
       <!-- Авто-команды: созданы кнопкой «По рейтингу» -->
       <template v-if="autoTeams.length > 0">
-        <p class="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+        <p class="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-500">
           <span aria-hidden="true">⚡</span> По рейтингу
         </p>
         <ul class="space-y-1" role="list">

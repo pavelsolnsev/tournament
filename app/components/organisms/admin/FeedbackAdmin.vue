@@ -16,7 +16,7 @@
       >
         <!-- Шеврон в одной линии с заголовком — не по центру многострочного inline-текста. -->
         <svg
-          class="h-5 w-5 shrink-0 self-center text-slate-500 transition-transform duration-200 dark:text-slate-400"
+          class="h-5 w-5 shrink-0 self-center text-slate-600 transition-transform duration-200 dark:text-slate-400"
           :class="expanded && 'rotate-180'"
           viewBox="0 0 24 24"
           fill="none"
@@ -75,7 +75,7 @@
       </p>
 
       <!-- Загрузка — спиннер пока данные ещё не пришли. -->
-      <div v-if="isLoading" class="flex items-center gap-3 py-2 text-sm text-slate-400 dark:text-slate-500">
+      <div v-if="isLoading" class="flex items-center gap-3 py-2 text-sm text-slate-600 dark:text-slate-500">
         <span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-slate-300 dark:border-slate-700 border-t-emerald-500" aria-hidden="true" />
         Загружаем пожелания…
       </div>
@@ -95,7 +95,7 @@
           <p class="text-sm text-slate-800 dark:text-slate-100 whitespace-pre-wrap break-words">
             {{ item.text }}
           </p>
-          <p class="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+          <p class="mt-1.5 text-xs text-slate-600 dark:text-slate-500">
             {{ formatDate(item.created_at) }}
           </p>
         </li>

@@ -24,7 +24,7 @@
                 <span v-if="tournamentName">{{ tournamentName }}</span>
                 <span v-else class="sr-only">Турнир</span>
               </h1>
-              <p v-if="tournamentDate" class="truncate text-xs text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+              <p v-if="tournamentDate" class="truncate text-xs text-slate-600 dark:text-slate-400 leading-tight mt-0.5">
                 {{ tournamentDate }}
               </p>
             </div>
@@ -43,7 +43,7 @@
           <!-- Кнопка обновить — зритель может вручную получить свежие данные в любой момент. -->
           <button
             type="button"
-            class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+            class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
             :class="isRefreshing && 'pointer-events-none'"
             aria-label="Обновить"
             @click="handleRefresh"
@@ -68,7 +68,7 @@
         <!-- Кнопка «Войти»: спокойная (для владельца), но с нормальной тач-зоной -->
         <button
           type="button"
-          class="inline-flex h-11 items-center gap-1 rounded-xl px-2 text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:gap-2 sm:px-3"
+          class="inline-flex h-11 items-center gap-1 rounded-xl px-2 text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:gap-2 sm:px-3"
           aria-label="Войти как администратор"
           @click="onAdminEnter"
         >
@@ -153,7 +153,7 @@
                     <!-- Чип "+N" — показываем если игрок свёрнут и есть скрытые бейджи -->
                     <span
                       v-if="row.badges.length > MAX_VISIBLE_BADGES && !expandedPlayerIds.has(row.playerId)"
-                      class="inline-flex items-center rounded-md px-1 py-0.5 text-[10px] font-semibold leading-none bg-slate-200/80 text-slate-500 dark:bg-slate-700/80 dark:text-slate-400 transition-opacity"
+                      class="inline-flex items-center rounded-md px-1 py-0.5 text-[10px] font-semibold leading-none bg-slate-200/80 text-slate-600 dark:bg-slate-700/80 dark:text-slate-400 transition-opacity"
                     >+{{ row.badges.length - MAX_VISIBLE_BADGES }}</span>
                   </div>
                 </div>
@@ -172,7 +172,7 @@
                     <!-- Чип "+N" (зеркально — слева от бейджей) если игрок свёрнут -->
                     <span
                       v-if="row.badges.length > MAX_VISIBLE_BADGES && !expandedPlayerIds.has(row.playerId)"
-                      class="inline-flex items-center rounded-md px-1 py-0.5 text-[10px] font-semibold leading-none bg-slate-200/80 text-slate-500 dark:bg-slate-700/80 dark:text-slate-400 transition-opacity"
+                      class="inline-flex items-center rounded-md px-1 py-0.5 text-[10px] font-semibold leading-none bg-slate-200/80 text-slate-600 dark:bg-slate-700/80 dark:text-slate-400 transition-opacity"
                     >+{{ row.badges.length - MAX_VISIBLE_BADGES }}</span>
                     <span
                       v-for="badge in row.badges.slice(0, visibleBadgeCount(row.playerId, row.badges.length))"
@@ -222,13 +222,13 @@
 
             <div class="flex flex-col gap-1.5">
               <p class="text-base font-semibold text-slate-700 dark:text-slate-300">Турнир ещё не начался</p>
-              <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                 Обновится после старта турнира организатором.
               </p>
             </div>
 
             <!-- Что появится на странице — те же пункты, короче формулировки. -->
-            <ul class="w-full flex flex-col gap-2 text-left text-sm text-slate-500 dark:text-slate-400">
+            <ul class="w-full flex flex-col gap-2 text-left text-sm text-slate-600 dark:text-slate-400">
               <li class="flex items-start gap-2">
                 <span class="shrink-0 mt-0.5" aria-hidden="true">🔴</span>
                 <span>Счёт матча в реальном времени</span>
@@ -253,13 +253,13 @@
               <li class="pt-1 border-t border-slate-200 dark:border-slate-700/50" aria-hidden="true" />
 
               <li class="flex items-center gap-2">
-                <svg class="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <svg class="h-4 w-4 shrink-0 text-slate-600 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                 </svg>
                 <span>Светлая и тёмная тема — в шапке справа</span>
               </li>
               <li class="flex items-center gap-2">
-                <svg class="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <svg class="h-4 w-4 shrink-0 text-slate-600 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
                 <span>Идея или баг — через чат в шапке</span>
@@ -439,7 +439,7 @@ const liveAwayScore = computed(() => {
 const liveScorePillClass = computed(() => {
   const h = liveHomeTeam.value
   const a = liveAwayTeam.value
-  if (!h || !a) return 'bg-slate-200 text-slate-500 ring-slate-300 dark:bg-slate-800/90 dark:text-slate-400 dark:ring-slate-600/40'
+  if (!h || !a) return 'bg-slate-200 text-slate-600 ring-slate-300 dark:bg-slate-800/90 dark:text-slate-400 dark:ring-slate-600/40'
   return getMatchScorePillClass(
     liveHomeScore.value,
     liveAwayScore.value,

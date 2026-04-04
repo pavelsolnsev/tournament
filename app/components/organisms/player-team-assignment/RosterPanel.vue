@@ -23,7 +23,7 @@
         <h2 class="min-w-0 text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100 line-clamp-2 break-words">
           {{ teamMarker(selectedTeamName) }} {{ selectedTeamName }}
         </h2>
-        <span class="shrink-0 rounded-full bg-slate-200 dark:bg-slate-700/60 px-2.5 py-0.5 text-xs tabular-nums text-slate-500 dark:text-slate-400">
+        <span class="shrink-0 rounded-full bg-slate-200 dark:bg-slate-700/60 px-2.5 py-0.5 text-xs tabular-nums text-slate-600 dark:text-slate-400">
           {{ playersInTeam.length }}&thinsp;/&thinsp;{{ players.length }}
         </span>
       </div>
@@ -35,8 +35,8 @@
         <div class="flex min-h-[12rem] flex-col gap-2 lg:min-h-0 lg:h-full">
           <!-- Заголовок блока с цифрой -->
           <div class="flex shrink-0 items-center justify-between gap-2 px-0.5">
-            <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">В команде</h3>
-            <span class="text-xs tabular-nums text-slate-400 dark:text-slate-500">{{ playersInTeam.length }}</span>
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">В команде</h3>
+            <span class="text-xs tabular-nums text-slate-600 dark:text-slate-500">{{ playersInTeam.length }}</span>
           </div>
 
           <!-- Список или подсказка -->
@@ -50,7 +50,7 @@
                 @activate="emit('removeFromTeam', p.id)"
               />
             </AtomsPlayerListUl>
-            <p v-else class="px-2 py-4 text-center text-xs text-slate-400 dark:text-slate-500">
+            <p v-else class="px-2 py-4 text-center text-xs text-slate-600 dark:text-slate-500">
               Добавьте игроков
             </p>
           </div>
@@ -60,8 +60,8 @@
         <div class="flex min-h-[12rem] flex-col gap-2 lg:min-h-0 lg:h-full">
           <!-- Заголовок блока с цифрой -->
           <div class="flex shrink-0 items-center justify-between gap-2 px-0.5">
-            <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Свободные</h3>
-            <span class="text-xs tabular-nums text-slate-400 dark:text-slate-500">{{ unassignedPlayers.length }}</span>
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">Свободные</h3>
+            <span class="text-xs tabular-nums text-slate-600 dark:text-slate-500">{{ unassignedPlayers.length }}</span>
           </div>
 
           <!-- Поиск — показываем только когда есть кто-то свободный -->
@@ -85,10 +85,10 @@
                 @activate="emit('setTeam', p.id, selectedTeamName)"
               />
             </AtomsPlayerListUl>
-            <p v-else-if="unassignedSearch" class="px-2 py-4 text-center text-xs text-slate-400 dark:text-slate-500">
+            <p v-else-if="unassignedSearch" class="px-2 py-4 text-center text-xs text-slate-600 dark:text-slate-500">
               Никого не найдено
             </p>
-            <p v-else class="px-2 py-4 text-center text-xs text-slate-400 dark:text-slate-500">
+            <p v-else class="px-2 py-4 text-center text-xs text-slate-600 dark:text-slate-500">
               Все игроки распределены
             </p>
           </div>

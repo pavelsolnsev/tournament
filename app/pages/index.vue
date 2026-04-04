@@ -35,7 +35,7 @@
 
           <!-- flex-1 растягивает main; pt — отступ под абсолютный header. Контент идёт сверху. -->
           <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]">
-            <div v-if="!wizard.stateRestored.value" class="flex items-center gap-3 py-8 text-sm text-slate-500 dark:text-slate-400">
+            <div v-if="!wizard.stateRestored.value" class="flex items-center gap-3 py-8 text-sm text-slate-600 dark:text-slate-400">
               <div class="h-9 w-9 shrink-0 animate-spin rounded-full border-2 border-slate-300 dark:border-slate-700 border-t-emerald-500" />
               <span>Загружаем…</span>
             </div>
@@ -61,7 +61,7 @@
                       v-if="crumb.step < wizard.step.value"
                       type="button"
                       class="inline-flex items-center rounded-lg px-2 py-1 text-sm font-medium
-                             text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-700 dark:hover:text-slate-200
+                             text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-700 dark:hover:text-slate-200
                              focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
                       @click="wizard.step.value = crumb.step as 0 | 1 | 2"
                     >
@@ -90,7 +90,7 @@
                   <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-xl ring-1 ring-emerald-500/30">🏆</span>
                   <div>
                     <p class="font-bold text-emerald-700 dark:text-emerald-300">Турнир завершён!</p>
-                    <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Зрители видят итоги. Когда будете готовы — запустите новый турнир.</p>
+                    <p class="mt-0.5 text-sm text-slate-600 dark:text-slate-400">Зрители видят итоги. Когда будете готовы — запустите новый турнир.</p>
                   </div>
                 </div>
                 <button

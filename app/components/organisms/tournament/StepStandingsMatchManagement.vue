@@ -3,7 +3,7 @@
   <div class="flex flex-col gap-4">
 
     <!-- Заголовок секции — единый стиль с остальными заголовками сайта -->
-    <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+    <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-400">
       Управление матчем
     </h3>
 
@@ -26,7 +26,7 @@
           Команды (дом/гость)
           <span
             class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-            :class="isTeamPickersOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-800/80 text-slate-500'"
+            :class="isTeamPickersOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'"
           >
             {{ isTeamPickersOpen ? 'Открыт' : 'Скрыт' }}
           </span>
@@ -170,7 +170,7 @@
       <!-- Подсказка когда все пары сыграли -->
       <p
         v-if="!hasNextMatch"
-        class="px-4 pb-3 text-[11px] text-slate-400 dark:text-slate-500"
+        class="px-4 pb-3 text-[11px] text-slate-600 dark:text-slate-500"
       >
         Все пары команд уже сыграли между собой.
       </p>
@@ -192,7 +192,7 @@
           Управление
           <span
             class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-            :class="isMgmtOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-800/80 text-slate-500'"
+            :class="isMgmtOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'"
           >
             {{ isMgmtOpen ? 'Открыт' : 'Скрыт' }}
           </span>
@@ -284,7 +284,7 @@
             :class="finishTournamentStatus === 'success'
               ? 'border-emerald-600/40 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
               : finishTournamentStatus === 'loading'
-                ? 'border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                ? 'border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                 : 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 md:hover:bg-amber-500/20 md:hover:border-amber-500/50'"
             :disabled="!hasPlayedMatches || finishTournamentStatus === 'loading' || finishTournamentStatus === 'success' || showFinishTournamentConfirm"
             @click="openFinishTournamentConfirm"

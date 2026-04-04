@@ -3,7 +3,7 @@
   <section class="min-w-0 space-y-3">
 
     <div v-if="showHeading">
-      <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+      <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-400">
         Составы и статистика
       </h3>
       <p class="mt-0.5 text-xs text-slate-400 dark:text-slate-600">

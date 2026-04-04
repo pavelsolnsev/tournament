@@ -21,14 +21,14 @@
             Таблица
             <span
               class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-              :class="isStandingsBlockOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500'"
+              :class="isStandingsBlockOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'"
             >
               {{ isStandingsBlockOpen ? 'Открыт' : 'Скрыт' }}
             </span>
           </span>
           <span
             v-if="tournamentName || tournamentDate"
-            class="mt-0.5 block truncate text-xs text-slate-400 dark:text-slate-500"
+            class="mt-0.5 block truncate text-xs text-slate-600 dark:text-slate-500"
           >
             <span v-if="tournamentName">{{ tournamentName }}</span>
             <span v-if="tournamentName && tournamentDate"> · </span>
@@ -97,7 +97,7 @@
           Составы
           <span
             class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-            :class="isRosterTotalsOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500'"
+            :class="isRosterTotalsOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'"
           >
             {{ isRosterTotalsOpen ? 'Открыт' : 'Скрыт' }}
           </span>
@@ -166,7 +166,7 @@
             Результаты
             <span
               class="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-              :class="isPlayedMatchesOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500'"
+              :class="isPlayedMatchesOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'"
             >
               {{ isPlayedMatchesOpen ? 'Открыт' : 'Скрыт' }}
             </span>
@@ -174,7 +174,7 @@
           <div class="flex shrink-0 items-center gap-2">
             <span
               v-if="playedMatchesList.length > 0"
-              class="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400"
+              class="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-600 dark:text-slate-400"
             >
               {{ playedMatchesList.length }}
             </span>

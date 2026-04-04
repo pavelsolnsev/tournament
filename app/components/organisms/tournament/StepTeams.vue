@@ -5,7 +5,7 @@
     <!-- Пустое состояние — нет выбранных игроков -->
     <p
       v-if="selectedPlayers.length === 0"
-      class="rounded-xl border border-slate-200 dark:border-slate-700/40 bg-slate-50 dark:bg-slate-800/30 p-4 text-slate-500 text-sm"
+      class="rounded-xl border border-slate-200 dark:border-slate-700/40 bg-slate-50 dark:bg-slate-800/30 p-4 text-sm text-slate-600 dark:text-slate-400"
     >
       Нет выбранных игроков.
       <button
@@ -60,7 +60,7 @@
         <!-- Подсказка: показываем только когда кнопка задизейблена — объясняем что нужно сделать -->
         <p
           v-if="confirmedTeamsCount < 2"
-          class="text-center text-xs text-slate-400 dark:text-slate-500"
+          class="text-center text-xs text-slate-600 dark:text-slate-500"
         >
           Подтвердите минимум 2 команды чтобы начать турнир
           <span v-if="confirmedTeamsCount === 1">(ещё одну)</span>

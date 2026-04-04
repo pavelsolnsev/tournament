@@ -1,10 +1,10 @@
 <!-- Компонент AvailablePlayersList: тот же набор атомов, что в мастере турнира. -->
 <template>
   <AtomsTournamentPanel root-class="min-w-0">
-    <p v-if="!players?.length" class="text-slate-500 text-xs">
+    <p v-if="!players?.length" class="text-xs text-slate-600 dark:text-slate-400">
       Нет игроков в базе. Добавьте выше.
     </p>
-    <p v-else-if="allSelected" class="text-slate-500 text-xs">
+    <p v-else-if="allSelected" class="text-xs text-slate-600 dark:text-slate-400">
       Все игроки уже выбраны.
     </p>
     <div v-else class="space-y-3">
@@ -18,7 +18,7 @@
         />
       </MoleculesFieldBlock>
 
-      <p v-if="filteredPlayers.length === 0" class="text-slate-500 text-xs">
+      <p v-if="filteredPlayers.length === 0" class="text-xs text-slate-600 dark:text-slate-400">
         По этому запросу игроков не найдено.
       </p>
       <AtomsPlayerListUl v-else>
@@ -30,7 +30,7 @@
           @activate="emit('select', p.id)"
         />
       </AtomsPlayerListUl>
-      <p class="text-slate-500 text-xs">
+      <p class="text-xs text-slate-600 dark:text-slate-400">
         Клик по строке добавляет игрока в турнир.
       </p>
     </div>

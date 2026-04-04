@@ -15,7 +15,7 @@
       </span>
     </div>
 
-    <span class="w-6 shrink-0 text-center text-xs tabular-nums text-slate-400 dark:text-slate-500">
+    <span class="w-6 shrink-0 text-center text-xs tabular-nums text-slate-600 dark:text-slate-500">
       {{ teamPlayerCounts[name] ?? 0 }}
     </span>
 
@@ -47,7 +47,7 @@
       <button
         v-else-if="isTeamConfirmed(name)"
         type="button"
-        class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700/40 text-sm font-medium text-slate-500 dark:text-slate-400
+        class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700/40 text-sm font-medium text-slate-600 dark:text-slate-400
                transition-colors md:hover:bg-slate-300 dark:md:hover:bg-slate-700/60 md:hover:text-slate-700 dark:md:hover:text-slate-200
                focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
         title="Убрать из участников"

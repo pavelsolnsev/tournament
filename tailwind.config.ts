@@ -20,6 +20,14 @@ export default {
       transitionProperty: {
         colors: 'color, background-color, border-color, text-decoration-color, fill, stroke',
       },
+      // Светлая тема: только slate 50–200 (холст и разделители). 300+ не трогаем — иначе меняются dark:border-slate-500, dark:text-slate-500 и т.д.
+      colors: {
+        slate: {
+          50: '#f2f5f8',
+          100: '#e6eaef',
+          200: '#d5dce5',
+        },
+      },
     },
   },
   plugins: [],

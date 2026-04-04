@@ -31,7 +31,7 @@
     <span
       v-if="action !== 'none'"
       class="shrink-0 select-none text-xs leading-none"
-      :class="action === 'add' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'"
+      :class="action === 'add' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-500'"
       aria-hidden="true"
     >
       {{ action === 'add' ? '+' : '×' }}

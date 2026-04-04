@@ -5,7 +5,7 @@
       <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-50">
         Турнирная таблица
       </h1>
-      <p class="text-slate-500 dark:text-slate-400 text-sm mb-4">
+      <p class="text-slate-600 dark:text-slate-400 text-sm mb-4">
         <span v-if="tournamentName" class="truncate">{{ tournamentName }}</span>
         <span v-if="tournamentName && tournamentDate"> · </span>
         <span v-if="tournamentDate">{{ tournamentDate }}</span>

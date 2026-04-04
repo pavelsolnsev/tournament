@@ -3,7 +3,7 @@
   <AtomsTournamentPanel as="section" root-class="lg:col-span-3">
     <!-- Сначала добавление игрока, ниже поиск по списку — так порядок действий сверху вниз. -->
     <form class="flex w-full min-w-0 flex-col gap-2" @submit.prevent="onCreatePlayer">
-      <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Новый игрок</p>
+      <p class="text-xs font-medium text-slate-600 dark:text-slate-400">Новый игрок</p>
 
       <AtomsTournamentTextInput
         v-model="newName"
@@ -51,10 +51,10 @@
     <!-- Разделитель между поиском и списком -->
     <div class="border-t border-slate-300 dark:border-slate-700/40" />
 
-    <p v-if="!players?.length" class="text-slate-500 text-xs">
+    <p v-if="!players?.length" class="text-xs text-slate-600 dark:text-slate-400">
       Нет игроков в базе.
     </p>
-    <p v-else-if="availablePlayers.length === 0" class="text-slate-500 text-xs">
+    <p v-else-if="availablePlayers.length === 0" class="text-xs text-slate-600 dark:text-slate-400">
       Все игроки уже выбраны.
     </p>
     <AtomsPlayerListUl v-else>
@@ -66,7 +66,7 @@
         @activate="emit('selectPlayer', p.id)"
       />
     </AtomsPlayerListUl>
-    <p v-if="filteredAvailablePlayers.length === 0 && availablePlayers.length > 0" class="text-slate-500 text-xs">
+    <p v-if="filteredAvailablePlayers.length === 0 && availablePlayers.length > 0" class="text-xs text-slate-600 dark:text-slate-400">
       Ничего не найдено.
     </p>
 
@@ -74,7 +74,7 @@
     <div ref="resetConfirmAnchor" class="mt-6 hidden flex-col items-center lg:flex">
       <button
         type="button"
-        class="inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-300 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-40"
+        class="inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-800 dark:hover:text-slate-300 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-40"
         :disabled="resetting"
         @click="openResetConfirm"
       >

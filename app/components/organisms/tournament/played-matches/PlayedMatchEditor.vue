@@ -7,7 +7,7 @@
         {{ match.homeTeam }}
       </span>
       <div class="flex shrink-0 flex-col items-center gap-0.5">
-        <span class="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-600">Счёт</span>
+        <span class="text-[10px] uppercase tracking-widest text-slate-600 dark:text-slate-600">Счёт</span>
         <span
           class="rounded-md px-2 py-0.5 font-mono text-lg font-bold tabular-nums ring-1"
           :class="draftScorePillClass"
@@ -59,7 +59,7 @@
               </div>
               <svg
                 class="h-4 w-4 shrink-0 transition-transform duration-150"
-                :class="openEditPlayer === editPlayerKey('home', p.id) ? 'rotate-180 text-slate-500 dark:text-slate-400' : 'text-slate-500 dark:text-slate-600'"
+                :class="openEditPlayer === editPlayerKey('home', p.id) ? 'rotate-180 text-slate-600 dark:text-slate-400' : 'text-slate-600 dark:text-slate-600'"
                 viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
               >
                 <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
@@ -135,7 +135,7 @@
               </div>
               <svg
                 class="h-4 w-4 shrink-0 transition-transform duration-150"
-                :class="openEditPlayer === editPlayerKey('away', p.id) ? 'rotate-180 text-slate-500 dark:text-slate-400' : 'text-slate-500 dark:text-slate-600'"
+                :class="openEditPlayer === editPlayerKey('away', p.id) ? 'rotate-180 text-slate-600 dark:text-slate-400' : 'text-slate-600 dark:text-slate-600'"
                 viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
               >
                 <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />

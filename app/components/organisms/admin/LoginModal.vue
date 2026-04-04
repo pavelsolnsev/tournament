@@ -21,13 +21,13 @@
         </button>
       </div>
 
-      <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+      <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
         Введите пароль администратора. При первом входе он станет мастер-паролем.
       </p>
 
       <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
         <div class="flex flex-col gap-2">
-          <label for="admin-password" class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <label for="admin-password" class="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
             Пароль
           </label>
           <!-- font-size: 16px — предотвращает автозум на iOS Safari при фокусе -->

@@ -9,7 +9,7 @@
     @keydown.space.prevent="$emit('click')"
   >
     <span class="min-w-0 truncate font-medium">{{ label }}</span>
-    <span v-if="secondary" class="min-w-0 truncate text-slate-500 dark:text-slate-500">{{ secondary }}</span>
+    <span v-if="secondary" class="min-w-0 truncate text-slate-600 dark:text-slate-500">{{ secondary }}</span>
   </span>
 </template>
 

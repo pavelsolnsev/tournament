@@ -3,7 +3,7 @@
     <label
       v-if="label"
       :for="id"
-      class="mb-1 block font-medium text-slate-500 dark:text-slate-400"
+      class="mb-1 block font-medium text-slate-600 dark:text-slate-400"
       :class="labelSize === 'sm' ? 'text-sm' : 'text-xs'"
     >
       {{ label }}

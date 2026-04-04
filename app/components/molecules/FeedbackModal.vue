@@ -35,7 +35,7 @@
               >
                 Пожелания и идеи
               </h2>
-              <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+              <p class="mt-0.5 text-sm text-slate-600 dark:text-slate-400">
                 Расскажи, что хотел бы улучшить на сайте
               </p>
             </div>
@@ -59,7 +59,7 @@
           >
             <span class="text-4xl" aria-hidden="true">🙌</span>
             <p class="text-base font-semibold text-emerald-700 dark:text-emerald-300">Спасибо!</p>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Твоё пожелание отправлено.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Твоё пожелание отправлено.</p>
             <button
               type="button"
               class="mt-2 inline-flex h-10 items-center rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 px-5 text-sm font-medium text-slate-700 dark:text-slate-200 transition-colors hover:bg-slate-200 dark:hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
@@ -92,7 +92,7 @@
                 class="w-full resize-none rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 placeholder-slate-400 transition-colors focus:border-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-emerald-500"
               />
               <!-- Счётчик символов справа внизу. -->
-              <p class="self-end text-xs text-slate-400 dark:text-slate-500">
+              <p class="self-end text-xs text-slate-600 dark:text-slate-500">
                 {{ text.length }}/500
               </p>
             </div>

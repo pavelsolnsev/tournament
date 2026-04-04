@@ -7,7 +7,7 @@
       <span v-if="teamName" aria-hidden="true" class="shrink-0 text-base leading-none">
         {{ teamMarker(teamName) }}
       </span>
-      <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+      <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
         {{ teamName }}
       </span>
     </div>
@@ -65,7 +65,7 @@
           <!-- Шеврон — показывает что строку можно раскрыть -->
           <svg
             class="h-4 w-4 shrink-0 transition-transform duration-200"
-            :class="isActivePlayer(side, p.id) ? 'rotate-180 text-slate-500 dark:text-slate-300' : 'text-slate-500 dark:text-slate-600'"
+            :class="isActivePlayer(side, p.id) ? 'rotate-180 text-slate-600 dark:text-slate-300' : 'text-slate-600 dark:text-slate-600'"
             viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
           >
             <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />

@@ -75,7 +75,7 @@ const toneClasses = computed(() => {
   return {
     panel: 'border-slate-200 dark:border-slate-700/60 bg-slate-50 dark:bg-slate-900/40',
     title: 'text-slate-700 dark:text-slate-200',
-    subtitle: 'text-slate-500 dark:text-slate-400',
+    subtitle: 'text-slate-600 dark:text-slate-400',
     confirmBtn: 'bg-sky-500 text-white dark:text-slate-950',
   }
 })

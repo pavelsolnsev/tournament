@@ -21,15 +21,15 @@
       <thead>
         <!-- Шапка таблицы: светлая тема — slate-100 фон, тёмная — slate-800. -->
         <tr class="border-b border-slate-200 dark:border-slate-700/60 bg-slate-100 dark:bg-slate-800/80">
-          <th class="whitespace-nowrap px-1 py-2.5 text-xs font-semibold text-slate-500 sm:px-1.5">М</th>
-          <th class="px-1 py-2.5 text-left text-xs font-semibold text-slate-500 sm:px-1.5">Команда</th>
-          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">И</th>
-          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">В</th>
-          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">Н</th>
-          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">П</th>
-          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">ЗМ</th>
-          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">ПМ</th>
-          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-500">РМ</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-500 sm:px-1.5">М</th>
+          <th class="px-1 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-500 sm:px-1.5">Команда</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-600 dark:text-slate-500">И</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-600 dark:text-slate-500">В</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-600 dark:text-slate-500">Н</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-600 dark:text-slate-500">П</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-600 dark:text-slate-500">ЗМ</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-600 dark:text-slate-500">ПМ</th>
+          <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-600 dark:text-slate-500">РМ</th>
           <!-- Очки выделены цветом -->
           <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-bold text-slate-600 dark:text-slate-300">О</th>
         </tr>
@@ -42,7 +42,7 @@
           class="border-b border-slate-100 dark:border-slate-800/50 transition-colors last:border-0 md:hover:bg-slate-50 dark:md:hover:bg-slate-800/30"
         >
           <!-- Место -->
-          <td class="whitespace-nowrap px-1 py-3 text-sm font-medium tabular-nums text-slate-500 dark:text-slate-400 sm:px-1.5">
+          <td class="whitespace-nowrap px-1 py-3 text-sm font-medium tabular-nums text-slate-600 dark:text-slate-400 sm:px-1.5">
             {{ row.place }}
           </td>
 
@@ -59,38 +59,38 @@
           </td>
 
           <!-- И -->
-          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-500 dark:text-slate-400">
+          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-600 dark:text-slate-400">
             {{ row.played }}
           </td>
 
           <!-- В — зелёный если есть победы -->
           <td
             class="whitespace-nowrap px-1 py-3 text-center text-sm font-medium tabular-nums"
-            :class="row.wins > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'"
+            :class="row.wins > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-500'"
           >
             {{ row.wins }}
           </td>
 
           <!-- Н -->
-          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-400 dark:text-slate-500">
+          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-600 dark:text-slate-500">
             {{ row.draws }}
           </td>
 
           <!-- П — красный если есть поражения -->
           <td
             class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums"
-            :class="row.losses > 0 ? 'text-red-500/90 dark:text-red-400/80' : 'text-slate-400 dark:text-slate-500'"
+            :class="row.losses > 0 ? 'text-red-500/90 dark:text-red-400/80' : 'text-slate-600 dark:text-slate-500'"
           >
             {{ row.losses }}
           </td>
 
           <!-- ЗМ -->
-          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-500 dark:text-slate-400">
+          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-600 dark:text-slate-400">
             {{ row.goalsFor }}
           </td>
 
           <!-- ПМ -->
-          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-500 dark:text-slate-400">
+          <td class="whitespace-nowrap px-1 py-3 text-center text-sm tabular-nums text-slate-600 dark:text-slate-400">
             {{ row.goalsAgainst }}
           </td>
 
@@ -167,6 +167,6 @@ function goalDiffClass(diff: number): string {
   // В светлой теме зелёный и красный чуть насыщеннее для лучшего контраста.
   if (diff > 0) return 'text-emerald-600 dark:text-emerald-400'
   if (diff < 0) return 'text-red-500/90 dark:text-red-400/80'
-  return 'text-slate-400 dark:text-slate-500'
+  return 'text-slate-600 dark:text-slate-500'
 }
 </script>

@@ -4,12 +4,12 @@
 
     <!-- Заголовок секции -->
     <div v-if="showHeading" class="flex items-center justify-between gap-3">
-      <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+      <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-400">
         Сыгранные матчи
       </h3>
       <span
         v-if="playedMatchesList.length > 0"
-        class="rounded-full bg-slate-200 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400"
+        class="rounded-full bg-slate-200 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-600 dark:text-slate-400"
       >
         {{ playedMatchesList.length }}
       </span>
@@ -25,7 +25,7 @@
         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
         <path d="M2 12h20" />
       </svg>
-      <p class="text-xs text-slate-500">Пока матчей нет.</p>
+      <p class="text-xs text-slate-600 dark:text-slate-400">Пока матчей нет.</p>
       <p class="text-[11px] text-slate-400 dark:text-slate-600">Завершите первый матч, чтобы он появился здесь.</p>
     </div>
 
@@ -67,7 +67,7 @@
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
             :class="openMatch === m.matchNumber
               ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
-              : 'text-slate-500 md:hover:bg-slate-100 dark:md:hover:bg-slate-800 md:hover:text-slate-700 dark:md:hover:text-slate-300'"
+              : 'text-slate-600 md:hover:bg-slate-100 dark:md:hover:bg-slate-800 md:hover:text-slate-800 dark:md:hover:text-slate-300'"
             @click="toggleDetails(m.matchNumber)"
           >
             <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -82,7 +82,7 @@
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
             :class="editMatch === m.matchNumber
               ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300'
-              : 'text-slate-500 md:hover:bg-slate-100 md:hover:text-slate-700 dark:md:hover:bg-slate-800 dark:md:hover:text-slate-300'"
+              : 'text-slate-600 md:hover:bg-slate-100 md:hover:text-slate-800 dark:md:hover:bg-slate-800 dark:md:hover:text-slate-300'"
             @click="toggleEdit(m)"
           >
             <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -114,7 +114,7 @@
             </button>
             <button
               type="button"
-              class="inline-flex h-9 items-center rounded-xl px-2.5 text-xs text-slate-500 transition-colors md:hover:text-slate-300 focus:outline-none"
+              class="inline-flex h-9 items-center rounded-xl px-2.5 text-xs text-slate-600 transition-colors md:hover:text-slate-800 dark:text-slate-400 dark:md:hover:text-slate-200 focus:outline-none"
               @click="cancelDelete"
             >
               Нет

@@ -4,7 +4,7 @@
     <!-- Нет ни одного игрока с событиями -->
     <p
       v-if="match.homePlayers.length === 0 && match.awayPlayers.length === 0"
-      class="text-center text-xs text-slate-500 dark:text-slate-600"
+      class="text-center text-xs text-slate-600 dark:text-slate-600"
     >
       Нет отмеченных игроков.
     </p>

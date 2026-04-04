@@ -4,7 +4,7 @@
 
     <!-- Хозяева -->
     <div ref="homeColumnRef" class="min-w-0 flex-1">
-      <p class="mb-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">Хозяева</p>
+      <p class="mb-1.5 text-xs font-medium text-slate-600 dark:text-slate-400">Хозяева</p>
       <button
         ref="homeTriggerRef"
         type="button"
@@ -17,7 +17,7 @@
         <span v-if="homeTeam" class="shrink-0 text-base leading-none">{{ teamMarker(homeTeam) }}</span>
         <span
           class="min-w-0 flex-1 truncate"
-          :class="homeTeam ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'"
+          :class="homeTeam ? 'text-slate-800 dark:text-slate-100' : 'text-slate-600 dark:text-slate-500'"
         >
           {{ homeTeam || 'Выберите команду' }}
         </span>
@@ -56,7 +56,7 @@
             <li>
               <button
                 type="button"
-                class="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-slate-400 dark:text-slate-500 transition-colors
+                class="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-slate-600 dark:text-slate-500 transition-colors
                        hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-600 dark:hover:text-slate-300"
                 @click="selectHome('')"
               >
@@ -88,7 +88,7 @@
 
     <!-- Гости -->
     <div ref="awayColumnRef" class="min-w-0 flex-1">
-      <p class="mb-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">Гости</p>
+      <p class="mb-1.5 text-xs font-medium text-slate-600 dark:text-slate-400">Гости</p>
       <button
         ref="awayTriggerRef"
         type="button"
@@ -101,7 +101,7 @@
         <span v-if="awayTeam" class="shrink-0 text-base leading-none">{{ teamMarker(awayTeam) }}</span>
         <span
           class="min-w-0 flex-1 truncate"
-          :class="awayTeam ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'"
+          :class="awayTeam ? 'text-slate-800 dark:text-slate-100' : 'text-slate-600 dark:text-slate-500'"
         >
           {{ awayTeam || 'Выберите команду' }}
         </span>
@@ -140,7 +140,7 @@
             <li>
               <button
                 type="button"
-                class="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-slate-400 dark:text-slate-500 transition-colors
+                class="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-slate-600 dark:text-slate-500 transition-colors
                        hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-600 dark:hover:text-slate-300"
                 @click="selectAway('')"
               >

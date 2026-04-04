@@ -3,7 +3,7 @@
 
     <!-- ─── ДАТА ТУРНИРА ─────────────────────────────────────────── -->
     <div v-if="props.tournamentDate" class="px-4 pt-5 pb-4 sm:px-6">
-      <p class="text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">
+      <p class="text-center text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">
         🏟️ Турнир проведён {{ formattedDate }}
       </p>
     </div>
@@ -12,7 +12,7 @@
 
     <!-- ─── 1. ИТОГОВАЯ ТАБЛИЦА ───────────────────────────────── -->
     <div v-if="props.summary.standingsRows.length > 0" class="px-4 pt-5 pb-4 sm:px-6">
-      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">📊 Итоговая таблица</p>
+      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">📊 Итоговая таблица</p>
       <OrganismsStandingsTable
         :teams="props.summary.standingsRows.map(r => r.teamName)"
         :rows="props.summary.standingsRows"
@@ -24,7 +24,7 @@
 
     <!-- ─── 2. MVP ТУРНИРА ─────────────────────────────────────── -->
     <div v-if="props.summary.mvp.length > 0" class="px-4 pt-5 pb-5 sm:px-6">
-      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">⭐ MVP турнира</p>
+      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">⭐ MVP турнира</p>
 
       <div
         v-for="player in props.summary.mvp"
@@ -61,7 +61,7 @@
                 <span v-if="player.tournamentStats.yellows > 0" class="inline-flex items-center gap-0.5 rounded bg-yellow-500/15 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-yellow-900 dark:text-yellow-300">🟨 {{ player.tournamentStats.yellows }}</span>
               </div>
             </div>
-            <p class="flex items-center gap-1 text-[11px] leading-none text-slate-500 dark:text-slate-400">
+            <p class="flex items-center gap-1 text-[11px] leading-none text-slate-600 dark:text-slate-400">
               <span class="shrink-0" aria-hidden="true">{{ player.teamMarker }}</span>
               <span class="truncate">{{ player.teamName }}</span>
             </p>
@@ -78,7 +78,7 @@
 
     <!-- ─── 3. ИНДИВИДУАЛЬНЫЕ НАГРАДЫ ─────────────────────────── -->
     <div v-if="hasAnyStats" class="px-4 pt-5 pb-5 sm:px-6">
-      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">🎖️ Индивидуальные награды</p>
+      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">🎖️ Индивидуальные награды</p>
 
       <div class="flex flex-col gap-2 sm:grid sm:grid-cols-3">
         <AtomsAwardCard
@@ -115,7 +115,7 @@
 
     <!-- ─── 4. ЖЁЛТЫЕ КАРТОЧКИ ──────────────────────────────── -->
     <div v-if="props.summary.yellowCards.length > 0" class="px-4 pb-5 sm:px-6">
-      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">🟨 Жёлтые карточки</p>
+      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">🟨 Жёлтые карточки</p>
 
       <div class="flex flex-col gap-1.5">
         <div
@@ -133,7 +133,7 @@
 
           <div class="min-w-0 flex-1 flex flex-col justify-center gap-0.5">
             <p class="truncate text-[13px] font-semibold leading-tight text-slate-800 dark:text-slate-200">{{ player.name }}</p>
-            <p class="flex items-center gap-1 text-[11px] leading-none text-slate-500">
+            <p class="flex items-center gap-1 text-[11px] leading-none text-slate-600 dark:text-slate-500">
               <span class="shrink-0" aria-hidden="true">{{ player.teamMarker }}</span>
               <span class="truncate">{{ player.teamName }}</span>
             </p>
@@ -175,7 +175,7 @@
               <span class="truncate">👥 Составы</span>
               <span
                 class="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-                :class="isRosterOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500'"
+                :class="isRosterOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'"
               >
                 {{ isRosterOpen ? 'Открыт' : 'Скрыт' }}
               </span>
@@ -229,7 +229,7 @@
 
     <!-- ─── 6. MVP КОМАНД ─────────────────────────────────────── -->
     <div v-if="props.summary.teamMvps.length > 0" class="px-4 pt-5 pb-5 sm:px-6">
-      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">👑 MVP команд</p>
+      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">👑 MVP команд</p>
 
       <div class="flex flex-col gap-2 sm:grid sm:grid-cols-2">
         <div
@@ -254,7 +254,7 @@
             <p v-if="teamMvp.players.length > 0" class="mt-1 truncate text-[13px] font-semibold text-slate-800 leading-tight dark:text-slate-100">
               {{ teamMvp.players[0]!.name }}
             </p>
-            <p v-else class="mt-1 text-[13px] text-slate-500">—</p>
+            <p v-else class="mt-1 text-[13px] text-slate-600 dark:text-slate-500">—</p>
           </div>
 
           <div v-if="teamMvp.players.length > 0" class="flex shrink-0 items-center gap-1">
@@ -288,14 +288,14 @@
             <span class="truncate">Результаты</span>
             <span
               class="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-              :class="isResultsOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500'"
+              :class="isResultsOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'"
             >
               {{ isResultsOpen ? 'Открыт' : 'Скрыт' }}
             </span>
           </span>
           <div class="flex shrink-0 items-center gap-2">
             <span
-              class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+              class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-400"
             >
               {{ playedMatchesForResults.length }}
             </span>
@@ -352,7 +352,7 @@
 
     <!-- ─── 8. САМЫЙ РЕЗУЛЬТАТИВНЫЙ МАТЧ ──────────────────────── -->
     <div v-if="props.summary.stats.topScoringMatch" class="px-4 pt-5 pb-5 sm:px-6">
-      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">🔥 Самый результативный матч</p>
+      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">🔥 Самый результативный матч</p>
 
       <div class="overflow-hidden rounded-2xl border border-slate-300 bg-slate-50 dark:border-slate-700/60 dark:bg-slate-800/60">
         <!-- Мобиль: вертикально -->
@@ -403,7 +403,7 @@
 
     <!-- ─── 9. ССЫЛКИ ────────────────────────────────────────── -->
     <div class="px-4 pt-4 pb-5 sm:px-6">
-      <p class="mb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-500">🔗 Полезные ссылки</p>
+      <p class="mb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">🔗 Полезные ссылки</p>
       <!-- Телефон: кнопки на всю ширину. Десктоп (sm+): чипы по тексту и перенос строки. -->
       <ul class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-2">
         <li v-for="item in usefulLinks" :key="item.href" class="w-full min-w-0 sm:w-auto">
