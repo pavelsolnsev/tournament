@@ -114,6 +114,7 @@
 
 <script setup lang="ts">
 import { useTeamColors } from '~/composables/useTeamColors'
+import { resolveTeamColorIndex } from '~/utils/teamNames'
 
 export interface StandingsRow {
   place: number
@@ -155,10 +156,9 @@ const computedRows = computed<StandingsRow[]>(() => {
   }))
 })
 
-// Маркер команды по цветовому индексу.
+// Маркер команды — один резолвер с остальным приложением (карта → иначе номер строки).
 function markerForTeam(teamName: string, rowIndex: number): string {
-  const raw = props.teamColors?.[teamName]
-  const index = typeof raw === 'number' ? raw : (rowIndex % teamMarkers.length)
+  const index = resolveTeamColorIndex(teamName, props.teamColors, rowIndex % teamMarkers.length)
   return getMarkerByIndex(index)
 }
 

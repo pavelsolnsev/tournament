@@ -110,7 +110,7 @@
           :team-name="homeTeam"
           :players="playersByTeam(homeTeam)"
           active-shadow-class="border-sky-300 bg-sky-50 shadow-sm shadow-sky-200/30 dark:border-sky-500/40 dark:bg-sky-500/10 dark:shadow-none"
-          :team-color-index="effectiveTeamColors[homeTeam] ?? 0"
+          :team-color-index="resolveTeamColorIndex(homeTeam, effectiveTeamColors, 0)"
           :team-marker="teamMarker"
           :display-player-label="displayPlayerLabelWithoutRating"
           :is-active-player="isActivePlayer"
@@ -124,7 +124,7 @@
           :team-name="awayTeam"
           :players="playersByTeam(awayTeam)"
           active-shadow-class="border-emerald-300 bg-emerald-50 shadow-sm shadow-emerald-200/30 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:shadow-none"
-          :team-color-index="effectiveTeamColors[awayTeam] ?? 0"
+          :team-color-index="resolveTeamColorIndex(awayTeam, effectiveTeamColors, 0)"
           :team-marker="teamMarker"
           :display-player-label="displayPlayerLabelWithoutRating"
           :is-active-player="isActivePlayer"
@@ -365,6 +365,7 @@ import { useTeamColors } from '~/composables/useTeamColors'
 import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
 import MoleculesDangerConfirmInline from '~/components/molecules/DangerConfirmInline.vue'
 import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
+import { resolveTeamColorIndex } from '~/utils/teamNames'
 
 type Side = 'home' | 'away'
 
@@ -424,7 +425,7 @@ const boardScorePillClass = computed(() =>
     props.awayGoals,
     props.homeTeam,
     props.awayTeam,
-    (name) => props.effectiveTeamColors[name] ?? 0,
+    (name) => resolveTeamColorIndex(name, props.effectiveTeamColors, 0),
   ),
 )
 

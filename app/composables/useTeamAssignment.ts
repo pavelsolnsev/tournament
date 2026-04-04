@@ -41,11 +41,15 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
 
   function setTeamColor(teamName: string, colorIndex: number) {
     if (colorIndex < 0 || colorIndex > 5) return
-    teamColors.value = { ...teamColors.value, [teamName]: colorIndex }
+    const key = normalizeTeamName(teamName)
+    if (!key) return
+    teamColors.value = { ...teamColors.value, [key]: colorIndex }
   }
 
   function getTeamColor(teamName: string): number {
-    return teamColors.value[teamName] ?? 0
+    const key = normalizeTeamName(teamName)
+    if (!key) return 0
+    return teamColors.value[key] ?? 0
   }
 
   function confirmTeam(teamName: string) {
@@ -93,7 +97,9 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
       openNewTeamInput(playerId)
       return
     }
-    assignment.value = { ...assignment.value, [playerId]: teamName }
+    const name = normalizeTeamName(teamName)
+    if (!name) return
+    assignment.value = { ...assignment.value, [playerId]: name }
     closeNewTeamInput()
   }
 
@@ -192,9 +198,11 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
     }
     confirmedTeamNames.value = nextConfirmed
 
-    const nextColors = { ...teamColors.value }
-    for (const k of Object.keys(nextColors)) {
-      if (normalizeTeamName(k) === normalized) delete nextColors[k]
+    const nextColors: Record<string, number> = {}
+    for (const [k, v] of Object.entries(teamColors.value)) {
+      const nk = normalizeTeamName(k)
+      if (!nk || nk === normalized) continue
+      nextColors[nk] = v
     }
     teamColors.value = nextColors
 

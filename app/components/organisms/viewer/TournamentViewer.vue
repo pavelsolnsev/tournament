@@ -290,6 +290,7 @@
             :assignment-by-player-id="assignmentByPlayerId"
             :aggregate-player-stats="initialSnapshot?.aggregatePlayerStats ?? {}"
             :player-rating-deltas="initialSnapshot?.playerRatingDeltas ?? {}"
+            :played-matches-list="finishedPlayedMatches"
           />
         </div>
 
@@ -334,6 +335,12 @@ import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTeamColors } from '~/composables/useTeamColors'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 import { useTournamentSummary } from '~/composables/useTournamentSummary'
+import {
+  dedupeTeamNamesPreservingOrder,
+  normalizeTeamColorsMap,
+  normalizeTeamName,
+  resolveTeamColorIndex,
+} from '~/utils/teamNames'
 import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
 
 const props = defineProps<{
@@ -368,10 +375,21 @@ async function handleRefresh() {
 
 const tournamentName = computed(() => props.state?.tournamentName ?? '')
 const tournamentDate = computed(() => props.state?.tournamentDate ?? '')
-const teams = computed(() => props.state?.confirmedTeamNames ?? [])
-const teamColors = computed(() => props.state?.teamColors ?? {})
-const assignmentByPlayerId = computed(() => props.state?.assignmentByPlayerId ?? {})
+const teams = computed(() => dedupeTeamNamesPreservingOrder(props.state?.confirmedTeamNames ?? []))
+const teamColors = computed(() => normalizeTeamColorsMap(props.state?.teamColors ?? {}))
+const assignmentByPlayerId = computed(() => {
+  const raw = props.state?.assignmentByPlayerId ?? {}
+  const out: Record<number, string> = {}
+  for (const [idStr, team] of Object.entries(raw)) {
+    const n = normalizeTeamName(String(team))
+    if (n) out[Number(idStr)] = n
+  }
+  return out
+})
 const initialSnapshot = computed<SavedStandingsSnapshot | null>(() => props.state?.standingsSnapshot ?? null)
+
+// Список сыгранных матчей для блока «Результаты» на экране итогов зрителя.
+const finishedPlayedMatches = computed(() => initialSnapshot.value?.playedMatchesList ?? [])
 
 // Статус матча — upcoming / live / finished. По умолчанию upcoming если данных нет.
 const matchStatus = computed(() => props.state?.matchStatus ?? 'upcoming')
@@ -388,6 +406,7 @@ const tournamentSummary = computed(() => {
     playedMatchesList: snap.playedMatchesList,
     standingsRows: snap.standingsRows,
     playerRatingDeltas: snap.playerRatingDeltas,
+    teamColors: teamColors.value,
   })
 })
 // Команды текущего live-матча — отображаем в шапке когда статус Live.
@@ -397,13 +416,11 @@ const liveAwayTeam = computed(() => props.state?.liveAwayTeam ?? '')
 // Маркеры цветов для команд live-матча — берём из teamColors через индекс.
 const { getMarkerByIndex, getMatchScorePillClass, getPlayerNameTone } = useTeamColors()
 const liveHomeMarker = computed(() => {
-  // Находим индекс цвета для домашней команды, по умолчанию 0 (🔴).
-  const idx = teamColors.value[liveHomeTeam.value] ?? 0
+  const idx = resolveTeamColorIndex(liveHomeTeam.value, teamColors.value, 0)
   return getMarkerByIndex(idx)
 })
 const liveAwayMarker = computed(() => {
-  // Находим индекс цвета для гостевой команды, по умолчанию 1 (🟢).
-  const idx = teamColors.value[liveAwayTeam.value] ?? 1
+  const idx = resolveTeamColorIndex(liveAwayTeam.value, teamColors.value, 1)
   return getMarkerByIndex(idx)
 })
 
@@ -428,7 +445,7 @@ const liveScorePillClass = computed(() => {
     liveAwayScore.value,
     h,
     a,
-    (name) => teamColors.value[name] ?? 0,
+    (name) => resolveTeamColorIndex(name, teamColors.value, 0),
   )
 })
 
@@ -495,7 +512,7 @@ function buildPlayerRow(
     .filter((b) => (stats[b.key as keyof typeof stats] ?? 0) > 0)
     .map((b) => ({ key: b.key, icon: b.icon, count: stats[b.key as keyof typeof stats] ?? 0, bgClass: b.bgClass, textClass: b.textClass }))
   // Получаем лёгкий тон цвета по индексу команды из teamColors.
-  const colorIdx = teamColors.value[teamName] ?? 0
+  const colorIdx = resolveTeamColorIndex(teamName, teamColors.value, 0)
   const nameColorClass = getPlayerNameTone(colorIdx)
   // Имя для инициалов в аватаре — сырое из карточки игрока, без подписи рейтинга.
   const avatarFallbackName = (player?.name ?? '').trim() || `#${playerId}`

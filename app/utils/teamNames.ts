@@ -27,3 +27,46 @@ export function teamNameCollides(candidate: string, list: string[]): boolean {
   const key = normalizeTeamName(candidate)
   return list.some((x) => normalizeTeamName(x) === key)
 }
+
+/**
+ * Приводит ключи карты цветов к канону (trim + один пробел).
+ * Нужно чтобы зритель и админка совпадали, даже если в БД лежали «старые» ключи.
+ */
+export function normalizeTeamColorsMap(map: Record<string, number> | undefined | null): Record<string, number> {
+  if (!map || typeof map !== 'object') return {}
+  const out: Record<string, number> = {}
+  for (const [k, v] of Object.entries(map)) {
+    const key = normalizeTeamName(k)
+    if (!key || typeof v !== 'number' || !Number.isFinite(v)) continue
+    out[key] = v
+  }
+  return out
+}
+
+const MAX_COLOR_INDEX = 5
+
+/**
+ * Индекс цвета команды: сначала карта (по каноническому имени), иначе fallback.
+ * Если в карте есть «чужой» ключ с тем же normalize — тоже находим (старые сохранения).
+ */
+export function resolveTeamColorIndex(
+  teamName: string,
+  teamColors: Record<string, number> | undefined | null,
+  fallbackIndex: number,
+): number {
+  const key = normalizeTeamName(teamName)
+  if (!key) return Math.min(Math.max(0, fallbackIndex), MAX_COLOR_INDEX)
+  const map = teamColors
+  if (map && typeof map === 'object') {
+    const direct = map[key]
+    if (typeof direct === 'number' && Number.isFinite(direct)) {
+      return Math.min(Math.max(0, direct), MAX_COLOR_INDEX)
+    }
+    for (const [k, v] of Object.entries(map)) {
+      if (normalizeTeamName(k) === key && typeof v === 'number' && Number.isFinite(v)) {
+        return Math.min(Math.max(0, v), MAX_COLOR_INDEX)
+      }
+    }
+  }
+  return Math.min(Math.max(0, fallbackIndex), MAX_COLOR_INDEX)
+}

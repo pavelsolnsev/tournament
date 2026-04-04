@@ -188,6 +188,7 @@ import { useTeamColors } from '~/composables/useTeamColors'
 import OrganismsTournamentPlayedMatchesPlayedMatchDetails from '~/components/organisms/tournament/played-matches/PlayedMatchDetails.vue'
 import OrganismsTournamentPlayedMatchesPlayedMatchEditor from '~/components/organisms/tournament/played-matches/PlayedMatchEditor.vue'
 import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
+import { resolveTeamColorIndex } from '~/utils/teamNames'
 
 type MarkedPlayer = {
   playerId: number
@@ -305,7 +306,7 @@ function scorePillClass(m: PlayedMatch): string {
     m.awayGoals,
     m.homeTeam,
     m.awayTeam,
-    (name) => props.teamColorByName[name] ?? 0,
+    (name) => resolveTeamColorIndex(name, props.teamColorByName, 0),
   )
 }
 </script>

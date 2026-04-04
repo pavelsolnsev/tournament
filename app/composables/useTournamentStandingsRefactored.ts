@@ -16,6 +16,7 @@ import type {
 import type { ActiveSelection } from './tournament-standings/matchStats'
 import type { PairingState } from './tournament-standings/pairing'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
+import { normalizeTeamColorsMap, normalizeTeamName, resolveTeamColorIndex } from '~/utils/teamNames'
 
 import { extractMarkedPlayers } from './tournament-standings/events'
 import { pickNextMatchPair, recordFinishedMatch, recalibratePairingState, resetMatchHistoryIfBalanced } from './tournament-standings/pairing'
@@ -42,21 +43,22 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
   const { teamMarkers, getMarkerByIndex } = useTeamColors()
   const { displayPlayerLabel, displayPlayerLabelWithoutRating } = usePlayerDisplay()
 
-  // Цвета команд: если какого-то цвета нет, добавляем его по кругу.
+  // Цвета команд: ключи канонические; пропуски добиваем по порядку списка команд (как в мастере).
   const effectiveTeamColors = computed<Record<string, number>>(() => {
-    const map: Record<string, number> = { ...params.teamColors }
+    const map = normalizeTeamColorsMap(params.teamColors)
     let next = 0
     for (const name of params.teams) {
-      if (map[name] === undefined) {
-        map[name] = next % teamMarkers.length
-        next += 1
-      }
+      const nk = normalizeTeamName(name)
+      if (!nk) continue
+      if (map[nk] !== undefined) continue
+      map[nk] = next % teamMarkers.length
+      next += 1
     }
     return map
   })
 
   function teamMarker(teamName: string): string {
-    const colorIndex = effectiveTeamColors.value[teamName] ?? 0
+    const colorIndex = resolveTeamColorIndex(teamName, effectiveTeamColors.value, 0)
     return getMarkerByIndex(colorIndex)
   }
 

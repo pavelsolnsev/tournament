@@ -6,7 +6,7 @@ import type { PlayedMatch, PlayerMatchStats } from '~/composables/tournament-sta
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 import { useTeamAssignment } from '~/composables/useTeamAssignment'
 import type { TournamentStateSyncApi } from '~/composables/useTournamentState'
-import { dedupeTeamNamesPreservingOrder, normalizeTeamName } from '~/utils/teamNames'
+import { dedupeTeamNamesPreservingOrder, normalizeTeamColorsMap, normalizeTeamName } from '~/utils/teamNames'
 
 // Снапшот состояния турнирной таблицы — сохраняется отдельно при каждом изменении матчей.
 export type SavedStandingsSnapshot = {
@@ -187,7 +187,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
       assignment.confirmedTeamNames.value = new Set(
         dedupeTeamNamesPreservingOrder(ctx.confirmedTeamNames ?? []),
       )
-      assignment.teamColors.value = ctx.teamColors ?? {}
+      assignment.teamColors.value = normalizeTeamColorsMap(ctx.teamColors ?? {})
 
       // Восстанавливаем снапшот турнирной таблицы.
       standingsSnapshot.value = ctx.standingsSnapshot ?? null
@@ -224,7 +224,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     selectedIds: Array.from(selectedIds.value),
     assignmentByPlayerId: assignment.assignment.value,
     confirmedTeamNames: Array.from(assignment.confirmedTeamNames.value),
-    teamColors: assignment.teamColors.value,
+    teamColors: normalizeTeamColorsMap(assignment.teamColors.value),
     // Сохраняем последний снапшот таблицы — он обновляется снаружи через saveStandingsSnapshot.
     standingsSnapshot: standingsSnapshot.value,
     // Сохраняем статус матча — зритель видит Live/Upcoming/Finished через polling.

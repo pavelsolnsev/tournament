@@ -204,6 +204,7 @@
 import type { Player } from '~/types/tournament'
 import type { PlayerMatchStats, StatKey } from '~/composables/tournament-standings/types'
 import { useTeamColors } from '~/composables/useTeamColors'
+import { resolveTeamColorIndex } from '~/utils/teamNames'
 import { computed, ref } from 'vue'
 
 type DraftState = {
@@ -326,7 +327,7 @@ const draftScorePillClass = computed(() =>
     draftAwayGoals.value,
     props.match.homeTeam,
     props.match.awayTeam,
-    (name) => props.teamColorByName[name] ?? 0,
+    (name) => resolveTeamColorIndex(name, props.teamColorByName, 0),
   ),
 )
 

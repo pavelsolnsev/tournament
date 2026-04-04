@@ -154,19 +154,75 @@
 
     <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
-    <!-- ─── 5. СОСТАВЫ ───────────────────────────────────────── -->
+    <!-- ─── 5. СОСТАВЫ (аккордеон) ──────────────────────────── -->
     <template v-if="hasRosterData">
       <div class="px-4 pt-5 pb-5 sm:px-6">
-        <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">👥 Составы</p>
-        <OrganismsTournamentStepStandingsTeamRosterTotals
-          :teams="rosterTeams"
-          :players-by-team="rosterPlayersByTeam"
-          :team-marker="teamMarkerForRow"
-          :display-player-label="displayPlayerLabelWithoutRating"
-          :aggregate-player-stats="props.aggregatePlayerStats ?? {}"
-          :player-rating-deltas="props.playerRatingDeltas ?? {}"
-          :show-heading="false"
-        />
+        <div
+          class="overflow-hidden rounded-2xl border bg-slate-50 dark:bg-slate-900/60 transition-colors"
+          :class="isRosterOpen ? 'border-slate-300 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
+        >
+          <button
+            :id="rosterToggleId"
+            type="button"
+            class="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+            :class="isRosterOpen ? 'bg-slate-50 dark:bg-slate-800/80' : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'"
+            :aria-expanded="isRosterOpen"
+            :aria-controls="rosterPanelId"
+            @click="isRosterOpen = !isRosterOpen"
+          >
+            <span class="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+              <span class="truncate">👥 Составы</span>
+              <span
+                class="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                :class="isRosterOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500'"
+              >
+                {{ isRosterOpen ? 'Открыт' : 'Скрыт' }}
+              </span>
+            </span>
+            <svg
+              class="h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200"
+              :class="isRosterOpen && 'rotate-180'"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+
+          <Transition
+            enter-active-class="transition-all duration-200 ease-out overflow-hidden"
+            enter-from-class="max-h-0 opacity-0"
+            enter-to-class="max-h-[120rem] opacity-100"
+            leave-active-class="transition-all duration-150 ease-in overflow-hidden"
+            leave-from-class="max-h-[120rem] opacity-100"
+            leave-to-class="max-h-0 opacity-0"
+            @after-enter="scrollExpandedPanelIntoView"
+          >
+            <div
+              v-if="isRosterOpen"
+              :id="rosterPanelId"
+              role="region"
+              :aria-labelledby="rosterToggleId"
+              class="border-t border-slate-200 px-3 pb-4 pt-3 dark:border-slate-700/60"
+            >
+              <OrganismsTournamentStepStandingsTeamRosterTotals
+                :teams="rosterTeams"
+                :players-by-team="rosterPlayersByTeam"
+                :team-marker="teamMarkerForRow"
+                :display-player-label="displayPlayerLabelWithoutRating"
+                :aggregate-player-stats="props.aggregatePlayerStats ?? {}"
+                :player-rating-deltas="props.playerRatingDeltas ?? {}"
+                :show-heading="false"
+              />
+            </div>
+          </Transition>
+        </div>
       </div>
       <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
     </template>
@@ -212,7 +268,89 @@
 
     <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
-    <!-- ─── 7. САМЫЙ РЕЗУЛЬТАТИВНЫЙ МАТЧ ──────────────────────── -->
+    <!-- ─── 7. РЕЗУЛЬТАТЫ МАТЧЕЙ (как на шаге турнира, только чтение) ─ -->
+    <div v-if="hasPlayedMatches" class="px-4 pt-5 pb-5 sm:px-6">
+      <div
+        class="overflow-hidden rounded-2xl border bg-slate-50 dark:bg-slate-900/60 transition-colors"
+        :class="isResultsOpen ? 'border-slate-300 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
+      >
+        <button
+          :id="resultsToggleId"
+          type="button"
+          class="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          :class="isResultsOpen ? 'bg-slate-50 dark:bg-slate-800/80' : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'"
+          :aria-expanded="isResultsOpen"
+          :aria-controls="resultsPanelId"
+          @click="isResultsOpen = !isResultsOpen"
+        >
+          <span class="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+            <span class="truncate">Результаты</span>
+            <span
+              class="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+              :class="isResultsOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500'"
+            >
+              {{ isResultsOpen ? 'Открыт' : 'Скрыт' }}
+            </span>
+          </span>
+          <div class="flex shrink-0 items-center gap-2">
+            <span
+              class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+            >
+              {{ playedMatchesForResults.length }}
+            </span>
+            <svg
+              class="h-5 w-5 text-slate-400 transition-transform duration-200"
+              :class="isResultsOpen && 'rotate-180'"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+        </button>
+
+        <Transition
+          enter-active-class="transition-all duration-200 ease-out overflow-hidden"
+          enter-from-class="max-h-0 opacity-0"
+          enter-to-class="max-h-[120rem] opacity-100"
+          leave-active-class="transition-all duration-150 ease-in overflow-hidden"
+          leave-from-class="max-h-[120rem] opacity-100"
+          leave-to-class="max-h-0 opacity-0"
+          @after-enter="scrollExpandedPanelIntoView"
+        >
+          <div
+            v-if="isResultsOpen"
+            :id="resultsPanelId"
+            role="region"
+            :aria-labelledby="resultsToggleId"
+            class="border-t border-slate-200 px-3 pb-3 pt-1 dark:border-slate-700/60"
+          >
+            <OrganismsTournamentStepStandingsPlayedMatches
+              :played-matches-list="playedMatchesForResults"
+              :team-marker="teamMarkerForRow"
+              :team-color-by-name="effectiveTeamColors"
+              :players-by-team="rosterPlayersByTeam"
+              :display-player-label="displayPlayerLabelWithoutRating"
+              :player-avatars-by-id="playerAvatarsById"
+              :update-played-match="noopUpdatePlayedMatch"
+              :delete-played-match="noopDeletePlayedMatch"
+              :show-heading="false"
+              :readonly="true"
+            />
+          </div>
+        </Transition>
+      </div>
+    </div>
+
+    <div v-if="hasPlayedMatches" class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
+
+    <!-- ─── 8. САМЫЙ РЕЗУЛЬТАТИВНЫЙ МАТЧ ──────────────────────── -->
     <div v-if="props.summary.stats.topScoringMatch" class="px-4 pt-5 pb-5 sm:px-6">
       <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">🔥 Самый результативный матч</p>
 
@@ -263,7 +401,7 @@
 
     <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
-    <!-- ─── 8. ССЫЛКИ ────────────────────────────────────────── -->
+    <!-- ─── 9. ССЫЛКИ ────────────────────────────────────────── -->
     <div class="px-4 pt-4 pb-5 sm:px-6">
       <p class="mb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-500">🔗 Полезные ссылки</p>
       <!-- Телефон: кнопки на всю ширину. Десктоп (sm+): чипы по тексту и перенос строки. -->
@@ -288,9 +426,11 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import type { TournamentSummary } from '~/composables/useTournamentSummary'
-import type { PlayerMatchStats } from '~/composables/tournament-standings/types'
+import type { PlayedMatch, PlayerMatchStats } from '~/composables/tournament-standings/types'
 import { useTeamColors } from '~/composables/useTeamColors'
+import { normalizeTeamColorsMap, normalizeTeamName, resolveTeamColorIndex } from '~/utils/teamNames'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
+import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
 
 // Ссылки внизу итогов — один массив, чтобы не копировать длинные классы на каждую строку.
 const usefulLinks = [
@@ -331,18 +471,79 @@ const props = defineProps<{
   aggregatePlayerStats?: Record<number, PlayerMatchStats>
   /** Дельты рейтинга игроков за турнир. */
   playerRatingDeltas?: Record<number, number>
+  /** Сыгранные матчи — тот же список, что в шаге «Результаты» у админа. */
+  playedMatchesList?: PlayedMatch[]
 }>()
 
-const { getMarkerByIndex, getMatchScorePillClass } = useTeamColors()
+const { teamMarkers, getMarkerByIndex, getMatchScorePillClass } = useTeamColors()
 
-// Индекс для плашки счёта: как у маркеров в этом же блоке — сначала строка в таблице, иначе цвет из мастера.
-// Если бы шли только teamColors, «Команда 1» с индексом 0 в карте могла бы быть красной, хотя в таблице она вторая и кружок синий.
+// Список матчей для блока «Результаты»; пустой массив если проп не передали.
+const playedMatchesForResults = computed(() => props.playedMatchesList ?? [])
+const hasPlayedMatches = computed(() => playedMatchesForResults.value.length > 0)
+
+// Карта цветов с добивкой по командам из таблицы и из матчей — как в турнирной таблице.
+const effectiveTeamColors = computed(() => {
+  const map = normalizeTeamColorsMap(props.teamColors)
+  const ordered: string[] = []
+  const seen = new Set<string>()
+  for (const r of props.summary.standingsRows) {
+    const nk = normalizeTeamName(r.teamName)
+    if (!nk || seen.has(nk)) continue
+    seen.add(nk)
+    ordered.push(nk)
+  }
+  for (const m of playedMatchesForResults.value) {
+    for (const raw of [m.homeTeam, m.awayTeam]) {
+      const nk = normalizeTeamName(raw)
+      if (!nk || seen.has(nk)) continue
+      seen.add(nk)
+      ordered.push(nk)
+    }
+  }
+  let next = 0
+  for (const nk of ordered) {
+    if (map[nk] !== undefined) continue
+    map[nk] = next % teamMarkers.length
+    next += 1
+  }
+  return map
+})
+
+// Аватары для деталей матча в списке результатов.
+const playerAvatarsById = computed(() => {
+  const out: Record<number, { photo: string | null; name: string }> = {}
+  for (const p of props.players ?? []) {
+    out[p.id] = { photo: p.photo ?? null, name: p.name }
+  }
+  return out
+})
+
+// В режиме только чтения кнопок правки нет — заглушки удовлетворяют тип пропсов.
+function noopUpdatePlayedMatch(
+  _matchNumber: number,
+  _homeGoals: number,
+  _awayGoals: number,
+  _homeStats: Record<number, PlayerMatchStats>,
+  _awayStats: Record<number, PlayerMatchStats>,
+) {}
+
+function noopDeletePlayedMatch(_matchNumber: number) {}
+
+const rosterSectionUid = useId?.() ?? Math.random().toString(36).slice(2)
+const rosterToggleId = `viewer-summary-roster-${rosterSectionUid}`
+const rosterPanelId = `viewer-summary-roster-panel-${rosterSectionUid}`
+const isRosterOpen = ref(false)
+
+const resultsSectionUid = useId?.() ?? Math.random().toString(36).slice(2)
+const resultsToggleId = `viewer-summary-results-${resultsSectionUid}`
+const resultsPanelId = `viewer-summary-results-panel-${resultsSectionUid}`
+const isResultsOpen = ref(false)
+
+// Плашка лучшего матча — тот же резолвер цвета, что и у таблицы/итогов.
 function scorePillColorIndexForTeam(teamName: string): number {
-  const idx = props.summary.standingsRows.findIndex((r) => r.teamName === teamName)
-  if (idx >= 0) return idx
-  const fromMap = props.teamColors?.[teamName]
-  if (fromMap !== undefined && Number.isFinite(fromMap)) return fromMap
-  return 0
+  const map = normalizeTeamColorsMap(props.teamColors)
+  const idx = props.summary.standingsRows.findIndex((r) => normalizeTeamName(r.teamName) === normalizeTeamName(teamName))
+  return resolveTeamColorIndex(teamName, map, idx >= 0 ? idx : 0)
 }
 
 // Плашка «самый результативный матч»: ничья — нейтрально, иначе — цвет победителя.
@@ -367,10 +568,12 @@ const formattedDate = computed(() => {
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
 })
 
-// Возвращает маркер команды по её названию — ищем позицию в итоговой таблице.
+// Маркер у составов — каноническое сопоставление имени команды с цветом.
 function teamMarkerForRow(teamName: string): string {
-  const idx = props.summary.standingsRows.findIndex((r) => r.teamName === teamName)
-  return getMarkerByIndex(idx >= 0 ? idx : 0)
+  const map = normalizeTeamColorsMap(props.teamColors)
+  const idx = props.summary.standingsRows.findIndex((r) => normalizeTeamName(r.teamName) === normalizeTeamName(teamName))
+  const colorIdx = resolveTeamColorIndex(teamName, map, idx >= 0 ? idx : 0)
+  return getMarkerByIndex(colorIdx)
 }
 
 // Маркеры команд для блока «лучший матч».
