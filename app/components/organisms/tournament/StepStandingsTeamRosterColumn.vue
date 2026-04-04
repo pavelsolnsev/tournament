@@ -23,12 +23,16 @@
           : 'z-0 border-transparent'"
       >
         <!-- Строка игрока: одна строка — имя слева, бейджи справа -->
+        <!-- Кнопка строки: фон только slate + hover, без цвета команды — так спокойнее для глаз. -->
         <button
           type="button"
           class="h-12 flex w-full min-w-0 items-center gap-2 px-3 text-left
                  transition-colors active:opacity-80
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
-          :class="[playerBg(isActivePlayer(side, p.id)), !isActivePlayer(side, p.id) && 'md:hover:brightness-125']"
+          :class="[
+            playerRowBg(isActivePlayer(side, p.id)),
+            !isActivePlayer(side, p.id) && 'md:hover:bg-slate-200/90 dark:md:hover:bg-slate-700/55',
+          ]"
           @click="handlePlayerRowClick(side, p.id)"
         >
           <AtomsPlayerAvatar
@@ -37,13 +41,13 @@
             :fallback-name="p.name"
             size="md"
           />
-          <!-- Имя сжимается (truncate), рейтинг справа всегда целиком. -->
+          <!-- Имя сжимается; суффикс рейтинга — только если showPlayerRating (в управлении матчем выкл.). -->
           <span class="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
             <span class="min-w-0 truncate text-sm font-medium leading-tight text-slate-800 dark:text-slate-100">
               {{ labelParts(p).name }}
             </span>
             <span
-              v-if="labelParts(p).rating"
+              v-if="rosterColumnProps.showPlayerRating && labelParts(p).rating"
               class="shrink-0 whitespace-nowrap text-sm font-medium leading-tight text-slate-800 dark:text-slate-100 tabular-nums"
             >{{ labelParts(p).rating }}</span>
           </span>
@@ -214,48 +218,29 @@ function labelParts(p: Player) {
   return playerLabelRatingParts(p)
 }
 
-const rosterColumnProps = defineProps<{
-  side: Side
-  teamName: string
-  players: Player[]
-  activeShadowClass: string
-  teamColorIndex: number
-  teamMarker: (teamName: string) => string
-  displayPlayerLabel: (player: Player) => string
-  isActivePlayer: (side: Side, playerId: number) => boolean
-  selectPlayerForMark: (side: Side, playerId: number) => void
-  playerStat: (side: Side, playerId: number) => PlayerMatchStats
-  addPlayerEvent: (side: Side, playerId: number, key: StatKey) => void
-  removePlayerEvent: (side: Side, playerId: number, key: StatKey) => void
-}>()
+const rosterColumnProps = withDefaults(
+  defineProps<{
+    side: Side
+    teamName: string
+    players: Player[]
+    activeShadowClass: string
+    teamMarker: (teamName: string) => string
+    displayPlayerLabel: (player: Player) => string
+    /** false — в «Управлении матчем» не показываем эмодзи уровня и число рейтинга в строке. */
+    showPlayerRating?: boolean
+    isActivePlayer: (side: Side, playerId: number) => boolean
+    selectPlayerForMark: (side: Side, playerId: number) => void
+    playerStat: (side: Side, playerId: number) => PlayerMatchStats
+    addPlayerEvent: (side: Side, playerId: number, key: StatKey) => void
+    removePlayerEvent: (side: Side, playerId: number, key: StatKey) => void
+  }>(),
+  { showPlayerRating: true },
+)
 
-// Маппинг индекса цвета команды → очень слабый фон для строки игрока.
-// Цвета соответствуют маркерам: 🔴🟢🔵🟡⚪⚫
-// Прозрачность /5–/8 — едва заметный оттенок, не бросается в глаза.
-const TEAM_COLOR_BG: Record<number, string> = {
-  0: 'bg-red-500/5',
-  1: 'bg-emerald-500/5',
-  2: 'bg-blue-500/5',
-  3: 'bg-yellow-500/5',
-  4: 'bg-slate-200/40 dark:bg-slate-300/5',
-  5: 'bg-slate-100 dark:bg-slate-900/5',
-}
-
-// Слегка более тёмный фон когда строка игрока активна (выбрана).
-const TEAM_COLOR_BG_ACTIVE: Record<number, string> = {
-  0: 'bg-red-500/10',
-  1: 'bg-emerald-500/10',
-  2: 'bg-blue-500/10',
-  3: 'bg-yellow-500/10',
-  4: 'bg-slate-200/70 dark:bg-slate-300/10',
-  5: 'bg-slate-200 dark:bg-slate-900/10',
-}
-
-function playerBg(isActive: boolean): string {
-  const idx = rosterColumnProps.teamColorIndex
-  return isActive
-    ? (TEAM_COLOR_BG_ACTIVE[idx] ?? 'bg-slate-200 dark:bg-slate-800/60')
-    : (TEAM_COLOR_BG[idx] ?? 'bg-slate-100 dark:bg-slate-800/40')
+// Фон строки игрока — только slate, без цвета команды: так список спокойнее и единообразнее.
+function playerRowBg(isActive: boolean): string {
+  // Активная строка чуть темнее, чтобы было видно кого выбрали для событий.
+  return isActive ? 'bg-slate-200 dark:bg-slate-800/60' : 'bg-slate-100 dark:bg-slate-800/40'
 }
 
 // Клик по строке игрока — выбирает или снимает выбор (toggle).

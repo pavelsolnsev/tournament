@@ -138,8 +138,8 @@
                     :photo="row.photo"
                     :fallback-name="row.avatarFallbackName"
                   />
-                  <!-- Имя игрока — обрезается при нехватке места, слегка подсвечен в цвет команды -->
-                  <span class="min-w-0 truncate text-[11px] font-medium leading-none" :class="row.nameColorClass">{{ row.name }}</span>
+                  <!-- Имя — нейтральный slate, без оттенка команды; длинное имя режется truncate. -->
+                  <span class="min-w-0 truncate text-[11px] font-medium leading-none text-slate-800 dark:text-slate-100">{{ row.name }}</span>
                   <!-- Бейджи событий: показываем лимит или все если раскрыто -->
                   <div class="flex shrink-0 items-center gap-0.5">
                     <span
@@ -183,8 +183,8 @@
                       {{ badge.icon }}{{ badge.count }}
                     </span>
                   </div>
-                  <!-- Имя игрока — обрезается при нехватке места, слегка подсвечен в цвет команды -->
-                  <span class="min-w-0 truncate text-[11px] font-medium leading-none" :class="row.nameColorClass">{{ row.name }}</span>
+                  <!-- Имя — нейтральный slate, без оттенка команды; длинное имя режется truncate. -->
+                  <span class="min-w-0 truncate text-[11px] font-medium leading-none text-slate-800 dark:text-slate-100">{{ row.name }}</span>
                   <!-- Аватар у правого края гостевой колонки — зеркально домашней -->
                   <AtomsPlayerAvatar
                     class="shrink-0"
@@ -414,7 +414,7 @@ const liveHomeTeam = computed(() => props.state?.liveHomeTeam ?? '')
 const liveAwayTeam = computed(() => props.state?.liveAwayTeam ?? '')
 
 // Маркеры цветов для команд live-матча — берём из teamColors через индекс.
-const { getMarkerByIndex, getMatchScorePillClass, getPlayerNameTone } = useTeamColors()
+const { getMarkerByIndex, getMatchScorePillClass } = useTeamColors()
 const liveHomeMarker = computed(() => {
   const idx = resolveTeamColorIndex(liveHomeTeam.value, teamColors.value, 0)
   return getMarkerByIndex(idx)
@@ -484,14 +484,12 @@ const LIVE_STAT_BADGES = [
 
 type LiveBadge = { key: string; icon: string; count: number; bgClass: string; textClass: string }
 // Строки статистики игроков текущего матча — только игроки с хотя бы одним событием.
-// nameColorClass — лёгкий тон цвета команды для имени игрока.
 // photo / avatarFallbackName — для AtomsPlayerAvatar (файл в public/player-photos/ или инициалы).
 type LivePlayerRow = {
   playerId: number
   name: string
   badges: LiveBadge[]
   side: 'home' | 'away'
-  nameColorClass: string
   photo: string | null
   avatarFallbackName: string
 }
@@ -500,7 +498,6 @@ function buildPlayerRow(
   idStr: string,
   stats: { goals: number; assists: number; saves: number; yellows: number },
   side: 'home' | 'away',
-  teamName: string,
 ): LivePlayerRow | null {
   // Считаем сумму всех событий — пропускаем игроков без отметок.
   const total = (stats.goals ?? 0) + (stats.assists ?? 0) + (stats.saves ?? 0) + (stats.yellows ?? 0)
@@ -511,9 +508,6 @@ function buildPlayerRow(
   const badges = LIVE_STAT_BADGES
     .filter((b) => (stats[b.key as keyof typeof stats] ?? 0) > 0)
     .map((b) => ({ key: b.key, icon: b.icon, count: stats[b.key as keyof typeof stats] ?? 0, bgClass: b.bgClass, textClass: b.textClass }))
-  // Получаем лёгкий тон цвета по индексу команды из teamColors.
-  const colorIdx = resolveTeamColorIndex(teamName, teamColors.value, 0)
-  const nameColorClass = getPlayerNameTone(colorIdx)
   // Имя для инициалов в аватаре — сырое из карточки игрока, без подписи рейтинга.
   const avatarFallbackName = (player?.name ?? '').trim() || `#${playerId}`
   return {
@@ -521,7 +515,6 @@ function buildPlayerRow(
     name: player ? displayPlayerLabelWithoutRating(player) : `#${playerId}`,
     badges,
     side,
-    nameColorClass,
     photo: player?.photo ?? null,
     avatarFallbackName,
   }
@@ -531,14 +524,14 @@ const livePlayerRows = computed<LivePlayerRow[]>(() => {
   const snap = initialSnapshot.value
   if (!snap) return []
   const rows: LivePlayerRow[] = []
-  // Домашние игроки — передаём имя домашней команды чтобы получить её цвет.
+  // Домашняя половина — только игроки с событиями в currentHomeStats.
   for (const [idStr, stats] of Object.entries(snap.currentHomeStats ?? {})) {
-    const row = buildPlayerRow(idStr, stats, 'home', liveHomeTeam.value)
+    const row = buildPlayerRow(idStr, stats, 'home')
     if (row) rows.push(row)
   }
-  // Гостевые игроки — передаём имя гостевой команды чтобы получить её цвет.
+  // Гостевая половина — только игроки с событиями в currentAwayStats.
   for (const [idStr, stats] of Object.entries(snap.currentAwayStats ?? {})) {
-    const row = buildPlayerRow(idStr, stats, 'away', liveAwayTeam.value)
+    const row = buildPlayerRow(idStr, stats, 'away')
     if (row) rows.push(row)
   }
   return rows

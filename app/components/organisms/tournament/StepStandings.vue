@@ -140,6 +140,7 @@
             :display-player-label="displayPlayerLabel"
             :aggregate-player-stats="aggregatePlayerStats"
             :player-rating-deltas="playerRatingDeltas"
+            :hide-base-player-rating="hideBasePlayerRating"
             :show-heading="false"
           />
         </div>
@@ -356,6 +357,12 @@ const playerAvatarsById = computed(() => {
   }
   return out
 })
+
+// В «Составах» убираем «⭐️ N», когда уже есть сыгранные матчи или выбрана пара команд (идёт матч).
+const hideBasePlayerRating = computed(
+  () =>
+    playedMatchesList.value.length > 0 || Boolean(homeTeam.value && awayTeam.value),
+)
 
 const standingsUid = useId?.() ?? Math.random().toString(36).slice(2)
 const standingsToggleId = `standings-block-toggle-${standingsUid}`

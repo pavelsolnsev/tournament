@@ -218,6 +218,7 @@
                 :display-player-label="displayPlayerLabelWithoutRating"
                 :aggregate-player-stats="props.aggregatePlayerStats ?? {}"
                 :player-rating-deltas="props.playerRatingDeltas ?? {}"
+                :hide-base-player-rating="hideBasePlayerRating"
                 :show-heading="false"
               />
             </div>
@@ -480,6 +481,9 @@ const { teamMarkers, getMarkerByIndex, getMatchScorePillClass } = useTeamColors(
 // Список матчей для блока «Результаты»; пустой массив если проп не передали.
 const playedMatchesForResults = computed(() => props.playedMatchesList ?? [])
 const hasPlayedMatches = computed(() => playedMatchesForResults.value.length > 0)
+
+// Итоги зрителя: если в списке уже есть матчи — базовый рейтинг в составах не показываем (остаётся дельта).
+const hideBasePlayerRating = computed(() => playedMatchesForResults.value.length > 0)
 
 // Карта цветов с добивкой по командам из таблицы и из матчей — как в турнирной таблице.
 const effectiveTeamColors = computed(() => {

@@ -21,23 +21,7 @@ export function useTeamColors() {
     const clamped = Math.max(0, Math.min(safeIndex, teamMarkers.length - 1))
     return teamMarkers[clamped] ?? teamMarkers[0]
   }
-
-  // Имя игрока: цвет почти как обычный текст (slate), чтобы буквы читались чётко.
-  // В смесь добавляем каплю цвета команды (3%) — оттенок слабый, но различимый.
-  // Индексы: 0=красный, 1=синий, 2=зелёный, 3=жёлтый; 4 и 5 — без оттенка, только нейтраль.
-  const playerNameTones = [
-    'text-[color-mix(in_srgb,rgb(51_65_85)_97%,rgb(239_68_68)_3%)] dark:text-[color-mix(in_srgb,rgb(226_232_240)_97%,rgb(248_113_113)_3%)]',
-    'text-[color-mix(in_srgb,rgb(51_65_85)_97%,rgb(14_165_233)_3%)] dark:text-[color-mix(in_srgb,rgb(226_232_240)_97%,rgb(56_189_248)_3%)]',
-    'text-[color-mix(in_srgb,rgb(51_65_85)_97%,rgb(16_185_129)_3%)] dark:text-[color-mix(in_srgb,rgb(226_232_240)_97%,rgb(52_211_153)_3%)]',
-    'text-[color-mix(in_srgb,rgb(51_65_85)_97%,rgb(245_158_11)_3%)] dark:text-[color-mix(in_srgb,rgb(226_232_240)_97%,rgb(251_191_36)_3%)]',
-    'text-slate-700 dark:text-slate-200',
-    'text-zinc-700 dark:text-zinc-200',
-  ] as const
-
-  function getPlayerNameTone(index: number): string {
-    const safe = Number.isFinite(index) ? Math.max(0, Math.min(index, playerNameTones.length - 1)) : 0
-    return playerNameTones[safe] ?? playerNameTones[0]
-  }
+  // Имена игроков в UI больше не красим через этот composable — только маркеры команд и плашка счёта.
 
   // Ничья — нейтральная плашка; победа — тон команды-победителя (индекс из teamColors).
   function getMatchScorePillClass(
@@ -60,7 +44,6 @@ export function useTeamColors() {
     teamMarkers,
     getMarkerByIndex,
     getMatchScorePillClass,
-    getPlayerNameTone,
   }
 }
 

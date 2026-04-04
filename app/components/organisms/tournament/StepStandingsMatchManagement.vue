@@ -104,14 +104,15 @@
       </div>
 
       <!-- Составы: на мобайле — друг под другом, на широком — рядом -->
+      <!-- show-player-rating=false — в отметке событий рейтинг в строке не нужен, только имя. -->
       <div class="flex flex-col divide-y divide-slate-200 dark:divide-slate-700/60 sm:grid sm:grid-cols-2 sm:divide-x sm:divide-y-0">
         <OrganismsTournamentStepStandingsTeamRosterColumn
           side="home"
           :team-name="homeTeam"
           :players="playersByTeam(homeTeam)"
           active-shadow-class="border-sky-300 bg-sky-50 shadow-sm shadow-sky-200/30 dark:border-sky-500/40 dark:bg-sky-500/10 dark:shadow-none"
-          :team-color-index="resolveTeamColorIndex(homeTeam, effectiveTeamColors, 0)"
           :team-marker="teamMarker"
+          :show-player-rating="false"
           :display-player-label="displayPlayerLabelWithoutRating"
           :is-active-player="isActivePlayer"
           :select-player-for-mark="selectPlayerForMark"
@@ -124,8 +125,8 @@
           :team-name="awayTeam"
           :players="playersByTeam(awayTeam)"
           active-shadow-class="border-emerald-300 bg-emerald-50 shadow-sm shadow-emerald-200/30 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:shadow-none"
-          :team-color-index="resolveTeamColorIndex(awayTeam, effectiveTeamColors, 0)"
           :team-marker="teamMarker"
+          :show-player-rating="false"
           :display-player-label="displayPlayerLabelWithoutRating"
           :is-active-player="isActivePlayer"
           :select-player-for-mark="selectPlayerForMark"

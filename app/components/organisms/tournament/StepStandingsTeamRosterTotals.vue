@@ -13,11 +13,11 @@
 
     <!-- Команды — все открыты сразу, без аккордеона -->
     <div class="space-y-3">
+      <!-- Карточка команды: только slate и рамка — без красного/синего фона от цвета команды. -->
       <div
         v-for="teamName in teams"
         :key="teamName"
-        class="overflow-hidden rounded-xl"
-        :class="teamCardBg(teamName)"
+        class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700/60 dark:bg-slate-900/30"
       >
         <!-- Заголовок команды -->
         <div class="flex items-center gap-2 px-3 py-2.5">
@@ -36,11 +36,11 @@
           </p>
 
           <ul v-else class="space-y-1" role="list">
+            <!-- Строка игрока — нейтральный фон, как в других списках состава. -->
             <li
               v-for="p in playersByTeam(teamName)"
               :key="p.id"
-              class="flex min-w-0 items-center gap-2 rounded-xl px-3 py-2.5"
-              :class="playerRowBg(teamName)"
+              class="flex min-w-0 items-center gap-2 rounded-xl border border-transparent bg-slate-100 px-3 py-2.5 dark:bg-slate-800/40"
             >
               <AtomsPlayerAvatar
                 class="shrink-0"
@@ -48,13 +48,13 @@
                 :fallback-name="p.name"
                 size="md"
               />
-              <!-- Имя сжимается, рейтинг рядом не обрезается. -->
+              <!-- До старта игр — имя + базовый рейтинг; после — только имя, прогресс в бейдже дельты. -->
               <span class="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
                 <span class="min-w-0 truncate text-sm font-medium text-slate-800 dark:text-slate-100">
                   {{ labelParts(p).name }}
                 </span>
                 <span
-                  v-if="labelParts(p).rating"
+                  v-if="!hideBasePlayerRating && labelParts(p).rating"
                   class="shrink-0 whitespace-nowrap text-sm font-medium text-slate-800 dark:text-slate-100 tabular-nums"
                 >{{ labelParts(p).rating }}</span>
               </span>
@@ -125,17 +125,22 @@ type PlayerMatchStats = {
   yellows: number
 }
 
-const props = defineProps<{
-  teams: string[]
-  playersByTeam: (teamName: string) => Player[]
-  teamMarker: (teamName: string) => string
-  displayPlayerLabel: (player: Player) => string
-  aggregatePlayerStats: Record<number, PlayerMatchStats>
-  // Накопленные дельты рейтинга за весь турнир — для каждого игрока по id.
-  playerRatingDeltas: Record<number, number>
-  /** Если false — заголовок скрыт (когда он вынесен в родительский аккордеон). */
-  showHeading?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    teams: string[]
+    playersByTeam: (teamName: string) => Player[]
+    teamMarker: (teamName: string) => string
+    displayPlayerLabel: (player: Player) => string
+    aggregatePlayerStats: Record<number, PlayerMatchStats>
+    // Накопленные дельты рейтинга за весь турнир — для каждого игрока по id.
+    playerRatingDeltas: Record<number, number>
+    /** Если false — заголовок скрыт (когда он вынесен в родительский аккордеон). */
+    showHeading?: boolean
+    /** true — убрать «⭐️ N» в строке (после старта турнира); дельту рейтинга не трогаем. */
+    hideBasePlayerRating?: boolean
+  }>(),
+  { hideBasePlayerRating: false },
+)
 
 const showHeading = computed(() => props.showHeading ?? true)
 
@@ -171,36 +176,4 @@ function ratingDeltaClass(playerId: number): string {
     : 'text-red-600 dark:text-red-400 bg-red-500/10'
 }
 
-// Лёгкий фон карточки команды — работает в обеих темах.
-// Для ⚫ в светлой теме используем slate-100, в тёмной — slate-800/40.
-const CARD_BG: Record<string, string> = {
-  '🔴': 'bg-red-500/8',
-  '🟢': 'bg-emerald-500/8',
-  '🔵': 'bg-blue-500/8',
-  '🟡': 'bg-yellow-500/8',
-  '⚪': 'bg-slate-200/50 dark:bg-slate-300/6',
-  '⚫': 'bg-slate-100 dark:bg-slate-800/40',
-}
-
-// Фон строки игрока — чуть насыщеннее карточки.
-const PLAYER_ROW_BG: Record<string, string> = {
-  '🔴': 'bg-red-500/10',
-  '🟢': 'bg-emerald-500/10',
-  '🔵': 'bg-blue-500/10',
-  '🟡': 'bg-yellow-500/10',
-  '⚪': 'bg-slate-200/60 dark:bg-slate-300/8',
-  '⚫': 'bg-slate-200 dark:bg-slate-700/40',
-}
-
-function teamCardBg(teamName: string): string {
-  const marker = props.teamMarker(teamName)
-  // Дефолт: нейтральный светлый фон вместо тёмного серого.
-  return CARD_BG[marker] ?? 'bg-slate-100 dark:bg-slate-800/20'
-}
-
-function playerRowBg(teamName: string): string {
-  const marker = props.teamMarker(teamName)
-  // Дефолт: чуть насыщеннее карточки, но без тёмного серого.
-  return PLAYER_ROW_BG[marker] ?? 'bg-slate-200/60 dark:bg-slate-700/20'
-}
 </script>
