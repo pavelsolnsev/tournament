@@ -2,6 +2,10 @@ export default defineNuxtConfig({
   srcDir: 'app',
   modules: ['@nuxtjs/tailwindcss'],
   css: ['~/assets/css/tailwind.css'],
+  // Фиксируем порт 3000 — чтобы он не прыгал на 3001 если что-то занимает порт.
+  devServer: {
+    port: 3000,
+  },
   app: {
     head: {
       // Язык документа для поисковиков и скринридеров (контент интерфейса на русском).

@@ -58,13 +58,46 @@
       Все игроки уже выбраны.
     </p>
     <AtomsPlayerListUl v-else>
-      <MoleculesPlayerListRow
+      <li
         v-for="p in filteredAvailablePlayers"
         :key="p.id"
-        v-bind="libraryPlayerRowBind(p)"
-        action="add"
-        @activate="emit('selectPlayer', p.id)"
-      />
+        class="flex min-w-0 flex-col gap-1"
+      >
+        <!-- Строка игрока с двумя кнопками: добавить в турнир и удалить из базы. -->
+        <div class="flex min-w-0 items-center gap-1">
+          <MoleculesPlayerListRow
+            class="flex-1"
+            v-bind="libraryPlayerRowBind(p)"
+            action="add"
+            @activate="emit('selectPlayer', p.id)"
+          />
+          <!-- Кнопка удаления — маленькая, красная, справа от строки. -->
+          <button
+            type="button"
+            class="shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-red-500/30 text-red-500 transition-colors hover:bg-red-500/10 active:bg-red-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
+            :title="`Удалить ${p.name} из базы`"
+            @click="openDeleteConfirm(p.id)"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+        <!-- Панель подтверждения удаления — появляется под строкой игрока. -->
+        <MoleculesDangerConfirmInline
+          v-if="deleteConfirmId === p.id"
+          :open="true"
+          :seconds-left="deleteConfirmSecondsLeft"
+          :busy="deleting"
+          :aria-label="`Подтверждение удаления ${p.name}`"
+          :title="`Удалить «${p.name}» навсегда?`"
+          cancel-text="Отмена"
+          confirm-text="Удалить"
+          busy-text="Удаляем…"
+          @cancel="closeDeleteConfirm"
+          @confirm="confirmDelete(p.id)"
+        />
+      </li>
     </AtomsPlayerListUl>
     <p v-if="filteredAvailablePlayers.length === 0 && availablePlayers.length > 0" class="text-xs text-slate-600 dark:text-slate-400">
       Ничего не найдено.
@@ -143,6 +176,52 @@ const resetConfirmAnchor = useTemplateRef<HTMLDivElement>('resetConfirmAnchor')
 const isResetConfirmOpen = ref(false)
 const resetConfirmSecondsLeft = ref(0)
 const resetConfirmIntervalId = ref<ReturnType<typeof setInterval> | null>(null)
+
+// Состояние удаления игрока — id игрока у которого открыто подтверждение.
+const deleteConfirmId = ref<number | null>(null)
+const deleteConfirmSecondsLeft = ref(0)
+const deleteConfirmIntervalId = ref<ReturnType<typeof setInterval> | null>(null)
+const deleting = ref(false)
+
+function openDeleteConfirm(playerId: number) {
+  // Закрываем предыдущее подтверждение если было открыто для другого игрока.
+  closeDeleteConfirm()
+  deleteConfirmId.value = playerId
+  deleteConfirmSecondsLeft.value = 3
+
+  // Таймер 3 сек — кнопка «Удалить» станет активной только после отсчёта.
+  deleteConfirmIntervalId.value = setInterval(() => {
+    deleteConfirmSecondsLeft.value = Math.max(0, deleteConfirmSecondsLeft.value - 1)
+    if (deleteConfirmSecondsLeft.value === 0 && deleteConfirmIntervalId.value) {
+      clearInterval(deleteConfirmIntervalId.value)
+      deleteConfirmIntervalId.value = null
+    }
+  }, 1000)
+}
+
+function closeDeleteConfirm() {
+  deleteConfirmId.value = null
+  deleteConfirmSecondsLeft.value = 0
+  if (deleteConfirmIntervalId.value) {
+    clearInterval(deleteConfirmIntervalId.value)
+    deleteConfirmIntervalId.value = null
+  }
+}
+
+async function confirmDelete(playerId: number) {
+  deleting.value = true
+  try {
+    // Удаляем игрока из базы через API.
+    await $fetch(`/api/players/${playerId}`, { method: 'DELETE' })
+    closeDeleteConfirm()
+    // Обновляем список — игрок исчезнет из UI.
+    emit('refreshPlayers')
+  } catch {
+    closeDeleteConfirm()
+  } finally {
+    deleting.value = false
+  }
+}
 
 async function onCreatePlayer() {
   const name = newName.value.trim()
