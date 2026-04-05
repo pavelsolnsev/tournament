@@ -3,7 +3,7 @@
   <AtomsTournamentPanel as="section" root-class="lg:col-span-3">
     <!-- Сначала добавление игрока, ниже поиск по списку — так порядок действий сверху вниз. -->
     <form class="flex w-full min-w-0 flex-col gap-2" @submit.prevent="onCreatePlayer">
-      <p class="text-xs font-medium text-slate-600 dark:text-slate-400">Новый игрок</p>
+      <p class="text-xs font-medium text-slate-600 dark:text-slate-400">Добавьте игрока</p>
 
       <AtomsTournamentTextInput
         v-model="newName"
