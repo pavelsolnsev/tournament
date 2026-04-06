@@ -128,6 +128,7 @@
                   @back-to-players="wizard.step.value = 0"
                   @go-to-standings="goToStandings"
                   @auto-distribute="(count) => wizard.assignment.autoDistribute(wizard.selectedPlayers.value, count)"
+                  @remove-player="wizard.removePlayer"
                 />
 
                 <OrganismsTournamentStepPlayers

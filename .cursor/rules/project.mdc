@@ -47,6 +47,17 @@ Organise UI components by **Atomic Design** so that structure stays clear and re
 
 Place each component in the correct folder so that atoms stay generic and organisms stay feature-specific.
 
+---
+
+## VK bot companion project
+
+When the task involves the **VK (VKontakte) bot** — reading or editing bot code, env vars, handlers, or deployment — treat the bot as a **separate codebase** at:
+
+**`D:\web\vk-bot`**
+
+Do not assume bot logic lives in this football/Nuxt repo. Open, search, and change files under that path when integrating or debugging the bot.
+
+---
 
 “Please add a comment in simple language (simple10 level) after each piece of logic you add, so it is clear what is happening here and why it is needed.”
 

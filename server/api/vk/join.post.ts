@@ -3,7 +3,7 @@ import { ensureTablesExist } from '../../utils/initDb'
 import { normalizePlayerUsername } from '../../utils/normalizePlayerUsername'
 
 // API: POST /api/vk/join — вызывается VK-ботом когда пользователь жмёт «Играть» или «+».
-// Создаёт нового игрока (если такого имени нет) и добавляет его в список выбранных игроков турнира.
+// Создаёт игрока при необходимости и добавляет в selectedIds. Не удаляет строки из players.
 
 // Тип тела запроса от бота.
 interface VkJoinBody {
@@ -15,6 +15,8 @@ interface VkJoinBody {
 // Тип строки состояния турнира из базы.
 interface TournamentState {
   selectedIds?: number[]
+  /** upcoming | live | finished — при live запись через бота в список турнира запрещена. */
+  matchStatus?: string
   [key: string]: unknown
 }
 
@@ -44,6 +46,29 @@ export default defineEventHandler(async (event) => {
 
   if (!name) {
     throw createError({ statusCode: 400, statusMessage: 'Name is required' })
+  }
+
+  // Пока идёт live-матч — не добавляем в список турнира и не создаём игрока «в никуда».
+  const stateRowsEarly = await queryWithRetry<Array<{ value: string }>>(
+    'SELECT value FROM app_state WHERE key_name = ?',
+    ['tournament'],
+  )
+  if (stateRowsEarly.length > 0 && stateRowsEarly[0]?.value) {
+    try {
+      const early = JSON.parse(stateRowsEarly[0].value) as TournamentState
+      if (early.matchStatus === 'live') {
+        throw createError({
+          statusCode: 409,
+          statusMessage: 'Tournament live: registration closed',
+          data: { code: 'TOURNAMENT_LIVE' },
+        })
+      }
+    } catch (err) {
+      if (err && typeof err === 'object' && 'statusCode' in err && (err as { statusCode: number }).statusCode === 409) {
+        throw err
+      }
+      // Битый JSON — не блокируем join.
+    }
   }
 
   // Проверяем — есть ли уже игрок с таким vk_user_id в базе.

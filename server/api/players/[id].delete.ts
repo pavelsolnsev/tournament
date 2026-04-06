@@ -1,7 +1,8 @@
 import { queryWithRetry } from '../../utils/db'
 
-// API: DELETE /api/players/:id — удаляет игрока из базы навсегда.
-// Только администратор может удалять игроков.
+// API: DELETE /api/players/:id — единственный HTTP-способ удалить строку из players (кроме прямого SQL).
+// Вызывается только из админки (кнопка корзины). Бот и /api/vk/* строки из players не удаляют.
+// Только администратор (cookie admin_session).
 export default defineEventHandler(async (event) => {
   // Проверяем сессию администратора.
   const session = getCookie(event, 'admin_session')

@@ -23,6 +23,7 @@
         v-model="teamCountForDistribution"
         :free-players="freePlayers"
         @distribute="onDistribute"
+        @remove-free-player="emit('removePlayer', $event)"
       />
 
       <!-- Основная зона: команды + состав -->
@@ -102,6 +103,8 @@ const emit = defineEmits<{
   backToPlayers: []
   goToStandings: []
   autoDistribute: [teamCount: number]
+  /** Убрать игрока из выбранных (из списка свободных на шаге команд). */
+  removePlayer: [playerId: number]
 }>()
 
 // Количество команд для авто-распределения (2–4).

@@ -117,7 +117,9 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   }
 
   function removePlayer(id: number) {
-    // Убираем игрока из выбранных.
+    // Снимаем игрока с команды (если был в assignment) — чтобы состояние не оставалось «висячим».
+    assignment.removeFromTeam(id)
+    // Убираем игрока из выбранных на турнир.
     const next = new Set(selectedIds.value)
     next.delete(id)
     selectedIds.value = next

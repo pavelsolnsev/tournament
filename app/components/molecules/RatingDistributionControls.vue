@@ -40,6 +40,16 @@
           >
             {{ ratingTierEmoji(Math.round(p.rating)) }} {{ Math.round(p.rating) }}
           </span>
+          <!-- Кнопка «убрать из турнира» — только для свободных; возвращает игрока на шаг выбора (в базовый список). -->
+          <button
+            type="button"
+            class="shrink-0 rounded-md px-1 text-xs font-semibold leading-none text-slate-500 transition-colors md:hover:bg-slate-300/70 md:hover:text-red-600 dark:text-slate-400 dark:md:hover:bg-slate-600/60 dark:md:hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
+            :aria-label="`Убрать из турнира: ${displayName(p)}`"
+            :title="`Убрать из турнира: ${displayName(p)}`"
+            @click.stop="emit('removeFreePlayer', p.id)"
+          >
+            ×
+          </button>
         </li>
       </ul>
 
@@ -142,6 +152,8 @@ defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: number]
   distribute: []
+  /** Убрать игрока из выбранных на турнир (с шага «Команды», из блока свободных). */
+  removeFreePlayer: [playerId: number]
 }>()
 
 // Флаг: открыт ли шаг выбора количества команд.
