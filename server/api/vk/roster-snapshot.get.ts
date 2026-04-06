@@ -1,6 +1,7 @@
 import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
+import { readVkListClosePending } from '../../utils/vkListCloseRequest'
 
 const LINK_KEY = 'tournament_vk_link'
 const TOURNAMENT_KEY = 'tournament'
@@ -15,11 +16,13 @@ interface LinkJson {
   gameEventId?: string
 }
 
-// Снимок состава для бота: только если есть связь из бота (link-event).
+// Снимок состава для бота + флаг закрытия списка (завершение матча/турнира на сайте).
 
 export default defineEventHandler(async (event) => {
   await ensureTablesExist()
   requireVkBotToken(event)
+
+  const closeVkListRequested = await readVkListClosePending()
 
   const linkRows = await queryWithRetry<Array<{ value: string }>>(
     'SELECT value FROM app_state WHERE key_name = ?',
@@ -27,20 +30,20 @@ export default defineEventHandler(async (event) => {
   )
 
   if (linkRows.length === 0 || !linkRows[0]?.value) {
-    return { linked: false }
+    return { linked: false, closeVkListRequested }
   }
 
   let link: LinkJson
   try {
     link = JSON.parse(linkRows[0].value) as LinkJson
   } catch {
-    return { linked: false }
+    return { linked: false, closeVkListRequested }
   }
 
   const peerId = Number(link.peerId)
   const gameEventId = typeof link.gameEventId === 'string' ? link.gameEventId.trim() : ''
   if (!peerId || !Number.isFinite(peerId) || !gameEventId) {
-    return { linked: false }
+    return { linked: false, closeVkListRequested }
   }
 
   const stateRows = await queryWithRetry<Array<{ value: string }>>(
@@ -62,7 +65,7 @@ export default defineEventHandler(async (event) => {
   }
 
   if (selectedIds.length === 0) {
-    return { linked: true, peerId, gameEventId, rosterVkUserIds: [] as number[] }
+    return { linked: true, peerId, gameEventId, rosterVkUserIds: [] as number[], closeVkListRequested }
   }
 
   const placeholders = selectedIds.map(() => '?').join(',')
@@ -80,12 +83,11 @@ export default defineEventHandler(async (event) => {
   const seenVk = new Set<number>()
   for (const pid of selectedIds) {
     const vkId = byId.get(pid)
-    // Ноль пропускаем; отрицательные — синтетические id (+add / админка), их тоже отдаём в бот.
     if (vkId == null || !Number.isFinite(vkId) || vkId === 0) continue
     if (seenVk.has(vkId)) continue
     seenVk.add(vkId)
     rosterVkUserIds.push(vkId)
   }
 
-  return { linked: true, peerId, gameEventId, rosterVkUserIds }
+  return { linked: true, peerId, gameEventId, rosterVkUserIds, closeVkListRequested }
 })

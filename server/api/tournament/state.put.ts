@@ -1,12 +1,29 @@
 import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 
+const TOURNAMENT_KEY = 'tournament'
+
 // API: PUT /api/tournament/state — сохраняет состояние турнира в базу данных.
 // Только администратор может сохранять состояние.
+
+function normalizeSelectedIds(raw: unknown): number[] {
+  if (!Array.isArray(raw)) return []
+  return raw.map((n) => Number(n)).filter((n) => Number.isFinite(n) && n > 0)
+}
+
+function parsePrevSelectedIds(jsonStr: string | undefined): number[] {
+  if (!jsonStr) return []
+  try {
+    const s = JSON.parse(jsonStr) as { selectedIds?: unknown }
+    return normalizeSelectedIds(s.selectedIds)
+  } catch {
+    return []
+  }
+}
+
 export default defineEventHandler(async (event) => {
   await ensureTablesExist()
 
-  // Проверяем сессию администратора.
   const session = getCookie(event, 'admin_session')
   if (session !== 'true') {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
@@ -18,13 +35,45 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'State is required' })
   }
 
-  // Сериализуем состояние в JSON и сохраняем в базе (upsert — обновляем если уже есть).
-  const json = JSON.stringify(body.state)
+  const state = body.state as Record<string, unknown>
+
+  const rows = await queryWithRetry<Array<{ value: string }>>(
+    'SELECT value FROM app_state WHERE key_name = ?',
+    [TOURNAMENT_KEY],
+  )
+  const prevIds = parsePrevSelectedIds(rows[0]?.value)
+  const nextIds = normalizeSelectedIds(state.selectedIds)
+
+  const mergeFlag = String(process.env.TOURNAMENT_MERGE_SELECTED_IDS ?? '').toLowerCase()
+  const mergeEnabled = mergeFlag === '1' || mergeFlag === 'true'
+
+  if (mergeEnabled && prevIds.length > 0) {
+    const nextSet = new Set(nextIds)
+    const tail = prevIds.filter((id) => !nextSet.has(id))
+    if (tail.length > 0) {
+      state.selectedIds = [...nextIds, ...tail]
+      console.info(
+        '[tournament/state.put] TOURNAMENT_MERGE_SELECTED_IDS: к выбору с клиента добавлены id, оставшиеся только в БД (часто запись через бота):',
+        tail,
+      )
+    }
+  } else {
+    const nextSet = new Set(nextIds)
+    const lost = prevIds.filter((id) => !nextSet.has(id))
+    if (lost.length > 0) {
+      console.warn(
+        '[tournament/state.put] В сохранении нет id, которые были в БД (устаревшая вкладка или удаление в UI). Пропадают с сервера:',
+        lost,
+      )
+    }
+  }
+
+  const json = JSON.stringify(state)
 
   await queryWithRetry(
     `INSERT INTO app_state (key_name, value) VALUES (?, ?)
      ON DUPLICATE KEY UPDATE value = VALUES(value)`,
-    ['tournament', json],
+    [TOURNAMENT_KEY, json],
   )
 
   return { ok: true }

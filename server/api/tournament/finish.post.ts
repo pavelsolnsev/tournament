@@ -1,4 +1,5 @@
 import { getPool } from '../../utils/db'
+import { setVkListCloseRequested } from '../../utils/vkListCloseRequest'
 import { savePlayersToDb } from './save-players'
 import { saveTeamsToDb } from './save-teams'
 import type { PlayerTournamentData } from './save-players'
@@ -44,6 +45,9 @@ export default defineEventHandler(async (event) => {
 
     // Всё прошло — фиксируем.
     await conn.commit()
+
+    // Просим бота закрыть список в ВК (как e!), если был открыт.
+    await setVkListCloseRequested().catch((e) => console.error('[tournament/finish] vk list close flag:', e))
 
     return { ok: true, savedPlayers: body.players.length, savedTeams: body.teams.length }
   } catch (err) {
