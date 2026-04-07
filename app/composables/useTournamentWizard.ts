@@ -32,6 +32,9 @@ export type SavedTournamentContext = {
   step: number
   tournamentName: string
   tournamentDate: string
+  // Место проведения и формат турнира — выбираются на шаге 0 перед переходом к командам.
+  venueLabel: string
+  formatLabel: string
   selectedIds: number[]
   assignmentByPlayerId: Record<number, string>
   confirmedTeamNames: string[]
@@ -53,6 +56,9 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   const step = ref<0 | 1 | 2>(0)
   const tournamentName = ref('')
   const tournamentDate = ref('')
+  // Место проведения и формат — обязательны перед переходом к командам.
+  const venueLabel = ref('')
+  const formatLabel = ref('')
 
   // Загружаем игроков из API.
   const { data: players, refresh: refreshPlayers } = useFetch<Player[]>('/api/players', {
@@ -172,6 +178,8 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
 
       tournamentName.value = ctx.tournamentName ?? ''
       tournamentDate.value = ctx.tournamentDate ?? ''
+      venueLabel.value = ctx.venueLabel ?? ''
+      formatLabel.value = ctx.formatLabel ?? ''
 
       // Восстанавливаем набор выбранных игроков.
       selectedIds.value = new Set(
@@ -223,6 +231,8 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     step: step.value,
     tournamentName: tournamentName.value,
     tournamentDate: tournamentDate.value,
+    venueLabel: venueLabel.value,
+    formatLabel: formatLabel.value,
     selectedIds: Array.from(selectedIds.value),
     assignmentByPlayerId: assignment.assignment.value,
     confirmedTeamNames: Array.from(assignment.confirmedTeamNames.value),
@@ -258,6 +268,15 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     liveAwayTeam.value = away
   }
 
+  // Переход к шагу команд — автоматически проставляем ISO-дату сегодня если не заполнена.
+  // TournamentSummary сам форматирует "YYYY-MM-DD" в читаемый вид.
+  function goToTeams() {
+    if (!tournamentDate.value) {
+      tournamentDate.value = new Date().toISOString().slice(0, 10)
+    }
+    step.value = 1
+  }
+
   // Полный сброс wizard после завершения турнира — начинаем с чистого листа.
   async function resetWizard() {
     // Сбрасываем шаг в начало (шаг 0 — выбор игроков).
@@ -284,11 +303,16 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     liveHomeTeam.value = ''
     liveAwayTeam.value = ''
 
+    venueLabel.value = ''
+    formatLabel.value = ''
+
     // Сразу сохраняем сброшенное состояние в базу (без debounce — важный момент).
     await saveTournamentStateNow({
       step: 0,
       tournamentName: '',
       tournamentDate: '',
+      venueLabel: '',
+      formatLabel: '',
       selectedIds: [],
       assignmentByPlayerId: {},
       confirmedTeamNames: [],
@@ -304,6 +328,9 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     step,
     tournamentName,
     tournamentDate,
+    venueLabel,
+    formatLabel,
+    goToTeams,
     players,
     refreshPlayers,
     assignment,

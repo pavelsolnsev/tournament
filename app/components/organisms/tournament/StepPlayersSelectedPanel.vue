@@ -20,10 +20,18 @@
         />
       </AtomsPlayerListUl>
 
+      <!-- Подсказка почему кнопка заблокирована — показывается если нет места или формата -->
+      <p
+        v-if="selectedPlayers.length > 0 && !canGoToTeams"
+        class="text-center text-xs text-amber-600 dark:text-amber-400"
+      >
+        Укажите место и формат
+      </p>
+
       <AtomsPrimaryButton
         size="block"
-        :variant="selectedPlayers.length > 0 ? 'solid' : 'muted'"
-        :disabled="selectedPlayers.length === 0"
+        :variant="canGoToTeams ? 'solid' : 'muted'"
+        :disabled="!canGoToTeams"
         @click="emit('goToTeams')"
       >
         Перейти к командам →
@@ -38,6 +46,8 @@ import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
 
 defineProps<{
   selectedPlayers: Player[]
+  // Разрешение перейти к командам — true только когда выбраны игроки, место и формат.
+  canGoToTeams: boolean
 }>()
 
 const emit = defineEmits<{

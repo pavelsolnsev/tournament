@@ -3,6 +3,7 @@
 import type { Player } from '~/types/tournament'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 import type { PlayerMatchStats, PlayedMatch } from '~/composables/tournament-standings/types'
+import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { selectMvp, type MvpCandidate, type MvpTeamStat } from '~/composables/tournament-standings/mvp'
 import { round1 } from '~/composables/tournament-standings/ratingCalc'
 
@@ -19,6 +20,13 @@ type FinishTournamentParams = {
   playerRatingDeltas: Ref<Record<number, number>>
   // Список сыгранных матчей — нужен для подсчёта gamesPlayed/wins/draws/losses по игроку.
   playedMatchesList: Ref<PlayedMatch[]>
+  // Данные для архива — нужны чтобы сохранить итоги в tournament_archives.
+  tournamentName: Ref<string>
+  tournamentDate: Ref<string>
+  venueLabel: Ref<string>
+  formatLabel: Ref<string>
+  standingsSnapshot: Ref<SavedStandingsSnapshot | null>
+  teamColors: Ref<Record<string, number>>
 }
 
 // Статус завершения — нужен для UI (кнопка, спиннер, сообщение).
@@ -204,6 +212,15 @@ export function useFinishTournament(params: FinishTournamentParams) {
         body: {
           players: buildPlayersPayload(),
           teams: buildTeamsPayload(),
+          // Данные для архива — передаём вместе с основными данными в одной транзакции.
+          tournamentName: params.tournamentName.value,
+          tournamentDate: params.tournamentDate.value,
+          venueLabel: params.venueLabel.value,
+          formatLabel: params.formatLabel.value,
+          snapshot: params.standingsSnapshot.value,
+          allPlayers: params.players,
+          assignmentByPlayerId: params.assignmentByPlayerId,
+          teamColors: params.teamColors.value,
         },
       })
       status.value = 'success'

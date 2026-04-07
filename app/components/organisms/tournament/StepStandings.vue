@@ -280,6 +280,8 @@ import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView
 const props = defineProps<{
   tournamentName: string
   tournamentDate: string
+  venueLabel?: string
+  formatLabel?: string
   teams: string[]
   teamColors: Record<string, number>
   players: Player[]
@@ -438,6 +440,7 @@ async function handleGoToNextMatch() {
 // Этот обработчик даёт зрителю максимально актуальный статус после «Следующий матч».
 
 // Подключаем логику завершения турнира.
+// toRef нужен чтобы передать props-поля как реактивные Ref — composable ожидает Ref<T>.
 const {
   finishTournament,
   status: finishStatus,
@@ -449,6 +452,12 @@ const {
   aggregatePlayerStats,
   playerRatingDeltas,
   playedMatchesList,
+  tournamentName: toRef(props, 'tournamentName'),
+  tournamentDate: toRef(props, 'tournamentDate'),
+  venueLabel: toRef(props, 'venueLabel') as Ref<string>,
+  formatLabel: toRef(props, 'formatLabel') as Ref<string>,
+  standingsSnapshot: toRef(props, 'initialSnapshot') as Ref<import('~/composables/useTournamentWizard').SavedStandingsSnapshot | null>,
+  teamColors: toRef(props, 'teamColors'),
 })
 
 async function handleFinishTournament() {

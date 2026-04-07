@@ -85,10 +85,18 @@ export function useTournamentState() {
     }
   })
 
+  // Проверяем куку admin_session на клиенте — не делаем PUT если пользователь не администратор.
+  // Это предотвращает лишний запрос и 403 в консоли браузера у зрителей.
+  function isAdmin(): boolean {
+    if (!import.meta.client) return false
+    return document.cookie.split(';').some(c => c.trim().startsWith('admin_session=true'))
+  }
+
   function saveTournamentState(state: SavedTournamentContext) {
     if (saveTimer) clearTimeout(saveTimer)
 
     saveTimer = setTimeout(async () => {
+      if (!isAdmin()) return
       try {
         await $fetch('/api/tournament/state', {
           method: 'PUT',
@@ -105,6 +113,7 @@ export function useTournamentState() {
       clearTimeout(saveTimer)
       saveTimer = null
     }
+    if (!isAdmin()) return
     try {
       await $fetch('/api/tournament/state', {
         method: 'PUT',

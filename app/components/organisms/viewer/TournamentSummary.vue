@@ -1,14 +1,29 @@
 <template>
   <section class="flex flex-col">
 
-    <!-- ─── ДАТА ТУРНИРА ─────────────────────────────────────────── -->
-    <div v-if="props.tournamentDate" class="px-4 pt-5 pb-4 sm:px-6">
-      <p class="text-center text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">
-        🏟️ Турнир проведён {{ formattedDate }}
-      </p>
+    <!-- ─── ШАПКА: дата, место, формат ──────────────────────────── -->
+    <div v-if="props.tournamentDate || props.venueLabel || props.formatLabel" class="px-4 pt-5 pb-4 sm:px-6">
+      <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
+        <!-- Дата -->
+        <span v-if="props.tournamentDate" class="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">
+          <span aria-hidden="true">📅</span>{{ formattedDate }}
+        </span>
+        <!-- Разделитель -->
+        <span v-if="props.tournamentDate && (props.venueLabel || props.formatLabel)" class="text-slate-300 dark:text-slate-700" aria-hidden="true">·</span>
+        <!-- Место -->
+        <span v-if="props.venueLabel" class="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">
+          <span aria-hidden="true">🏟️</span>{{ props.venueLabel }}
+        </span>
+        <!-- Разделитель -->
+        <span v-if="props.venueLabel && props.formatLabel" class="text-slate-300 dark:text-slate-700" aria-hidden="true">·</span>
+        <!-- Формат -->
+        <span v-if="props.formatLabel" class="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">
+          <span aria-hidden="true">⚽</span>{{ props.formatLabel }}
+        </span>
+      </div>
     </div>
 
-    <div v-if="props.tournamentDate" class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6" />
+    <div v-if="props.tournamentDate || props.venueLabel || props.formatLabel" class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 1. ИТОГОВАЯ ТАБЛИЦА ───────────────────────────────── -->
     <div v-if="props.summary.standingsRows.length > 0" class="px-4 pt-5 pb-4 sm:px-6">
@@ -446,22 +461,31 @@ function mvpMarksTotal(s: PlayerMatchStats): number {
   return s.goals + s.assists + s.saves + s.yellows
 }
 
-// Вспомогательный компонент-заглушка — чтобы не повторять разметку три раза.
-// Определяем прямо здесь через defineComponent, т.к. это мелкий presentational элемент.
+// Вспомогательный компонент-заглушка — render-функция вместо template-строки,
+// потому что runtime-компилятор недоступен в production-сборке Nuxt.
 const EmptyAward = defineComponent({
   props: { icon: String, text: String },
-  template: `
-    <div class="flex items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 dark:border-slate-700/40 dark:bg-slate-800/20">
-      <span class="text-base opacity-40 dark:opacity-30" aria-hidden="true">{{ icon }}</span>
-      <span class="text-[12px] text-slate-600 dark:text-slate-500">{{ text }}</span>
-    </div>
-  `,
+  setup(props) {
+    return () =>
+      h(
+        'div',
+        { class: 'flex items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 dark:border-slate-700/40 dark:bg-slate-800/20' },
+        [
+          h('span', { class: 'text-base opacity-40 dark:opacity-30', 'aria-hidden': 'true' }, props.icon),
+          h('span', { class: 'text-[12px] text-slate-600 dark:text-slate-500' }, props.text),
+        ],
+      )
+  },
 })
 
 // Получаем итоги турнира снаружи — компонент только отображает данные.
 const props = defineProps<{
   summary: TournamentSummary
   tournamentDate?: string
+  /** Место проведения — отображается в шапке итогов. */
+  venueLabel?: string
+  /** Формат турнира — отображается в шапке итогов. */
+  formatLabel?: string
   /** Цвета команд с мастера; если пусто — индекс берём из места в таблице. */
   teamColors?: Record<string, number>
   /** Игроки турнира — нужны для раздела «Составы». */

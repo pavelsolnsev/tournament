@@ -369,6 +369,15 @@
             <p class="text-xs text-slate-400 dark:text-slate-600">
               Ждите старта или нажмите «обновить» в шапке.
             </p>
+
+            <!-- Ссылка на архив прошлых турниров — видна пока новый не начался -->
+            <NuxtLink
+              to="/tournaments"
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/60 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 transition-all hover:border-emerald-400/60 dark:hover:border-emerald-500/40 hover:text-emerald-700 dark:hover:text-emerald-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+            >
+              <span aria-hidden="true">🏆</span>
+              Прошлые турниры
+            </NuxtLink>
           </div>
         </div>
 
@@ -381,6 +390,8 @@
           <OrganismsViewerTournamentSummary
             :summary="tournamentSummary"
             :tournament-date="tournamentDate"
+            :venue-label="venueLabel"
+            :format-label="formatLabel"
             :team-colors="teamColors"
             :players="players"
             :assignment-by-player-id="assignmentByPlayerId"
@@ -473,6 +484,8 @@ async function handleRefresh() {
 
 const tournamentName = computed(() => props.state?.tournamentName ?? "");
 const tournamentDate = computed(() => props.state?.tournamentDate ?? "");
+const venueLabel = computed(() => props.state?.venueLabel ?? "");
+const formatLabel = computed(() => props.state?.formatLabel ?? "");
 const teams = computed(() =>
   dedupeTeamNamesPreservingOrder(props.state?.confirmedTeamNames ?? []),
 );

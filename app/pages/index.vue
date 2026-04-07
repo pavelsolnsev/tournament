@@ -138,11 +138,17 @@
                   :available-players="wizard.availablePlayers.value"
                   :filtered-available-players="wizard.filteredAvailablePlayers.value"
                   :player-search="wizard.playerSearch.value"
+                  :venue-label="wizard.venueLabel.value"
+                  :format-label="wizard.formatLabel.value"
+                  :tournament-date="wizard.tournamentDate.value"
                   @select-player="wizard.selectPlayer"
                   @remove-player="wizard.removePlayer"
                   @update:player-search="(v) => { wizard.playerSearch.value = v }"
+                  @update:venue-label="(v) => { wizard.venueLabel.value = v }"
+                  @update:format-label="(v) => { wizard.formatLabel.value = v }"
+                  @update:tournament-date="(v) => { wizard.tournamentDate.value = v }"
                   @refresh-players="wizard.refreshPlayers()"
-                  @go-to-teams="wizard.step.value = 1"
+                  @go-to-teams="wizard.goToTeams()"
                 />
               </template>
 
@@ -153,6 +159,8 @@
                 v-if="wizard.step.value === 2"
                 :tournament-name="wizard.tournamentName.value"
                 :tournament-date="wizard.tournamentDate.value"
+                :venue-label="wizard.venueLabel.value"
+                :format-label="wizard.formatLabel.value"
                 :teams="wizard.confirmedTeamsList.value"
                 :team-colors="wizard.assignment.teamColors.value"
                 :players="wizard.players.value ?? []"
