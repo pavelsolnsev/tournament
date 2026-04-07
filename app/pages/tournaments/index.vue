@@ -116,7 +116,7 @@
         <div
           v-for="tournament in localTournaments"
           :key="tournament.id"
-          class="group relative flex items-center gap-4 rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/60 px-4 py-4 sm:px-5 transition-all hover:border-emerald-400/60 dark:hover:border-emerald-500/40 hover:shadow-sm"
+          class="group relative flex items-start gap-4 rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/60 px-4 py-4 sm:px-5 transition-all hover:border-emerald-400/60 dark:hover:border-emerald-500/40 hover:shadow-sm"
         >
           <!-- Ссылка на весь блок (кроме кнопки удаления) -->
           <NuxtLink
@@ -125,17 +125,17 @@
             :aria-label="archiveCardTitle(tournament)"
           />
 
-          <!-- Иконка — кубок -->
-          <div class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-500/10 text-xl pointer-events-none">
+          <!-- Иконка — кубок; сверху выровнена с первой строкой текста -->
+          <div class="relative mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-500/10 text-xl pointer-events-none">
             🏆
           </div>
 
-          <!-- Место и формат (как на карточке) + дата -->
+          <!-- Место и формат + дата — перенос строк без многоточия -->
           <div class="relative min-w-0 flex-1 pointer-events-none">
-            <p class="truncate text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+            <p class="whitespace-normal break-words text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
               {{ archiveCardTitle(tournament) }}
             </p>
-            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-500">
+            <p class="mt-0.5 whitespace-normal break-words text-xs leading-snug text-slate-500 dark:text-slate-500">
               {{ formatDate(tournament.tournament_date) }}
             </p>
           </div>
@@ -144,7 +144,7 @@
           <button
             v-if="isAdmin"
             type="button"
-            class="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 dark:text-slate-600 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
+            class="relative z-10 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 dark:text-slate-600 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
             :aria-label="`Удалить запись: ${archiveCardTitle(tournament)}`"
             :disabled="deletingId === tournament.id"
             @click.prevent="deleteTournament(tournament.id)"
@@ -163,7 +163,7 @@
           </button>
 
           <!-- Стрелка вправо — только не для администратора -->
-          <svg v-if="!isAdmin" class="relative h-4 w-4 shrink-0 text-slate-400 dark:text-slate-600 group-hover:text-emerald-500 transition-colors pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg v-if="!isAdmin" class="relative mt-2 h-4 w-4 shrink-0 text-slate-400 dark:text-slate-600 group-hover:text-emerald-500 transition-colors pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
         </div>

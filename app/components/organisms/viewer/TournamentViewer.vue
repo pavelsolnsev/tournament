@@ -37,12 +37,6 @@
                 <span v-if="tournamentName">{{ tournamentName }}</span>
                 <span v-else class="sr-only">Турнир</span>
               </h1>
-              <p
-                v-if="tournamentDate"
-                class="truncate text-xs text-slate-600 dark:text-slate-400 leading-tight mt-0.5"
-              >
-                {{ tournamentDate }}
-              </p>
             </div>
 
             <!-- Бейдж статуса — сразу видно идёт ли матч сейчас -->
@@ -273,12 +267,12 @@
           class="flex flex-col items-center justify-center"
         >
           <div
-            class="flex w-full max-w-sm flex-col items-center gap-6 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/60 px-6 py-12 text-center"
+            class="flex w-full max-w-sm flex-col items-center gap-5 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/60 px-6 py-10 text-center"
           >
             <!-- Иконка футбольного мяча -->
             <span class="text-5xl" aria-hidden="true">⚽</span>
 
-            <div class="flex flex-col gap-1.5">
+            <div class="flex flex-col gap-2">
               <p
                 class="text-base font-semibold text-slate-700 dark:text-slate-300"
               >
@@ -287,88 +281,9 @@
               <p
                 class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed"
               >
-                Обновится после старта турнира организатором.
+                После старта обновите страницу — кнопка в шапке.
               </p>
             </div>
-
-            <!-- Что появится на странице — те же пункты, короче формулировки. -->
-            <ul
-              class="w-full flex flex-col gap-2 text-left text-sm text-slate-600 dark:text-slate-400"
-            >
-              <li class="flex items-start gap-2">
-                <span class="shrink-0 mt-0.5" aria-hidden="true">🔴</span>
-                <span>Счёт матча в реальном времени</span>
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="shrink-0 mt-0.5" aria-hidden="true">📊</span>
-                <span>Таблица с очками команд</span>
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="shrink-0 mt-0.5" aria-hidden="true">⚽</span>
-                <span>Результаты сыгранных матчей</span>
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="shrink-0 mt-0.5" aria-hidden="true">🏅</span>
-                <span>Составы и статистика игроков</span>
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="shrink-0 mt-0.5" aria-hidden="true">🏆</span>
-                <span>Итоги и награды после финала</span>
-              </li>
-
-              <li
-                class="pt-1 border-t border-slate-200 dark:border-slate-700/50"
-                aria-hidden="true"
-              />
-
-              <li class="flex items-center gap-2">
-                <svg
-                  class="h-4 w-4 shrink-0 text-slate-600 dark:text-slate-500"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  aria-hidden="true"
-                >
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-                <span>Светлая и тёмная тема — в шапке справа</span>
-              </li>
-              <li class="flex items-center gap-2">
-                <svg
-                  class="h-4 w-4 shrink-0 text-slate-600 dark:text-slate-500"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                  />
-                </svg>
-                <span>Идея или баг — через чат в шапке</span>
-              </li>
-              <li class="flex items-center gap-2">
-                <span class="shrink-0 text-base leading-none" aria-hidden="true"
-                  >🔐</span
-                >
-                <span
-                  >Организатору —
-                  <strong
-                    class="font-semibold text-slate-600 dark:text-slate-300"
-                    >Войти</strong
-                  >
-                  в шапке справа</span
-                >
-              </li>
-            </ul>
-
-            <p class="text-xs text-slate-400 dark:text-slate-600">
-              Ждите старта или нажмите «обновить» в шапке.
-            </p>
 
             <!-- Ссылка на архив прошлых турниров — видна пока новый не начался -->
             <NuxtLink

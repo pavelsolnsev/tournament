@@ -11,10 +11,10 @@
             Администратор
           </span>
           <div class="flex items-center gap-1">
-            <!-- Копировать ссылку — для вставки в посты -->
+            <!-- Копировать ссылку — только иконка (подпись в aria-label) -->
             <button
               type="button"
-              class="inline-flex h-11 items-center gap-1.5 rounded-xl px-2 text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:px-3"
+              class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
               :class="copied && 'text-emerald-600 dark:text-emerald-400'"
               :aria-label="copied ? 'Ссылка скопирована' : 'Скопировать ссылку'"
               @click="copyLink"
@@ -26,14 +26,13 @@
                 <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                 <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
               </svg>
-              <span class="hidden sm:inline">{{ copied ? 'Скопировано' : 'Ссылка' }}</span>
             </button>
             <AtomsFeedbackButton />
             <AtomsThemeToggle />
             <!-- Удалить турнир -->
             <button
               type="button"
-              class="inline-flex h-11 items-center gap-1 rounded-xl px-2 text-sm font-medium text-red-500 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 active:bg-red-100 dark:active:bg-red-900/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50 sm:px-3"
+              class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-red-500 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 active:bg-red-100 dark:active:bg-red-900/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50 disabled:opacity-50"
               :disabled="isDeleting"
               aria-label="Удалить турнир из архива"
               @click="deleteTournament"
@@ -47,7 +46,6 @@
                 <path d="M10 11v6M14 11v6" />
                 <path d="M9 6V4h6v2" />
               </svg>
-              <span class="hidden sm:inline">Удалить</span>
             </button>
             <!-- Выйти — точно как на главной -->
             <button
@@ -76,15 +74,12 @@
               <p class="truncate text-base font-bold text-slate-800 dark:text-slate-50 sm:text-lg leading-tight">
                 {{ tournament?.tournamentName || 'Турнир' }}
               </p>
-              <p v-if="tournament?.tournamentDate" class="truncate text-xs text-slate-600 dark:text-slate-400 leading-tight mt-0.5">
-                {{ formatDate(tournament.tournamentDate) }}
-              </p>
             </div>
           </div>
           <div class="flex shrink-0 items-center gap-0.5 sm:gap-1">
             <button
               type="button"
-              class="inline-flex h-11 items-center gap-1.5 rounded-xl px-2 text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:px-3"
+              class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
               :class="copied && 'text-emerald-600 dark:text-emerald-400'"
               :aria-label="copied ? 'Ссылка скопирована' : 'Скопировать ссылку'"
               @click="copyLink"
@@ -96,7 +91,6 @@
                 <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                 <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
               </svg>
-              <span class="hidden sm:inline">{{ copied ? 'Скопировано' : 'Ссылка' }}</span>
             </button>
             <AtomsFeedbackButton />
             <AtomsThemeToggle />
@@ -291,12 +285,5 @@ async function deleteTournament() {
     alert('Не удалось удалить турнир. Попробуйте ещё раз.')
     isDeleting.value = false
   }
-}
-
-// Форматируем дату из YYYY-MM-DD в «12 апреля 2025».
-function formatDate(dateStr: string): string {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 </script>
