@@ -1,6 +1,7 @@
 import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
+import { clearVkListCloseRequest } from '../../utils/vkListCloseRequest'
 
 const LINK_KEY = 'tournament_vk_link'
 
@@ -29,6 +30,10 @@ export default defineEventHandler(async (event) => {
      ON DUPLICATE KEY UPDATE value = VALUES(value)`,
     [LINK_KEY, payload],
   )
+
+  // Сбрасываем «закрыть список»: иначе после прошлого «Завершить матч» флаг мог остаться в БД, если ack бота не дошёл.
+  // Первый тик поллинга тогда делал бы runCloseEvent и сразу гасил только что созданный список (редкий, но реальный баг).
+  await clearVkListCloseRequest()
 
   return { ok: true }
 })
