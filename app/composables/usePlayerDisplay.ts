@@ -4,7 +4,12 @@ import type { Player } from '~/types/tournament'
 /** Максимум символов в подписи; дальше ставим «…», чтобы длинные ники не раздували строки. */
 export const PLAYER_LABEL_MAX_CHARS = 28
 
-/** Иконка уровня рейтинга (целое число после округления). */
+/** Округляем до одного знака после запятой — так рейтинг читается на табло и в списках. */
+export function formatPlayerRatingDisplay(ratingValue: number): string {
+  return (Math.round(ratingValue * 10) / 10).toFixed(1)
+}
+
+/** Иконка уровня рейтинга (пороги считаем по целому — как раньше). */
 export function ratingTierEmoji(ratingRounded: number): string {
   if (ratingRounded < 10) return '⭐️'
   if (ratingRounded < 30) return '💫'
@@ -37,8 +42,8 @@ const RATING_TIER_EMOJI_ALTERNATION = ['⭐️', '💫', '✨', '🌠', '💎', 
 export function stripRatingFromDisplayLabel(label: string): string {
   const t = label.trimEnd()
   if (!t) return '—'
-  // Сначала пробуем новый формат: пробел + эмодзи уровня + пробел + число в конце строки.
-  const reNew = new RegExp(`^(.*)\\s+(?:${RATING_TIER_EMOJI_ALTERNATION})\\s+\\d+$`)
+  // Сначала пробуем новый формат: пробел + эмодзи уровня + пробел + число (целое или с десятичной частью).
+  const reNew = new RegExp(`^(.*)\\s+(?:${RATING_TIER_EMOJI_ALTERNATION})\\s+\\d+(?:\\.\\d)?$`)
   const mNew = t.match(reNew)
   if (mNew) return mNew[1]!.trimEnd() || '—'
   // Затем старый формат: пробел + «(число)» в конце строки.
@@ -70,15 +75,16 @@ export function playerLabelRatingParts(p: Player): { name: string; rating: strin
   if (!hasRating) {
     return { name: clipLongPlayerLabel(raw), rating: null }
   }
-  const r = Math.round(ratingValue)
-  const emoji = ratingTierEmoji(r)
-  const ratingSuffix = ` ${emoji} ${r}`
+  const tier = Math.round(ratingValue)
+  const emoji = ratingTierEmoji(tier)
+  const displayNum = formatPlayerRatingDisplay(ratingValue)
+  const ratingSuffix = ` ${emoji} ${displayNum}`
   const maxNameChars = Math.max(1, PLAYER_LABEL_MAX_CHARS - ratingSuffix.length)
   const clippedName =
     raw.length <= maxNameChars
       ? raw
       : `${raw.slice(0, Math.max(1, maxNameChars - 1))}…`
-  return { name: clippedName, rating: `${emoji} ${r}` }
+  return { name: clippedName, rating: `${emoji} ${displayNum}` }
 }
 
 export function usePlayerDisplay() {
@@ -92,5 +98,6 @@ export function usePlayerDisplay() {
     displayPlayerLabelWithoutRating,
     playerLabelRatingParts,
     ratingTierEmoji,
+    formatPlayerRatingDisplay,
   }
 }

@@ -38,7 +38,7 @@
             v-if="p.rating != null"
             class="shrink-0 text-[11px] tabular-nums text-slate-600 dark:text-slate-500"
           >
-            {{ ratingTierEmoji(Math.round(p.rating)) }} {{ Math.round(p.rating) }}
+            {{ ratingTierEmoji(Math.round(p.rating)) }} {{ formatPlayerRatingDisplay(Number(p.rating)) }}
           </span>
           <!-- Кнопка «убрать из турнира» — только для свободных; возвращает игрока на шаг выбора (в базовый список). -->
           <button
@@ -142,7 +142,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { Player } from '~/types/tournament'
-import { ratingTierEmoji, displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
+import {
+  ratingTierEmoji,
+  displayPlayerLabelWithoutRating,
+  formatPlayerRatingDisplay,
+} from '~/composables/usePlayerDisplay'
 
 defineProps<{
   modelValue: number

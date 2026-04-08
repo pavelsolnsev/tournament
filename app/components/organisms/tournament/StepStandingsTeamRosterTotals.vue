@@ -117,6 +117,7 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import { playerLabelRatingParts } from '~/composables/usePlayerDisplay'
+import { round1 } from '~/composables/tournament-standings/ratingCalc'
 
 type PlayerMatchStats = {
   goals: number
@@ -159,11 +160,14 @@ function totalEvents(playerId: number): number {
   return s.goals + s.assists + s.saves + s.yellows
 }
 
-// Возвращает форматированную строку дельты рейтинга (+1.5 / -0.8) или null если 0.
+// Возвращает дельту с одним знаком после запятой (+1.5 / -0.8) или null если после округления ноль.
 function ratingDelta(playerId: number): string | null {
   const delta = props.playerRatingDeltas[playerId]
-  if (!delta) return null
-  return delta > 0 ? `+${delta}` : String(delta)
+  if (delta === undefined || delta === null || delta === 0) return null
+  const d = round1(delta)
+  if (d === 0) return null
+  const s = d.toFixed(1)
+  return d > 0 ? `+${s}` : s
 }
 
 // Цвет бейджа дельты: зелёный для роста, красный для падения.
