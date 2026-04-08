@@ -1,6 +1,7 @@
 import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
+import { clearTournamentSelectedIdsAfterVkListClose } from '../../utils/clearTournamentSelectionAfterVkListClose'
 
 const LINK_KEY = 'tournament_vk_link'
 
@@ -11,6 +12,7 @@ export default defineEventHandler(async (event) => {
   requireVkBotToken(event)
 
   await queryWithRetry('DELETE FROM app_state WHERE key_name = ?', [LINK_KEY])
+  await clearTournamentSelectedIdsAfterVkListClose()
 
   return { ok: true }
 })

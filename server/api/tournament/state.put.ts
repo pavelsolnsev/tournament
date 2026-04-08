@@ -43,29 +43,16 @@ export default defineEventHandler(async (event) => {
   )
   const prevIds = parsePrevSelectedIds(rows[0]?.value)
   const nextIds = normalizeSelectedIds(state.selectedIds)
+  const nextSet = new Set(nextIds)
 
-  const mergeFlag = String(process.env.TOURNAMENT_MERGE_SELECTED_IDS ?? '').toLowerCase()
-  const mergeEnabled = mergeFlag === '1' || mergeFlag === 'true'
-
-  if (mergeEnabled && prevIds.length > 0) {
-    const nextSet = new Set(nextIds)
-    const tail = prevIds.filter((id) => !nextSet.has(id))
-    if (tail.length > 0) {
-      state.selectedIds = [...nextIds, ...tail]
-      console.info(
-        '[tournament/state.put] TOURNAMENT_MERGE_SELECTED_IDS: к выбору с клиента добавлены id, оставшиеся только в БД (часто запись через бота):',
-        tail,
-      )
-    }
-  } else {
-    const nextSet = new Set(nextIds)
-    const lost = prevIds.filter((id) => !nextSet.has(id))
-    if (lost.length > 0) {
-      console.warn(
-        '[tournament/state.put] В сохранении нет id, которые были в БД (устаревшая вкладка или удаление в UI). Пропадают с сервера:',
-        lost,
-      )
-    }
+  // Сравниваем с прошлым снимком из БД: пропавшие id не ошибка — это нормальное удаление в админке.
+  // Раньше опционально «дописывали хвост» из БД (TOURNAMENT_MERGE_SELECTED_IDS), но тогда снятие игрока на сайте откатывалось обратно.
+  const lost = prevIds.filter((id) => !nextSet.has(id))
+  if (lost.length > 0) {
+    console.warn(
+      '[tournament/state.put] В сохранении нет id, которые были в БД (устаревшая вкладка или удаление в UI). Пропадают с сервера:',
+      lost,
+    )
   }
 
   const json = JSON.stringify(state)

@@ -80,28 +80,6 @@
                 </ol>
               </nav>
 
-              <!-- Баннер «Турнир завершён» — появляется на шаге 0 после финиша турнира -->
-              <!-- Даёт администратору возможность запустить новый турнир, не мешая зрителям видеть итоги -->
-              <div
-                v-if="wizard.step.value === 0 && wizard.matchStatus.value === 'finished'"
-                class="flex flex-col gap-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-5 py-5"
-              >
-                <div class="flex items-center gap-3">
-                  <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-xl ring-1 ring-emerald-500/30">🏆</span>
-                  <div>
-                    <p class="font-bold text-emerald-700 dark:text-emerald-300">Турнир завершён!</p>
-                    <p class="mt-0.5 text-sm text-slate-600 dark:text-slate-400">Зрители видят итоги. Когда будете готовы — запустите новый турнир.</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  class="self-start inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 active:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
-                  @click="wizard.resetWizard()"
-                >
-                  Начать новый турнир
-                </button>
-              </div>
-
               <template v-if="wizard.step.value === 0 || wizard.step.value === 1">
                 <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-50 sm:text-3xl">
                   {{ wizard.step.value === 0 ? 'Выберите игроков' : 'Команды' }}
@@ -171,7 +149,7 @@
                 :clear-tournament-busy="clearTournamentBusy"
                 @update:snapshot="wizard.saveStandingsSnapshot"
                 @update:match-status="wizard.updateMatchStatus"
-                @tournament-finished="wizard.step.value = 0"
+                @tournament-finished="handleTournamentFinished"
                 @clear-tournament="showClearTournamentConfirm = true"
                 @cancel-clear-tournament="cancelClearTournament"
                 @confirm-clear-tournament="confirmClearTournament"
@@ -363,6 +341,15 @@ const breadcrumbs = [
 async function goToStandings() {
   wizard.step.value = 2
   // Принудительно инвалидируем кэш state — следующий опрос зрителя вернёт свежие данные.
+  await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
+}
+
+// После «Завершить турнир»: статус finished уже в мастере — сохраняем для зрителей, затем сразу сбрасываем мастер (выбор игроков), без промежуточной плашки.
+async function handleTournamentFinished() {
+  await nextTick()
+  await wizard.saveCurrentTournamentStateNow()
+  await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
+  await wizard.resetWizard()
   await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
 }
 </script>

@@ -102,6 +102,8 @@ export function useTournamentState() {
           method: 'PUT',
           body: { state },
         })
+        // Подтягиваем тот же state в useFetch, иначе мастер думает, что на сервере старый selectedIds (бот/UI расходятся).
+        await refresh()
       } catch (err) {
         console.error('Failed to save tournament state:', err)
       }
@@ -119,6 +121,7 @@ export function useTournamentState() {
         method: 'PUT',
         body: { state },
       })
+      await refresh()
     } catch (err) {
       console.error('Failed to save tournament state (immediate):', err)
     }

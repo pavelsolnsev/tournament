@@ -466,8 +466,7 @@ async function handleFinishTournament() {
   if (finishStatus.value === 'success') {
     emit('update:matchStatus', 'finished', '', '')
     emit('tournament-finished')
-    // Сразу показываем зрителю итоги турнира — не ждём поллинга.
-    await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
+    // Обновление кэша state выполняет родитель (сохранение finished → сброс мастера).
   }
 }
 </script>

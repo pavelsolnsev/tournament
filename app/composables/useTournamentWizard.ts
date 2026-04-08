@@ -148,8 +148,17 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
 
   // Флаг: было ли уже восстановлено состояние из базы.
   const stateRestored = ref(false)
+  // Отпечаток последнего набора selectedIds, который мы считали «в одном шаге» с сервером (для подмешивания записей с бота без затирания несохранённых правок).
+  const lastAppliedSelectedIdsKey = ref('')
 
   const { serverState, isLoading, saveTournamentState, saveTournamentStateNow } = stateSync
+
+  // Стабильная строка по списку id — чтобы сравнивать сервер и локальный Set без лишних срабатываний.
+  function selectedIdsFingerprint(ids: Iterable<number> | undefined | null): string {
+    const arr = ids == null ? [] : [...ids].filter((n) => Number.isFinite(n))
+    arr.sort((a, b) => a - b)
+    return arr.join(',')
+  }
 
   // Восстанавливаем состояние из базы, когда оно загрузится.
   // Срабатывает один раз после первой загрузки — даже если state = null (турнир ещё не начат).
@@ -162,7 +171,10 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
       // Загрузка завершена. Если состояния нет — просто отмечаем как восстановленное.
       stateRestored.value = true
 
-      if (!ctx) return
+      if (!ctx) {
+        lastAppliedSelectedIdsKey.value = ''
+        return
+      }
 
       // Читаем шаг из базы. Если это старый формат (0–4), приводим к новому (0–2).
       const raw = ctx.step
@@ -222,8 +234,37 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
       assignment.newTeamNames.value = uniqueFromContext.filter(
         (name) => !existingKeys.has(normalizeTeamName(name)),
       )
+
+      // Запоминаем отпечаток после полной гидратации — дальше сравниваем с поллингом/focus refresh.
+      lastAppliedSelectedIdsKey.value = selectedIdsFingerprint(selectedIds.value)
     },
     { immediate: true },
+  )
+
+  // Если сервер обновился снаружи (бот) и локально выбор не трогали — подтягиваем selectedIds.
+  watch(
+    () => [isLoading.value, selectedIdsFingerprint(serverState.value?.selectedIds)] as const,
+    () => {
+      if (!stateRestored.value || isLoading.value) {
+        return
+      }
+      const ctx = serverState.value
+      if (!ctx) {
+        return
+      }
+      const serverKey = selectedIdsFingerprint(ctx.selectedIds)
+      const localKey = selectedIdsFingerprint(selectedIds.value)
+      if (serverKey === localKey) {
+        lastAppliedSelectedIdsKey.value = serverKey
+        return
+      }
+      if (localKey === lastAppliedSelectedIdsKey.value) {
+        selectedIds.value = new Set(
+          (ctx.selectedIds ?? []).filter((id) => Number.isFinite(id)),
+        )
+        lastAppliedSelectedIdsKey.value = serverKey
+      }
+    },
   )
 
   // Текущее состояние для записи в базу данных.
@@ -324,6 +365,11 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     })
   }
 
+  // Однократно сохраняем текущий экран (например статус finished + снапшот) до сброса мастера — чтобы зритель успел получить итог.
+  async function saveCurrentTournamentStateNow() {
+    await saveTournamentStateNow(savedContext.value)
+  }
+
   return {
     step,
     tournamentName,
@@ -349,6 +395,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     liveAwayTeam,
     updateMatchStatus,
     resetWizard,
+    saveCurrentTournamentStateNow,
     stateRestored,
   }
 }

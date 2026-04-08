@@ -6,8 +6,13 @@ import { readVkListClosePending } from '../../utils/vkListCloseRequest'
 const LINK_KEY = 'tournament_vk_link'
 const TOURNAMENT_KEY = 'tournament'
 
+type MatchStatus = 'upcoming' | 'live' | 'finished'
+
 interface TournamentJson {
-  selectedIds?: number[]
+  selectedIds?: unknown
+  matchStatus?: unknown
+  liveHomeTeam?: unknown
+  liveAwayTeam?: unknown
   [key: string]: unknown
 }
 
@@ -16,13 +21,54 @@ interface LinkJson {
   gameEventId?: string
 }
 
-// Снимок состава для бота + флаг закрытия списка (завершение матча/турнира на сайте).
+interface ParsedTournament {
+  selectedIds: number[]
+  matchStatus: MatchStatus
+  liveHomeTeam: string
+  liveAwayTeam: string
+}
+
+function parseTournamentValue(value: string | undefined): ParsedTournament {
+  const empty: ParsedTournament = {
+    selectedIds: [],
+    matchStatus: 'upcoming',
+    liveHomeTeam: '',
+    liveAwayTeam: '',
+  }
+  if (!value) return empty
+  try {
+    const st = JSON.parse(value) as TournamentJson
+    const raw = st.selectedIds
+    const selectedIds = Array.isArray(raw)
+      ? raw.map((n) => Number(n)).filter((n) => Number.isFinite(n) && n > 0)
+      : []
+    const ms = st.matchStatus
+    const matchStatus: MatchStatus =
+      ms === 'live' || ms === 'finished' || ms === 'upcoming' ? ms : 'upcoming'
+    return {
+      selectedIds,
+      matchStatus,
+      liveHomeTeam: typeof st.liveHomeTeam === 'string' ? st.liveHomeTeam : '',
+      liveAwayTeam: typeof st.liveAwayTeam === 'string' ? st.liveAwayTeam : '',
+    }
+  } catch {
+    return empty
+  }
+}
+
+// Снимок состава для бота + флаг закрытия списка + статус матча (live → уведомление в ВК).
 
 export default defineEventHandler(async (event) => {
   await ensureTablesExist()
   requireVkBotToken(event)
 
   const closeVkListRequested = await readVkListClosePending()
+
+  const stateRows = await queryWithRetry<Array<{ value: string }>>(
+    'SELECT value FROM app_state WHERE key_name = ?',
+    [TOURNAMENT_KEY],
+  )
+  const parsed = parseTournamentValue(stateRows[0]?.value)
 
   const linkRows = await queryWithRetry<Array<{ value: string }>>(
     'SELECT value FROM app_state WHERE key_name = ?',
@@ -46,26 +92,19 @@ export default defineEventHandler(async (event) => {
     return { linked: false, closeVkListRequested }
   }
 
-  const stateRows = await queryWithRetry<Array<{ value: string }>>(
-    'SELECT value FROM app_state WHERE key_name = ?',
-    [TOURNAMENT_KEY],
-  )
-
-  let selectedIds: number[] = []
-  if (stateRows.length > 0 && stateRows[0]?.value) {
-    try {
-      const st = JSON.parse(stateRows[0].value) as TournamentJson
-      const raw = st.selectedIds
-      if (Array.isArray(raw)) {
-        selectedIds = raw.map((n) => Number(n)).filter((n) => Number.isFinite(n) && n > 0)
-      }
-    } catch {
-      selectedIds = []
-    }
-  }
+  const { selectedIds, matchStatus, liveHomeTeam, liveAwayTeam } = parsed
 
   if (selectedIds.length === 0) {
-    return { linked: true, peerId, gameEventId, rosterVkUserIds: [] as number[], closeVkListRequested }
+    return {
+      linked: true,
+      peerId,
+      gameEventId,
+      rosterVkUserIds: [] as number[],
+      closeVkListRequested,
+      matchStatus,
+      liveHomeTeam,
+      liveAwayTeam,
+    }
   }
 
   const placeholders = selectedIds.map(() => '?').join(',')
@@ -89,5 +128,14 @@ export default defineEventHandler(async (event) => {
     rosterVkUserIds.push(vkId)
   }
 
-  return { linked: true, peerId, gameEventId, rosterVkUserIds, closeVkListRequested }
+  return {
+    linked: true,
+    peerId,
+    gameEventId,
+    rosterVkUserIds,
+    closeVkListRequested,
+    matchStatus,
+    liveHomeTeam,
+    liveAwayTeam,
+  }
 })

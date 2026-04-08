@@ -1,6 +1,8 @@
 import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 import { normalizePlayerUsername } from '../../utils/normalizePlayerUsername'
+import { requireVkBotToken } from '../../utils/vkBotAuth'
+import { getRequestIdempotencyKey, runIdempotent } from '../../utils/idempotency'
 
 // API: POST /api/vk/join — вызывается VK-ботом когда пользователь жмёт «Играть» или «+».
 // Создаёт игрока при необходимости и добавляет в selectedIds. Не удаляет строки из players.
@@ -20,122 +22,186 @@ interface TournamentState {
   [key: string]: unknown
 }
 
+const TOURNAMENT_KEY = 'tournament'
+
+type AppStateRow = { value: string }
+type DbWriteResult = { affectedRows?: number }
+
+function isDuplicatePrimaryError(err: unknown): boolean {
+  const e = err as { code?: string; errno?: number; sqlMessage?: string }
+  if (e?.code !== 'ER_DUP_ENTRY' && e?.errno !== 1062) return false
+  return String(e?.sqlMessage ?? '').toLowerCase().includes('primary')
+}
+
+function isDuplicateVkError(err: unknown): boolean {
+  const e = err as { code?: string; errno?: number; sqlMessage?: string }
+  if (e?.code !== 'ER_DUP_ENTRY' && e?.errno !== 1062) return false
+  return String(e?.sqlMessage ?? '').toLowerCase().includes('vk_user')
+}
+
+function nextPlayerIdCandidate() {
+  return Date.now() * 1000 + Math.floor(Math.random() * 1000)
+}
+
+async function persistTournamentStateCas(prevValue: string | null, nextValue: string): Promise<boolean> {
+  if (prevValue != null) {
+    const res = await queryWithRetry<DbWriteResult>(
+      'UPDATE app_state SET value = ? WHERE key_name = ? AND value = ?',
+      [nextValue, TOURNAMENT_KEY, prevValue],
+    )
+    return Number(res?.affectedRows ?? 0) === 1
+  }
+
+  const res = await queryWithRetry<DbWriteResult>(
+    'INSERT IGNORE INTO app_state (key_name, value) VALUES (?, ?)',
+    [TOURNAMENT_KEY, nextValue],
+  )
+  return Number(res?.affectedRows ?? 0) === 1
+}
+
 export default defineEventHandler(async (event) => {
   await ensureTablesExist()
+  requireVkBotToken(event)
+  const idemKey = getRequestIdempotencyKey(event)
 
-  // Проверяем секретный токен — только бот знает этот токен.
-  const authHeader = getHeader(event, 'authorization') ?? ''
-  const token = authHeader.replace(/^Bearer\s+/i, '').trim()
-  const expectedToken = process.env.VK_TOKEN ?? ''
+  return await runIdempotent(idemKey, async () => {
+    // Читаем тело запроса от бота.
+    const body = await readBody<VkJoinBody>(event)
 
-  if (!expectedToken || token !== expectedToken) {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden: invalid token' })
-  }
-
-  // Читаем тело запроса от бота.
-  const body = await readBody<VkJoinBody>(event)
-
-  // vk_user_id обязателен — по нему ищем игрока при выходе.
-  const vkUserId = Number(body?.vk_user_id)
-  if (!vkUserId || !Number.isFinite(vkUserId)) {
-    throw createError({ statusCode: 400, statusMessage: 'vk_user_id is required' })
-  }
-
-  // Собираем имя игрока из first_name + last_name, убираем лишние пробелы.
-  const name = `${(body?.first_name ?? '').trim()} ${(body?.last_name ?? '').trim()}`.trim()
-
-  if (!name) {
-    throw createError({ statusCode: 400, statusMessage: 'Name is required' })
-  }
-
-  // Пока идёт live-матч — не добавляем в список турнира и не создаём игрока «в никуда».
-  const stateRowsEarly = await queryWithRetry<Array<{ value: string }>>(
-    'SELECT value FROM app_state WHERE key_name = ?',
-    ['tournament'],
-  )
-  if (stateRowsEarly.length > 0 && stateRowsEarly[0]?.value) {
-    try {
-      const early = JSON.parse(stateRowsEarly[0].value) as TournamentState
-      if (early.matchStatus === 'live') {
-        throw createError({
-          statusCode: 409,
-          statusMessage: 'Tournament live: registration closed',
-          data: { code: 'TOURNAMENT_LIVE' },
-        })
-      }
-    } catch (err) {
-      if (err && typeof err === 'object' && 'statusCode' in err && (err as { statusCode: number }).statusCode === 409) {
-        throw err
-      }
-      // Битый JSON — не блокируем join.
+    // vk_user_id обязателен — по нему ищем игрока при выходе. Допускаются отрицательные «синтетические» id (игрок без ВК, +add / сайт).
+    const vkUserId = Number(body?.vk_user_id)
+    if (vkUserId == null || !Number.isFinite(vkUserId) || vkUserId === 0) {
+      throw createError({ statusCode: 400, statusMessage: 'vk_user_id is required' })
     }
-  }
 
-  // Проверяем — есть ли уже игрок с таким vk_user_id в базе.
-  // Если есть — не создаём дубль, просто берём его id.
-  const existing = await queryWithRetry<Array<{ id: number }>>(
-    'SELECT id FROM players WHERE vk_user_id = ?',
-    [vkUserId],
-  )
+    // Собираем имя игрока из first_name + last_name, убираем лишние пробелы.
+    const name = `${(body?.first_name ?? '').trim()} ${(body?.last_name ?? '').trim()}`.trim()
 
-  let playerId: number
+    if (!name) {
+      throw createError({ statusCode: 400, statusMessage: 'Name is required' })
+    }
 
-  if (existing.length > 0 && existing[0]) {
-    // Игрок уже есть — используем его существующий id.
-    playerId = existing[0].id
-  } else {
-    // Новый игрок — создаём запись в таблице.
-    // username не передаётся — ставим @unknown как плейсхолдер (можно вручную поменять позже).
-    // Передаём строку 'unknown' — normalizePlayerUsername превратит её в '@unknown'.
-    const username = normalizePlayerUsername('unknown')
-    playerId = Date.now()
+    // Пока идёт live-матч — не добавляем в список турнира и не создаём игрока «в никуда».
+    const stateRowsEarly = await queryWithRetry<AppStateRow[]>(
+      'SELECT value FROM app_state WHERE key_name = ?',
+      [TOURNAMENT_KEY],
+    )
+    if (stateRowsEarly.length > 0 && stateRowsEarly[0]?.value) {
+      try {
+        const early = JSON.parse(stateRowsEarly[0].value) as TournamentState
+        if (early.matchStatus === 'live') {
+          throw createError({
+            statusCode: 409,
+            statusMessage: 'Tournament live: registration closed',
+            data: { code: 'TOURNAMENT_LIVE' },
+          })
+        }
+      } catch (err) {
+        if (err && typeof err === 'object' && 'statusCode' in err && (err as { statusCode: number }).statusCode === 409) {
+          throw err
+        }
+        // Битый JSON — не блокируем join.
+      }
+    }
 
-    try {
-      await queryWithRetry(
-        `INSERT INTO players (id, name, username, vk_user_id, goals, assists, saves, gamesPlayed, wins, draws, losses, rating, mvp, yellow_cards)
-         VALUES (?, ?, ?, ?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)`,
-        [playerId, name, username, vkUserId],
+    // Проверяем — есть ли уже игрок с таким vk_user_id в базе.
+    // Если есть — не создаём дубль, просто берём его id.
+    const existing = await queryWithRetry<Array<{ id: number }>>(
+      'SELECT id FROM players WHERE vk_user_id = ?',
+      [vkUserId],
+    )
+
+    let playerId: number | null = null
+
+    if (existing.length > 0 && existing[0]) {
+      // Игрок уже есть — используем его существующий id.
+      playerId = existing[0].id
+    } else {
+      // Новый игрок — создаём запись в таблице.
+      // username не передаётся — ставим @unknown как плейсхолдер (можно вручную поменять позже).
+      // Передаём строку 'unknown' — normalizePlayerUsername превратит её в '@unknown'.
+      const username = normalizePlayerUsername('unknown')
+      let created = false
+
+      for (let attempt = 0; attempt < 8; attempt++) {
+          playerId = nextPlayerIdCandidate()
+        try {
+          await queryWithRetry(
+            `INSERT INTO players (id, name, username, vk_user_id, goals, assists, saves, gamesPlayed, wins, draws, losses, rating, mvp, yellow_cards)
+             VALUES (?, ?, ?, ?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)`,
+            [playerId, name, username, vkUserId],
+          )
+          created = true
+          break
+        } catch (err) {
+          if (isDuplicatePrimaryError(err)) {
+            continue
+          }
+          if (isDuplicateVkError(err)) {
+            const raced = await queryWithRetry<Array<{ id: number }>>(
+              'SELECT id FROM players WHERE vk_user_id = ?',
+              [vkUserId],
+            )
+            if (raced.length > 0 && raced[0]) {
+                playerId = raced[0].id
+              created = true
+              break
+            }
+          }
+          const mysqlErr = err as { code?: string; sqlMessage?: string; message?: string }
+          console.error('[vk/join] Failed to create player:', mysqlErr?.code, mysqlErr?.sqlMessage ?? mysqlErr?.message)
+          throw createError({
+            statusCode: 500,
+            statusMessage: `Failed to create player: ${mysqlErr?.sqlMessage ?? mysqlErr?.message ?? 'unknown'}`,
+          })
+        }
+      }
+      if (!created) {
+        throw createError({ statusCode: 500, statusMessage: 'Failed to allocate player id' })
+      }
+    }
+
+    if (playerId == null) {
+      throw createError({ statusCode: 500, statusMessage: 'Player id resolve failed' })
+    }
+
+    // CAS-обновление состояния, чтобы параллельные join не теряли игроков.
+    let persisted = false
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const rows = await queryWithRetry<AppStateRow[]>(
+        'SELECT value FROM app_state WHERE key_name = ?',
+        [TOURNAMENT_KEY],
       )
-    } catch (err) {
-      // Выводим детальную ошибку MySQL в лог сервера — поможет понять причину сбоя.
-      const mysqlErr = err as { code?: string; sqlMessage?: string; message?: string }
-      console.error('[vk/join] Failed to create player:', mysqlErr?.code, mysqlErr?.sqlMessage ?? mysqlErr?.message)
-      throw createError({ statusCode: 500, statusMessage: `Failed to create player: ${mysqlErr?.sqlMessage ?? mysqlErr?.message ?? 'unknown'}` })
+      const prev = rows.length > 0 && rows[0]?.value ? rows[0].value : null
+
+      let state: TournamentState = { selectedIds: [] }
+      if (prev) {
+        try {
+          state = JSON.parse(prev) as TournamentState
+        } catch {
+          state = { selectedIds: [] }
+        }
+      }
+
+      const selected = Array.isArray(state.selectedIds) ? state.selectedIds : []
+      if (selected.includes(playerId)) {
+        persisted = true
+        break
+      }
+      state.selectedIds = [...selected, playerId]
+      const next = JSON.stringify(state)
+
+      const ok = await persistTournamentStateCas(prev, next)
+      if (ok) {
+        persisted = true
+        break
+      }
     }
-  }
-
-  // Читаем текущее состояние турнира из базы.
-  const rows = await queryWithRetry<Array<{ value: string }>>(
-    'SELECT value FROM app_state WHERE key_name = ?',
-    ['tournament'],
-  )
-
-  // Если состояния ещё нет — создаём минимальное с одним игроком.
-  let state: TournamentState = { selectedIds: [] }
-
-  if (rows.length > 0 && rows[0]?.value) {
-    try {
-      state = JSON.parse(rows[0].value) as TournamentState
-    } catch {
-      // Если JSON битый — начинаем с чистого состояния.
-      state = { selectedIds: [] }
+    if (!persisted) {
+      throw createError({ statusCode: 409, statusMessage: 'Concurrent update conflict on tournament state' })
     }
-  }
 
-  // Добавляем нового игрока в список выбранных (selectedIds), без дублей.
-  const existingIds: number[] = Array.isArray(state.selectedIds) ? state.selectedIds : []
-  if (!existingIds.includes(playerId)) {
-    state.selectedIds = [...existingIds, playerId]
-  }
-
-  // Сохраняем обновлённое состояние обратно в базу.
-  const json = JSON.stringify(state)
-  await queryWithRetry(
-    `INSERT INTO app_state (key_name, value) VALUES (?, ?)
-     ON DUPLICATE KEY UPDATE value = VALUES(value)`,
-    ['tournament', json],
-  )
-
-  // Возвращаем данные игрока боту — бот может использовать их для ответа пользователю в ВК.
-  return { ok: true, player: { id: playerId, name } }
+    // Возвращаем данные игрока боту — бот может использовать их для ответа пользователю в ВК.
+    return { ok: true, player: { id: playerId, name } }
+  })
 })
