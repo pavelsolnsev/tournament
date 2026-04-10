@@ -31,7 +31,7 @@
       <OrganismsStandingsTable
         :teams="props.summary.standingsRows.map(r => r.teamName)"
         :rows="props.summary.standingsRows"
-        :team-colors="props.teamColors"
+        :team-colors="effectiveTeamColors"
       />
     </div>
 
