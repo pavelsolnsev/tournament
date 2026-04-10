@@ -569,9 +569,8 @@ const isResultsOpen = ref(false)
 
 // Плашка лучшего матча — тот же резолвер цвета, что и у таблицы/итогов.
 function scorePillColorIndexForTeam(teamName: string): number {
-  const map = normalizeTeamColorsMap(props.teamColors)
   const idx = props.summary.standingsRows.findIndex((r) => normalizeTeamName(r.teamName) === normalizeTeamName(teamName))
-  return resolveTeamColorIndex(teamName, map, idx >= 0 ? idx : 0)
+  return resolveTeamColorIndex(teamName, effectiveTeamColors.value, idx >= 0 ? idx : 0)
 }
 
 // Плашка «самый результативный матч»: ничья — нейтрально, иначе — цвет победителя.
@@ -598,9 +597,8 @@ const formattedDate = computed(() => {
 
 // Маркер у составов — каноническое сопоставление имени команды с цветом.
 function teamMarkerForRow(teamName: string): string {
-  const map = normalizeTeamColorsMap(props.teamColors)
   const idx = props.summary.standingsRows.findIndex((r) => normalizeTeamName(r.teamName) === normalizeTeamName(teamName))
-  const colorIdx = resolveTeamColorIndex(teamName, map, idx >= 0 ? idx : 0)
+  const colorIdx = resolveTeamColorIndex(teamName, effectiveTeamColors.value, idx >= 0 ? idx : 0)
   return getMarkerByIndex(colorIdx)
 }
 

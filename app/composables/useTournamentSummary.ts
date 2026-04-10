@@ -83,16 +83,57 @@ type SummaryParams = {
   teamColors?: Record<string, number>
 }
 
+const TEAM_MARKERS_COUNT = 6
+
+// Готовим единую карту цветов для всех блоков итогов.
+// Если цвета у команды нет — выдаём его по порядку команд из таблицы/матчей.
+function buildEffectiveTeamColors(
+  teamColors: Record<string, number> | undefined,
+  standingsRows: StandingsRow[],
+  playedMatchesList: PlayedMatch[],
+): Record<string, number> {
+  const map = normalizeTeamColorsMap(teamColors)
+  const ordered: string[] = []
+  const seen = new Set<string>()
+
+  // Сначала берём команды из итоговой таблицы — это основной порядок экрана итогов.
+  for (const row of standingsRows) {
+    const nk = normalizeTeamName(row.teamName)
+    if (!nk || seen.has(nk)) continue
+    seen.add(nk)
+    ordered.push(nk)
+  }
+
+  // Потом добавляем команды только из матчей — на случай старых/нестандартных архивов.
+  for (const m of playedMatchesList) {
+    for (const raw of [m.homeTeam, m.awayTeam]) {
+      const nk = normalizeTeamName(raw)
+      if (!nk || seen.has(nk)) continue
+      seen.add(nk)
+      ordered.push(nk)
+    }
+  }
+
+  let next = 0
+  for (const nk of ordered) {
+    if (map[nk] !== undefined) continue
+    map[nk] = next % TEAM_MARKERS_COUNT
+    next += 1
+  }
+
+  return map
+}
+
 // Маркер команды — как везде: resolveTeamColorIndex(teamColors), иначе место в таблице.
 function resolveTeamMarker(
   teamName: string,
   standingsRows: StandingsRow[],
-  teamColors: Record<string, number> | undefined,
+  effectiveTeamColors: Record<string, number>,
   getMarkerByIndex: (i: number) => string,
 ): string {
   const rowIdx = standingsRows.findIndex((r) => normalizeTeamName(r.teamName) === normalizeTeamName(teamName))
   const fallback = rowIdx >= 0 ? rowIdx : 0
-  const colorIdx = resolveTeamColorIndex(teamName, normalizeTeamColorsMap(teamColors), fallback)
+  const colorIdx = resolveTeamColorIndex(teamName, effectiveTeamColors, fallback)
   return getMarkerByIndex(colorIdx)
 }
 
@@ -104,7 +145,7 @@ function findTopPlayers(
   aggregateStats: Record<number, PlayerMatchStats>,
   field: keyof PlayerMatchStats,
   standingsRows: StandingsRow[],
-  teamColors: Record<string, number> | undefined,
+  effectiveTeamColors: Record<string, number>,
   getMarkerByIndex: (i: number) => string,
 ): AwardWinner[] {
   // Собираем игроков у которых есть хотя бы одно значение в поле.
@@ -115,7 +156,7 @@ function findTopPlayers(
       name: displayPlayerLabelWithoutRating(p),
       photo: p.photo ?? null,
       teamName,
-      teamMarker: resolveTeamMarker(teamName, standingsRows, teamColors, getMarkerByIndex),
+      teamMarker: resolveTeamMarker(teamName, standingsRows, effectiveTeamColors, getMarkerByIndex),
       value: aggregateStats[p.id]?.[field] ?? 0,
     }
   }).filter((p) => p.value > 0)
@@ -174,7 +215,7 @@ function findTournamentMvp(
   aggregateStats: Record<number, PlayerMatchStats>,
   playerRatingDeltas: Record<number, number>,
   standingsRows: StandingsRow[],
-  teamColors: Record<string, number> | undefined,
+  effectiveTeamColors: Record<string, number>,
   getMarkerByIndex: (i: number) => string,
 ): AwardWinner[] {
   if (players.length === 0) return []
@@ -218,7 +259,7 @@ function findTournamentMvp(
     name: displayPlayerLabelWithoutRating(winnerPlayer),
     photo: winnerPlayer.photo ?? null,
     teamName,
-    teamMarker: resolveTeamMarker(teamName, standingsRows, teamColors, getMarkerByIndex),
+    teamMarker: resolveTeamMarker(teamName, standingsRows, effectiveTeamColors, getMarkerByIndex),
     value: winner.goals,
     tournamentStats: { goals: s.goals, assists: s.assists, saves: s.saves, yellows: s.yellows },
   }]
@@ -227,7 +268,12 @@ function findTournamentMvp(
 // Основной composable — вычисляет все итоги турнира из снапшота.
 export function useTournamentSummary(params: SummaryParams): TournamentSummary {
   const { getMarkerByIndex } = useTeamColors()
-  const teamColors = params.teamColors
+  // Единая карта цветов для всех секций итогов — чтобы маркеры везде совпадали.
+  const effectiveTeamColors = buildEffectiveTeamColors(
+    params.teamColors,
+    params.standingsRows,
+    params.playedMatchesList,
+  )
 
   // MVP всего турнира.
   const mvp = findTournamentMvp(
@@ -236,7 +282,7 @@ export function useTournamentSummary(params: SummaryParams): TournamentSummary {
     params.aggregatePlayerStats,
     params.playerRatingDeltas,
     params.standingsRows,
-    teamColors,
+    effectiveTeamColors,
     getMarkerByIndex,
   )
 
@@ -247,7 +293,7 @@ export function useTournamentSummary(params: SummaryParams): TournamentSummary {
     params.aggregatePlayerStats,
     'goals',
     params.standingsRows,
-    teamColors,
+    effectiveTeamColors,
     getMarkerByIndex,
   )
 
@@ -258,7 +304,7 @@ export function useTournamentSummary(params: SummaryParams): TournamentSummary {
     params.aggregatePlayerStats,
     'assists',
     params.standingsRows,
-    teamColors,
+    effectiveTeamColors,
     getMarkerByIndex,
   )
 
@@ -269,7 +315,7 @@ export function useTournamentSummary(params: SummaryParams): TournamentSummary {
     params.aggregatePlayerStats,
     'saves',
     params.standingsRows,
-    teamColors,
+    effectiveTeamColors,
     getMarkerByIndex,
   )
 
@@ -283,7 +329,7 @@ export function useTournamentSummary(params: SummaryParams): TournamentSummary {
     const stats = mvpPlayer ? (params.aggregatePlayerStats[mvpPlayer.id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0 }) : { goals: 0, assists: 0, saves: 0, yellows: 0 }
 
     // Маркер — как в таблице итогов: teamColors, иначе строка standings.
-    const marker = resolveTeamMarker(teamName, params.standingsRows, teamColors, getMarkerByIndex)
+    const marker = resolveTeamMarker(teamName, params.standingsRows, effectiveTeamColors, getMarkerByIndex)
 
     const players: AwardWinner[] = mvpPlayer
       ? [{
@@ -332,7 +378,7 @@ export function useTournamentSummary(params: SummaryParams): TournamentSummary {
     .filter(p => (params.aggregatePlayerStats[p.id]?.yellows ?? 0) > 0)
     .map(p => {
       const teamName = params.assignmentByPlayerId[p.id] ?? ''
-      const marker = resolveTeamMarker(teamName, params.standingsRows, teamColors, getMarkerByIndex)
+      const marker = resolveTeamMarker(teamName, params.standingsRows, effectiveTeamColors, getMarkerByIndex)
       return {
         playerId: p.id,
         name: displayPlayerLabelWithoutRating(p),
