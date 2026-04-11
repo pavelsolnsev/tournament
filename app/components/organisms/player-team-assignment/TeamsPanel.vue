@@ -53,7 +53,7 @@
           <li
             v-for="name in autoTeams"
             :key="name"
-            class="cursor-pointer rounded-xl border px-3 py-2 transition-colors"
+            class="min-w-0 cursor-pointer rounded-xl border px-3 py-2 transition-colors"
             :class="selectedTeamName === name
               ? 'border-emerald-500/50 bg-emerald-500/8 dark:bg-emerald-500/10'
               : 'border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-900/30 hover:bg-slate-50 dark:hover:bg-slate-900/50'"
@@ -94,7 +94,7 @@
         <li
           v-for="name in manualTeams"
           :key="name"
-          class="cursor-pointer rounded-xl border px-3 py-2 transition-colors"
+          class="min-w-0 cursor-pointer rounded-xl border px-3 py-2 transition-colors"
           :class="selectedTeamName === name
             ? 'border-emerald-500/50 bg-emerald-500/8 dark:bg-emerald-500/10'
             : 'border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-900/30 hover:bg-slate-50 dark:hover:bg-slate-900/50'"

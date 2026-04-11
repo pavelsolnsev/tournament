@@ -3,8 +3,8 @@
   <!-- На мобиле — стек; на lg — одинаковая высота колонок, слева шире, чтобы имена команд читались. -->
   <div class="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-stretch">
 
-    <!-- Левая зона: min 22rem, до ~28rem / 36% ширины — раньше w-64 резало названия до «E..» -->
-    <div class="min-w-0 lg:flex lg:min-h-0 lg:w-[36%] lg:max-w-[28rem] lg:min-w-[22rem] lg:shrink-0 lg:flex-col">
+    <!-- Левая зона ещё чуть уже: min 19rem, cap 24rem, ~30% — больше ширины у состава справа. -->
+    <div class="min-w-0 lg:flex lg:min-h-0 lg:w-[30%] lg:max-w-[24rem] lg:min-w-[19rem] lg:shrink-0 lg:flex-col">
       <OrganismsPlayerTeamAssignmentTeamsPanel
         class="lg:min-h-0 lg:flex-1"
         :new-team-name-value="newTeamNameValue"
