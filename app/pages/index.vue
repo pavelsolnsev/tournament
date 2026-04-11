@@ -2,11 +2,39 @@
   <!-- h-full продолжает цепочку высоты от #scroll-root → landing → сюда. -->
   <div class="h-full">
     <!-- clientReady становится true только после монтирования на клиенте.
-         До этого рендерим нейтральный скелетон — он совпадает с SSR и не даёт hydration mismatch. -->
-    <div v-if="!clientReady" class="bg-slate-100 dark:bg-slate-900" aria-hidden="true" />
+         Показываем явный лоадер — иначе при медленной сети кажется, что сайт «сломан» (только фон). -->
+    <div
+      v-if="!clientReady"
+      class="flex min-h-full flex-col items-center justify-center gap-4 bg-slate-100 px-4 dark:bg-slate-900"
+      role="status"
+      aria-live="polite"
+    >
+      <div
+        class="h-10 w-10 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-emerald-500 dark:border-slate-700 dark:border-t-emerald-400"
+        aria-hidden="true"
+      />
+      <p class="max-w-sm text-center text-sm text-slate-600 dark:text-slate-300">
+        Загружаем интерфейс… Если экран долго не меняется, проверьте интернет или обновите страницу.
+      </p>
+    </div>
 
     <!-- После монтирования на клиенте показываем реальный UI -->
     <template v-else>
+      <!-- Ошибка API списка игроков — отдельно от падения Vue: зритель и админ видят кнопку «Повторить». -->
+      <div
+        v-if="playersFetchError"
+        class="mx-auto mb-4 flex w-full max-w-4xl flex-col gap-2 rounded-xl border border-amber-300/80 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-50 sm:px-6"
+        role="alert"
+      >
+        <span>Не удалось загрузить список игроков с сервера.</span>
+        <button
+          type="button"
+          class="self-start rounded-lg border border-amber-400/90 bg-white/80 px-3 py-1.5 text-sm font-medium text-amber-950 transition-colors hover:bg-amber-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 dark:border-amber-600 dark:bg-amber-900/50 dark:text-amber-50 dark:hover:bg-amber-900/80"
+          @click="() => void refreshPlayers()"
+        >
+          Повторить
+        </button>
+      </div>
       <!-- Режим администратора -->
       <template v-if="isAdmin">
         <!-- min-h-full растягивает до высоты #scroll-root (= весь экран). -->
@@ -325,7 +353,7 @@ async function confirmClearTournament() {
   }
 }
 
-const { data: allPlayers } = useFetch<Player[]>('/api/players', {
+const { data: allPlayers, error: playersFetchError, refresh: refreshPlayers } = useFetch<Player[]>('/api/players', {
   default: () => [],
 })
 
