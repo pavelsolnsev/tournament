@@ -26,7 +26,7 @@
       <div class="px-3 pb-3 pt-2">
         <!-- Заголовок команды: маркер + название — единый стиль с остальными колонками -->
         <div class="mb-2 flex min-w-0 items-center gap-1.5 px-0.5">
-          <span aria-hidden="true" class="shrink-0 text-base leading-none">{{ teamMarker(match.homeTeam) }}</span>
+          <AtomsTeamMarkerOrLogo :team-name="match.homeTeam" :marker="teamMarker(match.homeTeam)" size="md" />
           <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">{{ match.homeTeam }}</span>
         </div>
         <div class="space-y-1.5">
@@ -102,7 +102,7 @@
       <div class="px-3 pb-3 pt-2">
         <!-- Заголовок команды: маркер + название — единый стиль с остальными колонками -->
         <div class="mb-2 flex min-w-0 items-center gap-1.5 px-0.5">
-          <span aria-hidden="true" class="shrink-0 text-base leading-none">{{ teamMarker(match.awayTeam) }}</span>
+          <AtomsTeamMarkerOrLogo :team-name="match.awayTeam" :marker="teamMarker(match.awayTeam)" size="md" />
           <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">{{ match.awayTeam }}</span>
         </div>
         <div class="space-y-1.5">

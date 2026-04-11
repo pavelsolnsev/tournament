@@ -1,7 +1,7 @@
 <!-- Компонент StandingsTable: турнирная таблица мест и очков команд. -->
 <template>
   <!-- Без overflow-x-auto — таблица должна помещаться в любой ширине экрана -->
-  <div class="w-full rounded-xl border border-slate-200 dark:border-slate-700/60 overflow-hidden">
+  <div class="w-full rounded-xl border border-slate-200/90 bg-slate-50/80 dark:border-slate-700/60 dark:bg-transparent overflow-hidden">
     <table class="w-full table-fixed border-collapse text-left">
       <colgroup>
         <!-- Фиксированные пропорции: таблица выглядит ровно и без скролла -->
@@ -20,7 +20,7 @@
 
       <thead>
         <!-- Шапка таблицы: светлая тема — slate-100 фон, тёмная — slate-800. -->
-        <tr class="border-b border-slate-200 dark:border-slate-700/60 bg-slate-100 dark:bg-slate-800/80">
+        <tr class="border-b border-slate-200 dark:border-slate-700/60 bg-slate-50/90 dark:bg-slate-800/80">
           <th class="whitespace-nowrap px-1 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-500 sm:px-1.5">М</th>
           <th class="px-1 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-500 sm:px-1.5">Команда</th>
           <th class="whitespace-nowrap px-1 py-2.5 text-center text-xs font-semibold text-slate-600 dark:text-slate-500">И</th>
@@ -39,7 +39,7 @@
         <tr
           v-for="(row, i) in computedRows"
           :key="row.teamName"
-          class="border-b border-slate-100 dark:border-slate-800/50 transition-colors last:border-0 md:hover:bg-slate-50 dark:md:hover:bg-slate-800/30"
+          class="border-b border-slate-100/90 dark:border-slate-800/50 transition-colors last:border-0 md:hover:bg-white/80 dark:md:hover:bg-slate-800/30"
         >
           <!-- Место -->
           <td class="whitespace-nowrap px-1 py-3 text-sm font-medium tabular-nums text-slate-600 dark:text-slate-400 sm:px-1.5">
@@ -49,9 +49,11 @@
           <!-- Команда: маркер + имя — truncate не даёт ломать соседние ячейки -->
           <td class="min-w-0 px-1 py-3 sm:px-1.5">
             <div class="flex min-w-0 items-center gap-1">
-              <span class="shrink-0 text-sm leading-none" aria-hidden="true">
-                {{ markerForTeam(row.teamName, i) }}
-              </span>
+              <AtomsTeamMarkerOrLogo
+                :team-name="row.teamName"
+                :marker="markerForTeam(row.teamName, i)"
+                size="sm"
+              />
               <span class="min-w-0 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
                 {{ row.teamName }}
               </span>

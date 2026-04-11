@@ -42,7 +42,7 @@
         <!-- Строка матча: счёт + команды -->
         <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-3">
           <div class="flex min-w-0 items-center gap-2">
-            <span aria-hidden="true" class="shrink-0 text-base leading-none">{{ teamMarker(m.homeTeam) }}</span>
+            <AtomsTeamMarkerOrLogo :team-name="m.homeTeam" :marker="teamMarker(m.homeTeam)" size="md" />
             <span class="min-w-0 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{{ m.homeTeam }}</span>
           </div>
           <div class="flex shrink-0 flex-col items-center gap-0.5">
@@ -55,7 +55,7 @@
           </div>
           <div class="flex min-w-0 items-center justify-end gap-2">
             <span class="min-w-0 truncate text-right text-sm font-semibold text-slate-700 dark:text-slate-200">{{ m.awayTeam }}</span>
-            <span aria-hidden="true" class="shrink-0 text-base leading-none">{{ teamMarker(m.awayTeam) }}</span>
+            <AtomsTeamMarkerOrLogo :team-name="m.awayTeam" :marker="teamMarker(m.awayTeam)" size="md" />
           </div>
         </div>
 

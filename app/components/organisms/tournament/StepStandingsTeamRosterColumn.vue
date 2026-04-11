@@ -5,7 +5,7 @@
     <!-- Заголовок колонки: маркер + название команды -->
     <div class="mb-1 flex min-w-0 items-center gap-1.5 px-0.5">
       <span v-if="teamName" aria-hidden="true" class="shrink-0 text-base leading-none">
-        {{ teamMarker(teamName) }}
+        <AtomsTeamMarkerOrLogo :team-name="teamName" :marker="teamMarker(teamName)" size="sm" />
       </span>
       <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
         {{ teamName }}

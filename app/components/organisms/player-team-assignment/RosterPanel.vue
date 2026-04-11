@@ -21,7 +21,13 @@
       <!-- Шапка панели: маркер + имя команды + счётчик игроков -->
       <div class="flex min-w-0 shrink-0 items-center justify-between gap-3">
         <h2 class="min-w-0 text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100 line-clamp-2 break-words">
-          {{ teamMarker(selectedTeamName) }} {{ selectedTeamName }}
+          <AtomsTeamMarkerOrLogo
+            :team-name="selectedTeamName"
+            :marker="teamMarker(selectedTeamName)"
+            size="md"
+            class="inline-flex align-middle"
+          />
+          {{ selectedTeamName }}
         </h2>
         <span class="shrink-0 rounded-full bg-slate-200 dark:bg-slate-700/60 px-2.5 py-0.5 text-xs tabular-nums text-slate-600 dark:text-slate-400">
           {{ playersInTeam.length }}&thinsp;/&thinsp;{{ players.length }}

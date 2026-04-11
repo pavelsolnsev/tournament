@@ -17,12 +17,12 @@
       <div
         v-for="teamName in teams"
         :key="teamName"
-        class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700/60 dark:bg-slate-900/30"
+        class="overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50/90 dark:border-slate-700/60 dark:bg-slate-900/30"
       >
         <!-- Заголовок команды -->
         <div class="flex items-center gap-2 px-3 py-2.5">
           <span class="shrink-0 text-base leading-none" aria-hidden="true">
-            {{ teamMarker(teamName) }}
+            <AtomsTeamMarkerOrLogo :team-name="teamName" :marker="teamMarker(teamName)" size="sm" />
           </span>
           <span class="min-w-0 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
             {{ teamName }}
@@ -40,7 +40,7 @@
             <li
               v-for="p in playersByTeam(teamName)"
               :key="p.id"
-              class="flex min-w-0 items-center gap-2 rounded-xl border border-transparent bg-slate-100 px-3 py-2.5 dark:bg-slate-800/40"
+              class="flex min-w-0 items-center gap-2 rounded-xl border border-transparent bg-slate-100/80 px-3 py-2.5 dark:bg-slate-800/40"
             >
               <AtomsPlayerAvatar
                 class="shrink-0"

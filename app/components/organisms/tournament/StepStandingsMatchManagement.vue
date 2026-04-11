@@ -84,7 +84,7 @@
       <!-- Табло -->
       <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-slate-200 dark:border-slate-700/60 px-4 py-3">
         <p class="flex items-center gap-1.5 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
-          <span class="shrink-0">{{ teamMarker(homeTeam) }}</span>
+          <AtomsTeamMarkerOrLogo :team-name="homeTeam" :marker="teamMarker(homeTeam)" size="md" />
           <span class="truncate">{{ homeTeam }}</span>
         </p>
 
@@ -99,7 +99,7 @@
 
         <p class="flex items-center justify-end gap-1.5 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
           <span class="truncate">{{ awayTeam }}</span>
-          <span class="shrink-0">{{ teamMarker(awayTeam) }}</span>
+          <AtomsTeamMarkerOrLogo :team-name="awayTeam" :marker="teamMarker(awayTeam)" size="md" />
         </p>
       </div>
 

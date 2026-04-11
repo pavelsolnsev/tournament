@@ -46,7 +46,7 @@
       id="summary-standings"
       class="scroll-mt-24 px-4 pt-5 pb-4 sm:px-6"
     >
-      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">📊 Итоговая таблица</p>
+      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">📊 Итоговая таблица</p>
       <OrganismsStandingsTable
         :teams="props.summary.standingsRows.map(r => r.teamName)"
         :rows="props.summary.standingsRows"
@@ -62,15 +62,15 @@
       id="summary-mvp"
       class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
     >
-      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">⭐ MVP турнира</p>
+      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">⭐ MVP турнира</p>
 
       <div
         v-for="player in props.summary.mvp"
         :key="player.playerId"
-        class="relative overflow-hidden rounded-2xl border border-amber-400/60 bg-gradient-to-br from-amber-100 to-slate-50 p-4
-               dark:border-amber-500/25 dark:from-amber-500/10 dark:to-slate-800/70"
+        class="relative overflow-hidden rounded-2xl border border-amber-300/50 bg-slate-50 p-4
+               dark:border-amber-500/25 dark:bg-slate-800/70"
       >
-        <div class="pointer-events-none absolute -left-4 -top-4 h-32 w-32 rounded-full bg-amber-400/10 blur-3xl" aria-hidden="true" />
+        <div class="pointer-events-none absolute -left-4 -top-4 h-32 w-32 rounded-full bg-amber-300/10 blur-3xl" aria-hidden="true" />
 
         <div class="relative flex items-center gap-3">
           <div class="relative shrink-0 h-9 w-9">
@@ -88,7 +88,7 @@
 
           <div class="min-w-0 flex-1 flex flex-col justify-center gap-0.5">
             <div class="flex min-w-0 items-center gap-1.5">
-              <p class="min-w-0 truncate text-[14px] font-bold leading-tight text-amber-700 dark:text-amber-200">{{ player.name }}</p>
+              <p class="min-w-0 truncate text-[14px] font-bold leading-tight text-slate-800 dark:text-amber-200">{{ player.name }}</p>
               <div
                 v-if="player.tournamentStats && mvpMarksTotal(player.tournamentStats) > 0"
                 class="flex shrink-0 flex-wrap items-center gap-1"
@@ -100,12 +100,16 @@
               </div>
             </div>
             <p class="flex items-center gap-1 text-[11px] leading-none text-slate-600 dark:text-slate-400">
-              <span class="shrink-0" aria-hidden="true">{{ player.teamMarker }}</span>
+              <AtomsTeamMarkerOrLogo
+                :team-name="player.teamName"
+                :marker="player.teamMarker"
+                size="xs"
+              />
               <span class="truncate">{{ player.teamName }}</span>
             </p>
           </div>
 
-          <span class="shrink-0 self-center rounded-md bg-amber-500/15 px-2 py-1 text-[11px] font-bold tracking-wider text-amber-900 ring-1 ring-amber-500/30 dark:text-amber-300 dark:ring-amber-500/25">
+          <span class="shrink-0 self-center rounded-md bg-amber-400/15 px-2 py-1 text-[11px] font-bold tracking-wider text-amber-800 ring-1 ring-amber-300/40 dark:text-amber-300 dark:ring-amber-500/25">
             MVP
           </span>
         </div>
@@ -120,7 +124,7 @@
       id="summary-awards"
       class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
     >
-      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">🎖️ Индивидуальные награды</p>
+      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">🎖️ Индивидуальные награды</p>
 
       <div class="flex flex-col gap-2 sm:grid sm:grid-cols-3">
         <AtomsAwardCard
@@ -161,13 +165,13 @@
       id="summary-yellows"
       class="scroll-mt-24 px-4 pb-5 sm:px-6"
     >
-      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">🟨 Жёлтые карточки</p>
+      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">🟨 Жёлтые карточки</p>
 
       <div class="flex flex-col gap-1.5">
         <div
           v-for="player in props.summary.yellowCards"
           :key="player.playerId"
-          class="flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5
+          class="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-2.5
                  dark:border-yellow-500/15 dark:bg-yellow-500/5"
         >
           <AtomsPlayerAvatar
@@ -180,7 +184,11 @@
           <div class="min-w-0 flex-1 flex flex-col justify-center gap-0.5">
             <p class="truncate text-[13px] font-semibold leading-tight text-slate-800 dark:text-slate-200">{{ player.name }}</p>
             <p class="flex items-center gap-1 text-[11px] leading-none text-slate-600 dark:text-slate-500">
-              <span class="shrink-0" aria-hidden="true">{{ player.teamMarker }}</span>
+              <AtomsTeamMarkerOrLogo
+                :team-name="player.teamName"
+                :marker="player.teamMarker"
+                size="xs"
+              />
               <span class="truncate">{{ player.teamName }}</span>
             </p>
           </div>
@@ -192,7 +200,7 @@
               class="inline-block h-4 w-3 rounded-sm bg-yellow-400 ring-1 ring-yellow-500/50"
               aria-hidden="true"
             />
-            <span class="ml-1 text-[12px] font-bold tabular-nums text-amber-900 dark:text-yellow-300">{{ player.count }}</span>
+            <span class="ml-1 text-[12px] font-bold tabular-nums text-amber-800 dark:text-yellow-300">{{ player.count }}</span>
           </div>
         </div>
       </div>
@@ -204,7 +212,7 @@
     <template v-if="hasRosterData">
       <div id="summary-rosters" class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6">
         <div
-          class="overflow-hidden rounded-2xl border bg-slate-50 dark:bg-slate-900/60 transition-colors"
+          class="overflow-hidden rounded-2xl border bg-slate-50/90 dark:bg-slate-900/60 transition-colors"
           :class="isRosterOpen ? 'border-slate-300 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
         >
           <button
@@ -212,7 +220,7 @@
             type="button"
             class="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-            :class="isRosterOpen ? 'bg-slate-50 dark:bg-slate-800/80' : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'"
+            :class="isRosterOpen ? 'bg-slate-50/80 dark:bg-slate-800/80' : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/30'"
             :aria-expanded="isRosterOpen"
             :aria-controls="rosterPanelId"
             @click="isRosterOpen = !isRosterOpen"
@@ -221,7 +229,7 @@
               <span class="truncate">👥 Составы</span>
               <span
                 class="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-                :class="isRosterOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'"
+                :class="isRosterOpen ? 'bg-emerald-400/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'"
               >
                 {{ isRosterOpen ? 'Открыт' : 'Скрыт' }}
               </span>
@@ -280,13 +288,13 @@
       id="summary-team-mvps"
       class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
     >
-      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">👑 MVP команд</p>
+      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">👑 MVP команд</p>
 
       <div class="flex flex-col gap-2 sm:grid sm:grid-cols-2">
         <div
           v-for="teamMvp in props.summary.teamMvps"
           :key="teamMvp.teamName"
-          class="flex items-center gap-3 rounded-xl border border-slate-300 bg-slate-50 p-3 dark:border-slate-700/60 dark:bg-slate-800/50"
+          class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-700/60 dark:bg-slate-800/50"
         >
           <div class="relative shrink-0">
             <AtomsPlayerAvatar
@@ -294,10 +302,16 @@
               :fallback-name="teamMvp.players[0]?.name ?? teamMvp.teamName"
               size="md"
             />
-            <span
-              class="absolute -bottom-0.5 -right-0.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-white text-[10px] ring-1 ring-slate-300 dark:bg-slate-900 dark:ring-slate-700/60"
+            <div
+              class="absolute -bottom-0.5 -right-0.5 flex h-[18px] w-[18px] items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-slate-300 dark:bg-slate-900 dark:ring-slate-700/60"
               aria-hidden="true"
-            >{{ teamMvp.teamMarker }}</span>
+            >
+              <AtomsTeamMarkerOrLogo
+                :team-name="teamMvp.teamName"
+                :marker="teamMvp.teamMarker"
+                size="xs"
+              />
+            </div>
           </div>
 
           <div class="min-w-0 flex-1">
@@ -326,7 +340,7 @@
       class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
     >
       <div
-        class="overflow-hidden rounded-2xl border bg-slate-50 dark:bg-slate-900/60 transition-colors"
+        class="overflow-hidden rounded-2xl border bg-slate-50/90 dark:bg-slate-900/60 transition-colors"
         :class="isResultsOpen ? 'border-slate-300 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
       >
         <button
@@ -334,7 +348,7 @@
           type="button"
           class="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-          :class="isResultsOpen ? 'bg-slate-50 dark:bg-slate-800/80' : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'"
+          :class="isResultsOpen ? 'bg-slate-50/80 dark:bg-slate-800/80' : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/30'"
           :aria-expanded="isResultsOpen"
           :aria-controls="resultsPanelId"
           @click="isResultsOpen = !isResultsOpen"
@@ -343,14 +357,14 @@
             <span class="truncate">Результаты</span>
             <span
               class="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-              :class="isResultsOpen ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'"
+              :class="isResultsOpen ? 'bg-emerald-400/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'"
             >
               {{ isResultsOpen ? 'Открыт' : 'Скрыт' }}
             </span>
           </span>
           <div class="flex shrink-0 items-center gap-2">
             <span
-              class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+              class="rounded-full bg-slate-100/90 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-400"
             >
               {{ playedMatchesForResults.length }}
             </span>
@@ -405,55 +419,67 @@
 
     <div v-if="hasPlayedMatches" class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
-    <!-- ─── 8. САМЫЙ РЕЗУЛЬТАТИВНЫЙ МАТЧ ──────────────────────── -->
+    <!-- ─── 8. ТОП-МАТЧ (макс. голов; карточка как «Результаты») ─ -->
     <div
       v-if="props.summary.stats.topScoringMatch"
       id="summary-top-match"
       class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
     >
-      <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">🔥 Самый результативный матч</p>
+      <div
+        class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/90 transition-colors dark:border-slate-600/50 dark:bg-transparent"
+      >
+        <!-- Шапка без отдельного тёмного слоя — фон как у карточки (в тёмной теме тоже прозрачно к странице). -->
+        <div class="flex w-full items-center justify-between gap-3 bg-slate-50/80 px-4 py-3.5 dark:bg-transparent">
+          <span class="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+            <span class="truncate">🔥 Топ-матч</span>
+            <span
+              class="shrink-0 rounded-md bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-300"
+            >
+              {{ pluralGoals(props.summary.stats.topScoringMatchGoals) }}
+            </span>
+          </span>
+          <span
+            class="shrink-0 rounded-md bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-slate-600 tabular-nums dark:bg-slate-800/70 dark:text-slate-400"
+          >
+            М{{ props.summary.stats.topScoringMatch.matchNumber }}
+          </span>
+        </div>
 
-      <div class="overflow-hidden rounded-2xl border border-slate-300 bg-slate-50 dark:border-slate-700/60 dark:bg-slate-800/60">
-        <!-- Мобиль: вертикально -->
-        <div class="sm:hidden">
-          <div class="flex items-center gap-2.5 px-4 pt-4 pb-3">
-            <span class="shrink-0 text-lg leading-none" aria-hidden="true">{{ homeTeamMarker }}</span>
-            <span class="text-[14px] font-semibold text-slate-800 leading-snug dark:text-slate-100">{{ props.summary.stats.topScoringMatch.homeTeam }}</span>
-          </div>
-          <div class="relative flex items-center px-4">
-            <div class="flex-1 border-t border-slate-300 dark:border-slate-700/50" />
-            <div class="mx-3 shrink-0 flex items-baseline gap-1.5 rounded-xl px-4 py-1.5 ring-1" :class="topScoringMatchPillClass">
-              <span class="text-2xl font-black tabular-nums leading-none">{{ props.summary.stats.topScoringMatch.homeGoals }}</span>
-              <span class="text-base font-light leading-none opacity-60">:</span>
-              <span class="text-2xl font-black tabular-nums leading-none">{{ props.summary.stats.topScoringMatch.awayGoals }}</span>
+        <div class="border-t border-slate-200 bg-slate-50/80 px-3 pb-3 pt-1 dark:border-slate-700/50 dark:bg-transparent">
+          <!-- Строка счёта и список игроков — без вложенной карточки с отдельным бордером. -->
+          <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-1 py-3 sm:px-2">
+            <div class="flex min-w-0 items-center gap-2">
+              <AtomsTeamMarkerOrLogo
+                :team-name="props.summary.stats.topScoringMatch.homeTeam"
+                :marker="homeTeamMarker"
+                size="md"
+              />
+              <span class="min-w-0 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{{ props.summary.stats.topScoringMatch.homeTeam }}</span>
             </div>
-            <div class="flex-1 border-t border-slate-300 dark:border-slate-700/50" />
+            <div class="flex shrink-0 flex-col items-center gap-0.5">
+              <span
+                class="rounded-md px-3 py-1 font-mono text-base font-bold tabular-nums ring-1"
+                :class="topScoringMatchPillClass"
+              >
+                {{ props.summary.stats.topScoringMatch.homeGoals }}&nbsp;:&nbsp;{{ props.summary.stats.topScoringMatch.awayGoals }}
+              </span>
+            </div>
+            <div class="flex min-w-0 items-center justify-end gap-2">
+              <span class="min-w-0 truncate text-right text-sm font-semibold text-slate-700 dark:text-slate-200">{{ props.summary.stats.topScoringMatch.awayTeam }}</span>
+              <AtomsTeamMarkerOrLogo
+                :team-name="props.summary.stats.topScoringMatch.awayTeam"
+                :marker="awayTeamMarker"
+                size="md"
+              />
+            </div>
           </div>
-          <div class="flex items-center gap-2.5 px-4 pt-3 pb-4">
-            <span class="shrink-0 text-lg leading-none" aria-hidden="true">{{ awayTeamMarker }}</span>
-            <span class="text-[14px] font-semibold text-slate-800 leading-snug dark:text-slate-100">{{ props.summary.stats.topScoringMatch.awayTeam }}</span>
-          </div>
-        </div>
 
-        <!-- Десктоп: горизонтально -->
-        <div class="hidden sm:flex items-center gap-3 px-6 py-5">
-          <div class="min-w-0 flex-1 flex items-center justify-end gap-2">
-            <span class="min-w-0 text-[15px] font-semibold text-slate-800 leading-tight text-right dark:text-slate-100">{{ props.summary.stats.topScoringMatch.homeTeam }}</span>
-            <span class="shrink-0 text-xl leading-none" aria-hidden="true">{{ homeTeamMarker }}</span>
-          </div>
-          <div class="shrink-0 flex items-baseline gap-2 rounded-2xl px-5 py-2.5 ring-1" :class="topScoringMatchPillClass">
-            <span class="text-3xl font-black tabular-nums leading-none">{{ props.summary.stats.topScoringMatch.homeGoals }}</span>
-            <span class="text-xl font-light leading-none opacity-60">:</span>
-            <span class="text-3xl font-black tabular-nums leading-none">{{ props.summary.stats.topScoringMatch.awayGoals }}</span>
-          </div>
-          <div class="min-w-0 flex-1 flex items-center justify-start gap-2">
-            <span class="shrink-0 text-xl leading-none" aria-hidden="true">{{ awayTeamMarker }}</span>
-            <span class="min-w-0 text-[15px] font-semibold text-slate-800 leading-tight text-left dark:text-slate-100">{{ props.summary.stats.topScoringMatch.awayTeam }}</span>
-          </div>
-        </div>
-
-        <div class="border-t border-slate-300 px-4 py-2 text-center text-[11px] font-medium text-slate-700 dark:border-slate-700/40 dark:text-slate-400">
-          {{ pluralGoals(props.summary.stats.topScoringMatchGoals) }} в матче
+          <OrganismsTournamentPlayedMatchesPlayedMatchDetails
+            :match="props.summary.stats.topScoringMatch"
+            :team-marker="teamMarkerForRow"
+            :player-avatars-by-id="playerAvatarsById"
+            embedded
+          />
         </div>
       </div>
     </div>
@@ -462,7 +488,7 @@
 
     <!-- ─── 9. ССЫЛКИ ────────────────────────────────────────── -->
     <div id="summary-links" class="scroll-mt-24 px-4 pt-4 pb-5 sm:px-6 print:break-inside-avoid">
-      <p class="mb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">🔗 Полезные ссылки</p>
+      <p class="mb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">🔗 Полезные ссылки</p>
       <!-- Телефон: кнопки на всю ширину. Десктоп (sm+): чипы по тексту и перенос строки. -->
       <ul class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-2">
         <li v-for="item in usefulLinks" :key="item.href" class="w-full min-w-0 sm:w-auto">
@@ -470,7 +496,7 @@
             :href="item.href"
             target="_blank"
             rel="noopener noreferrer"
-            class="flex w-full items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-100 sm:inline-flex sm:w-auto sm:max-w-full sm:py-2 dark:border-slate-700/50 dark:bg-slate-800/40 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800/70"
+            class="flex w-full items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-white sm:inline-flex sm:w-auto sm:max-w-full sm:py-2 dark:border-slate-700/50 dark:bg-slate-800/40 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800/70"
           >
             <span class="shrink-0" aria-hidden="true">{{ item.icon }}</span>
             <span>{{ item.label }}</span>
@@ -512,7 +538,7 @@ const EmptyAward = defineComponent({
     return () =>
       h(
         'div',
-        { class: 'flex items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 dark:border-slate-700/40 dark:bg-slate-800/20' },
+        { class: 'flex items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-3 dark:border-slate-700/40 dark:bg-slate-800/20' },
         [
           h('span', { class: 'text-base opacity-40 dark:opacity-30', 'aria-hidden': 'true' }, props.icon),
           h('span', { class: 'text-[12px] text-slate-600 dark:text-slate-500' }, props.text),

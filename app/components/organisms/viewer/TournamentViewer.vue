@@ -8,12 +8,19 @@
     <header
       class="absolute inset-x-0 top-0 z-20 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)] print:hidden"
     >
+      <!-- Одна строка по умолчанию; вторую включаем только если левая группа реально наезжает на кнопки (syncHeaderWrap). -->
       <div
-        class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6 h-14"
+        ref="headerRootRef"
+        class="mx-auto flex w-full min-w-0 max-w-4xl gap-2 px-3 sm:gap-3 sm:px-6"
+        :class="
+          headerActionsWrap
+            ? 'flex-col py-2'
+            : 'h-14 flex-row items-center justify-between py-0'
+        "
       >
         <!-- Лого снаружи min-w-0 — иначе на узком экране flex сжимает колонку с заголовком и картинка пропадает. -->
         <!-- Между лого и текстом/бейджем узкий зазор — визуально одна группа. -->
-        <div class="flex min-w-0 min-h-0 flex-1 items-center gap-1 sm:gap-1.5">
+        <div ref="headerLeftRef" class="flex min-h-0 min-w-0 flex-1 items-center gap-1 sm:gap-1.5">
           <img
             src="/favicon-96x96.png"
             srcset="/favicon-96x96.png 1x, /icon-192.png 2x"
@@ -32,7 +39,7 @@
               :class="tournamentName ? 'flex-1' : 'shrink-0'"
             >
               <h1
-                class="truncate text-base font-bold text-slate-800 dark:text-slate-50 sm:text-lg leading-tight"
+                class="truncate text-sm font-bold leading-tight text-slate-800 dark:text-slate-50 sm:text-base sm:text-lg"
               >
                 <span v-if="tournamentName">{{ tournamentName }}</span>
                 <span v-else class="sr-only">Турнир</span>
@@ -48,12 +55,18 @@
           </div>
         </div>
 
-        <!-- Кнопки шапки: плотнее иконки, тач-зона у кнопок как была (атомы). -->
-        <div class="flex shrink-0 items-center gap-0.5 sm:gap-1">
+        <div
+          ref="headerActionsRef"
+          class="flex shrink-0 items-center justify-end gap-px sm:gap-0.5"
+          :class="
+            headerActionsWrap &&
+              'w-full border-t border-slate-200/80 pt-1.5 dark:border-slate-700/60 dark:pt-1.5'
+          "
+        >
           <!-- Кнопка обновить — зритель может вручную получить свежие данные в любой момент. -->
           <button
             type="button"
-            class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100/60 hover:text-slate-700 active:bg-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:h-11 sm:w-11 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200 dark:active:bg-slate-800"
             :class="isRefreshing && 'pointer-events-none'"
             aria-label="Обновить"
             @click="handleRefresh"
@@ -78,12 +91,12 @@
           <!-- Кнопка «Войти»: спокойная (для владельца), но с нормальной тач-зоной -->
           <button
             type="button"
-            class="inline-flex h-11 items-center gap-1 rounded-xl px-2 text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:gap-2 sm:px-3"
+            class="inline-flex h-10 items-center gap-1 rounded-xl px-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100/60 hover:text-slate-700 active:bg-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:h-11 sm:gap-2 sm:px-3 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200 dark:active:bg-slate-800"
             aria-label="Войти как администратор"
             @click="onAdminEnter"
           >
             <span aria-hidden="true">🔐</span>
-            Войти
+            <span :class="headerActionsWrap ? 'inline' : 'hidden sm:inline'">Войти</span>
           </button>
         </div>
       </div>
@@ -110,7 +123,11 @@
             <span
               class="min-w-0 flex items-center justify-end gap-1.5 text-right text-sm font-semibold text-slate-800 dark:text-slate-100 flex-1"
             >
-              <span class="shrink-0">{{ liveHomeMarker }}</span>
+              <AtomsTeamMarkerOrLogo
+                :team-name="liveHomeTeam"
+                :marker="liveHomeMarker"
+                size="md"
+              />
               <span class="truncate">{{ liveHomeTeam }}</span>
             </span>
             <!-- Счёт: ничья — серая плашка; лидер — в цвете команды из настроек турнира. -->
@@ -125,7 +142,11 @@
               class="min-w-0 flex items-center justify-start gap-1.5 text-left text-sm font-semibold text-slate-800 dark:text-slate-100 flex-1"
             >
               <span class="truncate">{{ liveAwayTeam }}</span>
-              <span class="shrink-0">{{ liveAwayMarker }}</span>
+              <AtomsTeamMarkerOrLogo
+                :team-name="liveAwayTeam"
+                :marker="liveAwayMarker"
+                size="md"
+              />
             </span>
           </div>
 
@@ -248,17 +269,10 @@
       </Transition>
     </header>
 
-    <!-- main всегда присутствует в DOM — стабильный каркас без прыжков при refresh -->
-    <!-- Отступ сверху увеличивается когда live-блок активен: базово ~36px, с статистикой ~до 100px -->
+    <!-- main: если шапка в два ряда — больше pt на мобилке; одна строка — как h-14. -->
     <main
       class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 transition-[padding] duration-300 print:max-w-none print:px-4 sm:px-6 print:!pt-6"
-      :class="
-        matchStatus === 'live' && liveHomeTeam && liveAwayTeam
-          ? livePlayerRows.length > 0
-            ? 'pt-[calc(theme(spacing.14)+env(safe-area-inset-top)+6.5rem)]'
-            : 'pt-[calc(theme(spacing.14)+env(safe-area-inset-top)+2.75rem)]'
-          : 'pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]'
-      "
+      :class="mainTopPaddingClass"
     >
       <div class="flex flex-1 flex-col py-5 sm:py-8">
         <!-- Заглушка «турнир не начался» — сверху, как обычный контент -->
@@ -285,7 +299,7 @@
               </p>
             </div>
 
-            <!-- Ссылка на архив прошлых турниров — видна пока новый не начался -->
+            <!-- Ссылка на архив — пока турнир не стартовал, зритель может уйти к прошлым. -->
             <NuxtLink
               to="/tournaments"
               class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/60 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 transition-all hover:border-emerald-400/60 dark:hover:border-emerald-500/40 hover:text-emerald-700 dark:hover:text-emerald-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
@@ -301,19 +315,9 @@
           v-else-if="matchStatus === 'finished' && tournamentSummary"
           class="flex flex-col gap-3"
         >
-          <!-- Ссылка в архив — на главной не было крошек, зритель ищет прошлые турниры здесь. -->
-          <div class="flex flex-wrap items-center gap-2 print:hidden">
-            <NuxtLink
-              to="/tournaments"
-              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-emerald-400/60 hover:text-emerald-800 dark:border-slate-700/60 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:border-emerald-500/40 dark:hover:text-emerald-300"
-            >
-              <span aria-hidden="true">🏆</span>
-              Прошлые турниры
-            </NuxtLink>
-          </div>
           <!-- Обёртка даёт чуть более тёмный фон в светлой теме для контраста со страницей -->
           <div
-            class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-700/50 dark:bg-slate-900/60 print:border-slate-300 print:shadow-none"
+            class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-700/50 dark:bg-slate-900/60 print:border-slate-300 print:shadow-none"
           >
             <OrganismsViewerTournamentSummary
               :summary="tournamentSummary"
@@ -366,6 +370,7 @@
 </template>
 
 <script setup lang="ts">
+import { nextTick, onMounted, onUnmounted, watch } from "vue";
 import type { Player } from "~/types/tournament";
 import type { SavedTournamentContext } from "~/composables/useTournamentWizard";
 import type { SavedStandingsSnapshot } from "~/composables/useTournamentWizard";
@@ -389,6 +394,50 @@ const props = defineProps<{
 
 const showLoginModal = ref(false);
 const { restoreSession } = useAdminAuth();
+
+// Шапка: перенос кнопок на вторую строку только если правая граница левого блока заходит на кнопки.
+const headerRootRef = ref<HTMLElement | null>(null);
+const headerLeftRef = ref<HTMLElement | null>(null);
+const headerActionsRef = ref<HTMLElement | null>(null);
+const headerActionsWrap = ref(false);
+
+function syncHeaderWrap() {
+  const root = headerRootRef.value;
+  const left = headerLeftRef.value;
+  const actions = headerActionsRef.value;
+  if (!root || !left || !actions) return;
+  headerActionsWrap.value = false;
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      const lr = left.getBoundingClientRect();
+      const ar = actions.getBoundingClientRect();
+      headerActionsWrap.value = lr.right > ar.left - 2;
+    });
+  });
+}
+
+let headerResizeObserver: ResizeObserver | null = null;
+
+onMounted(() => {
+  syncHeaderWrap();
+  headerResizeObserver = new ResizeObserver(() => syncHeaderWrap());
+  if (headerRootRef.value) headerResizeObserver.observe(headerRootRef.value);
+});
+
+onUnmounted(() => {
+  headerResizeObserver?.disconnect();
+  headerResizeObserver = null;
+});
+
+watch(
+  () => [props.state?.tournamentName, props.state?.matchStatus],
+  () => nextTick(() => syncHeaderWrap()),
+);
+
+watch(
+  () => [props.state?.liveHomeTeam, props.state?.liveAwayTeam],
+  () => nextTick(() => syncHeaderWrap()),
+);
 
 function onAdminEnter() {
   // Если сессия уже есть — входим сразу, без пароля.
@@ -622,6 +671,28 @@ const livePlayerRows = computed<LivePlayerRow[]>(() => {
     if (row) rows.push(row);
   }
   return rows;
+});
+
+// Отступ main под высоту шапки: вторая строка кнопок — только если headerActionsWrap (строки целиком для JIT).
+const mainTopPaddingClass = computed(() => {
+  const wrap = headerActionsWrap.value;
+  const live =
+    matchStatus.value === "live" &&
+    Boolean(liveHomeTeam.value) &&
+    Boolean(liveAwayTeam.value);
+  if (!live) {
+    return wrap
+      ? "pt-[calc(6.75rem+env(safe-area-inset-top))] sm:pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]"
+      : "pt-[calc(theme(spacing.14)+env(safe-area-inset-top))] sm:pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]";
+  }
+  if (livePlayerRows.value.length > 0) {
+    return wrap
+      ? "pt-[calc(6.75rem+env(safe-area-inset-top)+6.5rem)] sm:pt-[calc(theme(spacing.14)+env(safe-area-inset-top)+6.5rem)]"
+      : "pt-[calc(theme(spacing.14)+env(safe-area-inset-top)+6.5rem)] sm:pt-[calc(theme(spacing.14)+env(safe-area-inset-top)+6.5rem)]";
+  }
+  return wrap
+    ? "pt-[calc(6.75rem+env(safe-area-inset-top)+2.75rem)] sm:pt-[calc(theme(spacing.14)+env(safe-area-inset-top)+2.75rem)]"
+    : "pt-[calc(theme(spacing.14)+env(safe-area-inset-top)+2.75rem)] sm:pt-[calc(theme(spacing.14)+env(safe-area-inset-top)+2.75rem)]";
 });
 
 const snapshotKey = computed(() => {

@@ -1,5 +1,7 @@
 // Этот файл: composable для цветов/маркеров команд.
 // Он нужен, чтобы показывать командам одинаковые маркеры по индексу цвета.
+import { getTeamLogoSrc as getTeamLogoSrcFromMap } from '~/utils/teamLogos'
+
 export function useTeamColors() {
   // Порядок маркеров: индекс совпадает с номером команды минус 1.
   // Команда 1 → 🔴 (0), Команда 2 → 🔵 (1), Команда 3 → 🟢 (2), Команда 4 → 🟡 (3).
@@ -44,6 +46,8 @@ export function useTeamColors() {
     teamMarkers,
     getMarkerByIndex,
     getMatchScorePillClass,
+    /** Путь к логотипу из /team-photos или null — для AtomsTeamMarkerOrLogo. */
+    getTeamLogoSrc: getTeamLogoSrcFromMap,
   }
 }
 

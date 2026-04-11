@@ -3,7 +3,12 @@
   <div class="flex min-h-[2.5rem] items-start gap-2 lg:items-center">
     <!-- Маркер + имя + бейдж: до 2 строк на узкой колонке, без обрезки в одну букву -->
     <div class="flex min-w-0 flex-1 items-start gap-2 lg:items-center">
-      <span aria-hidden="true" class="shrink-0 pt-0.5 text-base leading-none lg:pt-0">{{ teamMarker(name) }}</span>
+      <AtomsTeamMarkerOrLogo
+        :team-name="name"
+        :marker="teamMarker(name)"
+        class="pt-0.5 lg:pt-0"
+        size="md"
+      />
       <span class="flex min-w-0 items-start gap-1.5 lg:items-center">
         <span class="min-w-0 break-words text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 line-clamp-2">{{ name }}</span>
         <span

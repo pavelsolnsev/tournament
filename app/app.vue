@@ -8,13 +8,6 @@
     <h1 class="text-lg font-semibold text-slate-800 dark:text-slate-100">
       Страница не загрузилась
     </h1>
-    <!-- Технический текст только в dev — зрителю достаточно заголовка и кнопки. -->
-    <p
-      v-if="showFaultDetails && faultMessage"
-      class="max-w-md break-words text-left text-xs text-slate-500 dark:text-slate-400"
-    >
-      {{ faultMessage }}
-    </p>
     <button
       type="button"
       class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
@@ -51,8 +44,6 @@ import { useTheme } from '~/composables/useTheme'
 
 const { initTheme } = useTheme()
 const { faultMessage } = useAppClientFault()
-// В шаблоне нельзя писать import.meta — парсер Vue ругается; выносим флаг сюда.
-const showFaultDetails = import.meta.dev
 
 // Полная перезагрузка — самый надёжный способ после сбоя чанка или состояния Vue.
 function reloadPage() {

@@ -34,7 +34,11 @@
           class="shrink-0"
         />
         <span class="min-w-0 flex-1 truncate text-[13px] font-semibold leading-tight text-slate-800 dark:text-slate-100">{{ winner.name }}</span>
-        <span class="shrink-0 text-sm leading-none" aria-hidden="true">{{ winner.teamMarker }}</span>
+        <AtomsTeamMarkerOrLogo
+          :team-name="winner.teamName"
+          :marker="winner.teamMarker"
+          size="sm"
+        />
       </div>
     </div>
   </div>
@@ -53,23 +57,23 @@ const props = defineProps<{
 
 // Фон + граница карточки по цвету категории.
 const borderClass = computed(() => ({
-  emerald: 'border-emerald-500/20 bg-emerald-500/5',
-  sky:     'border-sky-500/20 bg-sky-500/5',
-  violet:  'border-violet-500/20 bg-violet-500/5',
+  emerald: 'border-emerald-300/35 bg-slate-50/90 dark:border-emerald-500/20 dark:bg-emerald-500/5',
+  sky:     'border-sky-300/35 bg-slate-50/90 dark:border-sky-500/20 dark:bg-sky-500/5',
+  violet:  'border-violet-300/35 bg-slate-50/90 dark:border-violet-500/20 dark:bg-violet-500/5',
 }[props.color]))
 
 // Иконка-бейдж.
 const iconBgClass = computed(() => ({
-  emerald: 'bg-emerald-500/15 ring-emerald-500/25',
-  sky:     'bg-sky-500/15 ring-sky-500/25',
-  violet:  'bg-violet-500/15 ring-violet-500/25',
+  emerald: 'bg-emerald-400/15 ring-emerald-300/40 dark:bg-emerald-500/15 dark:ring-emerald-500/25',
+  sky:     'bg-sky-400/15 ring-sky-300/40 dark:bg-sky-500/15 dark:ring-sky-500/25',
+  violet:  'bg-violet-400/15 ring-violet-300/40 dark:bg-violet-500/15 dark:ring-violet-500/25',
 }[props.color]))
 
 // Цвет подписи категории.
 const labelClass = computed(() => ({
-  emerald: 'text-emerald-600/90 dark:text-emerald-500/80',
-  sky:     'text-sky-600/90 dark:text-sky-500/80',
-  violet:  'text-violet-600/90 dark:text-violet-500/80',
+  emerald: 'text-emerald-700/80 dark:text-emerald-500/80',
+  sky:     'text-sky-700/80 dark:text-sky-500/80',
+  violet:  'text-violet-700/80 dark:text-violet-500/80',
 }[props.color]))
 
 // Цвет значения показателя — в светлой теме чуть темнее для контраста.
@@ -81,8 +85,8 @@ const valueClass = computed(() => ({
 
 // Разделитель — того же цвета что и граница.
 const dividerClass = computed(() => ({
-  emerald: 'border-emerald-500/15',
-  sky:     'border-sky-500/15',
-  violet:  'border-violet-500/15',
+  emerald: 'border-emerald-200/50 dark:border-emerald-500/15',
+  sky:     'border-sky-200/50 dark:border-sky-500/15',
+  violet:  'border-violet-200/50 dark:border-violet-500/15',
 }[props.color]))
 </script>

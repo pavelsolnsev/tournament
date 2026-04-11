@@ -14,7 +14,12 @@
         :class="homeOpen ? 'border-emerald-500/50' : 'hover:border-slate-600'"
         @click="toggleHome"
       >
-        <span v-if="homeTeam" class="shrink-0 text-base leading-none">{{ teamMarker(homeTeam) }}</span>
+        <AtomsTeamMarkerOrLogo
+          v-if="homeTeam"
+          :team-name="homeTeam"
+          :marker="teamMarker(homeTeam)"
+          size="md"
+        />
         <span
           class="min-w-0 flex-1 truncate"
           :class="homeTeam ? 'text-slate-800 dark:text-slate-100' : 'text-slate-600 dark:text-slate-500'"
@@ -77,7 +82,7 @@
                 :disabled="name === awayTeam"
                 @click="name !== awayTeam && selectHome(name)"
               >
-                <span class="shrink-0 text-base leading-none">{{ teamMarker(name) }}</span>
+                <AtomsTeamMarkerOrLogo :team-name="name" :marker="teamMarker(name)" size="md" />
                 <span class="min-w-0 truncate">{{ name }}</span>
               </button>
             </li>
@@ -98,7 +103,12 @@
         :class="awayOpen ? 'border-emerald-500/50' : 'hover:border-slate-600'"
         @click="toggleAway"
       >
-        <span v-if="awayTeam" class="shrink-0 text-base leading-none">{{ teamMarker(awayTeam) }}</span>
+        <AtomsTeamMarkerOrLogo
+          v-if="awayTeam"
+          :team-name="awayTeam"
+          :marker="teamMarker(awayTeam)"
+          size="md"
+        />
         <span
           class="min-w-0 flex-1 truncate"
           :class="awayTeam ? 'text-slate-800 dark:text-slate-100' : 'text-slate-600 dark:text-slate-500'"
@@ -161,7 +171,7 @@
                 :disabled="name === homeTeam"
                 @click="name !== homeTeam && selectAway(name)"
               >
-                <span class="shrink-0 text-base leading-none">{{ teamMarker(name) }}</span>
+                <AtomsTeamMarkerOrLogo :team-name="name" :marker="teamMarker(name)" size="md" />
                 <span class="min-w-0 truncate">{{ name }}</span>
               </button>
             </li>

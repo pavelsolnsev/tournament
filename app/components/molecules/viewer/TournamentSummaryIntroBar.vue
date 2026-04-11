@@ -2,7 +2,7 @@
   <div id="summary-intro" class="scroll-mt-24 space-y-4 px-4 pt-5 sm:px-6">
     <!-- Сводка цифр: матчи, голы, передачи и сейвы по всему турниру. -->
     <div
-      class="grid grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-white/80 p-3 dark:border-slate-700/60 dark:bg-slate-800/40 sm:grid-cols-4 sm:p-4"
+      class="grid grid-cols-2 gap-3 rounded-2xl border border-slate-200/90 bg-slate-50 p-3 dark:border-slate-700/60 dark:bg-slate-800/40 sm:grid-cols-4 sm:p-4"
     >
       <div class="flex flex-col items-center gap-0.5 text-center">
         <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Матчи</span>
@@ -26,13 +26,18 @@
     <div
       v-if="champion"
       id="summary-champion"
-      class="scroll-mt-24 overflow-hidden rounded-2xl border border-emerald-400/50 bg-gradient-to-br from-emerald-50 to-slate-50 p-4 dark:border-emerald-500/30 dark:from-emerald-950/40 dark:to-slate-900/80 sm:p-5"
+      class="scroll-mt-24 overflow-hidden rounded-2xl border border-emerald-300/50 bg-slate-50 p-4 dark:border-emerald-500/30 dark:bg-slate-900/70 sm:p-5"
     >
       <p class="mb-2 text-center text-[11px] font-semibold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">Чемпион турнира</p>
       <div class="flex flex-col items-center gap-2 text-center">
         <span class="text-3xl leading-none" aria-hidden="true">🏆</span>
         <div class="flex items-center justify-center gap-2">
-          <span class="text-2xl leading-none" aria-hidden="true">{{ championMarker }}</span>
+          <AtomsTeamMarkerOrLogo
+            v-if="champion"
+            :team-name="champion.teamName"
+            :marker="championMarker"
+            size="lg"
+          />
           <p class="text-lg font-bold leading-tight text-slate-900 dark:text-slate-50 sm:text-xl">
             {{ champion.teamName }}
           </p>
@@ -49,7 +54,7 @@
         v-for="item in navItems"
         :key="item.href"
         :href="item.href"
-        class="inline-flex items-center rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-emerald-400/60 hover:text-emerald-800 dark:border-slate-700/60 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:border-emerald-500/40 dark:hover:text-emerald-300"
+        class="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-emerald-300/70 hover:bg-white hover:text-emerald-800 dark:border-slate-700/60 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:border-emerald-500/40 dark:hover:text-emerald-300"
         @click="onNavClick($event, item.href)"
       >
         {{ item.label }}

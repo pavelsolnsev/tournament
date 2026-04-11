@@ -1,6 +1,11 @@
 <!-- Компонент PlayedMatchDetails: показывает детали матча (отмеченных игроков и их события). -->
 <template>
-  <div class="border-t border-slate-200 bg-slate-50 px-3 pb-3 pt-2.5 dark:border-slate-800/60 dark:bg-slate-950/40">
+  <div
+    class="border-t px-3 pb-3 pt-2.5"
+      :class="props.embedded
+      ? 'border-slate-200 bg-transparent dark:border-slate-700/50 dark:bg-transparent'
+      : 'border-slate-200 bg-slate-50/80 dark:border-slate-800/60 dark:bg-slate-950/40'"
+  >
     <!-- Нет ни одного игрока с событиями -->
     <p
       v-if="match.homePlayers.length === 0 && match.awayPlayers.length === 0"
@@ -13,9 +18,12 @@
 
       <!-- Домашняя команда -->
       <div v-if="match.homePlayers.length > 0" class="min-w-0">
-        <!-- Заголовок: маркер + название — такой же как в ростере текущего матча -->
-        <div class="mb-2 flex min-w-0 items-center gap-1.5 px-0.5">
-          <span aria-hidden="true" class="shrink-0 text-base leading-none">{{ teamMarker(match.homeTeam) }}</span>
+        <!-- В embedded на sm+ заголовок скрыт (две колонки рядом — понятно по порядку); на телефоне снова показываем, когда блоки столбиком. -->
+        <div
+          class="mb-2 flex min-w-0 items-center gap-1.5 px-0.5"
+          :class="props.embedded ? 'sm:hidden' : ''"
+        >
+          <AtomsTeamMarkerOrLogo :team-name="match.homeTeam" :marker="teamMarker(match.homeTeam)" size="md" />
           <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400">{{ match.homeTeam }}</span>
         </div>
         <!-- Список игроков домашней команды -->
@@ -23,7 +31,10 @@
           <li
             v-for="p in match.homePlayers"
             :key="p.playerId"
-            class="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200/90 bg-slate-50 px-3 py-2.5 dark:border-transparent dark:bg-slate-800/40"
+            class="flex min-w-0 items-center gap-2 rounded-xl border px-3 py-2.5"
+            :class="props.embedded
+              ? 'border-slate-200/90 bg-slate-50/80 dark:border-slate-600/50 dark:bg-slate-800/35'
+              : 'border-slate-200/90 bg-slate-50 dark:border-transparent dark:bg-slate-800/40'"
           >
             <AtomsPlayerAvatar
               class="shrink-0"
@@ -51,9 +62,11 @@
 
       <!-- Гостевая команда -->
       <div v-if="match.awayPlayers.length > 0" class="min-w-0">
-        <!-- Заголовок: маркер + название -->
-        <div class="mb-2 flex min-w-0 items-center gap-1.5 px-0.5">
-          <span aria-hidden="true" class="shrink-0 text-base leading-none">{{ teamMarker(match.awayTeam) }}</span>
+        <div
+          class="mb-2 flex min-w-0 items-center gap-1.5 px-0.5"
+          :class="props.embedded ? 'sm:hidden' : ''"
+        >
+          <AtomsTeamMarkerOrLogo :team-name="match.awayTeam" :marker="teamMarker(match.awayTeam)" size="md" />
           <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400">{{ match.awayTeam }}</span>
         </div>
         <!-- Список игроков гостевой команды -->
@@ -61,7 +74,10 @@
           <li
             v-for="p in match.awayPlayers"
             :key="p.playerId"
-            class="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200/90 bg-slate-50 px-3 py-2.5 dark:border-transparent dark:bg-slate-800/40"
+            class="flex min-w-0 items-center gap-2 rounded-xl border px-3 py-2.5"
+            :class="props.embedded
+              ? 'border-slate-200/90 bg-slate-50/80 dark:border-slate-600/50 dark:bg-slate-800/35'
+              : 'border-slate-200/90 bg-slate-50 dark:border-transparent dark:bg-slate-800/40'"
           >
             <AtomsPlayerAvatar
               class="shrink-0"
@@ -95,12 +111,20 @@
 import type { PlayedMatch } from '~/composables/tournament-standings/types'
 import { stripRatingFromDisplayLabel } from '~/composables/usePlayerDisplay'
 
-defineProps<{
-  match: PlayedMatch
-  teamMarker: (teamName: string) => string
-  /** Из StepStandings: фото и настоящее имя по id — для аватаров в деталях. */
-  playerAvatarsById?: Record<number, { photo: string | null; name: string }>
-}>()
+const props = withDefaults(
+  defineProps<{
+    match: PlayedMatch
+    teamMarker: (teamName: string) => string
+    /** Из StepStandings: фото и настоящее имя по id — для аватаров в деталях. */
+    playerAvatarsById?: Record<number, { photo: string | null; name: string }>
+    /**
+     * Встроенный вид (итоги турнира): без повторного заголовка команды и без лишнего тёмного слоя —
+     * строка счёта выше уже показала команды.
+     */
+    embedded?: boolean
+  }>(),
+  { embedded: false },
+)
 
 // Конфигурация бейджей — полностью совпадает с StepStandingsTeamRosterColumn,
 // чтобы стиль событий был одинаковым везде на сайте.
