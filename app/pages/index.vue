@@ -13,8 +13,8 @@
         class="h-10 w-10 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-emerald-500 dark:border-slate-700 dark:border-t-emerald-400"
         aria-hidden="true"
       />
-      <p class="max-w-sm text-center text-sm text-slate-600 dark:text-slate-300">
-        Загружаем интерфейс… Если экран долго не меняется, проверьте интернет или обновите страницу.
+      <p class="text-center text-sm text-slate-600 dark:text-slate-300">
+        Загрузка…
       </p>
     </div>
 
@@ -26,7 +26,7 @@
         class="mx-auto mb-4 flex w-full max-w-4xl flex-col gap-2 rounded-xl border border-amber-300/80 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-50 sm:px-6"
         role="alert"
       >
-        <span>Не удалось загрузить список игроков с сервера.</span>
+        <span>Не удалось загрузить данные.</span>
         <button
           type="button"
           class="self-start rounded-lg border border-amber-400/90 bg-white/80 px-3 py-1.5 text-sm font-medium text-amber-950 transition-colors hover:bg-amber-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 dark:border-amber-600 dark:bg-amber-900/50 dark:text-amber-50 dark:hover:bg-amber-900/80"
@@ -65,7 +65,7 @@
           <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]">
             <div v-if="!wizard.stateRestored.value" class="flex items-center gap-3 py-8 text-sm text-slate-600 dark:text-slate-400">
               <div class="h-9 w-9 shrink-0 animate-spin rounded-full border-2 border-slate-300 dark:border-slate-700 border-t-emerald-500" />
-              <span>Загружаем…</span>
+              <span>Загрузка…</span>
             </div>
 
             <section v-else class="flex w-full flex-col gap-6 py-5 sm:py-8">

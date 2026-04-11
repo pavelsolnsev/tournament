@@ -6,7 +6,7 @@
   >
     <!-- Шапка: absolute + safe-area сверху, не двигает контент -->
     <header
-      class="absolute inset-x-0 top-0 z-20 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)]"
+      class="absolute inset-x-0 top-0 z-20 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)] print:hidden"
     >
       <div
         class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6 h-14"
@@ -251,7 +251,7 @@
     <!-- main всегда присутствует в DOM — стабильный каркас без прыжков при refresh -->
     <!-- Отступ сверху увеличивается когда live-блок активен: базово ~36px, с статистикой ~до 100px -->
     <main
-      class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6 transition-[padding] duration-300"
+      class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 transition-[padding] duration-300 print:max-w-none print:px-4 sm:px-6 print:!pt-6"
       :class="
         matchStatus === 'live' && liveHomeTeam && liveAwayTeam
           ? livePlayerRows.length > 0
@@ -297,25 +297,39 @@
         </div>
 
         <!-- Итоги турнира — показываются когда турнир завершён -->
-        <!-- Обёртка даёт чуть более тёмный фон в светлой теме для контраста со страницей -->
         <div
           v-else-if="matchStatus === 'finished' && tournamentSummary"
-          class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-700/50 dark:bg-slate-900/60"
+          class="flex flex-col gap-3"
         >
-          <OrganismsViewerTournamentSummary
-            :summary="tournamentSummary"
-            :tournament-date="tournamentDate"
-            :venue-label="venueLabel"
-            :format-label="formatLabel"
-            :team-colors="teamColors"
-            :players="players"
-            :assignment-by-player-id="assignmentByPlayerId"
-            :aggregate-player-stats="
-              initialSnapshot?.aggregatePlayerStats ?? {}
-            "
-            :player-rating-deltas="initialSnapshot?.playerRatingDeltas ?? {}"
-            :played-matches-list="finishedPlayedMatches"
-          />
+          <!-- Ссылка в архив — на главной не было крошек, зритель ищет прошлые турниры здесь. -->
+          <div class="flex flex-wrap items-center gap-2 print:hidden">
+            <NuxtLink
+              to="/tournaments"
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-emerald-400/60 hover:text-emerald-800 dark:border-slate-700/60 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:border-emerald-500/40 dark:hover:text-emerald-300"
+            >
+              <span aria-hidden="true">🏆</span>
+              Прошлые турниры
+            </NuxtLink>
+          </div>
+          <!-- Обёртка даёт чуть более тёмный фон в светлой теме для контраста со страницей -->
+          <div
+            class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-700/50 dark:bg-slate-900/60 print:border-slate-300 print:shadow-none"
+          >
+            <OrganismsViewerTournamentSummary
+              :summary="tournamentSummary"
+              :tournament-date="tournamentDate"
+              :venue-label="venueLabel"
+              :format-label="formatLabel"
+              :team-colors="teamColors"
+              :players="players"
+              :assignment-by-player-id="assignmentByPlayerId"
+              :aggregate-player-stats="
+                initialSnapshot?.aggregatePlayerStats ?? {}
+              "
+              :player-rating-deltas="initialSnapshot?.playerRatingDeltas ?? {}"
+              :played-matches-list="finishedPlayedMatches"
+            />
+          </div>
         </div>
 
         <!-- Таблица зрителя — показывается во время турнира.

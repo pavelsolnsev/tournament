@@ -1,5 +1,6 @@
 <template>
-  <section class="flex flex-col">
+  <!-- print: чёрный текст на белом — чтобы PDF не зависел от тёмной темы. -->
+  <section class="flex flex-col print:bg-white print:text-black">
 
     <!-- ─── ШАПКА: дата, место, формат ──────────────────────────── -->
     <div v-if="props.tournamentDate || props.venueLabel || props.formatLabel" class="px-4 pt-5 pb-4 sm:px-6">
@@ -25,8 +26,26 @@
 
     <div v-if="props.tournamentDate || props.venueLabel || props.formatLabel" class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6" />
 
+    <!-- Цифры, чемпион, якорная навигация и печать — компактный вводный блок. -->
+    <MoleculesViewerTournamentSummaryIntroBar
+      v-if="showIntroBar"
+      :stats="props.summary.stats"
+      :champion="championStandingsRow"
+      :champion-marker="championTeamMarker"
+      :nav-items="summaryNavItems"
+    />
+
+    <div
+      v-if="showIntroBar && props.summary.standingsRows.length > 0"
+      class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6"
+    />
+
     <!-- ─── 1. ИТОГОВАЯ ТАБЛИЦА ───────────────────────────────── -->
-    <div v-if="props.summary.standingsRows.length > 0" class="px-4 pt-5 pb-4 sm:px-6">
+    <div
+      v-if="props.summary.standingsRows.length > 0"
+      id="summary-standings"
+      class="scroll-mt-24 px-4 pt-5 pb-4 sm:px-6"
+    >
       <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">📊 Итоговая таблица</p>
       <OrganismsStandingsTable
         :teams="props.summary.standingsRows.map(r => r.teamName)"
@@ -38,7 +57,11 @@
     <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 2. MVP ТУРНИРА ─────────────────────────────────────── -->
-    <div v-if="props.summary.mvp.length > 0" class="px-4 pt-5 pb-5 sm:px-6">
+    <div
+      v-if="props.summary.mvp.length > 0"
+      id="summary-mvp"
+      class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
+    >
       <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">⭐ MVP турнира</p>
 
       <div
@@ -92,7 +115,11 @@
     <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 3. ИНДИВИДУАЛЬНЫЕ НАГРАДЫ ─────────────────────────── -->
-    <div v-if="hasAnyStats" class="px-4 pt-5 pb-5 sm:px-6">
+    <div
+      v-if="hasAnyStats"
+      id="summary-awards"
+      class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
+    >
       <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">🎖️ Индивидуальные награды</p>
 
       <div class="flex flex-col gap-2 sm:grid sm:grid-cols-3">
@@ -129,7 +156,11 @@
     </div>
 
     <!-- ─── 4. ЖЁЛТЫЕ КАРТОЧКИ ──────────────────────────────── -->
-    <div v-if="props.summary.yellowCards.length > 0" class="px-4 pb-5 sm:px-6">
+    <div
+      v-if="props.summary.yellowCards.length > 0"
+      id="summary-yellows"
+      class="scroll-mt-24 px-4 pb-5 sm:px-6"
+    >
       <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">🟨 Жёлтые карточки</p>
 
       <div class="flex flex-col gap-1.5">
@@ -171,7 +202,7 @@
 
     <!-- ─── 5. СОСТАВЫ (аккордеон) ──────────────────────────── -->
     <template v-if="hasRosterData">
-      <div class="px-4 pt-5 pb-5 sm:px-6">
+      <div id="summary-rosters" class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6">
         <div
           class="overflow-hidden rounded-2xl border bg-slate-50 dark:bg-slate-900/60 transition-colors"
           :class="isRosterOpen ? 'border-slate-300 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
@@ -244,7 +275,11 @@
     </template>
 
     <!-- ─── 6. MVP КОМАНД ─────────────────────────────────────── -->
-    <div v-if="props.summary.teamMvps.length > 0" class="px-4 pt-5 pb-5 sm:px-6">
+    <div
+      v-if="props.summary.teamMvps.length > 0"
+      id="summary-team-mvps"
+      class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
+    >
       <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">👑 MVP команд</p>
 
       <div class="flex flex-col gap-2 sm:grid sm:grid-cols-2">
@@ -285,7 +320,11 @@
     <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 7. РЕЗУЛЬТАТЫ МАТЧЕЙ (как на шаге турнира, только чтение) ─ -->
-    <div v-if="hasPlayedMatches" class="px-4 pt-5 pb-5 sm:px-6">
+    <div
+      v-if="hasPlayedMatches"
+      id="summary-results"
+      class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
+    >
       <div
         class="overflow-hidden rounded-2xl border bg-slate-50 dark:bg-slate-900/60 transition-colors"
         :class="isResultsOpen ? 'border-slate-300 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
@@ -367,7 +406,11 @@
     <div v-if="hasPlayedMatches" class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 8. САМЫЙ РЕЗУЛЬТАТИВНЫЙ МАТЧ ──────────────────────── -->
-    <div v-if="props.summary.stats.topScoringMatch" class="px-4 pt-5 pb-5 sm:px-6">
+    <div
+      v-if="props.summary.stats.topScoringMatch"
+      id="summary-top-match"
+      class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
+    >
       <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">🔥 Самый результативный матч</p>
 
       <div class="overflow-hidden rounded-2xl border border-slate-300 bg-slate-50 dark:border-slate-700/60 dark:bg-slate-800/60">
@@ -418,7 +461,7 @@
     <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 9. ССЫЛКИ ────────────────────────────────────────── -->
-    <div class="px-4 pt-4 pb-5 sm:px-6">
+    <div id="summary-links" class="scroll-mt-24 px-4 pt-4 pb-5 sm:px-6 print:break-inside-avoid">
       <p class="mb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">🔗 Полезные ссылки</p>
       <!-- Телефон: кнопки на всю ширину. Десктоп (sm+): чипы по тексту и перенос строки. -->
       <ul class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-2">
@@ -619,6 +662,23 @@ function rosterPlayersByTeam(teamName: string): Player[] {
 // Показываем раздел «Составы» только если переданы игроки.
 const hasRosterData = computed(() => (props.players?.length ?? 0) > 0)
 
+// Вводный блок: есть сыгранные матчи — тогда цифры и навигация имеют смысл.
+const showIntroBar = computed(() => props.summary.stats.totalMatches > 0)
+
+// Чемпион — первая строка таблицы по месту (итог уже отсортирован на сервере, но сортируем на всякий случай).
+const championStandingsRow = computed(() => {
+  const rows = props.summary.standingsRows
+  if (!rows.length) return null
+  return [...rows].sort((a, b) => a.place - b.place)[0] ?? null
+})
+
+// Маркер цвета для карточки чемпиона — тот же резолвер, что у строк таблицы.
+const championTeamMarker = computed(() => {
+  const row = championStandingsRow.value
+  if (!row) return ''
+  return teamMarkerForRow(row.teamName)
+})
+
 // Блок «Индивидуальные награды» нужен только если хоть у кого-то есть статистика.
 // Если все матчи прошли без голов/пасов/сейвов/карточек — этот блок скрываем.
 const hasAnyStats = computed(() =>
@@ -627,6 +687,21 @@ const hasAnyStats = computed(() =>
   props.summary.topGoalkeepers.length > 0 ||
   props.summary.yellowCards.length > 0,
 )
+
+// Якоря в навигации — пропускаем пустые разделы, чтобы ссылки не вели в никуда.
+const summaryNavItems = computed(() => {
+  const items: { href: string; label: string }[] = []
+  if (props.summary.standingsRows.length > 0) items.push({ href: '#summary-standings', label: 'Таблица' })
+  if (props.summary.mvp.length > 0) items.push({ href: '#summary-mvp', label: 'MVP' })
+  if (hasAnyStats.value) items.push({ href: '#summary-awards', label: 'Награды' })
+  if (props.summary.yellowCards.length > 0) items.push({ href: '#summary-yellows', label: 'Карточки' })
+  if (hasRosterData.value) items.push({ href: '#summary-rosters', label: 'Составы' })
+  if (props.summary.teamMvps.length > 0) items.push({ href: '#summary-team-mvps', label: 'MVP команд' })
+  if (hasPlayedMatches.value) items.push({ href: '#summary-results', label: 'Матчи' })
+  if (props.summary.stats.topScoringMatch) items.push({ href: '#summary-top-match', label: 'Топ-матч' })
+  items.push({ href: '#summary-links', label: 'Ссылки' })
+  return items
+})
 
 // Склонение: голы.
 function pluralGoals(n: number): string {

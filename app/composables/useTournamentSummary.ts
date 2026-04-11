@@ -37,6 +37,10 @@ export type TeamMvp = {
 export type TournamentSummaryStats = {
   totalMatches: number
   totalGoals: number
+  /** Сумма передач по всем игрокам за турнир. */
+  totalAssists: number
+  /** Сумма сейвов по всем игрокам за турнир. */
+  totalSaves: number
   avgGoalsPerMatch: number
   topScoringMatch: PlayedMatch | null
   topScoringMatchGoals: number
@@ -358,6 +362,12 @@ export function useTournamentSummary(params: SummaryParams): TournamentSummary {
     (sum, m) => sum + m.homeGoals + m.awayGoals,
     0,
   )
+  let totalAssists = 0
+  let totalSaves = 0
+  for (const s of Object.values(params.aggregatePlayerStats)) {
+    totalAssists += s.assists ?? 0
+    totalSaves += s.saves ?? 0
+  }
   const avgGoalsPerMatch = totalMatches > 0
     ? Math.round((totalGoals / totalMatches) * 10) / 10
     : 0
@@ -400,6 +410,8 @@ export function useTournamentSummary(params: SummaryParams): TournamentSummary {
     stats: {
       totalMatches,
       totalGoals,
+      totalAssists,
+      totalSaves,
       avgGoalsPerMatch,
       topScoringMatch,
       topScoringMatchGoals,

@@ -1,7 +1,7 @@
 <template>
   <div class="flex min-h-full flex-col bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
 
-    <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)]">
+    <header class="absolute inset-x-0 top-0 z-20 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)] print:hidden">
       <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6 h-14">
 
         <!-- Режим администратора: зелёная точка + подпись (как на главной) -->
@@ -109,10 +109,10 @@
       </div>
     </header>
 
-    <main class="mx-auto w-full max-w-4xl flex-1 px-3 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))] py-5 sm:py-8">
+    <main class="mx-auto w-full max-w-4xl flex-1 px-3 py-5 sm:px-6 sm:py-8 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))] print:!pt-6 print:max-w-none">
 
       <!-- Хлебные крошки: Турнир / Архив / Название турнира -->
-      <nav aria-label="Навигация" class="mb-5">
+      <nav aria-label="Навигация" class="mb-5 print:hidden">
         <ol class="flex min-w-0 flex-wrap items-center gap-1">
           <li class="flex items-center gap-1">
             <NuxtLink
@@ -170,7 +170,7 @@
       <!-- Итоги турнира — тот же компонент что зритель видит на главной -->
       <div
         v-else-if="tournament && tournamentSummary"
-        class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-700/50 dark:bg-slate-900/60"
+        class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-700/50 dark:bg-slate-900/60 print:border-slate-300 print:shadow-none"
       >
         <OrganismsViewerTournamentSummary
           :summary="tournamentSummary"
@@ -207,10 +207,10 @@ const id = route.params.id as string
 // Загружаем данные турнира по id из URL.
 const { data: tournament, error } = await useFetch(`/api/tournaments/${id}`)
 
-// Мета-теги — для красивого заголовка во вкладке и при шаринге.
-useHead({
-  title: computed(() => tournament.value?.tournamentName || 'Итоги турнира'),
-})
+// Абсолютный URL страницы — для canonical и Open Graph (превью в соцсетях).
+const requestURL = useRequestURL()
+const pageCanonical = computed(() => `${requestURL.origin}/tournaments/${id}`)
+const ogImageAbsolute = computed(() => `${requestURL.origin}/icon-192.png`)
 
 // Нормализуем цвета команд — как в TournamentViewer.
 const teamColors = computed(() =>
@@ -244,6 +244,48 @@ const tournamentSummary = computed(() => {
     playerRatingDeltas: t.snapshot.playerRatingDeltas,
     teamColors: teamColors.value,
   })
+})
+
+// Текст для соцсетей и поиска: название, чемпион по таблице, сухие цифры.
+const tournamentSeoDescription = computed(() => {
+  const t = tournament.value
+  if (!t) return 'Итоги турнира РФОИ — таблица, награды и матчи в архиве.'
+  const sum = tournamentSummary.value
+  if (!sum) {
+    return `«${t.tournamentName}» — карточка турнира в архиве РФОИ.`
+  }
+  const sorted = [...sum.standingsRows].sort((a, b) => a.place - b.place)
+  const champ = sorted[0]?.teamName
+  const { totalMatches, totalGoals, avgGoalsPerMatch } = sum.stats
+  const avg = Number.isInteger(avgGoalsPerMatch) ? String(avgGoalsPerMatch) : avgGoalsPerMatch.toFixed(1)
+  const bits = [
+    `Итоги турнира «${t.tournamentName}».`,
+    champ ? `Чемпион: ${champ}.` : '',
+    `${totalMatches} матчей, ${totalGoals} голов, в среднем ${avg} за матч.`,
+  ]
+  return bits.filter(Boolean).join(' ')
+})
+
+const tournamentPageTitle = computed(() => tournament.value?.tournamentName || 'Итоги турнира')
+
+useSeoMeta({
+  title: tournamentPageTitle,
+  description: tournamentSeoDescription,
+  ogSiteName: 'РФОИ',
+  ogTitle: tournamentPageTitle,
+  ogDescription: tournamentSeoDescription,
+  ogType: 'article',
+  ogUrl: pageCanonical,
+  ogLocale: 'ru_RU',
+  ogImage: ogImageAbsolute,
+  twitterCard: 'summary_large_image',
+  twitterTitle: tournamentPageTitle,
+  twitterDescription: tournamentSeoDescription,
+  robots: 'index, follow',
+})
+
+useHead({
+  link: [{ rel: 'canonical', href: pageCanonical }],
 })
 
 // Состояние кнопки «Копировать ссылку» — на 2 секунды меняет иконку на галочку.

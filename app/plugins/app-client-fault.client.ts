@@ -15,17 +15,17 @@ export default defineNuxtPlugin((nuxtApp) => {
     // Ресурсные ошибки: только скрипты и стили ломают приложение; картинки и шрифты не закрываем весь экран.
     if (el && el !== window && el instanceof HTMLElement) {
       if (el.tagName === 'SCRIPT' || el.tagName === 'LINK') {
-        setClientFault('Не удалось загрузить файл страницы. Проверьте сеть или отключите блокировщик.')
+        setClientFault('Файл страницы не загрузился')
       }
       return
     }
-    const msg = event.message?.trim() || 'Ошибка загрузки или выполнения скрипта'
+    const msg = event.message?.trim() || 'Ошибка скрипта'
     setClientFault(msg)
   })
 
   window.addEventListener('unhandledrejection', (event) => {
     const r = event.reason
     const msg = r instanceof Error ? r.message : String(r)
-    setClientFault(msg.trim() || 'Необработанная ошибка в промисе')
+    setClientFault(msg.trim() || 'Ошибка')
   })
 })
