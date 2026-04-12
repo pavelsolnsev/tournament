@@ -430,12 +430,21 @@
       >
         <!-- Шапка без отдельного тёмного слоя — фон как у карточки (в тёмной теме тоже прозрачно к странице). -->
         <div class="flex w-full items-center justify-between gap-3 bg-slate-50/80 px-4 py-3.5 dark:bg-transparent">
-          <span class="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+          <span class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-slate-800 dark:text-slate-100">
             <span class="truncate">🔥 Топ-матч</span>
-            <span
-              class="shrink-0 rounded-md bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-300"
-            >
-              {{ pluralGoals(props.summary.stats.topScoringMatchGoals) }}
+            <span class="flex shrink-0 flex-wrap items-center gap-1">
+              <span
+                v-if="topScoringMatchTotals.goals > 0"
+                class="inline-flex items-center gap-0.5 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-emerald-900 dark:text-emerald-300"
+              >⚽ {{ topScoringMatchTotals.goals }}</span>
+              <span
+                v-if="topScoringMatchTotals.assists > 0"
+                class="inline-flex items-center gap-0.5 rounded bg-sky-500/15 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-sky-900 dark:text-sky-300"
+              >🎯 {{ topScoringMatchTotals.assists }}</span>
+              <span
+                v-if="topScoringMatchTotals.saves > 0"
+                class="inline-flex items-center gap-0.5 rounded bg-violet-500/15 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-violet-900 dark:text-violet-300"
+              >🧤 {{ topScoringMatchTotals.saves }}</span>
             </span>
           </span>
           <span
@@ -474,12 +483,45 @@
             </div>
           </div>
 
-          <OrganismsTournamentPlayedMatchesPlayedMatchDetails
-            :match="props.summary.stats.topScoringMatch"
-            :team-marker="teamMarkerForRow"
-            :player-avatars-by-id="playerAvatarsById"
-            embedded
-          />
+          <!-- Как панель «Детали» в StepStandingsPlayedMatches: та же строка, кнопка h-9, нативный details. -->
+          <details
+            class="border-t border-slate-100 dark:border-slate-800/60"
+            @toggle="onTopMatchDetailsToggle"
+          >
+            <summary
+              class="flex cursor-pointer list-none items-center gap-2 rounded-xl px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 [&::-webkit-details-marker]:hidden"
+            >
+              <span
+                class="inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-medium transition-colors"
+                :class="
+                  topMatchDetailsOpen
+                    ? 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                    : 'text-slate-600 md:hover:bg-slate-100 md:hover:text-slate-800 dark:md:hover:bg-slate-800 dark:md:hover:text-slate-300'
+                "
+              >
+                <svg
+                  class="h-3.5 w-3.5 shrink-0"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Детали
+              </span>
+            </summary>
+            <OrganismsTournamentPlayedMatchesPlayedMatchDetails
+              :match="props.summary.stats.topScoringMatch"
+              :team-marker="teamMarkerForRow"
+              :player-avatars-by-id="playerAvatarsById"
+              embedded
+              omit-top-border
+            />
+          </details>
         </div>
       </div>
     </div>
@@ -636,6 +678,21 @@ const resultsToggleId = `viewer-summary-results-${resultsSectionUid}`
 const resultsPanelId = `viewer-summary-results-panel-${resultsSectionUid}`
 const isResultsOpen = ref(false)
 
+// «Детали» топ-матча — те же визуальные состояния, что кнопка в списке сыгранных матчей.
+const topMatchDetailsOpen = ref(false)
+
+function onTopMatchDetailsToggle(ev: Event) {
+  const el = ev.target
+  if (el instanceof HTMLDetailsElement) topMatchDetailsOpen.value = el.open
+}
+
+watch(
+  () => props.summary.stats.topScoringMatch?.matchNumber,
+  () => {
+    topMatchDetailsOpen.value = false
+  },
+)
+
 // Плашка лучшего матча — тот же резолвер цвета, что и у таблицы/итогов.
 function scorePillColorIndexForTeam(teamName: string): number {
   const idx = props.summary.standingsRows.findIndex((r) => normalizeTeamName(r.teamName) === normalizeTeamName(teamName))
@@ -653,6 +710,27 @@ const topScoringMatchPillClass = computed(() => {
     m.awayTeam,
     scorePillColorIndexForTeam,
   )
+})
+
+// Голы в шапке — из счёта матча; пасы и сейвы — сумма по игрокам в записи топ-матча.
+const topScoringMatchTotals = computed(() => {
+  const m = props.summary.stats.topScoringMatch
+  if (!m) return { goals: 0, assists: 0, saves: 0 }
+  let assists = 0
+  let saves = 0
+  for (const st of Object.values(m.homeStats)) {
+    assists += st.assists ?? 0
+    saves += st.saves ?? 0
+  }
+  for (const st of Object.values(m.awayStats)) {
+    assists += st.assists ?? 0
+    saves += st.saves ?? 0
+  }
+  return {
+    goals: m.homeGoals + m.awayGoals,
+    assists,
+    saves,
+  }
 })
 
 // Форматируем дату из ISO-строки "YYYY-MM-DD" в читаемый вид "2 апреля 2026".

@@ -1,10 +1,13 @@
 <!-- Компонент PlayedMatchDetails: показывает детали матча (отмеченных игроков и их события). -->
 <template>
   <div
-    class="border-t px-3 pb-3 pt-2.5"
-      :class="props.embedded
-      ? 'border-slate-200 bg-transparent dark:border-slate-700/50 dark:bg-transparent'
-      : 'border-slate-200 bg-slate-50/80 dark:border-slate-800/60 dark:bg-slate-950/40'"
+    class="px-3 pb-3 pt-2.5"
+    :class="[
+      props.omitTopBorder ? 'border-t-0' : 'border-t',
+      props.embedded
+        ? 'border-slate-200 bg-transparent dark:border-slate-700/50 dark:bg-transparent'
+        : 'border-slate-200 bg-slate-50/80 dark:border-slate-800/60 dark:bg-slate-950/40',
+    ]"
   >
     <!-- Нет ни одного игрока с событиями -->
     <p
@@ -122,8 +125,10 @@ const props = withDefaults(
      * строка счёта выше уже показала команды.
      */
     embedded?: boolean
+    /** Убрать верхнюю линию — если родитель уже дал разделитель (строка «Детали» над блоком). */
+    omitTopBorder?: boolean
   }>(),
-  { embedded: false },
+  { embedded: false, omitTopBorder: false },
 )
 
 // Конфигурация бейджей — полностью совпадает с StepStandingsTeamRosterColumn,
