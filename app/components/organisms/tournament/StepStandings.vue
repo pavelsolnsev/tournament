@@ -416,11 +416,6 @@ async function handleFinishMatch() {
   finishMatch()
   // Сразу отдаём зрителю результат матча — не ждём очередного поллинга.
   await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
-  try {
-    await $fetch('/api/tournament/request-vk-list-close', { method: 'POST' })
-  } catch {
-    // Нет сессии или сеть — бот закроет список при следующем успешном запросе не обязателен
-  }
 }
 // Этот обработчик централизует статус: после нажатия «Завершить матч» он остаётся finished,
 // даже если админский UI очищает выбранные команды.

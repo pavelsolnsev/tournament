@@ -350,6 +350,45 @@
               @confirm="$emit('confirm-clear-tournament')"
             />
           </div>
+
+          <!-- VK статус — внизу управления, чтобы не мешал кнопкам. -->
+          <div class="mt-1 rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white/60 dark:bg-slate-900/40 px-3 py-2.5">
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                VK статус
+              </p>
+              <button
+                type="button"
+                class="inline-flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200
+                       transition-colors hover:bg-slate-200 dark:hover:bg-slate-700
+                       disabled:cursor-not-allowed disabled:opacity-50
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
+                :disabled="vkStatusPending"
+                @click="refreshVkStatus"
+              >
+                {{ vkStatusPending ? 'Обновляем…' : 'Обновить' }}
+              </button>
+            </div>
+
+            <p v-if="vkStatusError" class="mt-2 text-[11px] text-red-600 dark:text-red-300">
+              {{ vkStatusError }}
+            </p>
+
+            <div v-else class="mt-2 flex flex-wrap gap-2">
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                :class="vkStatusLinked ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
+              >
+                {{ vkStatusLinked ? 'Привязка: есть' : 'Привязка: нет' }}
+              </span>
+              <span
+                v-if="vkStatusLinked && vkPeerId"
+                class="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300"
+              >
+                peerId: {{ vkPeerId }}
+              </span>
+            </div>
+          </div>
         </div>
       </Transition>
     </div>
@@ -375,6 +414,14 @@ type PlayerMatchStats = {
   assists: number
   saves: number
   yellows: number
+}
+
+type VkStatusResponse = {
+  ok: true
+  linked: boolean
+  closeVkListRequested: boolean
+  peerId: number | null
+  gameEventId: string | null
 }
 
 const props = defineProps<{
@@ -453,6 +500,32 @@ const isMgmtOpen = ref(false)
 
 const pendingAction = ref<'next' | 'finish' | null>(null)
 const isActionConfirmOpen = computed(() => pendingAction.value !== null)
+
+// VK статус: отдельный запрос, чтобы админ видел — закрыт ли список и снята ли привязка.
+const vkStatusPending = ref(false)
+const vkStatusError = ref<string | null>(null)
+const vkStatusLinked = ref(false)
+const vkPeerId = ref<number | null>(null)
+
+async function refreshVkStatus() {
+  // Делаем запрос только по кнопке: это не критично для UI и не должно спамить сервер.
+  if (vkStatusPending.value) return
+  vkStatusPending.value = true
+  vkStatusError.value = null
+  try {
+    const res = await $fetch<VkStatusResponse>('/api/tournament/vk-status', { method: 'GET' })
+    vkStatusLinked.value = res.linked === true
+    vkPeerId.value = res.peerId ?? null
+  } catch (e: unknown) {
+    // Ошибку показываем коротко, чтобы было понятно что проверить (сессия/сервер).
+    vkStatusError.value = 'Не удалось получить VK статус (проверьте админ-сессию и сервер).'
+  } finally {
+    vkStatusPending.value = false
+  }
+}
+
+// Первый запрос делаем при монтировании: чтобы статус был виден сразу после открытия «Управление».
+void refreshVkStatus()
 
 // Отсчёт 3 секунды перед «Завершить матч» — та же идея что у «Очистить данные».
 const finishMatchSecondsLeft = ref(3)
