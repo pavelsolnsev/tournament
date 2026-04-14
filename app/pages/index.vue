@@ -270,6 +270,10 @@ useHead({
 
 const { isAdmin, logout } = useAdminAuth()
 
+// Канал между вкладками админки: после «Завершить турнир» / «Очистить данные» остальные вкладки подтягивают state из БД.
+const ADMIN_TOURNAMENT_BC = 'football-tournament-admin-sync'
+let adminTournamentBc: BroadcastChannel | null = null
+
 // clientReady становится true только после монтирования.
 // До этого рендерим пустой div — он совпадает с SSR и не даёт hydration mismatch.
 const clientReady = ref(false)
@@ -293,6 +297,46 @@ const wizard = useTournamentWizard({
 })
 
 const viewerState = computed(() => tournamentState.serverState.value)
+
+// Когда вкладка снова видна — подтягиваем турнир из БД (другая вкладка могла завершить турнир).
+function onAdminVisibilitySync() {
+  if (document.visibilityState !== 'visible') return
+  if (!isAdmin.value) return
+  void syncWizardFromServerAfterExternalChange()
+}
+
+// Обновляем кэш Nuxt и перезаливаем refs мастера из serverState — без этого вторая вкладка остаёт со старым UI.
+async function syncWizardFromServerAfterExternalChange() {
+  if (!isAdmin.value) return
+  await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
+  await nextTick()
+  wizard.reapplyFromServer()
+}
+
+// Сообщаем всем вкладкам админки: в БД уже новое состояние турнира, перечитайте.
+function broadcastAdminTournamentStateChanged() {
+  if (!import.meta.client || !isAdmin.value) return
+  try {
+    adminTournamentBc?.postMessage({ type: 'tournament-state-sync', ts: Date.now() })
+  } catch {
+    /* BroadcastChannel может быть недоступен — тогда остаётся sync по visibility */
+  }
+}
+
+onMounted(() => {
+  if (!import.meta.client) return
+  const match = document.cookie.match(/(?:^|; )admin_session=([^;]*)/)
+  const cookieValue = match ? decodeURIComponent(match[1] ?? '') : ''
+  if (cookieValue !== 'true') return
+  if (typeof BroadcastChannel !== 'undefined') {
+    adminTournamentBc = new BroadcastChannel(ADMIN_TOURNAMENT_BC)
+    adminTournamentBc.onmessage = () => {
+      void syncWizardFromServerAfterExternalChange()
+    }
+  }
+  document.addEventListener('visibilitychange', onAdminVisibilitySync)
+})
+
 
 // Панель «Очистить данные» — обратный отсчёт как у очистки пожеланий.
 const showClearTournamentConfirm = ref(false)
@@ -336,6 +380,9 @@ watch(
 
 onUnmounted(() => {
   if (clearTournamentCountdown) clearInterval(clearTournamentCountdown)
+  document.removeEventListener('visibilitychange', onAdminVisibilitySync)
+  adminTournamentBc?.close()
+  adminTournamentBc = null
 })
 
 function cancelClearTournament() {
@@ -347,6 +394,7 @@ async function confirmClearTournament() {
   try {
     await wizard.resetWizard()
     await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
+    broadcastAdminTournamentStateChanged()
   } finally {
     clearTournamentBusy.value = false
     showClearTournamentConfirm.value = false
@@ -379,5 +427,6 @@ async function handleTournamentFinished() {
   await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
   await wizard.resetWizard()
   await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
+  broadcastAdminTournamentStateChanged()
 }
 </script>

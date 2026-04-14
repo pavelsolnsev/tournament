@@ -160,6 +160,100 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     return arr.join(',')
   }
 
+  // Сброс мастера в «пусто» только в памяти — для resync, когда в БД нет записи турнира.
+  function applyEmptyTournamentContextLocal() {
+    lastAppliedSelectedIdsKey.value = ''
+    step.value = 0
+    tournamentName.value = ''
+    tournamentDate.value = ''
+    venueLabel.value = ''
+    formatLabel.value = ''
+    selectedIds.value = new Set()
+    playerSearch.value = ''
+    assignment.assignment.value = {}
+    assignment.confirmedTeamNames.value = new Set()
+    assignment.teamColors.value = {}
+    assignment.newTeamNames.value = []
+    assignment.newTeamName.value = ''
+    standingsSnapshot.value = null
+    matchStatus.value = 'upcoming'
+    liveHomeTeam.value = ''
+    liveAwayTeam.value = ''
+  }
+
+  // Одна функция: перенос объекта с сервера в refs мастера (первый раз или после другой вкладки).
+  function applyLoadedContext(ctx: SavedTournamentContext | null, mode: 'initial' | 'resync') {
+    if (!ctx) {
+      lastAppliedSelectedIdsKey.value = ''
+      // При первой загрузке без state оставляем дефолты ref() — как раньше.
+      if (mode === 'resync') {
+        applyEmptyTournamentContextLocal()
+      }
+      return
+    }
+
+    const raw = ctx.step
+    let migrated: 0 | 1 | 2
+    if (raw === 0 || raw === 1 || raw === 2) {
+      migrated = raw
+    } else if (raw === 3) {
+      migrated = 1
+    } else {
+      migrated = 2
+    }
+    step.value = migrated
+
+    tournamentName.value = ctx.tournamentName ?? ''
+    tournamentDate.value = ctx.tournamentDate ?? ''
+    venueLabel.value = ctx.venueLabel ?? ''
+    formatLabel.value = ctx.formatLabel ?? ''
+
+    selectedIds.value = new Set(
+      (ctx.selectedIds ?? []).filter((id) => Number.isFinite(id)),
+    )
+
+    const rawAssign = ctx.assignmentByPlayerId ?? {}
+    const normalizedAssign: Record<number, string> = {}
+    for (const [idStr, team] of Object.entries(rawAssign)) {
+      const n = normalizeTeamName(String(team))
+      if (n) normalizedAssign[Number(idStr)] = n
+    }
+    assignment.assignment.value = normalizedAssign
+    assignment.confirmedTeamNames.value = new Set(
+      dedupeTeamNamesPreservingOrder(ctx.confirmedTeamNames ?? []),
+    )
+    assignment.teamColors.value = normalizeTeamColorsMap(ctx.teamColors ?? {})
+
+    standingsSnapshot.value = ctx.standingsSnapshot ?? null
+
+    matchStatus.value = ctx.matchStatus ?? 'upcoming'
+    liveHomeTeam.value = ctx.liveHomeTeam ?? ''
+    liveAwayTeam.value = ctx.liveAwayTeam ?? ''
+
+    const namesFromAssignments = Object.values(ctx.assignmentByPlayerId ?? {})
+    const namesFromConfirmed = ctx.confirmedTeamNames ?? []
+    const namesFromColors = Object.keys(ctx.teamColors ?? {})
+    const mergedFromContext = [
+      ...namesFromAssignments,
+      ...namesFromConfirmed,
+      ...namesFromColors,
+    ].filter((name) => !!name && typeof name === 'string')
+    const uniqueFromContext = dedupeTeamNamesPreservingOrder(mergedFromContext)
+
+    const existingKeys = new Set((existingTeamNames.value ?? []).map((n) => normalizeTeamName(n)))
+    assignment.newTeamNames.value = uniqueFromContext.filter(
+      (name) => !existingKeys.has(normalizeTeamName(name)),
+    )
+
+    lastAppliedSelectedIdsKey.value = selectedIdsFingerprint(selectedIds.value)
+  }
+
+  // Подтянуть состояние с сервера снова — когда другая вкладка завершила турнир или сбросила данные.
+  function reapplyFromServer() {
+    if (!stateRestored.value) return
+    applyLoadedContext(serverState.value ?? null, 'resync')
+  }
+
   // Восстанавливаем состояние из базы, когда оно загрузится.
   // Срабатывает один раз после первой загрузки — даже если state = null (турнир ещё не начат).
   watch(
@@ -171,72 +265,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
       // Загрузка завершена. Если состояния нет — просто отмечаем как восстановленное.
       stateRestored.value = true
 
-      if (!ctx) {
-        lastAppliedSelectedIdsKey.value = ''
-        return
-      }
-
-      // Читаем шаг из базы. Если это старый формат (0–4), приводим к новому (0–2).
-      const raw = ctx.step
-      let migrated: 0 | 1 | 2
-      if (raw === 0 || raw === 1 || raw === 2) {
-        migrated = raw
-      } else if (raw === 3) {
-        migrated = 1
-      } else {
-        migrated = 2
-      }
-      step.value = migrated
-
-      tournamentName.value = ctx.tournamentName ?? ''
-      tournamentDate.value = ctx.tournamentDate ?? ''
-      venueLabel.value = ctx.venueLabel ?? ''
-      formatLabel.value = ctx.formatLabel ?? ''
-
-      // Восстанавливаем набор выбранных игроков.
-      selectedIds.value = new Set(
-        (ctx.selectedIds ?? []).filter((id) => Number.isFinite(id)),
-      )
-
-      // Восстанавливаем назначение игроков по командам (имена в одном формате, как в списке команд).
-      const rawAssign = ctx.assignmentByPlayerId ?? {}
-      const normalizedAssign: Record<number, string> = {}
-      for (const [idStr, team] of Object.entries(rawAssign)) {
-        const n = normalizeTeamName(String(team))
-        if (n) normalizedAssign[Number(idStr)] = n
-      }
-      assignment.assignment.value = normalizedAssign
-      assignment.confirmedTeamNames.value = new Set(
-        dedupeTeamNamesPreservingOrder(ctx.confirmedTeamNames ?? []),
-      )
-      assignment.teamColors.value = normalizeTeamColorsMap(ctx.teamColors ?? {})
-
-      // Восстанавливаем снапшот турнирной таблицы.
-      standingsSnapshot.value = ctx.standingsSnapshot ?? null
-
-      // Восстанавливаем статус матча и текущие команды.
-      matchStatus.value = ctx.matchStatus ?? 'upcoming'
-      liveHomeTeam.value = ctx.liveHomeTeam ?? ''
-      liveAwayTeam.value = ctx.liveAwayTeam ?? ''
-
-      // Восстанавливаем пользовательские команды для списка; без дублей и без повторов имён из БД.
-      const namesFromAssignments = Object.values(ctx.assignmentByPlayerId ?? {})
-      const namesFromConfirmed = ctx.confirmedTeamNames ?? []
-      const namesFromColors = Object.keys(ctx.teamColors ?? {})
-      const mergedFromContext = [
-        ...namesFromAssignments,
-        ...namesFromConfirmed,
-        ...namesFromColors,
-      ].filter((name) => !!name && typeof name === 'string')
-      const uniqueFromContext = dedupeTeamNamesPreservingOrder(mergedFromContext)
-
-      const existingKeys = new Set((existingTeamNames.value ?? []).map((n) => normalizeTeamName(n)))
-      assignment.newTeamNames.value = uniqueFromContext.filter(
-        (name) => !existingKeys.has(normalizeTeamName(name)),
-      )
-
-      // Запоминаем отпечаток после полной гидратации — дальше сравниваем с поллингом/focus refresh.
-      lastAppliedSelectedIdsKey.value = selectedIdsFingerprint(selectedIds.value)
+      applyLoadedContext(ctx ?? null, 'initial')
     },
     { immediate: true },
   )
@@ -397,5 +426,6 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     resetWizard,
     saveCurrentTournamentStateNow,
     stateRestored,
+    reapplyFromServer,
   }
 }
