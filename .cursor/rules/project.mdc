@@ -53,7 +53,7 @@ Place each component in the correct folder so that atoms stay generic and organi
 
 When the task involves the **VK (VKontakte) bot** — reading or editing bot code, env vars, handlers, or deployment — treat the bot as a **separate codebase** at:
 
-**`D:\web\vk-bot`**
+**`D:\web\football\vk-bot`**
 
 Do not assume bot logic lives in this football/Nuxt repo. Open, search, and change files under that path when integrating or debugging the bot.
 

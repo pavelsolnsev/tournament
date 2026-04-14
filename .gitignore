@@ -1,9 +1,11 @@
 node_modules
-
 # Nuxt build output
 .nuxt
 .output
 dist
+
+# VK bot lives in its own git repo (nested .git) — ignore it in the main repo
+vk-bot/
 
 # Logs
 npm-debug.log*
