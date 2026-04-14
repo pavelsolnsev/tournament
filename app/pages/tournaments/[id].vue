@@ -109,10 +109,11 @@
       </div>
     </header>
 
-    <main class="mx-auto w-full max-w-4xl flex-1 px-3 py-5 sm:px-6 sm:py-8 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))] print:!pt-6 print:max-w-none">
+    <!-- px только у хлебных крошек/ошибок; итоги турнира тянем на всю ширину max-w-4xl без второй «коробки». -->
+    <main class="mx-auto w-full max-w-4xl flex-1 px-0 py-5 sm:py-8 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))] print:!pt-6 print:max-w-none">
 
       <!-- Хлебные крошки: Турнир / Архив / Название турнира -->
-      <nav aria-label="Навигация" class="mb-5 print:hidden">
+      <nav aria-label="Навигация" class="mb-5 px-3 sm:px-6 print:hidden">
         <ol class="flex min-w-0 flex-wrap items-center gap-1">
           <li class="flex items-center gap-1">
             <NuxtLink
@@ -143,7 +144,7 @@
       <!-- Ошибка 404 -->
       <div
         v-if="error?.statusCode === 404"
-        class="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/60 px-6 py-16 text-center"
+        class="mx-3 flex flex-col items-center gap-4 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/60 px-6 py-16 text-center sm:mx-6"
       >
         <span class="text-5xl" aria-hidden="true">🏆</span>
         <div class="flex flex-col gap-1.5">
@@ -161,7 +162,7 @@
       <!-- Другая ошибка -->
       <div
         v-else-if="error"
-        class="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-red-300 dark:border-red-800/50 px-6 py-12 text-center"
+        class="mx-3 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-red-300 dark:border-red-800/50 px-6 py-12 text-center sm:mx-6"
       >
         <span class="text-4xl" aria-hidden="true">⚠️</span>
         <p class="text-sm text-slate-600 dark:text-slate-400">Не удалось загрузить турнир. Попробуйте обновить страницу.</p>
@@ -170,7 +171,7 @@
       <!-- Итоги турнира — тот же компонент что зритель видит на главной -->
       <div
         v-else-if="tournament && tournamentSummary"
-        class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-700/50 dark:bg-slate-900/60 print:border-slate-300 print:shadow-none"
+        class="w-full overflow-visible bg-transparent print:shadow-none"
       >
         <OrganismsViewerTournamentSummary
           :summary="tournamentSummary"
