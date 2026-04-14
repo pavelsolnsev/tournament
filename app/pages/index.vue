@@ -46,8 +46,9 @@
                 <span class="inline-block h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400" aria-hidden="true" />
                 Администратор
               </span>
-              <!-- Кнопки в шапке: пожелания + кнопка темы + выход. -->
+              <!-- Кнопки в шапке: обновить + пожелания + тема + выход (как у зрителя). -->
               <div class="flex items-center gap-1">
+                <AtomsHeaderRefreshButton :busy="adminHeaderRefreshing" @click="handleAdminHeaderRefresh" />
                 <AtomsFeedbackButton />
                 <AtomsThemeToggle />
                 <button
@@ -288,6 +289,9 @@ onMounted(() => {
 
 const clearTournamentBottomAnchor = useTemplateRef<HTMLDivElement>('clearTournamentBottomAnchor')
 
+// Крутилка на кнопке «Обновить» в шапке админки — пока тянем турнир и список игроков с сервера.
+const adminHeaderRefreshing = ref(false)
+
 const tournamentState = useTournamentState()
 const wizard = useTournamentWizard({
   serverState: tournamentState.serverState,
@@ -297,6 +301,20 @@ const wizard = useTournamentWizard({
 })
 
 const viewerState = computed(() => tournamentState.serverState.value)
+
+// Ручное обновление из шапки: свежий state турнира + игроки, потом мастер подстраивается под serverState.
+async function handleAdminHeaderRefresh() {
+  if (adminHeaderRefreshing.value) return
+  adminHeaderRefreshing.value = true
+  try {
+    await Promise.all([tournamentState.refresh(), refreshPlayers()])
+    await nextTick()
+    wizard.reapplyFromServer()
+  } finally {
+    await new Promise((r) => setTimeout(r, 600))
+    adminHeaderRefreshing.value = false
+  }
+}
 
 // Когда вкладка снова видна — подтягиваем турнир из БД (другая вкладка могла завершить турнир).
 function onAdminVisibilitySync() {
