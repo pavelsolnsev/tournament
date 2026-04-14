@@ -1,25 +1,7 @@
 <template>
   <!-- h-full продолжает цепочку высоты от #scroll-root → landing → сюда. -->
   <div class="h-full">
-    <!-- clientReady становится true только после монтирования на клиенте.
-         Показываем явный лоадер — иначе при медленной сети кажется, что сайт «сломан» (только фон). -->
-    <div
-      v-if="!clientReady"
-      class="flex min-h-full flex-col items-center justify-center gap-4 bg-slate-100 px-4 dark:bg-slate-900"
-      role="status"
-      aria-live="polite"
-    >
-      <div
-        class="h-10 w-10 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-emerald-500 dark:border-slate-700 dark:border-t-emerald-400"
-        aria-hidden="true"
-      />
-      <p class="text-center text-sm text-slate-600 dark:text-slate-300">
-        Загрузка…
-      </p>
-    </div>
-
-    <!-- После монтирования на клиенте показываем реальный UI -->
-    <template v-else>
+    <!-- Режим берём из SSR cookie через useAdminAuth, чтобы не зависать на клиентском прелоудере. -->
       <!-- Ошибка API списка игроков — отдельно от падения Vue: зритель и админ видят кнопку «Повторить». -->
       <div
         v-if="playersFetchError"
@@ -220,14 +202,13 @@
         </div>
       </template>
 
-      <!-- Режим зрителя -->
-      <OrganismsViewerTournamentViewer
-        v-else
-        :state="viewerState"
-        :players="allPlayers"
-        :on-refresh="tournamentState.refresh"
-      />
-    </template>
+    <!-- Режим зрителя -->
+    <OrganismsViewerTournamentViewer
+      v-else
+      :state="viewerState"
+      :players="allPlayers"
+      :on-refresh="tournamentState.refresh"
+    />
 
 </div>
 </template>
@@ -269,22 +250,15 @@ useHead({
   link: [{ rel: 'canonical', href: canonicalHref }],
 })
 
-const { isAdmin, logout } = useAdminAuth()
+const { isAdmin, logout, restoreSession } = useAdminAuth()
 
 // Канал между вкладками админки: после «Завершить турнир» / «Очистить данные» остальные вкладки подтягивают state из БД.
 const ADMIN_TOURNAMENT_BC = 'football-tournament-admin-sync'
 let adminTournamentBc: BroadcastChannel | null = null
 
-// clientReady становится true только после монтирования.
-// До этого рендерим пустой div — он совпадает с SSR и не даёт hydration mismatch.
-const clientReady = ref(false)
+// После гидрации мягко подтверждаем сессию из cookie — это убирает редкие рассинхроны между SSR и клиентом.
 onMounted(() => {
-  // Явно читаем cookie на клиенте: useCookie при гидрации может вернуть undefined
-  // в первый тик, поэтому синхронизируем isAdmin вручную из document.cookie.
-  const match = document.cookie.match(/(?:^|; )admin_session=([^;]*)/)
-  const cookieValue = match ? decodeURIComponent(match[1] ?? '') : ''
-  isAdmin.value = cookieValue === 'true'
-  clientReady.value = true
+  restoreSession()
 })
 
 const clearTournamentBottomAnchor = useTemplateRef<HTMLDivElement>('clearTournamentBottomAnchor')

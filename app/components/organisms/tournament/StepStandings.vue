@@ -264,6 +264,9 @@
       />
 
     </section>
+
+    <!-- Таймер матча только при ведении турнира (не в режиме зрителя). -->
+    <MoleculesMatchCountdownTimerBar v-if="props.readonly !== true" />
   </div>
 </template>
 

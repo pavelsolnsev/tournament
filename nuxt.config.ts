@@ -68,6 +68,12 @@ export default defineNuxtConfig({
           innerHTML: `(function(){try{var s=localStorage.getItem('theme');var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;if(s==='dark'||(s===null&&prefersDark)||s===null){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){document.documentElement.classList.add('dark');}})();`,
           type: 'text/javascript',
         },
+        {
+          // Ранний авто-ремонт чанков: если после деплоя прилетел старый import URL, делаем один reload до старта Vue.
+          // Так пользователь не зависает на прелоудере при mismatch манифеста и файлов в /_nuxt.
+          innerHTML: `(function(){try{var key='football-chunk-reload-once-v1';function isChunkMsg(msg){var m=String(msg||'').toLowerCase();return m.indexOf('failed to fetch dynamically imported module')!==-1||m.indexOf('chunkloaderror')!==-1||m.indexOf('error loading dynamically imported module')!==-1||m.indexOf('importing a module script failed')!==-1||m.indexOf('failed to fetch module script')!==-1;}function tryReload(msg){if(!isChunkMsg(msg))return;try{if(sessionStorage.getItem(key)==='1')return;sessionStorage.setItem(key,'1');}catch(_e){return;}window.location.reload();}window.addEventListener('error',function(e){var t=e&&e.target;if(t&&t!==window&&t.tagName&&(t.tagName==='SCRIPT'||t.tagName==='LINK')){tryReload('chunkloaderror');return;}tryReload(e&&e.message);},true);window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;var msg=r&&r.message?r.message:r;tryReload(msg);});}catch(_e){}})();`,
+          type: 'text/javascript',
+        },
       ],
     },
   },
