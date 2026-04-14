@@ -116,35 +116,73 @@
         <div
           v-for="tournament in localTournaments"
           :key="tournament.id"
-          class="group relative flex items-start gap-4 rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/60 px-4 py-4 sm:px-5 transition-all hover:border-emerald-400/60 dark:hover:border-emerald-500/40 hover:shadow-sm"
+          class="group relative flex items-start gap-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-700/70 bg-white/95 dark:bg-slate-800/70 px-3 py-3 sm:gap-4 sm:px-5 sm:py-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-400/60 dark:hover:border-emerald-500/40 hover:shadow-md hover:shadow-emerald-100/60 dark:hover:shadow-emerald-950/20"
         >
           <!-- Ссылка на весь блок (кроме кнопки удаления) -->
           <NuxtLink
             :to="`/tournaments/${tournament.id}`"
             class="absolute inset-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-            :aria-label="archiveCardTitle(tournament)"
+            :aria-label="archiveCardAriaLabel(tournament)"
           />
 
-          <!-- Иконка — кубок; сверху выровнена с первой строкой текста -->
-          <div class="relative mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-500/10 text-xl pointer-events-none">
-            🏆
-          </div>
-
-          <!-- Место и формат + дата — перенос строк без многоточия -->
+          <!-- Сначала крупный заголовок, ниже дата и награды отдельными бейджами. -->
           <div class="relative min-w-0 flex-1 pointer-events-none">
-            <p class="whitespace-normal break-words text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+            <p class="whitespace-normal break-words text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors sm:text-base">
               {{ archiveCardTitle(tournament) }}
             </p>
-            <p class="mt-0.5 whitespace-normal break-words text-xs leading-snug text-slate-500 dark:text-slate-500">
-              {{ formatDate(tournament.tournament_date) }}
-            </p>
+            <!-- Дату оформляем отдельной плашкой, чтобы она не спорила с заголовком. -->
+            <div class="mt-1 inline-flex max-w-full items-center gap-1 rounded-lg bg-slate-100/80 dark:bg-slate-700/35 px-1.5 py-0.5 text-[11px] text-slate-600 dark:text-slate-300 sm:gap-1.5 sm:px-2 sm:py-1 sm:text-xs">
+              <svg class="h-3 w-3 shrink-0 text-slate-500 dark:text-slate-400 sm:h-3.5 sm:w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              <span class="truncate">{{ formatDate(tournament.tournament_date) }}</span>
+            </div>
+
+            <!-- Бейджи наград рядом: так глазу легче быстро считать главное по турниру. -->
+            <div class="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5 sm:mt-2 sm:gap-2">
+              <div
+                v-if="championTeamLabel(tournament)"
+                class="inline-flex min-w-0 max-w-full items-center gap-1 rounded-lg border border-amber-200/80 dark:border-amber-500/30 bg-amber-50/90 dark:bg-amber-500/10 px-2 py-1 sm:gap-1.5 sm:rounded-xl sm:px-2.5 sm:py-1.5"
+              >
+                <AtomsTeamMarkerOrLogo
+                  :team-name="championTeamLabel(tournament)"
+                  :marker="championMarker(championTeamLabel(tournament))"
+                  size="xs"
+                />
+                <span class="min-w-0 text-[11px] leading-snug text-amber-900 dark:text-amber-100 sm:text-xs">
+                  <span class="font-semibold uppercase tracking-wide text-[9px] text-amber-700/90 dark:text-amber-300/90 sm:text-[10px]">Чемпион</span>
+                  {{ ' ' }}
+                  <span class="font-semibold text-slate-800 dark:text-slate-100">{{ championTeamLabel(tournament) }}</span>
+                </span>
+              </div>
+
+              <!-- MVP считается на сервере так же, как при завершении турнира; фото из архива игроков. -->
+              <div
+                v-if="mvpPlayerLabel(tournament)"
+                class="inline-flex min-w-0 max-w-full items-center gap-1 rounded-lg border border-emerald-200/80 dark:border-emerald-500/30 bg-emerald-50/90 dark:bg-emerald-500/10 px-2 py-1 sm:gap-1.5 sm:rounded-xl sm:px-2.5 sm:py-1.5"
+              >
+                <AtomsPlayerAvatar
+                  :photo="tournament.mvp_photo"
+                  :fallback-name="mvpPlayerLabel(tournament)"
+                  size="xs"
+                />
+                <span class="min-w-0 text-[11px] leading-snug text-emerald-900 dark:text-emerald-100 sm:text-xs">
+                  <span class="font-semibold uppercase tracking-wide text-[9px] text-emerald-700/90 dark:text-emerald-300/90 sm:text-[10px]">MVP</span>
+                  {{ ' ' }}
+                  <span class="font-semibold text-slate-800 dark:text-slate-100">{{ mvpPlayerLabel(tournament) }}</span>
+                </span>
+              </div>
+            </div>
           </div>
 
           <!-- Кнопка удаления — только для администратора -->
           <button
             v-if="isAdmin"
             type="button"
-            class="relative z-10 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 dark:text-slate-600 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
+            class="relative z-10 mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-slate-400 dark:text-slate-600 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
             :aria-label="`Удалить запись: ${archiveCardTitle(tournament)}`"
             :disabled="deletingId === tournament.id"
             @click.prevent="deleteTournament(tournament.id)"
@@ -163,7 +201,7 @@
           </button>
 
           <!-- Стрелка вправо — только не для администратора -->
-          <svg v-if="!isAdmin" class="relative mt-2 h-4 w-4 shrink-0 text-slate-400 dark:text-slate-600 group-hover:text-emerald-500 transition-colors pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg v-if="!isAdmin" class="relative my-auto h-4 w-4 shrink-0 text-slate-400 dark:text-slate-600 group-hover:text-emerald-500 transition-colors pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
         </div>
@@ -181,12 +219,31 @@
 
 <script setup lang="ts">
 import { useAdminAuth } from '~/composables/useAdminAuth'
+import { useTeamColors } from '~/composables/useTeamColors'
+import { resolveTeamColorIndex } from '~/utils/teamNames'
 
 // Мета-теги страницы — для SEO и вкладки браузера.
 useHead({ title: 'Архив турниров' })
 
+// Тип строки списка — совпадает с ответом GET /api/tournaments (в т.ч. чемпион из snapshot).
+type ArchiveListRow = {
+  id: string
+  tournament_name: string
+  tournament_date: string
+  venue_label: string
+  format_label: string
+  created_at: string
+  champion_team_name: string | null
+  mvp_player_id: number | null
+  mvp_player_name: string | null
+  mvp_photo: string | null
+}
+
 // Загружаем список всех завершённых турниров из API.
-const { data: tournaments, status } = await useFetch('/api/tournaments')
+const { data: tournaments, status } = await useFetch<ArchiveListRow[]>('/api/tournaments')
+
+// Маркер цвета для команды без карты цветов в списке — как запасной вариант для эмодзи.
+const { getMarkerByIndex } = useTeamColors()
 
 // Локальная копия списка — чтобы удалять записи без перезагрузки страницы.
 const localTournaments = computed(() => tournaments.value ?? [])
@@ -215,6 +272,33 @@ function archiveCardTitle(t: {
   if (venue) return venue
   if (format) return format
   return (t.tournament_name ?? '').trim() || 'Турнир'
+}
+
+// Подпись для скринридера — добавляем чемпиона, если сервер его вытащил из снапшота.
+function archiveCardAriaLabel(t: ArchiveListRow): string {
+  const base = archiveCardTitle(t)
+  const parts = [base]
+  const champ = championTeamLabel(t)
+  if (champ) parts.push(`Чемпион: ${champ}`)
+  const mvp = mvpPlayerLabel(t)
+  if (mvp) parts.push(`MVP: ${mvp}`)
+  return parts.join('. ')
+}
+
+// Имя чемпиона без лишних пробелов — пустая строка значит блок не показываем.
+function championTeamLabel(t: ArchiveListRow): string {
+  return (t.champion_team_name ?? '').trim()
+}
+
+// Эмодзи-маркер для чемпиона, если нет файла логотипа в teamLogos.
+function championMarker(teamName: string): string {
+  const idx = resolveTeamColorIndex(teamName, null, 0)
+  return getMarkerByIndex(idx)
+}
+
+// Подпись MVP с сервера — пусто, если не удалось посчитать.
+function mvpPlayerLabel(t: ArchiveListRow): string {
+  return (t.mvp_player_name ?? '').trim()
 }
 
 // Удаляем турнир — спрашиваем подтверждение, затем DELETE в API.
