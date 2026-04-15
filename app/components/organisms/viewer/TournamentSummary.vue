@@ -561,8 +561,10 @@ import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView
 
 // Ссылки внизу итогов — один массив, чтобы не копировать длинные классы на каждую строку.
 const usefulLinks = [
-  { href: 'https://football.pavelsolntsev.ru/', icon: '🌐', label: 'Рейтинг игроков' },
-  { href: 'https://football.pavelsolntsev.ru/tournament/', icon: '🏆', label: 'Список команд' },
+  { href: 'https://football.pavelsolntsev.ru/', icon: '🌐', label: 'Игроки' },
+  { href: 'https://football.pavelsolntsev.ru/tournament/', icon: '🏆', label: 'Команды' },
+  // Отдельный табло: результаты матчей и live во время турнира (не путать с football — там игроки и страница информации).
+  { href: 'https://tournament.pavelsolntsev.ru/', icon: '📺', label: 'Итоги игр и live-режим' },
   { href: 'https://football.pavelsolntsev.ru/info', icon: 'ℹ️', label: 'Информация' },
   { href: 'https://vk.com/rmsfootball', icon: '📣', label: 'Группа ВКонтакте' },
 ] as const
