@@ -9,10 +9,17 @@ export function useAdminAuth() {
     path: '/',
   })
 
+  function hasAdminSessionCookie(): boolean {
+    if (sessionCookie.value === 'true') return true
+    // Simple10: Иногда после обновления useCookie может отдать старое значение, поэтому на клиенте дополнительно читаем cookie напрямую из браузера.
+    if (!import.meta.client) return false
+    return document.cookie.split(';').some(cookie => cookie.trim().startsWith('admin_session=true'))
+  }
+
   // Фабрика используется как fallback если плагин ещё не успел создать useState.
   // На сервере: читает cookie из HTTP-контекста.
   // На клиенте: читает sessionCookie.value — Nuxt восстанавливает его из документа.
-  const isAdmin = useState<boolean>('isAdmin', () => sessionCookie.value === 'true')
+  const isAdmin = useState<boolean>('isAdmin', () => hasAdminSessionCookie())
 
   async function login(password: string): Promise<{ ok: boolean; error?: string }> {
     try {
@@ -38,7 +45,7 @@ export function useAdminAuth() {
   }
 
   function restoreSession(): boolean {
-    if (sessionCookie.value === 'true') {
+    if (hasAdminSessionCookie()) {
       isAdmin.value = true
       return true
     }
