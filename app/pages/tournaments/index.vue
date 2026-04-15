@@ -141,38 +141,41 @@
               <span class="truncate">{{ formatDate(tournament.tournament_date) }}</span>
             </div>
 
-            <!-- Бейджи наград рядом: так глазу легче быстро считать главное по турниру. -->
-            <div class="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5 sm:mt-2 sm:gap-2">
+            <!-- flex-nowrap — чемпион и MVP всегда в одну строку; имена режутся (truncate). -->
+            <div class="mt-1.5 flex min-w-0 flex-nowrap items-stretch gap-1.5 sm:mt-2 sm:gap-2">
               <div
                 v-if="championTeamLabel(tournament)"
-                class="inline-flex min-w-0 max-w-full items-center gap-1 rounded-lg border border-amber-200/80 dark:border-amber-500/30 bg-amber-50/90 dark:bg-amber-500/10 px-2 py-1 sm:gap-1.5 sm:rounded-xl sm:px-2.5 sm:py-1.5"
+                class="flex min-w-0 flex-1 basis-0 items-center gap-2 rounded-lg border border-slate-200/90 bg-slate-50/90 px-2 py-1 dark:border-slate-700/60 dark:bg-slate-800/50 sm:rounded-xl sm:px-2.5 sm:py-1.5"
               >
                 <AtomsTeamMarkerOrLogo
                   :team-name="championTeamLabel(tournament)"
                   :marker="championMarker(championTeamLabel(tournament))"
                   size="xs"
                 />
-                <span class="min-w-0 text-[11px] leading-snug text-amber-900 dark:text-amber-100 sm:text-xs">
-                  <span class="font-semibold uppercase tracking-wide text-[9px] text-amber-700/90 dark:text-amber-300/90 sm:text-[10px]">Чемпион</span>
-                  {{ ' ' }}
-                  <span class="font-semibold text-slate-800 dark:text-slate-100">{{ championTeamLabel(tournament) }}</span>
+                <span class="min-w-0 flex-1 truncate text-[11px] font-semibold leading-snug text-slate-800 dark:text-slate-100 sm:text-xs">
+                  {{ championTeamLabel(tournament) }}
                 </span>
+                <span
+                  class="inline-flex shrink-0 select-none items-center justify-center self-center rounded-md bg-amber-400/15 px-2 py-1 text-base leading-none text-amber-800 ring-1 ring-amber-300/40 dark:text-amber-300 dark:ring-amber-500/25 sm:text-lg"
+                  aria-hidden="true"
+                >🏆</span>
               </div>
 
-              <!-- MVP считается на сервере так же, как при завершении турнира; фото из архива игроков. -->
+              <!-- flex-1 basis-0 — делим строку пополам, чтобы не переносилось на вторую строку. -->
               <div
                 v-if="mvpPlayerLabel(tournament)"
-                class="inline-flex min-w-0 max-w-full items-center gap-1 rounded-lg border border-emerald-200/80 dark:border-emerald-500/30 bg-emerald-50/90 dark:bg-emerald-500/10 px-2 py-1 sm:gap-1.5 sm:rounded-xl sm:px-2.5 sm:py-1.5"
+                class="flex min-w-0 flex-1 basis-0 items-center gap-2 rounded-lg border border-slate-200/90 bg-slate-50/90 px-2 py-1 dark:border-slate-700/60 dark:bg-slate-800/50 sm:rounded-xl sm:px-2.5 sm:py-1.5"
               >
                 <AtomsPlayerAvatar
                   :photo="tournament.mvp_photo"
                   :fallback-name="mvpPlayerLabel(tournament)"
                   size="xs"
                 />
-                <span class="min-w-0 text-[11px] leading-snug text-emerald-900 dark:text-emerald-100 sm:text-xs">
-                  <span class="font-semibold uppercase tracking-wide text-[9px] text-emerald-700/90 dark:text-emerald-300/90 sm:text-[10px]">MVP</span>
-                  {{ ' ' }}
-                  <span class="font-semibold text-slate-800 dark:text-slate-100">{{ mvpPlayerLabel(tournament) }}</span>
+                <span class="min-w-0 flex-1 truncate text-[11px] font-semibold leading-snug text-slate-800 dark:text-slate-100 sm:text-xs">
+                  {{ mvpPlayerLabel(tournament) }}
+                </span>
+                <span class="shrink-0 self-center rounded-md bg-amber-400/15 px-2 py-1 text-[11px] font-bold tracking-wider text-amber-800 ring-1 ring-amber-300/40 dark:text-amber-300 dark:ring-amber-500/25">
+                  MVP
                 </span>
               </div>
             </div>
