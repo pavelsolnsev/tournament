@@ -36,6 +36,9 @@ const TEAM_LOGO_PATH_BY_NORMALIZED_KEY: Record<string, string> = {
   // РФОИ — кириллица и латиница после toLowerCase дают рфои / rfoi
   рфои: '/team-photos/admin.png',
   rfoi: '/team-photos/admin.png',
+  челси: '/team-photos/сhelsea.jpg',
+  chelsea: '/team-photos/сhelsea.jpg',
+  'fc chelsea': '/team-photos/сhelsea.jpg',
 }
 
 function logoLookupKey(teamName: string): string {
