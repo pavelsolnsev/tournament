@@ -300,7 +300,6 @@
           >
             <OrganismsViewerTournamentSummary
               :summary="tournamentSummary"
-              :tournament-date="tournamentDate"
               :venue-label="venueLabel"
               :format-label="formatLabel"
               :team-colors="teamColors"

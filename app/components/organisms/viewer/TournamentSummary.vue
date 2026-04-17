@@ -2,29 +2,20 @@
   <!-- print: чёрный текст на белом — чтобы PDF не зависел от тёмной темы. -->
   <section class="flex flex-col print:bg-white print:text-black">
 
-    <!-- ─── ШАПКА: дата, место, формат ──────────────────────────── -->
-    <div v-if="props.tournamentDate || props.venueLabel || props.formatLabel" class="px-4 pt-5 pb-4 sm:px-6">
+    <!-- ─── ШАПКА: место, формат (дата не показываем) ───────────── -->
+    <div v-if="props.venueLabel || props.formatLabel" class="px-4 pt-5 pb-4 sm:px-6">
       <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
-        <!-- Дата -->
-        <span v-if="props.tournamentDate" class="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">
-          <span aria-hidden="true">📅</span>{{ formattedDate }}
-        </span>
-        <!-- Разделитель -->
-        <span v-if="props.tournamentDate && (props.venueLabel || props.formatLabel)" class="text-slate-300 dark:text-slate-700" aria-hidden="true">·</span>
-        <!-- Место -->
         <span v-if="props.venueLabel" class="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">
           <span aria-hidden="true">🏟️</span>{{ props.venueLabel }}
         </span>
-        <!-- Разделитель -->
         <span v-if="props.venueLabel && props.formatLabel" class="text-slate-300 dark:text-slate-700" aria-hidden="true">·</span>
-        <!-- Формат -->
         <span v-if="props.formatLabel" class="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">
           <span aria-hidden="true">⚽</span>{{ props.formatLabel }}
         </span>
       </div>
     </div>
 
-    <div v-if="props.tournamentDate || props.venueLabel || props.formatLabel" class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6" />
+    <div v-if="props.venueLabel || props.formatLabel" class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- Цифры, чемпион, якорная навигация и печать — компактный вводный блок. -->
     <MoleculesViewerTournamentSummaryIntroBar
@@ -594,7 +585,6 @@ const EmptyAward = defineComponent({
 // Получаем итоги турнира снаружи — компонент только отображает данные.
 const props = defineProps<{
   summary: TournamentSummary
-  tournamentDate?: string
   /** Место проведения — отображается в шапке итогов. */
   venueLabel?: string
   /** Формат турнира — отображается в шапке итогов. */
@@ -733,15 +723,6 @@ const topScoringMatchTotals = computed(() => {
     assists,
     saves,
   }
-})
-
-// Форматируем дату из ISO-строки "YYYY-MM-DD" в читаемый вид "2 апреля 2026".
-// Если дата не передана — computed вернёт пустую строку.
-const formattedDate = computed(() => {
-  if (!props.tournamentDate) return ''
-  const d = new Date(props.tournamentDate)
-  if (isNaN(d.getTime())) return props.tournamentDate
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
 })
 
 // Маркер у составов — каноническое сопоставление имени команды с цветом.

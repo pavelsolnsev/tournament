@@ -30,12 +30,10 @@
             </span>
           </span>
           <span
-            v-if="tournamentName || tournamentDate"
+            v-if="tournamentName"
             class="mt-0.5 block truncate text-xs text-slate-600 dark:text-slate-500"
           >
-            <span v-if="tournamentName">{{ tournamentName }}</span>
-            <span v-if="tournamentName && tournamentDate"> · </span>
-            <span v-if="tournamentDate">{{ tournamentDate }}</span>
+            {{ tournamentName }}
           </span>
         </div>
         <svg
@@ -78,7 +76,6 @@
           <OrganismsTournamentStepStandingsHero
             v-else
             :tournament-name="tournamentName"
-            :tournament-date="tournamentDate"
             :teams="teams"
             :standings-rows="standingsRows"
             :effective-team-colors="effectiveTeamColors"

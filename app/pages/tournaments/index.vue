@@ -116,7 +116,8 @@
         <div
           v-for="tournament in localTournaments"
           :key="tournament.id"
-          class="group relative flex items-start gap-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-700/70 bg-white/95 dark:bg-slate-800/70 px-3 py-3 sm:gap-4 sm:px-5 sm:py-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-400/60 dark:hover:border-emerald-500/40 hover:shadow-md hover:shadow-emerald-100/60 dark:hover:shadow-emerald-950/20"
+          class="group relative flex items-start gap-3 rounded-2xl border border-slate-200/90 bg-white/95 px-4 py-4 dark:border-slate-700/70 dark:bg-slate-800/70 sm:gap-4 sm:px-5 sm:py-5
+                 transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-400/60 dark:hover:border-emerald-500/40 hover:shadow-md hover:shadow-emerald-100/60 dark:hover:shadow-emerald-950/20"
         >
           <!-- Ссылка на весь блок (кроме кнопки удаления) -->
           <NuxtLink
@@ -125,58 +126,79 @@
             :aria-label="archiveCardAriaLabel(tournament)"
           />
 
-          <!-- Сначала крупный заголовок, ниже дата и награды отдельными бейджами. -->
           <div class="relative min-w-0 flex-1 pointer-events-none">
-            <p class="whitespace-normal break-words text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors sm:text-base">
-              {{ archiveCardTitle(tournament) }}
-            </p>
-            <!-- Дату оформляем отдельной плашкой, чтобы она не спорила с заголовком. -->
-            <div class="mt-1 inline-flex max-w-full items-center gap-1 rounded-lg bg-slate-100/80 dark:bg-slate-700/35 px-1.5 py-0.5 text-[11px] text-slate-600 dark:text-slate-300 sm:gap-1.5 sm:px-2 sm:py-1 sm:text-xs">
-              <svg class="h-3 w-3 shrink-0 text-slate-500 dark:text-slate-400 sm:h-3.5 sm:w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
-              <span class="truncate">{{ formatDate(tournament.tournament_date) }}</span>
+            <!-- Заголовок и дата: на широком экране в одну линию -->
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+              <h2 class="min-w-0 text-base font-semibold leading-snug text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-slate-50 dark:group-hover:text-emerald-400 sm:text-lg">
+                {{ archiveCardTitle(tournament) }}
+              </h2>
+              <div
+                v-if="formatDate(tournament.tournament_date)"
+                class="inline-flex max-w-full shrink-0 items-center gap-1.5 self-start rounded-lg border border-slate-200/80 bg-slate-50 px-2 py-1 text-xs text-slate-600 dark:border-slate-600/50 dark:bg-slate-900/50 dark:text-slate-400"
+              >
+                <svg class="h-3.5 w-3.5 shrink-0 text-slate-500 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                <span class="whitespace-nowrap tabular-nums">{{ formatDate(tournament.tournament_date) }}</span>
+              </div>
             </div>
 
-            <!-- flex-nowrap — чемпион и MVP всегда в одну строку; имена режутся (truncate). -->
-            <div class="mt-1.5 flex min-w-0 flex-nowrap items-stretch gap-1.5 sm:mt-2 sm:gap-2">
+            <!-- Чемпион и MVP: стек на узком экране, в ряд на sm+ -->
+            <div
+              v-if="championTeamLabel(tournament) || mvpPlayerLabel(tournament)"
+              class="mt-4 flex min-w-0 flex-col gap-3 sm:mt-5 sm:flex-row sm:items-stretch"
+            >
               <div
                 v-if="championTeamLabel(tournament)"
-                class="flex min-w-0 flex-1 basis-0 items-center gap-2 rounded-lg border border-slate-200/90 bg-slate-50/90 px-2 py-1 dark:border-slate-700/60 dark:bg-slate-800/50 sm:rounded-xl sm:px-2.5 sm:py-1.5"
+                class="flex min-w-0 flex-1 gap-3 rounded-xl border border-slate-200/90 border-l-4 border-l-amber-400 bg-slate-50/90 px-3 py-3 dark:border-slate-600/50 dark:border-l-amber-500 dark:bg-slate-900/40"
               >
-                <AtomsTeamMarkerOrLogo
-                  :team-name="championTeamLabel(tournament)"
-                  :marker="championMarker(championTeamLabel(tournament))"
-                  size="xs"
-                />
-                <span class="min-w-0 flex-1 truncate text-[11px] font-semibold leading-snug text-slate-800 dark:text-slate-100 sm:text-xs">
-                  {{ championTeamLabel(tournament) }}
-                </span>
+                <div class="shrink-0 self-start pt-0.5">
+                  <AtomsTeamMarkerOrLogo
+                    :team-name="championTeamLabel(tournament)"
+                    :marker="championMarker(championTeamLabel(tournament))"
+                    size="sm"
+                  />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-[10px] font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-200/90">
+                    Чемпион
+                  </p>
+                  <p class="mt-0.5 truncate text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">
+                    {{ championTeamLabel(tournament) }}
+                  </p>
+                </div>
                 <span
-                  class="inline-flex shrink-0 select-none items-center justify-center self-center rounded-md bg-amber-400/15 px-2 py-1 text-base leading-none text-amber-800 ring-1 ring-amber-300/40 dark:text-amber-300 dark:ring-amber-500/25 sm:text-lg"
+                  class="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg bg-amber-400/20 text-lg text-amber-900 ring-1 ring-amber-400/35 dark:bg-amber-500/15 dark:text-amber-200 dark:ring-amber-500/30"
                   aria-hidden="true"
                 >🏆</span>
               </div>
 
-              <!-- flex-1 basis-0 — делим строку пополам, чтобы не переносилось на вторую строку. -->
               <div
                 v-if="mvpPlayerLabel(tournament)"
-                class="flex min-w-0 flex-1 basis-0 items-center gap-2 rounded-lg border border-slate-200/90 bg-slate-50/90 px-2 py-1 dark:border-slate-700/60 dark:bg-slate-800/50 sm:rounded-xl sm:px-2.5 sm:py-1.5"
+                class="flex min-w-0 flex-1 gap-3 rounded-xl border border-slate-200/90 border-l-4 border-l-violet-500 bg-slate-50/90 px-3 py-3 dark:border-slate-600/50 dark:border-l-violet-400 dark:bg-slate-900/40"
               >
-                <AtomsPlayerAvatar
-                  :photo="tournament.mvp_photo"
-                  :fallback-name="mvpPlayerLabel(tournament)"
-                  size="xs"
-                />
-                <span class="min-w-0 flex-1 truncate text-[11px] font-semibold leading-snug text-slate-800 dark:text-slate-100 sm:text-xs">
-                  {{ mvpPlayerLabel(tournament) }}
-                </span>
-                <span class="shrink-0 self-center rounded-md bg-amber-400/15 px-2 py-1 text-[11px] font-bold tracking-wider text-amber-800 ring-1 ring-amber-300/40 dark:text-amber-300 dark:ring-amber-500/25">
-                  MVP
-                </span>
+                <div class="shrink-0 self-start pt-0.5">
+                  <AtomsPlayerAvatar
+                    :photo="tournament.mvp_photo"
+                    :fallback-name="mvpPlayerLabel(tournament)"
+                    size="sm"
+                  />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-[10px] font-semibold uppercase tracking-wider text-violet-800 dark:text-violet-200/90">
+                    MVP
+                  </p>
+                  <p class="mt-0.5 truncate text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">
+                    {{ mvpPlayerLabel(tournament) }}
+                  </p>
+                </div>
+                <span
+                  class="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg bg-violet-500/15 text-lg leading-none text-violet-900 ring-1 ring-violet-400/40 dark:bg-violet-500/20 dark:text-violet-100 dark:ring-violet-400/35"
+                  aria-hidden="true"
+                >⭐</span>
               </div>
             </div>
           </div>

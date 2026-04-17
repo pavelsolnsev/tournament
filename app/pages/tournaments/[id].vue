@@ -175,7 +175,6 @@
       >
         <OrganismsViewerTournamentSummary
           :summary="tournamentSummary"
-          :tournament-date="tournament.tournamentDate"
           :venue-label="tournament.venueLabel"
           :format-label="tournament.formatLabel"
           :team-colors="teamColors"
