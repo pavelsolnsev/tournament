@@ -1,12 +1,9 @@
-<!-- Компонент PlayerTeamAssignmentList: две колонки — список команд слева, состав справа. -->
+<!-- Компонент PlayerTeamAssignmentList: команды сверху, состав снизу (одна колонка на всех ширинах). -->
 <template>
-  <!-- На мобиле — стек; на lg — одинаковая высота колонок, слева шире, чтобы имена команд читались. -->
-  <div class="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-stretch">
+  <div class="flex min-w-0 flex-col gap-4">
 
-    <!-- Левая зона ещё чуть уже: min 19rem, cap 24rem, ~30% — больше ширины у состава справа. -->
-    <div class="min-w-0 lg:flex lg:min-h-0 lg:w-[30%] lg:max-w-[24rem] lg:min-w-[19rem] lg:shrink-0 lg:flex-col">
+    <div class="min-w-0 w-full">
       <OrganismsPlayerTeamAssignmentTeamsPanel
-        class="lg:min-h-0 lg:flex-1"
         :new-team-name-value="newTeamNameValue"
         :all-teams="allTeams"
         :selected-team-name="selectedTeamName"
@@ -25,10 +22,8 @@
       />
     </div>
 
-    <!-- Правая зона: тянется по высоте вместе с левой колонкой -->
-    <div class="min-w-0 flex-1 lg:flex lg:min-h-0 lg:flex-col">
+    <div class="min-w-0 w-full">
       <OrganismsPlayerTeamAssignmentRosterPanel
-        class="lg:min-h-0 lg:flex-1"
         :selected-team-name="selectedTeamName"
         :players="players"
         :get-team="getTeam"

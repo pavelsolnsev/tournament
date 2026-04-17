@@ -2,7 +2,7 @@
 <template>
   <AtomsTournamentPanel
     as="section"
-    root-class="min-w-0 lg:flex lg:h-full lg:min-h-0 lg:flex-col"
+    root-class="min-w-0 flex flex-col"
   >
 
     <!-- Заголовок секции + счётчик команд -->
@@ -43,8 +43,11 @@
       Команд пока нет — создайте первую.
     </AtomsEmptyStateBox>
 
-    <!-- Список команд: на мобиле ограничение по высоте; на lg — заполняет карточку до низа рядом с составом -->
-    <div v-else class="max-h-[26rem] overflow-y-auto -mx-1 px-1 lg:max-h-none lg:min-h-0 lg:flex-1">
+    <!-- Список команд: ~4 строки карточек (+ место под подпись «По рейтингу»), дальше скролл -->
+    <div
+      v-else
+      class="-mx-1 max-h-[min(22rem,calc(2.25rem+4*3.75rem+3*0.25rem))] min-h-0 overflow-y-auto px-1"
+    >
 
       <!-- Авто-команды: созданы кнопкой «По рейтингу» -->
       <template v-if="autoTeams.length > 0">

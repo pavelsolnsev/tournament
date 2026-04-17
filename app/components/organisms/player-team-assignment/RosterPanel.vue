@@ -2,7 +2,7 @@
 <template>
   <AtomsTournamentPanel
     as="section"
-    root-class="min-w-0 lg:flex lg:h-full lg:min-h-0 lg:flex-col"
+    root-class="min-w-0 flex flex-col"
   >
 
     <!-- Пустое состояние — никакая команда не выбрана -->
@@ -10,13 +10,13 @@
       v-if="!selectedTeamName"
       align="center"
       size="sm"
-      root-class="py-10 lg:flex lg:flex-1 lg:items-center lg:justify-center"
+      root-class="py-8"
     >
-      ← Выберите команду слева
+      ↑ Выберите команду выше
     </AtomsEmptyStateBox>
 
     <template v-else>
-      <div class="flex min-h-0 flex-1 flex-col gap-4 lg:min-h-0">
+      <div class="flex min-h-0 flex-col gap-4">
 
       <!-- Шапка панели: маркер + имя команды + счётчик игроков -->
       <div class="flex min-w-0 shrink-0 items-center justify-between gap-3">
@@ -35,10 +35,10 @@
       </div>
 
       <!-- Два столбца: на lg тянутся по высоте, списки скроллятся внутри -->
-      <div class="grid min-h-0 flex-1 gap-3 sm:grid-cols-2 lg:min-h-0">
+      <div class="grid min-h-0 gap-3 sm:grid-cols-2">
 
         <!-- Левый блок: игроки в команде -->
-        <div class="flex min-h-[12rem] flex-col gap-2 lg:min-h-0 lg:h-full">
+        <div class="flex min-h-[12rem] flex-col gap-2">
           <!-- Заголовок блока с цифрой -->
           <div class="flex shrink-0 items-center justify-between gap-2 px-0.5">
             <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">В команде</h3>
@@ -63,7 +63,7 @@
         </div>
 
         <!-- Правый блок: нераспределённые игроки с поиском -->
-        <div class="flex min-h-[12rem] flex-col gap-2 lg:min-h-0 lg:h-full">
+        <div class="flex min-h-[12rem] flex-col gap-2">
           <!-- Заголовок блока с цифрой -->
           <div class="flex shrink-0 items-center justify-between gap-2 px-0.5">
             <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">Свободные</h3>
