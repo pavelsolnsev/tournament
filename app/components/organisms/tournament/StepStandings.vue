@@ -66,7 +66,14 @@
           :aria-labelledby="standingsToggleId"
           class="pt-1"
         >
+          <AtomsEmptyStateBox v-if="teams.length === 0" align="center" size="sm" root-class="mx-4 mb-4">
+            Пока нет команд — добавьте и подтвердите их, чтобы появилась таблица.
+          </AtomsEmptyStateBox>
+          <AtomsEmptyStateBox v-else-if="standingsRows.length === 0" align="center" size="sm" root-class="mx-4 mb-4">
+            Таблица пока пустая — сыграйте хотя бы один матч.
+          </AtomsEmptyStateBox>
           <OrganismsTournamentStepStandingsHero
+            v-else
             :tournament-name="tournamentName"
             :tournament-date="tournamentDate"
             :teams="teams"
@@ -133,7 +140,11 @@
           :aria-labelledby="rosterTotalsToggleId"
           class="pt-1"
         >
+          <AtomsEmptyStateBox v-if="teams.length === 0" align="center" size="sm" root-class="mx-4 mb-4">
+            Пока нет команд — составы появятся после подтверждения команд.
+          </AtomsEmptyStateBox>
           <OrganismsTournamentStepStandingsTeamRosterTotals
+            v-else
             :teams="teams"
             :players-by-team="playersByTeam"
             :team-marker="teamMarker"
@@ -249,6 +260,7 @@
         :remove-player-event="removePlayerEvent"
         :go-to-next-match="handleGoToNextMatch"
         :reset-match-stats="resetMatchStats"
+        :reset-tournament-marks="handleResetTournamentMarks"
         :finish-match="handleFinishMatch"
         :finish-tournament-status="finishStatus"
         :finish-tournament-error="finishErrorMessage"
@@ -266,7 +278,7 @@
     </section>
 
     <!-- Таймер матча только при ведении турнира (не в режиме зрителя). -->
-    <MoleculesMatchCountdownTimerBar v-if="props.readonly !== true" />
+    <MoleculesMatchCountdownTimerBar v-if="props.readonly !== true && !hideCountdownTimerBar" />
   </div>
 </template>
 
@@ -276,6 +288,7 @@ import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { useTournamentStandingsRefactored } from '~/composables/useTournamentStandingsRefactored'
 import { useFinishTournament } from '~/composables/useFinishTournament'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
+import { useAdminAuth } from '~/composables/useAdminAuth'
 import { TOURNAMENT_STATE_NUXT_KEY } from '~/composables/useTournamentState'
 import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
 
@@ -298,6 +311,10 @@ const props = defineProps<{
   clearTournamentSecondsLeft: number
   clearTournamentBusy: boolean
 }>()
+
+// Simple10: Ограниченный админ (limited) не должен видеть панель таймера внизу.
+const { adminRole } = useAdminAuth()
+const hideCountdownTimerBar = computed(() => adminRole.value === 'limited')
 
 const emit = defineEmits<{
   // Вызывается при каждом изменении матчей/таблицы — родитель сохраняет снапшот в куку.
@@ -333,6 +350,7 @@ const {
   updatePlayedMatch,
   deletePlayedMatch,
   resetMatchStats,
+  resetTournamentMarks,
   finishMatch,
   goToNextMatch,
   displayPlayerLabel,
@@ -418,6 +436,14 @@ async function handleFinishMatch() {
   }
   finishMatch()
   // Сразу отдаём зрителю результат матча — не ждём очередного поллинга.
+  await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
+}
+
+async function handleResetTournamentMarks() {
+  // Simple10: Сбрасываем результаты и отметки, но не трогаем команды/игроков турнира.
+  resetTournamentMarks()
+  emit('update:matchStatus', 'upcoming', '', '')
+  // Simple10: Сразу обновляем payload state — зритель увидит сброс без ожидания поллинга.
   await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
 }
 // Этот обработчик централизует статус: после нажатия «Завершить матч» он остаётся finished,

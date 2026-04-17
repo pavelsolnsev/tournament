@@ -13,6 +13,7 @@ interface TournamentJson {
   matchStatus?: unknown
   liveHomeTeam?: unknown
   liveAwayTeam?: unknown
+  vkMuted?: unknown
   [key: string]: unknown
 }
 
@@ -26,6 +27,7 @@ interface ParsedTournament {
   matchStatus: MatchStatus
   liveHomeTeam: string
   liveAwayTeam: string
+  vkMuted: boolean
 }
 
 function parseTournamentValue(value: string | undefined): ParsedTournament {
@@ -34,6 +36,7 @@ function parseTournamentValue(value: string | undefined): ParsedTournament {
     matchStatus: 'upcoming',
     liveHomeTeam: '',
     liveAwayTeam: '',
+    vkMuted: false,
   }
   if (!value) return empty
   try {
@@ -45,11 +48,13 @@ function parseTournamentValue(value: string | undefined): ParsedTournament {
     const ms = st.matchStatus
     const matchStatus: MatchStatus =
       ms === 'live' || ms === 'finished' || ms === 'upcoming' ? ms : 'upcoming'
+    const vkMuted = st.vkMuted === true
     return {
       selectedIds,
       matchStatus,
       liveHomeTeam: typeof st.liveHomeTeam === 'string' ? st.liveHomeTeam : '',
       liveAwayTeam: typeof st.liveAwayTeam === 'string' ? st.liveAwayTeam : '',
+      vkMuted,
     }
   } catch {
     return empty
@@ -92,7 +97,7 @@ export default defineEventHandler(async (event) => {
     return { linked: false, closeVkListRequested }
   }
 
-  const { selectedIds, matchStatus, liveHomeTeam, liveAwayTeam } = parsed
+  const { selectedIds, matchStatus, liveHomeTeam, liveAwayTeam, vkMuted } = parsed
 
   if (selectedIds.length === 0) {
     return {
@@ -104,6 +109,7 @@ export default defineEventHandler(async (event) => {
       matchStatus,
       liveHomeTeam,
       liveAwayTeam,
+      vkMuted,
     }
   }
 
@@ -137,5 +143,6 @@ export default defineEventHandler(async (event) => {
     matchStatus,
     liveHomeTeam,
     liveAwayTeam,
+    vkMuted,
   }
 })

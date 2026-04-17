@@ -22,6 +22,10 @@ export default defineEventHandler(async (event) => {
   }
 
   const state = body.state as Record<string, unknown>
+  // Simple10: Если состояние сохраняет ограниченный админ, помечаем это флагом vkMuted.
+  // Simple10: VK-бот будет читать этот флаг и не отправлять уведомления при выборе команд (переход matchStatus в live).
+  // Simple10: Для полного админа флаг всегда false — так включается обычное поведение.
+  state.vkMuted = session === 'limited'
   const json = JSON.stringify(state)
 
   await queryWithRetry(

@@ -231,6 +231,7 @@
         >
           <!-- Завершить матч — активна только когда есть текущий матч -->
           <button
+            v-if="canFinishMatchAction"
             type="button"
             class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-white dark:text-slate-900
                    transition-colors md:hover:bg-emerald-400 active:bg-emerald-600
@@ -243,7 +244,7 @@
           </button>
 
           <!-- Подтверждение «Завершить матч» — 3 секунды до кнопки подтверждения, как при сбросе турнира -->
-          <div ref="finishConfirmAnchor">
+          <div v-if="canFinishMatchAction" ref="finishConfirmAnchor">
             <MoleculesDangerConfirmInline
               :open="isActionConfirmOpen && pendingAction === 'finish'"
               :seconds-left="finishMatchSecondsLeft"
@@ -277,6 +278,7 @@
 
           <!-- Завершить турнир — сначала панель с отсчётом 3 сек, потом сохранение в БД -->
           <button
+            v-if="canFinishTournament"
             type="button"
             class="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border px-4
                    text-sm font-semibold transition-all
@@ -351,8 +353,38 @@
             />
           </div>
 
+          <!-- Сбросить отметки — обнуляет результаты и события (матчи/таблицу/статы) без удаления игроков и команд -->
+          <button
+            v-if="!showResetMarksConfirm"
+            type="button"
+            class="inline-flex h-10 w-full items-center justify-center rounded-xl border border-slate-300/70 bg-slate-100/70
+                   px-4 text-sm font-semibold text-slate-700 transition-colors
+                   hover:bg-slate-200/70 dark:border-slate-700/60 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:bg-slate-800
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
+            @click="openResetMarksConfirm"
+          >
+            Сбросить отметки
+          </button>
+          <div v-else>
+            <MoleculesDangerConfirmInline
+              :open="true"
+              :seconds-left="isLimitedAdmin ? 0 : resetMarksSecondsLeft"
+              :busy="false"
+              aria-label="Подтверждение сброса отметок"
+              title="Сбросить отметки и результаты?"
+              subtitle="Сыгранные матчи, счёт и отметки игроков будут обнулены. Команды и игроки останутся."
+              cancel-text="Отмена"
+              :confirm-text="(isLimitedAdmin ? 0 : resetMarksSecondsLeft) > 0 ? `Сбросить через ${(isLimitedAdmin ? 0 : resetMarksSecondsLeft)}с` : 'Сбросить'"
+              @cancel="closeResetMarksConfirm"
+              @confirm="confirmResetMarks"
+            />
+          </div>
+
           <!-- VK статус — внизу управления, чтобы не мешал кнопкам. -->
-          <div class="mt-1 rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white/60 dark:bg-slate-900/40 px-3 py-2.5">
+          <div
+            v-if="canViewVkStatus"
+            class="mt-1 rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white/60 dark:bg-slate-900/40 px-3 py-2.5"
+          >
             <div class="flex items-center justify-between gap-3">
               <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">
                 VK статус
@@ -446,6 +478,7 @@ const props = defineProps<{
   removePlayerEvent: (side: Side, playerId: number, key: StatKey) => void
   goToNextMatch: () => void
   resetMatchStats: () => void
+  resetTournamentMarks: () => void
   finishMatch: () => void
   finishTournamentStatus: 'idle' | 'loading' | 'success' | 'error'
   finishTournamentError: string | null
@@ -471,6 +504,9 @@ const { getMatchScorePillClass } = useTeamColors()
 const { adminRole } = useAdminAuth()
 const canFinishTournament = computed(() => adminRole.value === 'full')
 const canClearTournament = computed(() => adminRole.value === 'full')
+const canFinishMatchAction = computed(() => adminRole.value === 'full')
+const canViewVkStatus = computed(() => adminRole.value === 'full')
+const isLimitedAdmin = computed(() => adminRole.value === 'limited')
 
 // Табло: ничья — серая плашка; лидер — в цвете его команды.
 const boardScorePillClass = computed(() =>
@@ -507,6 +543,47 @@ const isMgmtOpen = ref(false)
 const pendingAction = ref<'next' | 'finish' | null>(null)
 const isActionConfirmOpen = computed(() => pendingAction.value !== null)
 
+// Simple10: Отдельное подтверждение для «Сбросить отметки» (обнуляет результаты и события).
+const showResetMarksConfirm = ref(false)
+const resetMarksSecondsLeft = ref(3)
+let resetMarksCountdown: ReturnType<typeof setInterval> | null = null
+
+function startResetMarksCountdown() {
+  resetMarksSecondsLeft.value = 3
+  if (resetMarksCountdown) clearInterval(resetMarksCountdown)
+  resetMarksCountdown = setInterval(() => {
+    resetMarksSecondsLeft.value -= 1
+    if (resetMarksSecondsLeft.value <= 0 && resetMarksCountdown) {
+      clearInterval(resetMarksCountdown)
+      resetMarksCountdown = null
+    }
+  }, 1000)
+}
+
+function stopResetMarksCountdown() {
+  if (resetMarksCountdown) {
+    clearInterval(resetMarksCountdown)
+    resetMarksCountdown = null
+  }
+  resetMarksSecondsLeft.value = 3
+}
+
+function openResetMarksConfirm() {
+  showResetMarksConfirm.value = true
+  startResetMarksCountdown()
+}
+
+function closeResetMarksConfirm() {
+  showResetMarksConfirm.value = false
+  stopResetMarksCountdown()
+}
+
+function confirmResetMarks() {
+  // Simple10: Сбрасываем результаты и отметки через функцию родителя.
+  props.resetTournamentMarks()
+  closeResetMarksConfirm()
+}
+
 // VK статус: отдельный запрос, чтобы админ видел — закрыт ли список и снята ли привязка.
 const vkStatusPending = ref(false)
 const vkStatusError = ref<string | null>(null)
@@ -514,6 +591,8 @@ const vkStatusLinked = ref(false)
 const vkPeerId = ref<number | null>(null)
 
 async function refreshVkStatus() {
+  // Simple10: Ограниченный админ не должен видеть VK статус и не должен делать запросы к VK статусу.
+  if (!canViewVkStatus.value) return
   // Делаем запрос только по кнопке: это не критично для UI и не должно спамить сервер.
   if (vkStatusPending.value) return
   vkStatusPending.value = true
@@ -530,8 +609,10 @@ async function refreshVkStatus() {
   }
 }
 
-// Первый запрос делаем при монтировании: чтобы статус был виден сразу после открытия «Управление».
-void refreshVkStatus()
+// Simple10: Первый запрос делаем только для полного админа — limited не должен видеть VK статус.
+if (canViewVkStatus.value) {
+  void refreshVkStatus()
+}
 
 // Отсчёт 3 секунды перед «Завершить матч» — та же идея что у «Очистить данные».
 const finishMatchSecondsLeft = ref(3)
@@ -678,6 +759,7 @@ watch(
 onUnmounted(() => {
   stopFinishMatchCountdown()
   stopFinishTournamentConfirmCountdown()
+  stopResetMarksCountdown()
 })
 
 // Только что выбрали вторую команду: сворачиваем «Команды (дом/гость)» и крутим скролл к карточке матча.

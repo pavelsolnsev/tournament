@@ -76,7 +76,8 @@ const toneClasses = computed(() => {
     panel: 'border-slate-200 dark:border-slate-700/60 bg-slate-50 dark:bg-slate-900/40',
     title: 'text-slate-700 dark:text-slate-200',
     subtitle: 'text-slate-600 dark:text-slate-400',
-    confirmBtn: 'bg-sky-500 text-white dark:text-slate-950',
+    // Simple10: Для нейтральных подтверждений используем зелёную кнопку (как основное действие во всём UI).
+    confirmBtn: 'bg-emerald-500 text-white dark:text-slate-950 md:hover:bg-emerald-400',
   }
 })
 </script>

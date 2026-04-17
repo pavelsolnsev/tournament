@@ -26,7 +26,7 @@
             <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6 h-14">
               <span class="flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                 <span class="inline-block h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400" aria-hidden="true" />
-                Администратор
+                {{ adminRole === 'limited' ? 'Режим судьи' : 'Администратор' }}
               </span>
               <!-- Кнопки в шапке: обновить + пожелания + тема + выход (как у зрителя). -->
               <div class="flex items-center gap-1">
@@ -53,7 +53,7 @@
 
             <section v-else class="flex w-full flex-col gap-6 py-5 sm:py-8">
               <!-- На шаге 0 крошку не показываем: заголовок уже «Выберите игроков», подпись «Игроки» лишняя. -->
-              <nav v-if="wizard.step.value > 0" aria-label="Шаги мастера">
+              <nav v-if="!isLimitedAdmin && wizard.step.value > 0" aria-label="Шаги мастера">
                 <ol class="flex min-w-0 flex-wrap items-center gap-1">
                   <li
                     v-for="(crumb, idx) in breadcrumbs.filter(c => c.step <= wizard.step.value)"
@@ -91,7 +91,7 @@
                 </ol>
               </nav>
 
-              <template v-if="wizard.step.value === 0 || wizard.step.value === 1">
+              <template v-if="!isLimitedAdmin && (wizard.step.value === 0 || wizard.step.value === 1)">
                 <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-50 sm:text-3xl">
                   {{ wizard.step.value === 0 ? 'Выберите игроков' : 'Команды' }}
                 </h1>
@@ -141,11 +141,8 @@
                 />
               </template>
 
-              <!-- Панель пожеланий пользователей — только на шаге 0, после списка игроков. -->
-              <OrganismsAdminFeedbackAdmin v-if="wizard.step.value === 0" />
-
               <OrganismsTournamentStepStandings
-                v-if="wizard.step.value === 2"
+                v-if="isLimitedAdmin || wizard.step.value === 2"
                 :tournament-name="wizard.tournamentName.value"
                 :tournament-date="wizard.tournamentDate.value"
                 :venue-label="wizard.venueLabel.value"
@@ -207,7 +204,7 @@
       v-else
       :state="viewerState"
       :players="allPlayers"
-      :on-refresh="tournamentState.refresh"
+      :on-refresh="refreshAll"
     />
 
 </div>
@@ -255,6 +252,9 @@ const { isAdmin, adminRole, logout, restoreSession } = useAdminAuth()
 
 // Simple10: «Очистить данные» — опасная операция, доступна только полному админу.
 const canClearTournament = computed(() => adminRole.value === 'full')
+
+// Simple10: Ограниченный админ (limited) должен видеть только раздел «Таблица».
+const isLimitedAdmin = computed(() => adminRole.value === 'limited')
 
 // Канал между вкладками админки: после «Завершить турнир» / «Очистить данные» остальные вкладки подтягивают state из БД.
 const ADMIN_TOURNAMENT_BC = 'football-tournament-admin-sync'
@@ -401,6 +401,11 @@ async function confirmClearTournament() {
 const { data: allPlayers, error: playersFetchError, refresh: refreshPlayers } = useFetch<Player[]>('/api/players', {
   default: () => [],
 })
+
+// Simple10: Для кнопки «Обновить» делаем единый рефреш: и состояние турнира, и список игроков — так у зрителя и админа всегда «всё свежее».
+async function refreshAll() {
+  await Promise.all([tournamentState.refresh(), refreshPlayers()])
+}
 
 // Шаги мастера для хлебной крошки.
 const breadcrumbs = [

@@ -11,9 +11,9 @@ const ALLOWED_MINUTES = new Set<number>(MATCH_TIMER_MINUTE_OPTIONS)
  */
 export function useMatchCountdownTimer() {
   // Минуты живут в useState — при уходе со шага и возврате прежнее значение не сбрасывается на 10.
-  const selectedMinutes = useState<number>('match-timer-selected-minutes', () => 10)
+  const selectedMinutes = useState<number>('match-timer-selected-minutes', () => 6)
   if (!ALLOWED_MINUTES.has(selectedMinutes.value)) {
-    selectedMinutes.value = 10
+    selectedMinutes.value = 6
   }
 
   // Сколько секунд осталось до нуля (показываем на экране).

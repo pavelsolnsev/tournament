@@ -206,6 +206,43 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     resetMatchStatsFn(homeStats, awayStats, activeSelection, matchFinalized)
   }
 
+  function resetTournamentMarks() {
+    // Simple10: Это "мягкий сброс" только результатов и отметок внутри текущего турнира.
+    // Simple10: Игроков, команды и назначение по командам НЕ трогаем — только матчи/таблицу/дельты рейтинга/счётчики.
+
+    // Simple10: Сбрасываем турнирную таблицу в ноль по текущему списку команд.
+    standingsRows.value = params.teams.map((name, index) => ({
+      place: index + 1,
+      teamName: name,
+      played: 0,
+      wins: 0,
+      draws: 0,
+      losses: 0,
+      goalsFor: 0,
+      goalsAgainst: 0,
+      goalDiff: 0,
+      points: 0,
+    }))
+
+    // Simple10: Очищаем историю матчей и все счётчики подбора следующей пары.
+    matchCount.value = 0
+    teamGamesCount.value = {}
+    consecutiveGames.value = {}
+    matchHistory.value = {}
+    lastMatchIndex.value = {}
+    playedSingleMatch.value = false
+    playedMatchesList.value = []
+
+    // Simple10: Очищаем суммарную статистику игроков и накопленные дельты рейтинга за турнир.
+    aggregatePlayerStats.value = {}
+    playerRatingDeltas.value = {}
+
+    // Simple10: Сбрасываем текущий матч (выбранные команды и текущие отметки).
+    resetMatchStats()
+    homeTeam.value = ''
+    awayTeam.value = ''
+  }
+
   // Рейтинг: функции вынесены в отдельный модуль, чтобы файл был меньше.
   const applyRating = (deltas: Record<number, number>) =>
     applyRatingDeltas({ playerRatingDeltas, deltas })
@@ -576,6 +613,7 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     updatePlayedMatch,
     deletePlayedMatch,
     resetMatchStats,
+    resetTournamentMarks,
     finishMatch,
     goToNextMatch,
     // Полная подпись с рейтингом — для ростеров и выбора игроков во время матча.

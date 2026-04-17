@@ -368,7 +368,7 @@ import { scrollExpandedPanelIntoView } from "~/utils/scrollExpandedPanelIntoView
 const props = defineProps<{
   state: SavedTournamentContext | null;
   players: Player[];
-  onRefresh: () => void;
+  onRefresh: () => void | Promise<void>;
 }>();
 
 const showLoginModal = ref(false);
