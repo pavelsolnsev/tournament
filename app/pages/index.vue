@@ -30,7 +30,7 @@
               </span>
               <!-- Кнопки в шапке: обновить + пожелания + тема + выход (как у зрителя). -->
               <div class="flex items-center gap-1">
-                <AtomsHeaderRefreshButton :busy="adminHeaderRefreshing" @click="handleAdminHeaderRefresh" />
+                <AtomsHeaderRefreshButton :busy="false" @click="reloadWithScrollRestore" />
                 <AtomsFeedbackButton />
                 <AtomsThemeToggle />
                 <button
@@ -46,7 +46,7 @@
 
           <!-- flex-1 растягивает main; pt — отступ под абсолютный header. Контент идёт сверху. -->
           <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]">
-            <div v-if="!wizard.stateRestored.value" class="flex items-center gap-3 py-8 text-sm text-slate-600 dark:text-slate-400">
+            <div v-if="!wizard.stateRestored.value" class="flex flex-1 items-center justify-center gap-3 text-sm text-slate-600 dark:text-slate-400">
               <div class="h-9 w-9 shrink-0 animate-spin rounded-full border-2 border-slate-300 dark:border-slate-700 border-t-emerald-500" />
               <span>Загрузка…</span>
             </div>
@@ -184,6 +184,7 @@
                   :seconds-left="clearTournamentSeconds"
                   :busy="clearTournamentBusy"
                   title="Сбросить турнир? Игроки в турнире, команды, таблица и статус матча обнулятся. Список игроков в базе не трогаем."
+                  :subtitle="clearTournamentError || undefined"
                   cancel-text="Отмена"
                   confirm-text="Очистить всё"
                   busy-text="Очищаем…"
@@ -204,7 +205,7 @@
       v-else
       :state="viewerState"
       :players="allPlayers"
-      :on-refresh="refreshAll"
+      :on-refresh="reloadWithScrollRestore"
     />
 
 </div>
@@ -216,6 +217,7 @@ import { computed } from 'vue'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTournamentWizard } from '~/composables/useTournamentWizard'
 import { TOURNAMENT_STATE_NUXT_KEY, useTournamentState } from '~/composables/useTournamentState'
+import { reloadWithScrollRestore } from '~/utils/reloadWithScrollRestore'
 
 definePageMeta({ layout: 'landing' })
 
@@ -267,9 +269,6 @@ onMounted(() => {
 
 const clearTournamentBottomAnchor = useTemplateRef<HTMLDivElement>('clearTournamentBottomAnchor')
 
-// Крутилка на кнопке «Обновить» в шапке админки — пока тянем турнир и список игроков с сервера.
-const adminHeaderRefreshing = ref(false)
-
 const tournamentState = useTournamentState()
 const wizard = useTournamentWizard({
   serverState: tournamentState.serverState,
@@ -279,20 +278,6 @@ const wizard = useTournamentWizard({
 })
 
 const viewerState = computed(() => tournamentState.serverState.value)
-
-// Ручное обновление из шапки: свежий state турнира + игроки, потом мастер подстраивается под serverState.
-async function handleAdminHeaderRefresh() {
-  if (adminHeaderRefreshing.value) return
-  adminHeaderRefreshing.value = true
-  try {
-    await Promise.all([tournamentState.refresh(), refreshPlayers()])
-    await nextTick()
-    wizard.reapplyFromServer()
-  } finally {
-    await new Promise((r) => setTimeout(r, 600))
-    adminHeaderRefreshing.value = false
-  }
-}
 
 // Когда вкладка снова видна — подтягиваем турнир из БД (другая вкладка могла завершить турнир).
 function onAdminVisibilitySync() {
@@ -338,6 +323,7 @@ onMounted(() => {
 // Панель «Очистить данные» — обратный отсчёт как у очистки пожеланий.
 const showClearTournamentConfirm = ref(false)
 const clearTournamentBusy = ref(false)
+const clearTournamentError = ref<string | null>(null)
 const clearTournamentSeconds = ref(3)
 let clearTournamentCountdown: ReturnType<typeof setInterval> | null = null
 
@@ -353,7 +339,10 @@ function startClearTournamentCountdown() {
 }
 
 watch(showClearTournamentConfirm, (open) => {
-  if (open) startClearTournamentCountdown()
+  if (open) {
+    clearTournamentError.value = null
+    startClearTournamentCountdown()
+  }
   else {
     if (clearTournamentCountdown) {
       clearInterval(clearTournamentCountdown)
@@ -388,24 +377,32 @@ function cancelClearTournament() {
 
 async function confirmClearTournament() {
   clearTournamentBusy.value = true
+  clearTournamentError.value = null
   try {
-    await wizard.resetWizard()
+    // Simple10: Иногда очистка может не пройти с первого раза (сеть/таймаут). Делаем одну попытку повтора.
+    try {
+      await wizard.resetWizard()
+    } catch (e) {
+      // Simple10: В dev выводим реальную ошибку, чтобы понять почему не очистилось.
+      if (import.meta.dev) console.error('[clear-tournament] resetWizard failed (first try):', e)
+      await new Promise((r) => setTimeout(r, 500))
+      await wizard.resetWizard()
+    }
     await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
     broadcastAdminTournamentStateChanged()
+    showClearTournamentConfirm.value = false
+  } catch (e) {
+    // Simple10: Если очистка не удалась — оставляем панель открытой и показываем короткую ошибку.
+    if (import.meta.dev) console.error('[clear-tournament] failed:', e)
+    clearTournamentError.value = 'Не удалось очистить данные. Попробуйте ещё раз.'
   } finally {
     clearTournamentBusy.value = false
-    showClearTournamentConfirm.value = false
   }
 }
 
 const { data: allPlayers, error: playersFetchError, refresh: refreshPlayers } = useFetch<Player[]>('/api/players', {
   default: () => [],
 })
-
-// Simple10: Для кнопки «Обновить» делаем единый рефреш: и состояние турнира, и список игроков — так у зрителя и админа всегда «всё свежее».
-async function refreshAll() {
-  await Promise.all([tournamentState.refresh(), refreshPlayers()])
-}
 
 // Шаги мастера для хлебной крошки.
 const breadcrumbs = [

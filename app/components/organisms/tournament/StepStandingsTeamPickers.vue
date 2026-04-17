@@ -84,6 +84,11 @@
               >
                 <AtomsTeamMarkerOrLogo :team-name="name" :marker="teamMarker(name)" size="md" />
                 <span class="min-w-0 truncate">{{ name }}</span>
+                <AtomsTeamColorDot
+                  v-if="getTeamColorIndex"
+                  :team-name="name"
+                  :color-index="getTeamColorIndex(name)"
+                />
               </button>
             </li>
           </ul>
@@ -173,6 +178,11 @@
               >
                 <AtomsTeamMarkerOrLogo :team-name="name" :marker="teamMarker(name)" size="md" />
                 <span class="min-w-0 truncate">{{ name }}</span>
+                <AtomsTeamColorDot
+                  v-if="getTeamColorIndex"
+                  :team-name="name"
+                  :color-index="getTeamColorIndex(name)"
+                />
               </button>
             </li>
           </ul>
@@ -191,6 +201,8 @@ defineProps<{
   homeTeam: string
   awayTeam: string
   teamMarker: (teamName: string) => string
+  /** Индекс цвета команды в турнире — для кружка после названия (только при логотипе в teamLogos). */
+  getTeamColorIndex?: (teamName: string) => number
 }>()
 
 const emit = defineEmits<{

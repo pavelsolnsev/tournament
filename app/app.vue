@@ -41,18 +41,39 @@
 <script setup lang="ts">
 import { useAppClientFault } from '~/composables/useAppClientFault'
 import { useTheme } from '~/composables/useTheme'
+import { reloadWithScrollRestore } from '~/utils/reloadWithScrollRestore'
 
 const { initTheme } = useTheme()
 const { faultMessage } = useAppClientFault()
 
+const SCROLL_RESTORE_KEY = 'football-scroll-restore-v1'
+
 // Полная перезагрузка — самый надёжный способ после сбоя чанка или состояния Vue.
 function reloadPage() {
-  window.location.reload()
+  reloadWithScrollRestore()
 }
 
 // Инициализируем тему после монтирования — читаем localStorage и системные настройки.
 // Это единственное место где вызываем initTheme, чтобы не дублировать логику.
 onMounted(() => {
   initTheme()
+
+  // Simple10: После загрузки страницы восстанавливаем скролл только если reload был запущен нашей кнопкой.
+  try {
+    const raw = sessionStorage.getItem(SCROLL_RESTORE_KEY)
+    if (!raw) return
+    const parsed = JSON.parse(raw) as { path?: string; top?: number }
+    sessionStorage.removeItem(SCROLL_RESTORE_KEY)
+    const currentPath = window.location.pathname + window.location.search
+    if (parsed.path !== currentPath) return
+    const top = typeof parsed.top === 'number' ? parsed.top : 0
+    const root = document.getElementById('scroll-root')
+    if (!root) return
+    requestAnimationFrame(() => {
+      root.scrollTop = Math.max(0, top)
+    })
+  } catch {
+    /* игнорируем */
+  }
 })
 </script>

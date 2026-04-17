@@ -67,6 +67,7 @@
             :home-team="homeTeam"
             :away-team="awayTeam"
             :team-marker="teamMarker"
+            :get-team-color-index="teamColorIndexForName"
             @update:home-team="$emit('update:homeTeam', $event)"
             @update:away-team="$emit('update:awayTeam', $event)"
           />
@@ -81,11 +82,15 @@
       class="rounded-2xl border border-slate-300 dark:border-slate-700/60 bg-slate-50 dark:bg-slate-900"
     >
 
-      <!-- Табло -->
-      <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-slate-200 dark:border-slate-700/60 px-4 py-3">
-        <p class="flex items-center gap-1.5 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
+      <!-- Табло — ref для скролла ровно к счёту (видно строку команд + 0:0). -->
+      <div
+        ref="matchScoreBoardRef"
+        class="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-slate-200 dark:border-slate-700/60 px-4 py-3 scroll-mt-[calc(theme(spacing.14)+env(safe-area-inset-top)+0.5rem)]"
+      >
+        <p class="flex min-w-0 items-center gap-1.5 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
           <AtomsTeamMarkerOrLogo :team-name="homeTeam" :marker="teamMarker(homeTeam)" size="md" />
-          <span class="truncate">{{ homeTeam }}</span>
+          <span class="min-w-0 truncate">{{ homeTeam }}</span>
+          <AtomsTeamColorDot :team-name="homeTeam" :color-index="homeTeamColorIndex" />
         </p>
 
         <div class="text-center">
@@ -97,8 +102,9 @@
           </p>
         </div>
 
-        <p class="flex items-center justify-end gap-1.5 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
-          <span class="truncate">{{ awayTeam }}</span>
+        <p class="flex min-w-0 items-center justify-end gap-1.5 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
+          <AtomsTeamColorDot :team-name="awayTeam" :color-index="awayTeamColorIndex" />
+          <span class="min-w-0 truncate">{{ awayTeam }}</span>
           <AtomsTeamMarkerOrLogo :team-name="awayTeam" :marker="teamMarker(awayTeam)" size="md" />
         </p>
       </div>
@@ -136,12 +142,12 @@
         />
       </div>
 
-      <!-- Кнопка "Следующий матч" — только когда выбраны команды -->
+      <!-- Кнопка "Следующий матч" — только когда выбраны команды; на телефоне на всю ширину карточки. -->
       <div class="border-t border-slate-200 dark:border-slate-700/60 px-3 py-2.5">
         <button
           type="button"
-          class="inline-flex h-11 items-center justify-center rounded-xl bg-sky-500 px-5 text-sm font-semibold text-white dark:text-slate-900
-                 transition-colors md:hover:bg-sky-400 active:bg-sky-600
+          class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-sky-500 px-5 text-sm font-semibold text-white dark:text-slate-900
+                 transition-colors sm:w-auto md:hover:bg-sky-400 active:bg-sky-600
                  disabled:cursor-not-allowed disabled:opacity-40
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50"
           :disabled="!hasNextMatch"
@@ -353,33 +359,6 @@
             />
           </div>
 
-          <!-- Сбросить отметки — обнуляет результаты и события (матчи/таблицу/статы) без удаления игроков и команд -->
-          <button
-            v-if="!showResetMarksConfirm"
-            type="button"
-            class="inline-flex h-10 w-full items-center justify-center rounded-xl border border-slate-300/70 bg-slate-100/70
-                   px-4 text-sm font-semibold text-slate-700 transition-colors
-                   hover:bg-slate-200/70 dark:border-slate-700/60 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:bg-slate-800
-                   focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
-            @click="openResetMarksConfirm"
-          >
-            Сбросить отметки
-          </button>
-          <div v-else>
-            <MoleculesDangerConfirmInline
-              :open="true"
-              :seconds-left="isLimitedAdmin ? 0 : resetMarksSecondsLeft"
-              :busy="false"
-              aria-label="Подтверждение сброса отметок"
-              title="Сбросить отметки и результаты?"
-              subtitle="Сыгранные матчи, счёт и отметки игроков будут обнулены. Команды и игроки останутся."
-              cancel-text="Отмена"
-              :confirm-text="(isLimitedAdmin ? 0 : resetMarksSecondsLeft) > 0 ? `Сбросить через ${(isLimitedAdmin ? 0 : resetMarksSecondsLeft)}с` : 'Сбросить'"
-              @cancel="closeResetMarksConfirm"
-              @confirm="confirmResetMarks"
-            />
-          </div>
-
           <!-- VK статус — внизу управления, чтобы не мешал кнопкам. -->
           <div
             v-if="canViewVkStatus"
@@ -421,6 +400,60 @@
               </span>
             </div>
           </div>
+
+          <!-- Сбросить отметки — под VK статусом (по просьбе), чтобы не мешать основным действиям. -->
+          <button
+            v-if="!showResetMarksConfirm"
+            type="button"
+            class="inline-flex h-10 w-full items-center justify-center rounded-xl border border-slate-300/70 bg-slate-100/70
+                   px-4 text-sm font-semibold text-slate-700 transition-colors
+                   hover:bg-slate-200/70 dark:border-slate-700/60 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:bg-slate-800
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
+            @click="openResetMarksConfirm"
+          >
+            Сбросить отметки
+          </button>
+          <div v-else>
+            <MoleculesDangerConfirmInline
+              :open="true"
+              :seconds-left="isLimitedAdmin ? 0 : resetMarksSecondsLeft"
+              :busy="false"
+              aria-label="Подтверждение сброса отметок"
+              title="Сбросить отметки и результаты?"
+              subtitle="Сыгранные матчи, счёт и отметки игроков будут обнулены. Команды и игроки останутся."
+              cancel-text="Отмена"
+              :confirm-text="(isLimitedAdmin ? 0 : resetMarksSecondsLeft) > 0 ? `Сбросить через ${(isLimitedAdmin ? 0 : resetMarksSecondsLeft)}с` : 'Сбросить'"
+              @cancel="closeResetMarksConfirm"
+              @confirm="confirmResetMarks"
+            />
+          </div>
+
+          <div class="border-t border-slate-200 dark:border-slate-700/60" />
+
+          <!-- Обновить страницу — в самом низу управления, чтобы не мешала основным действиям. -->
+          <button
+            type="button"
+            class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-300/70 bg-white/70 px-4 text-sm font-semibold text-slate-700 transition-colors
+                   hover:bg-slate-50 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-200 dark:hover:bg-slate-900/70
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+            aria-label="Обновить страницу"
+            @click="reloadPage"
+          >
+            <svg
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+              <path d="M21 3v5h-5" />
+            </svg>
+            Обновить страницу
+          </button>
         </div>
       </Transition>
     </div>
@@ -438,6 +471,7 @@ import { useTeamColors } from '~/composables/useTeamColors'
 import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
 import MoleculesDangerConfirmInline from '~/components/molecules/DangerConfirmInline.vue'
 import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
+import { reloadWithScrollRestore } from '~/utils/reloadWithScrollRestore'
 import { resolveTeamColorIndex } from '~/utils/teamNames'
 
 type Side = 'home' | 'away'
@@ -507,6 +541,22 @@ const canClearTournament = computed(() => adminRole.value === 'full')
 const canFinishMatchAction = computed(() => adminRole.value === 'full')
 const canViewVkStatus = computed(() => adminRole.value === 'full')
 const isLimitedAdmin = computed(() => adminRole.value === 'limited')
+
+// Simple10: Индекс цвета команды в турнире — для маленького кружка рядом с названием (только при логотипе).
+const homeTeamColorIndex = computed(() =>
+  resolveTeamColorIndex(props.homeTeam, props.effectiveTeamColors, 0),
+)
+const awayTeamColorIndex = computed(() =>
+  resolveTeamColorIndex(props.awayTeam, props.effectiveTeamColors, 1),
+)
+
+function teamColorIndexForName(teamName: string): number {
+  return resolveTeamColorIndex(teamName, props.effectiveTeamColors, 0)
+}
+
+function reloadPage() {
+  reloadWithScrollRestore()
+}
 
 // Табло: ничья — серая плашка; лидер — в цвете его команды.
 const boardScorePillClass = computed(() =>
@@ -703,6 +753,18 @@ const finishConfirmAnchor = useTemplateRef<HTMLDivElement>('finishConfirmAnchor'
 const finishTournamentConfirmAnchor = useTemplateRef<HTMLDivElement>('finishTournamentConfirmAnchor')
 const clearDataConfirmAnchor = useTemplateRef<HTMLDivElement>('clearDataConfirmAnchor')
 const matchCardRef = useTemplateRef<HTMLElement>('matchCardRef')
+const matchScoreBoardRef = useTemplateRef<HTMLDivElement>('matchScoreBoardRef')
+
+// Simple10: Прокрутка к строке табло со счётом (не ко всей карточке), чтобы 0:0 был в кадре под шапкой.
+function scrollMatchCardIntoView() {
+  if (import.meta.server) return
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const el = matchScoreBoardRef.value ?? matchCardRef.value
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' })
+    })
+  })
+}
 
 function scrollConfirmIntoView(el: HTMLElement | null | undefined) {
   // Ждём кадр: v-if внутри Confirm отрисовал панель, иначе scroll может не попасть в нужную высоту.
@@ -723,7 +785,7 @@ function openActionConfirm(action: 'next' | 'finish') {
   scrollConfirmIntoView(el)
 }
 
-function confirmPendingAction() {
+async function confirmPendingAction() {
   // Выполняем действие только когда таймер дошёл до нуля.
   const action = pendingAction.value
   closeActionConfirm()
@@ -734,6 +796,9 @@ function confirmPendingAction() {
   }
   if (action === 'next') {
     props.goToNextMatch()
+    await nextTick()
+    await nextTick()
+    scrollMatchCardIntoView()
   }
 }
 
@@ -771,8 +836,7 @@ watch(
     if (!both || hadBothBefore) return
     isTeamPickersOpen.value = false
     await nextTick()
-    const el = matchCardRef.value
-    if (el) scrollExpandedPanelIntoView(el)
+    scrollMatchCardIntoView()
   },
   { flush: 'post' },
 )

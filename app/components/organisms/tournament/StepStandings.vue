@@ -1,6 +1,9 @@
 <!-- Компонент StepStandings: таблица, составы со статистикой, сыгранные матчи и управление матчем — отдельными блоками. -->
 <template>
-  <div class="min-w-0 space-y-4">
+  <div
+    class="min-w-0 space-y-4"
+    :class="props.readonly !== true && !hideCountdownTimerBar && 'pb-24'"
+  >
     <!-- Блок 1: турнирная таблица -->
     <div
       class="overflow-hidden rounded-2xl border bg-slate-50 dark:bg-slate-900/60 transition-colors"
