@@ -24,7 +24,7 @@
       <AtomsPrimaryButton
         native-type="submit"
         size="block"
-        :disabled="!newName.trim() || creating"
+        :disabled="!canManagePlayers || !newName.trim() || creating"
       >
         {{ creating ? 'Добавляем…' : 'Добавить' }}
       </AtomsPrimaryButton>
@@ -76,6 +76,7 @@
             type="button"
             class="shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-red-500/30 text-red-500 transition-colors hover:bg-red-500/10 active:bg-red-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
             :title="`Удалить ${p.name} из базы`"
+            :disabled="!canManagePlayers"
             @click="openDeleteConfirm(p.id)"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -104,7 +105,7 @@
     </p>
 
     <!-- Reset только на lg+: на телефоне кнопку не показываем — реже случайное нажатие. -->
-    <div ref="resetConfirmAnchor" class="mt-6 hidden flex-col items-center lg:flex">
+    <div v-if="canManagePlayers" ref="resetConfirmAnchor" class="mt-6 hidden flex-col items-center lg:flex">
       <button
         type="button"
         class="inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-800 dark:hover:text-slate-300 active:bg-slate-200 dark:active:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-40"
@@ -133,8 +134,9 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
-import { nextTick, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
+import { useAdminAuth } from '~/composables/useAdminAuth'
 import MoleculesDangerConfirmInline from '~/components/molecules/DangerConfirmInline.vue'
 
 defineProps<{
@@ -156,6 +158,10 @@ const creating = ref(false)
 const createError = ref('')
 
 const { displayPlayerLabel, playerLabelRatingParts } = usePlayerDisplay()
+
+// Simple10: Ограниченный админ (limited) не может создавать/удалять игроков и делать reset.
+const { adminRole } = useAdminAuth()
+const canManagePlayers = computed(() => adminRole.value === 'full')
 
 function libraryPlayerRowBind(p: Player) {
   const { name, rating } = playerLabelRatingParts(p)
@@ -184,6 +190,8 @@ const deleteConfirmIntervalId = ref<ReturnType<typeof setInterval> | null>(null)
 const deleting = ref(false)
 
 function openDeleteConfirm(playerId: number) {
+  // Simple10: Для limited блокируем удаление игроков.
+  if (!canManagePlayers.value) return
   // Закрываем предыдущее подтверждение если было открыто для другого игрока.
   closeDeleteConfirm()
   deleteConfirmId.value = playerId
@@ -209,6 +217,8 @@ function closeDeleteConfirm() {
 }
 
 async function confirmDelete(playerId: number) {
+  // Simple10: Для limited блокируем удаление игроков (защита от ручного вызова).
+  if (!canManagePlayers.value) return
   deleting.value = true
   try {
     // Удаляем игрока из базы через API.
@@ -224,6 +234,8 @@ async function confirmDelete(playerId: number) {
 }
 
 async function onCreatePlayer() {
+  // Simple10: Для limited блокируем создание игроков.
+  if (!canManagePlayers.value) return
   const name = newName.value.trim()
   if (!name) {
     createError.value = 'Введите имя'
@@ -264,6 +276,8 @@ function closeResetConfirm() {
 
 function openResetConfirm() {
   // Для Reset оставляем таймер, чтобы сложнее было нажать случайно.
+  // Simple10: Для limited блокируем reset игроков.
+  if (!canManagePlayers.value) return
   if (resetting.value) return
   resetError.value = ''
   isResetConfirmOpen.value = true
@@ -287,6 +301,8 @@ function openResetConfirm() {
 async function confirmResetPlayers() {
   // Это финальное подтверждение reset — оно появляется только после отдельного шага.
   // Сбрасываем ошибку и показываем состояние загрузки.
+  // Simple10: Для limited блокируем reset игроков (защита от ручного вызова).
+  if (!canManagePlayers.value) return
   resetError.value = ''
   resetting.value = true
   try {

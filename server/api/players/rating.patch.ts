@@ -14,8 +14,9 @@ function round1(n: number): number {
 // Только администратор может обновлять рейтинги игроков.
 export default defineEventHandler(async (event) => {
   const session = getCookie(event, 'admin_session')
-  if (session !== 'true') {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
+  // Simple10: Обновление рейтингов — это изменение данных игроков, доступно только полному админу (full).
+  if (session !== 'full') {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden: full admin only' })
   }
 
   const body = await readBody<{ updates?: RatingUpdate[] }>(event)

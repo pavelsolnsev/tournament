@@ -8,8 +8,9 @@ export default defineEventHandler(async (event) => {
   await ensureTablesExist()
 
   const session = getCookie(event, 'admin_session')
-  if (session !== 'true') {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
+  // Simple10: Создавать игроков может только полный админ (full).
+  if (session !== 'full') {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden: full admin only' })
   }
 
   const body = await readBody<{ name?: string; username?: string }>(event)

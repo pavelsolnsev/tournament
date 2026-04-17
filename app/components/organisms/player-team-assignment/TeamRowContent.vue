@@ -69,6 +69,7 @@
 
       <!-- Удалить команду -->
       <button
+        v-if="canManageTeams"
         type="button"
         class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 dark:text-slate-600
                transition-colors md:hover:bg-red-500/10 md:hover:text-red-500 dark:md:hover:text-red-400
@@ -85,7 +86,7 @@
   <div ref="removeConfirmAnchor" data-team-row-stop>
     <MoleculesConfirmInline
       class="mt-1.5"
-      :open="removeConfirmTeamName === name"
+      :open="canManageTeams && removeConfirmTeamName === name"
       :busy="false"
       tone="danger"
       aria-label="Подтверждение удаления команды"
@@ -100,7 +101,8 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, watch } from 'vue'
+import { computed, nextTick, watch } from 'vue'
+import { useAdminAuth } from '~/composables/useAdminAuth'
 import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
 
 const props = defineProps<{
@@ -115,10 +117,16 @@ const props = defineProps<{
 
 const removeConfirmAnchor = useTemplateRef<HTMLDivElement>('removeConfirmAnchor')
 
+// Simple10: Ограниченный админ (limited) не может удалять команды.
+const { adminRole } = useAdminAuth()
+const canManageTeams = computed(() => adminRole.value === 'full')
+
 // Когда открыто подтверждение удаления именно этой строки — прокручиваем к панели.
 watch(
   () => props.removeConfirmTeamName,
   (v) => {
+    // Simple10: Для limited подтверждение удаления не показываем и не скроллим.
+    if (!canManageTeams.value) return
     if (v !== props.name) return
     void nextTick(() => {
       removeConfirmAnchor.value?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })

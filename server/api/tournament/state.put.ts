@@ -10,7 +10,8 @@ export default defineEventHandler(async (event) => {
   await ensureTablesExist()
 
   const session = getCookie(event, 'admin_session')
-  if (session !== 'true') {
+  // Simple10: Сохранять состояние может любой админ (full или limited).
+  if (session !== 'full' && session !== 'limited') {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
   }
 

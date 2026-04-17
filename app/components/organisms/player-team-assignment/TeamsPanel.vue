@@ -24,13 +24,15 @@
         size="sm"
         placeholder="Название команды"
         class="flex-1"
+        :disabled="!canManageTeams"
         @update:model-value="emit('update:newTeamName', $event)"
-        @keydown.enter.prevent="emit('addNewTeam')"
+        @keydown.enter.prevent="canManageTeams && emit('addNewTeam')"
       />
       <AtomsPrimaryButton
         size="md"
         title="Создать команду"
-        @click="emit('addNewTeam')"
+        :disabled="!canManageTeams"
+        @click="canManageTeams && emit('addNewTeam')"
       >
         +
       </AtomsPrimaryButton>
@@ -124,6 +126,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTeamColors } from '~/composables/useTeamColors'
 
 const props = defineProps<{
@@ -149,6 +152,10 @@ const emit = defineEmits<{
 
 const { teamMarkers } = useTeamColors()
 
+// Simple10: Ограниченный админ (limited) не может создавать и удалять команды.
+const { adminRole } = useAdminAuth()
+const canManageTeams = computed(() => adminRole.value === 'full')
+
 // Авто-команды — созданы распределением по рейтингу.
 const autoTeams = computed(() => props.allTeams.filter((n) => props.isAutoTeam(n)))
 // Ручные команды — все остальные.
@@ -165,6 +172,8 @@ function openRemoveConfirm(teamName: string) {
 }
 
 function confirmRemoveTeam(teamName: string) {
+  // Simple10: Для limited блокируем удаление команд.
+  if (!canManageTeams.value) return
   emit('removeTeam', teamName)
   closeRemoveConfirm()
 }

@@ -4,8 +4,9 @@ import { queryWithRetry } from '../../utils/db'
 // Доступно только администратору — проверяем cookie admin_session.
 export default defineEventHandler(async (event) => {
   const session = getCookie(event, 'admin_session')
-  if (session !== 'true') {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
+  // Simple10: Удаление архива турнира — опасная операция, доступна только полному админу (full).
+  if (session !== 'full') {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden: full admin only' })
   }
 
   const id = getRouterParam(event, 'id')

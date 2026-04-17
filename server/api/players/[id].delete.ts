@@ -6,8 +6,9 @@ import { queryWithRetry } from '../../utils/db'
 export default defineEventHandler(async (event) => {
   // Проверяем сессию администратора.
   const session = getCookie(event, 'admin_session')
-  if (session !== 'true') {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
+  // Simple10: Удалять игроков может только полный админ (full).
+  if (session !== 'full') {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden: full admin only' })
   }
 
   // Читаем id из URL-параметра.

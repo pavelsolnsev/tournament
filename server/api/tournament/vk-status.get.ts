@@ -15,7 +15,8 @@ export default defineEventHandler(async (event) => {
 
   // Проверяем админскую сессию — этот эндпоинт не нужен зрителям.
   const session = getCookie(event, 'admin_session')
-  if (session !== 'true') {
+  // Simple10: VK статус можно смотреть любому админу (full или limited).
+  if (session !== 'full' && session !== 'limited') {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
   }
 

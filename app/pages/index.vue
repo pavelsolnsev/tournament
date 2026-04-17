@@ -161,7 +161,7 @@
                 @update:snapshot="wizard.saveStandingsSnapshot"
                 @update:match-status="wizard.updateMatchStatus"
                 @tournament-finished="handleTournamentFinished"
-                @clear-tournament="showClearTournamentConfirm = true"
+                @clear-tournament="canClearTournament && (showClearTournamentConfirm = true)"
                 @cancel-clear-tournament="cancelClearTournament"
                 @confirm-clear-tournament="confirmClearTournament"
               />
@@ -169,7 +169,7 @@
               <!-- Сброс турнира — показываем внизу только на шагах 0 и 1.
                    На шаге 2 (Таблица) кнопка «Очистить данные» перенесена внутрь блока «Управление». -->
               <div
-                v-if="wizard.step.value !== 2"
+                v-if="wizard.step.value !== 2 && canClearTournament"
                 ref="clearTournamentBottomAnchor"
                 class="flex flex-col gap-2 dark:border-slate-700 sm:items-end"
               >
@@ -215,6 +215,7 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
+import { computed } from 'vue'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTournamentWizard } from '~/composables/useTournamentWizard'
 import { TOURNAMENT_STATE_NUXT_KEY, useTournamentState } from '~/composables/useTournamentState'
@@ -250,7 +251,10 @@ useHead({
   link: [{ rel: 'canonical', href: canonicalHref }],
 })
 
-const { isAdmin, logout, restoreSession } = useAdminAuth()
+const { isAdmin, adminRole, logout, restoreSession } = useAdminAuth()
+
+// Simple10: «Очистить данные» — опасная операция, доступна только полному админу.
+const canClearTournament = computed(() => adminRole.value === 'full')
 
 // Канал между вкладками админки: после «Завершить турнир» / «Очистить данные» остальные вкладки подтягивают state из БД.
 const ADMIN_TOURNAMENT_BC = 'football-tournament-admin-sync'
@@ -319,7 +323,8 @@ onMounted(() => {
   if (!import.meta.client) return
   const match = document.cookie.match(/(?:^|; )admin_session=([^;]*)/)
   const cookieValue = match ? decodeURIComponent(match[1] ?? '') : ''
-  if (cookieValue !== 'true') return
+  // Simple10: В cookie admin_session теперь роль: full или limited.
+  if (cookieValue !== 'full' && cookieValue !== 'limited') return
   if (typeof BroadcastChannel !== 'undefined') {
     adminTournamentBc = new BroadcastChannel(ADMIN_TOURNAMENT_BC)
     adminTournamentBc.onmessage = () => {

@@ -89,7 +89,11 @@ export function useTournamentState() {
   // Это предотвращает лишний запрос и 403 в консоли браузера у зрителей.
   function isAdmin(): boolean {
     if (!import.meta.client) return false
-    return document.cookie.split(';').some(c => c.trim().startsWith('admin_session=true'))
+    // Simple10: Админ — это либо full, либо limited.
+    return document.cookie.split(';').some((c) => {
+      const trimmed = c.trim()
+      return trimmed.startsWith('admin_session=full') || trimmed.startsWith('admin_session=limited')
+    })
   }
 
   function saveTournamentState(state: SavedTournamentContext) {

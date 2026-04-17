@@ -287,7 +287,7 @@
               : finishTournamentStatus === 'loading'
                 ? 'border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                 : 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 md:hover:bg-amber-500/20 md:hover:border-amber-500/50'"
-            :disabled="!hasPlayedMatches || finishTournamentStatus === 'loading' || finishTournamentStatus === 'success' || showFinishTournamentConfirm"
+            :disabled="!canFinishTournament || !hasPlayedMatches || finishTournamentStatus === 'loading' || finishTournamentStatus === 'success' || showFinishTournamentConfirm"
             @click="openFinishTournamentConfirm"
           >
             <span
@@ -307,7 +307,7 @@
 
           <div ref="finishTournamentConfirmAnchor">
             <MoleculesDangerConfirmInline
-              :open="showFinishTournamentConfirm"
+              :open="showFinishTournamentConfirm && canFinishTournament"
               :seconds-left="finishTournamentConfirmSecondsLeft"
               :busy="finishTournamentStatus === 'loading'"
               aria-label="Подтверждение завершения турнира"
@@ -325,7 +325,7 @@
 
           <!-- Кнопка «Очистить данные» — сбрасывает турнир полностью -->
           <button
-            v-if="!showClearTournamentConfirm"
+            v-if="canClearTournament && !showClearTournamentConfirm"
             type="button"
             class="inline-flex h-10 w-full items-center justify-center rounded-xl border border-red-300/70 bg-red-50
                    px-4 text-sm font-semibold text-red-700 transition-colors
@@ -336,7 +336,7 @@
             Очистить данные
           </button>
           <!-- Инлайн-подтверждение сброса — обёртка для прокрутки к отсчёту и кнопкам -->
-          <div v-else ref="clearDataConfirmAnchor">
+          <div v-else-if="canClearTournament" ref="clearDataConfirmAnchor">
             <MoleculesDangerConfirmInline
               :open="true"
               :seconds-left="clearTournamentSecondsLeft"
@@ -401,6 +401,7 @@ import type { Player } from '~/types/tournament'
 import type { StatKey } from '~/composables/tournament-standings/types'
 import { computed, nextTick, onUnmounted, watch } from 'vue'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
+import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTeamColors } from '~/composables/useTeamColors'
 import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
 import MoleculesDangerConfirmInline from '~/components/molecules/DangerConfirmInline.vue'
@@ -465,6 +466,11 @@ defineEmits<{
 }>()
 
 const { getMatchScorePillClass } = useTeamColors()
+
+// Simple10: Ограниченный админ (limited) может управлять матчем, но не может делать опасные действия.
+const { adminRole } = useAdminAuth()
+const canFinishTournament = computed(() => adminRole.value === 'full')
+const canClearTournament = computed(() => adminRole.value === 'full')
 
 // Табло: ничья — серая плашка; лидер — в цвете его команды.
 const boardScorePillClass = computed(() =>
@@ -582,6 +588,8 @@ function stopFinishTournamentConfirmCountdown() {
 }
 
 function openFinishTournamentConfirm() {
+  // Simple10: Для limited блокируем действие на всякий случай (даже если кто-то снимет disabled в DOM).
+  if (!canFinishTournament.value) return
   showFinishTournamentConfirm.value = true
   startFinishTournamentConfirmCountdown()
 }
@@ -593,6 +601,8 @@ function closeFinishTournamentConfirm() {
 }
 
 function confirmFinishTournament() {
+  // Simple10: Для limited блокируем действие на всякий случай (даже если панель подтверждения была открыта).
+  if (!canFinishTournament.value) return
   props.onFinishTournament()
 }
 

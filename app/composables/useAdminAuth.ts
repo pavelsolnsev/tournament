@@ -9,26 +9,42 @@ export function useAdminAuth() {
     path: '/',
   })
 
+  function readAdminRoleFromCookieValue(v: string | undefined): 'full' | 'limited' | null {
+    // Simple10: В cookie admin_session лежит роль: full или limited.
+    if (v === 'full' || v === 'limited') return v
+    return null
+  }
+
   function hasAdminSessionCookie(): boolean {
-    if (sessionCookie.value === 'true') return true
+    // Simple10: Админ — это либо full, либо limited.
+    if (readAdminRoleFromCookieValue(sessionCookie.value) !== null) return true
     // Simple10: Иногда после обновления useCookie может отдать старое значение, поэтому на клиенте дополнительно читаем cookie напрямую из браузера.
     if (!import.meta.client) return false
-    return document.cookie.split(';').some(cookie => cookie.trim().startsWith('admin_session=true'))
+    return document.cookie.split(';').some((cookie) => {
+      const trimmed = cookie.trim()
+      return trimmed.startsWith('admin_session=full') || trimmed.startsWith('admin_session=limited')
+    })
   }
 
   // Фабрика используется как fallback если плагин ещё не успел создать useState.
   // На сервере: читает cookie из HTTP-контекста.
   // На клиенте: читает sessionCookie.value — Nuxt восстанавливает его из документа.
   const isAdmin = useState<boolean>('isAdmin', () => hasAdminSessionCookie())
+  const adminRole = useState<'full' | 'limited' | null>(
+    'adminRole',
+    () => readAdminRoleFromCookieValue(sessionCookie.value),
+  )
 
   async function login(password: string): Promise<{ ok: boolean; error?: string }> {
     try {
-      await $fetch('/api/auth/login', {
+      const res = await $fetch<{ ok: true; role: 'full' | 'limited' }>('/api/auth/login', {
         method: 'POST',
         body: { password },
       })
-      sessionCookie.value = 'true'
+      // Simple10: Сервер вернул роль — сохраняем её в cookie и в state.
+      sessionCookie.value = res.role
       isAdmin.value = true
+      adminRole.value = res.role
       return { ok: true }
     } catch (err: unknown) {
       const status = (err as { statusCode?: number })?.statusCode
@@ -41,16 +57,18 @@ export function useAdminAuth() {
     await $fetch('/api/auth/logout', { method: 'POST' })
     sessionCookie.value = ''
     isAdmin.value = false
+    adminRole.value = null
     window.location.reload()
   }
 
   function restoreSession(): boolean {
-    if (hasAdminSessionCookie()) {
-      isAdmin.value = true
-      return true
-    }
-    return false
+    // Simple10: При восстановлении сессии читаем роль из cookie и синхронизируем state.
+    const role = readAdminRoleFromCookieValue(sessionCookie.value)
+    if (!role) return false
+    adminRole.value = role
+    isAdmin.value = true
+    return true
   }
 
-  return { isAdmin, login, logout, restoreSession }
+  return { isAdmin, adminRole, login, logout, restoreSession }
 }

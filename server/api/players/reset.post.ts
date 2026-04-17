@@ -3,8 +3,9 @@ import { getPool } from '../../utils/db'
 // Только администратор может сбрасывать статистику — это необратимая операция.
 export default defineEventHandler(async (event) => {
   const session = getCookie(event, 'admin_session')
-  if (session !== 'true') {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
+  // Simple10: Reset статистики — опасная операция, доступна только полному админу (full).
+  if (session !== 'full') {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden: full admin only' })
   }
 
   try {

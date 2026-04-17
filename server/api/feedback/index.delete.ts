@@ -7,7 +7,8 @@ export default defineEventHandler(async (event) => {
 
   // Проверяем, что запрос делает администратор.
   const session = getCookie(event, 'admin_session')
-  if (session !== 'true') {
+  // Simple10: Очистка пожеланий — админская операция, но не влияет на игроков/турнир, разрешаем full и limited.
+  if (session !== 'full' && session !== 'limited') {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
   }
 

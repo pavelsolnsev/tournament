@@ -27,8 +27,9 @@ type FinishTournamentBody = {
 // Только администратор может завершить турнир.
 export default defineEventHandler(async (event) => {
   const session = getCookie(event, 'admin_session')
-  if (session !== 'true') {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
+  // Simple10: Завершить турнир может только полный админ (full).
+  if (session !== 'full') {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden: full admin only' })
   }
 
   const body = await readBody<FinishTournamentBody>(event)
