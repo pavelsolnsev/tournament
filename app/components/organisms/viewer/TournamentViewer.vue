@@ -11,7 +11,7 @@
       <!-- Одна строка по умолчанию; вторую включаем только если левая группа реально наезжает на кнопки (syncHeaderWrap). -->
       <div
         ref="headerRootRef"
-        class="mx-auto flex w-full min-w-0 max-w-4xl gap-2 px-3 sm:gap-3 sm:px-6"
+        class="mx-auto flex w-full min-w-0 max-w-4xl gap-2 px-4 sm:gap-3 sm:px-6"
         :class="
           headerActionsWrap
             ? 'flex-col py-2'
@@ -132,7 +132,7 @@
           <!-- Статистика игроков текущего матча — показывается если есть хоть одно событие -->
           <div
             v-if="livePlayerRows.length > 0"
-            class="mx-auto w-full min-w-0 max-w-4xl px-3 sm:px-6 pb-2.5"
+            class="mx-auto w-full min-w-0 max-w-4xl px-4 sm:px-6 pb-2.5"
           >
             <!-- Разделитель между счётом и статистикой -->
             <div class="mb-2 border-t border-red-500/15" />
@@ -250,7 +250,7 @@
 
     <!-- main: если шапка в два ряда — больше pt на мобилке; одна строка — как h-14. -->
     <main
-      class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-0 transition-[padding] duration-300 print:max-w-none print:px-4 sm:px-6 print:!pt-6"
+      class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 transition-[padding] duration-300 print:max-w-none print:px-4 sm:px-6 print:!pt-6"
       :class="mainTopPaddingClass"
     >
       <div class="flex flex-1 flex-col py-5 sm:py-8">

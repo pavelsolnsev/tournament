@@ -46,7 +46,8 @@
 
           <!-- flex-1 растягивает main; pt — отступ под абсолютный header. Контент идёт сверху. -->
           <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]">
-            <div v-if="!wizard.stateRestored.value" class="flex flex-1 items-center justify-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+            <!-- До onMounted держим тот же узел, что на SSR: иначе pending useFetch на сервере и payload на клиенте дают разный v-if и ломают гидрацию. -->
+            <div v-if="!adminClientShellReady || !wizard.stateRestored.value" class="flex flex-1 items-center justify-center gap-3 text-sm text-slate-600 dark:text-slate-400">
               <div class="h-9 w-9 shrink-0 animate-spin rounded-full border-2 border-slate-300 dark:border-slate-700 border-t-emerald-500" />
               <span>Загрузка…</span>
             </div>
@@ -259,8 +260,12 @@ const isLimitedAdmin = computed(() => adminRole.value === 'limited')
 const ADMIN_TOURNAMENT_BC = 'football-tournament-admin-sync'
 let adminTournamentBc: BroadcastChannel | null = null
 
+// Флаг: клиент прошёл mount — до этого админский main совпадает с SSR (спиннер), чтобы не было hydration mismatch.
+const adminClientShellReady = ref(false)
+
 // После гидрации мягко подтверждаем сессию из cookie — это убирает редкие рассинхроны между SSR и клиентом.
 onMounted(() => {
+  adminClientShellReady.value = true
   restoreSession()
 })
 

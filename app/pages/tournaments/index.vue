@@ -57,7 +57,7 @@
       </div>
     </header>
 
-    <main class="mx-auto w-full max-w-4xl flex-1 px-3 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))] py-5 sm:py-8">
+    <main class="mx-auto w-full max-w-4xl flex-1 px-0 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))] py-5 sm:py-8">
 
       <!-- Хлебные крошки: Турнир / Архив -->
       <nav aria-label="Навигация" class="mb-5">

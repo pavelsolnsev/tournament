@@ -1,6 +1,6 @@
 <!-- Список завершённых матчей с просмотром деталей и inline-редактированием. -->
 <template>
-  <div class="space-y-3 pt-3">
+  <div class="space-y-3 py-2 ">
 
     <!-- Заголовок секции -->
     <div v-if="showHeading" class="flex items-center justify-between gap-3">
@@ -30,7 +30,7 @@
     </div>
 
     <!-- Список матчей -->
-    <ul v-else class="max-h-96 space-y-1.5 overflow-y-auto" role="list">
+    <ul v-else class="max-h-96 px-2 space-y-1.5 overflow-y-auto" role="list">
       <li
         v-for="m in playedMatchesList"
         :key="m.matchNumber"

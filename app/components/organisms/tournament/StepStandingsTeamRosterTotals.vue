@@ -17,7 +17,7 @@
       <div
         v-for="teamName in teams"
         :key="teamName"
-        class="w-full min-w-0 overflow-hidden rounded-none bg-slate-50/90 dark:bg-slate-900/30"
+        class="w-full min-w-0 overflow-hidden rounded-none px-4 bg-slate-50/90 dark:bg-slate-900/30"
       >
         <!-- Заголовок команды -->
         <div class="flex items-center gap-2 py-2.5">

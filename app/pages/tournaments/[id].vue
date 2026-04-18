@@ -110,7 +110,7 @@
     </header>
 
     <!-- Телефон: без бокового padding у main — больше места для итогов. Десктоп: как раньше sm:px-6. -->
-    <main class="mx-auto w-full max-w-4xl flex-1 px-0 py-5 sm:px-6 sm:py-8 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))] print:!pt-6 print:max-w-none">
+    <main class="mx-auto w-full max-w-4xl flex-1 px-0 py-5 sm:py-8 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))] print:!pt-6 print:max-w-none">
 
       <!-- Хлебные крошки: Турнир / Архив / Название турнира -->
       <nav aria-label="Навигация" class="mb-5 px-3 sm:px-0 print:hidden">

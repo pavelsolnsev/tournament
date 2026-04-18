@@ -3,7 +3,7 @@
   <section class="flex flex-col print:bg-white print:text-black">
 
     <!-- ─── ШАПКА: место, формат, дата турнира (если есть в пропах) ───────────── -->
-    <div v-if="props.venueLabel || props.formatLabel || headerDateLabel" class="px-4 pt-5 pb-4 sm:px-6">
+    <div v-if="props.venueLabel || props.formatLabel || headerDateLabel" class="pt-5 pb-4 sm:px-6">
       <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
         <span v-if="props.venueLabel" class="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">
           <span aria-hidden="true">🏟️</span>{{ props.venueLabel }}
@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <div v-if="props.venueLabel || props.formatLabel || headerDateLabel" class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6" />
+    <div v-if="props.venueLabel || props.formatLabel || headerDateLabel" class="border-t border-slate-200 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- Цифры, чемпион, якорная навигация и печать — компактный вводный блок. -->
     <MoleculesViewerTournamentSummaryIntroBar
@@ -32,14 +32,14 @@
 
     <div
       v-if="showIntroBar && props.summary.standingsRows.length > 0"
-      class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6"
+      class="border-t border-slate-200 dark:border-slate-700/50 sm:mx-6"
     />
 
     <!-- ─── 1. ИТОГОВАЯ ТАБЛИЦА ───────────────────────────────── -->
     <div
       v-if="props.summary.standingsRows.length > 0"
       id="summary-standings"
-      class="scroll-mt-24 px-4 pt-5 pb-4 sm:px-6"
+      class="scroll-mt-24 pt-5 pb-4 sm:px-6"
     >
       <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">📊 Итоговая таблица</p>
       <OrganismsStandingsTable
@@ -49,13 +49,13 @@
       />
     </div>
 
-    <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
+    <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 2. MVP ТУРНИРА ─────────────────────────────────────── -->
     <div
       v-if="props.summary.mvp.length > 0"
       id="summary-mvp"
-      class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
+      class="scroll-mt-24 pt-5 pb-5 sm:px-6"
     >
       <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">⭐ MVP турнира</p>
 
@@ -111,13 +111,13 @@
       </div>
     </div>
 
-    <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
+    <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 3. ИНДИВИДУАЛЬНЫЕ НАГРАДЫ ─────────────────────────── -->
     <div
       v-if="hasAnyStats"
       id="summary-awards"
-      class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
+      class="scroll-mt-24 pt-5 pb-5 sm:px-6"
     >
       <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">🎖️ Индивидуальные награды</p>
 
@@ -201,11 +201,11 @@
       </div>
     </div>
 
-    <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
+    <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 5. СОСТАВЫ (аккордеон) ──────────────────────────── -->
     <template v-if="hasRosterData">
-      <div id="summary-rosters" class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6">
+      <div id="summary-rosters" class="scroll-mt-24 pt-5 pb-5 sm:px-6">
         <div
           class="w-full min-w-0 overflow-hidden rounded-2xl border bg-slate-50/90 dark:bg-slate-900/60 transition-colors"
           :class="isRosterOpen ? 'border-slate-300 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
@@ -281,14 +281,14 @@
           </Transition>
         </div>
       </div>
-      <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
+      <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
     </template>
 
     <!-- ─── 6. MVP КОМАНД ─────────────────────────────────────── -->
     <div
       v-if="props.summary.teamMvps.length > 0"
       id="summary-team-mvps"
-      class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
+      class="scroll-mt-24 pt-5 pb-5 sm:px-6"
     >
       <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">👑 MVP команд</p>
 
@@ -333,13 +333,13 @@
       </div>
     </div>
 
-    <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
+    <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 7. РЕЗУЛЬТАТЫ МАТЧЕЙ (как на шаге турнира, только чтение) ─ -->
     <div
       v-if="hasPlayedMatches"
       id="summary-results"
-      class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
+      class="scroll-mt-24 pt-5 pb-5 sm:px-6"
     >
       <div
         class="overflow-hidden rounded-2xl border bg-slate-50/90 dark:bg-slate-900/60 transition-colors"
@@ -419,13 +419,13 @@
       </div>
     </div>
 
-    <div v-if="hasPlayedMatches" class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
+    <div v-if="hasPlayedMatches" class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 8. ТОП-МАТЧ (макс. голов; карточка как «Результаты») ─ -->
     <div
       v-if="props.summary.stats.topScoringMatch"
       id="summary-top-match"
-      class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6"
+      class="scroll-mt-24 pt-5 pb-5 sm:px-6"
     >
       <div
         class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/90 transition-colors dark:border-slate-600/50 dark:bg-transparent"
@@ -528,10 +528,10 @@
       </div>
     </div>
 
-    <div class="mx-4 border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
+    <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- ─── 9. ССЫЛКИ ────────────────────────────────────────── -->
-    <div id="summary-links" class="scroll-mt-24 px-4 pt-4 pb-5 sm:px-6 print:break-inside-avoid">
+    <div id="summary-links" class="scroll-mt-24 pt-4 pb-5 sm:px-6 print:break-inside-avoid">
       <p class="mb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">🔗 Полезные ссылки</p>
       <!-- Телефон: кнопки на всю ширину. Десктоп (sm+): чипы по тексту и перенос строки. -->
       <ul class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-2">
