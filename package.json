@@ -9,7 +9,9 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "test": "vitest",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@tanstack/vue-query": "latest",
@@ -17,18 +19,24 @@
     "nuxt": "latest"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@nuxtjs/tailwindcss": "latest",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/vue": "^8.1.0",
     "@types/node": "latest",
     "@vitejs/plugin-vue": "^6.0.4",
     "@vue/test-utils": "^2.4.6",
+    "eslint": "^9.39.2",
+    "eslint-plugin-vue": "^9.33.0",
+    "globals": "^16.0.0",
     "autoprefixer": "latest",
     "jsdom": "^28.1.0",
     "postcss": "latest",
     "sharp": "^0.34.5",
     "tailwindcss": "^3.4.13",
     "typescript": "latest",
+    "typescript-eslint": "^8.50.0",
+    "vue-eslint-parser": "^9.4.3",
     "vitest": "^4.0.18"
   }
 }

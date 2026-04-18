@@ -21,6 +21,8 @@ Do not keep large files. If a file grows big (e.g. hundreds of lines), split it 
 
 Aim for files that do one thing well and stay easy to navigate and test.
 
+**ESLint `max-lines` (see repo root `eslint.config.mjs`):** default limit **400** lines per `.ts` / `.vue` file (blank lines and full-line comments excluded). Lint does **not** auto-split files — it fails the check so you refactor into modules. A few legacy paths may temporarily use a higher cap until they are split.
+
 ---
 
 ## Vue SFC block order

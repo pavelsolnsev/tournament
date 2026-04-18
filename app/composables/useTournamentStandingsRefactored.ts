@@ -14,35 +14,7 @@ import type {
   TournamentStandingsParams,
 } from './tournament-standings/types'
 
-function emptyPlayerMatchStats(): PlayerMatchStats {
-  return { goals: 0, assists: 0, saves: 0, yellows: 0 }
-}
-
-function mergePlayerMatchStatsMax(a: PlayerMatchStats, b: PlayerMatchStats): PlayerMatchStats {
-  return {
-    goals: Math.max(a.goals, b.goals),
-    assists: Math.max(a.assists, b.assists),
-    saves: Math.max(a.saves, b.saves),
-    yellows: Math.max(a.yellows, b.yellows),
-  }
-}
-
-/** Объединяет две карты статистики по игрокам: по каждому полю берём максимум (вклад с разных устройств). */
-export function mergePlayerStatsRecords(
-  local: Record<number, PlayerMatchStats>,
-  remote: Record<number, PlayerMatchStats>,
-): Record<number, PlayerMatchStats> {
-  const ids = new Set<number>([
-    ...Object.keys(local).map(Number),
-    ...Object.keys(remote).map(Number),
-  ])
-  const out: Record<number, PlayerMatchStats> = {}
-  for (const id of ids) {
-    if (!Number.isFinite(id)) continue
-    out[id] = mergePlayerMatchStatsMax(local[id] ?? emptyPlayerMatchStats(), remote[id] ?? emptyPlayerMatchStats())
-  }
-  return out
-}
+import { mergePlayerStatsRecords } from './tournament-standings/playerStatsMerge'
 import type { ActiveSelection } from './tournament-standings/matchStats'
 import type { PairingState } from './tournament-standings/pairing'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
@@ -62,6 +34,7 @@ import {
 } from './tournament-standings/matchStats'
 import { mergeFinishedMatchIntoAggregate, subtractMatchFromAggregate } from './tournament-standings/aggregateTournamentPlayerStats'
 import { applyRatingDeltas, computeTeamRatingDeltas, revertRatingDeltas } from './tournament-standings/ratings'
+import { subtractPlayedMatchFromStandingsRows } from './tournament-standings/subtractPlayedMatchFromStandingsRows'
 
 // Дополнительные параметры composable — начальный снапшот и callback для сохранения.
 type StandingsOptions = {
@@ -364,30 +337,7 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     const old = playedMatchesList.value[idx]
     if (!old) return
 
-    // Откатываем старый результат из таблицы: вычитаем то что добавляли при finishMatch.
-    const homeRow = standingsRows.value.find((r) => r.teamName === old.homeTeam)
-    const awayRow = standingsRows.value.find((r) => r.teamName === old.awayTeam)
-
-    if (homeRow && awayRow) {
-      // Убираем старый матч из статистики обеих команд.
-      homeRow.played -= 1
-      homeRow.goalsFor -= old.homeGoals
-      homeRow.goalsAgainst -= old.awayGoals
-      awayRow.played -= 1
-      awayRow.goalsFor -= old.awayGoals
-      awayRow.goalsAgainst -= old.homeGoals
-
-      if (old.homeGoals > old.awayGoals) { homeRow.wins -= 1; homeRow.points -= 3 }
-      else if (old.homeGoals < old.awayGoals) { homeRow.losses -= 1 }
-      else { homeRow.draws -= 1; homeRow.points -= 1 }
-
-      if (old.awayGoals > old.homeGoals) { awayRow.wins -= 1; awayRow.points -= 3 }
-      else if (old.awayGoals < old.homeGoals) { awayRow.losses -= 1 }
-      else { awayRow.draws -= 1; awayRow.points -= 1 }
-
-      homeRow.goalDiff = homeRow.goalsFor - homeRow.goalsAgainst
-      awayRow.goalDiff = awayRow.goalsFor - awayRow.goalsAgainst
-    }
+    subtractPlayedMatchFromStandingsRows(standingsRows.value, old)
 
     // Применяем новый результат в таблицу.
     updateStandingsForTeam(standingsRows, old.homeTeam, newHomeGoals, newAwayGoals)
@@ -482,29 +432,7 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     const old = playedMatchesList.value[idx]
     if (!old) return
 
-    // Откатываем результат из турнирной таблицы — те же шаги что в updatePlayedMatch.
-    const homeRow = standingsRows.value.find((r) => r.teamName === old.homeTeam)
-    const awayRow = standingsRows.value.find((r) => r.teamName === old.awayTeam)
-
-    if (homeRow && awayRow) {
-      homeRow.played -= 1
-      homeRow.goalsFor -= old.homeGoals
-      homeRow.goalsAgainst -= old.awayGoals
-      awayRow.played -= 1
-      awayRow.goalsFor -= old.awayGoals
-      awayRow.goalsAgainst -= old.homeGoals
-
-      if (old.homeGoals > old.awayGoals) { homeRow.wins -= 1; homeRow.points -= 3 }
-      else if (old.homeGoals < old.awayGoals) { homeRow.losses -= 1 }
-      else { homeRow.draws -= 1; homeRow.points -= 1 }
-
-      if (old.awayGoals > old.homeGoals) { awayRow.wins -= 1; awayRow.points -= 3 }
-      else if (old.awayGoals < old.homeGoals) { awayRow.losses -= 1 }
-      else { awayRow.draws -= 1; awayRow.points -= 1 }
-
-      homeRow.goalDiff = homeRow.goalsFor - homeRow.goalsAgainst
-      awayRow.goalDiff = awayRow.goalsFor - awayRow.goalsAgainst
-    }
+    subtractPlayedMatchFromStandingsRows(standingsRows.value, old)
 
     // Убираем матч из списка.
     playedMatchesList.value.splice(idx, 1)

@@ -1,4 +1,6 @@
 export default defineNuxtConfig({
+  // Дата совместимости Nitro — убирает предупреждение и фиксирует поведение деплоя.
+  compatibilityDate: '2026-04-18',
   srcDir: 'app',
   modules: ['@nuxtjs/tailwindcss'],
   css: ['~/assets/css/tailwind.css'],
@@ -80,6 +82,12 @@ export default defineNuxtConfig({
   devtools: {
     // Отключаем Nuxt DevTools, чтобы убрать предупреждения про non-props attrs из оверлеев.
     enabled: false,
+  },
+  vite: {
+    optimizeDeps: {
+      // Подхватываем vue-query при старте Vite — меньше лишних перезагрузок страницы в dev.
+      include: ['@tanstack/vue-query'],
+    },
   },
   typescript: {
     strict: true,
