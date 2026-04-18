@@ -25,15 +25,15 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: "20"
-          cache: npm
+          cache: yarn
 
-      # Устанавливаем зависимости строго по lock-файлу.
+      # Проект на Yarn (yarn.lock). package-lock.json нет — npm ci не использовать.
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile --ignore-engines
 
       # Собираем production-артефакты в .output.
       - name: Build project
-        run: npm run build
+        run: yarn build
 
       # Копируем .output на VPS по SSH.
       # Перед загрузкой удаляем только старую .output, чтобы не стереть .env и другие файлы проекта.
