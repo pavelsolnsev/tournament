@@ -1,4 +1,6 @@
+import type { Player } from '../../../app/types/tournament'
 import { queryWithRetry } from '../../utils/db'
+import { mergePlayerPhotosFromDb } from '../../utils/mergePlayerPhotosFromDb'
 
 // Полная запись турнира из БД — с JSON-полями для восстановления итогов.
 type TournamentArchiveFull = {
@@ -42,6 +44,10 @@ export default defineEventHandler(async (event) => {
     }
 
     // MySQL возвращает JSON-поля как строки — парсим их перед отдачей клиенту.
+    const rawPlayers = typeof row.players === 'string' ? JSON.parse(row.players) : row.players
+    const playersList: Player[] = Array.isArray(rawPlayers) ? rawPlayers : []
+    const playersWithPhotos = await mergePlayerPhotosFromDb(playersList)
+
     return {
       id: row.id,
       tournamentName: row.tournament_name,
@@ -49,7 +55,7 @@ export default defineEventHandler(async (event) => {
       venueLabel: row.venue_label ?? '',
       formatLabel: row.format_label ?? '',
       snapshot: typeof row.snapshot === 'string' ? JSON.parse(row.snapshot) : row.snapshot,
-      players: typeof row.players === 'string' ? JSON.parse(row.players) : row.players,
+      players: playersWithPhotos,
       assignmentByPlayerId: typeof row.teams === 'string' ? JSON.parse(row.teams) : row.teams,
       teamColors: typeof row.team_colors === 'string' ? JSON.parse(row.team_colors) : row.team_colors,
       createdAt: row.created_at,

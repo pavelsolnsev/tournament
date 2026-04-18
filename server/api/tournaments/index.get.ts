@@ -2,6 +2,7 @@ import type { SavedStandingsSnapshot } from '../../../app/composables/useTournam
 import type { Player } from '../../../app/types/tournament'
 import { queryWithRetry } from '../../utils/db'
 import { computeArchiveTournamentMvp } from '../../utils/computeArchiveTournamentMvp'
+import { applyPlayerPhotosMap, fetchPlayerPhotosByIds } from '../../utils/mergePlayerPhotosFromDb'
 
 // Строка из БД до обогащения — подтягиваем JSON для расчёта MVP.
 type TournamentArchiveDbRow = {
@@ -78,17 +79,30 @@ export default defineEventHandler(async () => {
 
     if (!Array.isArray(rows)) return []
 
+    const parsed = rows.map((row) => ({
+      row,
+      snapshot: parseJsonField<SavedStandingsSnapshot>(row.snapshot),
+      players: parseJsonField<Player[]>(row.players),
+      assignment: parseJsonField<Record<string, string>>(row.teams),
+    }))
+
+    const allPlayerIds: number[] = []
+    for (const p of parsed) {
+      for (const pl of p.players ?? []) {
+        if (Number.isFinite(pl.id)) allPlayerIds.push(pl.id)
+      }
+    }
+    const photoById = await fetchPlayerPhotosByIds(allPlayerIds)
+
     const out: TournamentArchiveListItem[] = []
 
-    for (const row of rows) {
+    for (const { row, snapshot, players: playersRaw, assignment } of parsed) {
       let mvp_player_id: number | null = null
       let mvp_player_name: string | null = null
       let mvp_photo: string | null = null
       let mvp_team_name: string | null = null
 
-      const snapshot = parseJsonField<SavedStandingsSnapshot>(row.snapshot)
-      const players = parseJsonField<Player[]>(row.players)
-      const assignment = parseJsonField<Record<string, string>>(row.teams)
+      const players = playersRaw?.length ? applyPlayerPhotosMap(playersRaw, photoById) : (playersRaw ?? [])
 
       if (snapshot && players?.length && assignment && typeof assignment === 'object') {
         const mvp = computeArchiveTournamentMvp(snapshot, players, assignment)
