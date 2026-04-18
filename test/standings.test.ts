@@ -3,7 +3,22 @@
 import { describe, it, expect } from 'vitest'
 import { updateStandingsForTeam, resortStandings } from '~/composables/tournament-standings/standings'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
+import type { PlayedMatch } from '~/composables/tournament-standings/types'
 import { ref } from 'vue'
+
+function minimalMatch(p: Pick<PlayedMatch, 'homeTeam' | 'awayTeam' | 'homeGoals' | 'awayGoals'> & { matchNumber?: number }): PlayedMatch {
+  return {
+    matchNumber: p.matchNumber ?? 1,
+    homeTeam: p.homeTeam,
+    awayTeam: p.awayTeam,
+    homeGoals: p.homeGoals,
+    awayGoals: p.awayGoals,
+    homePlayers: [],
+    awayPlayers: [],
+    homeStats: {},
+    awayStats: {},
+  }
+}
 
 // Создаём строку таблицы с нулевой статистикой.
 function makeRow(teamName: string): StandingsRow {
@@ -110,5 +125,16 @@ describe('resortStandings', () => {
     resortStandings(rows)
     expect(rows.value[0]!.place).toBe(1)
     expect(rows.value[1]!.place).toBe(2)
+  })
+
+  it('при равных очках и общей таблице — выше тот, кто выиграл личку', () => {
+    const rows = ref([
+      { ...makeRow('Синие'), points: 3, goalDiff: 5, goalsFor: 8 },
+      { ...makeRow('Красные'), points: 3, goalDiff: 5, goalsFor: 8 },
+    ])
+    const matches = [minimalMatch({ homeTeam: 'Красные', awayTeam: 'Синие', homeGoals: 2, awayGoals: 0 })]
+    resortStandings(rows, matches)
+    expect(rows.value[0]!.teamName).toBe('Красные')
+    expect(rows.value[1]!.teamName).toBe('Синие')
   })
 })

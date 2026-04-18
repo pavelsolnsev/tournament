@@ -268,10 +268,7 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     const matchNumber = recordFinishedMatch(pairingState, homeTeam.value, awayTeam.value, params.teams)
     resetMatchHistoryIfBalanced(pairingState, params.teams)
 
-    resortStandings(standingsRows)
-
-    // Записываем матч в историю для отображения UI.
-    // homeStats/awayStats сохраняются для возможности inline-редактирования.
+    // Сначала в список сыгранных — сортировка с личками смотрит только завершённые матчи.
     playedMatchesList.value.push({
       matchNumber,
       homeTeam: homeTeam.value,
@@ -283,6 +280,8 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
       homeStats: { ...homeStats.value },
       awayStats: { ...awayStats.value },
     })
+
+    resortStandings(standingsRows, playedMatchesList.value)
 
     aggregatePlayerStats.value = mergeFinishedMatchIntoAggregate(
       aggregatePlayerStats.value,
@@ -363,7 +362,6 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     // Применяем новый результат в таблицу.
     updateStandingsForTeam(standingsRows, old.homeTeam, newHomeGoals, newAwayGoals)
     updateStandingsForTeam(standingsRows, old.awayTeam, newAwayGoals, newHomeGoals)
-    resortStandings(standingsRows)
 
     // Пересчитываем подписи игроков из новой статистики.
     const newHomePlayers = extractMarkedPlayers({
@@ -387,6 +385,8 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
       homePlayers: newHomePlayers,
       awayPlayers: newAwayPlayers,
     }
+
+    resortStandings(standingsRows, playedMatchesList.value)
 
     // Обновляем агрегатную статистику игроков: вычитаем старый матч, добавляем новый.
     aggregatePlayerStats.value = subtractMatchFromAggregate(
@@ -476,8 +476,6 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
       awayRow.goalDiff = awayRow.goalsFor - awayRow.goalsAgainst
     }
 
-    resortStandings(standingsRows)
-
     // Убираем матч из списка.
     playedMatchesList.value.splice(idx, 1)
 
@@ -487,6 +485,8 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     playedMatchesList.value.forEach((m, i) => {
       m.matchNumber = i + 1
     })
+
+    resortStandings(standingsRows, playedMatchesList.value)
 
     // Пересчитываем aggregate-статистику игроков без этого матча.
     aggregatePlayerStats.value = subtractMatchFromAggregate(

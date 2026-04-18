@@ -26,7 +26,9 @@ export default defineEventHandler(async (event) => {
 
   try {
     const rows = await queryWithRetry<TournamentArchiveFull[]>(
-      `SELECT id, tournament_name, tournament_date, venue_label, format_label, snapshot, players, teams, team_colors, created_at
+      `SELECT id, tournament_name,
+              DATE_FORMAT(tournament_date, '%Y-%m-%d') AS tournament_date,
+              venue_label, format_label, snapshot, players, teams, team_colors, created_at
        FROM tournament_archives
        WHERE id = ?
        LIMIT 1`,

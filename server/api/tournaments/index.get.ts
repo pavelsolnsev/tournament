@@ -53,7 +53,7 @@ export default defineEventHandler(async () => {
       `SELECT
          a.id,
          a.tournament_name,
-         a.tournament_date,
+         DATE_FORMAT(a.tournament_date, '%Y-%m-%d') AS tournament_date,
          a.venue_label,
          a.format_label,
          a.created_at,
