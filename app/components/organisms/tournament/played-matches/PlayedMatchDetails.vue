@@ -1,7 +1,7 @@
 <!-- Компонент PlayedMatchDetails: показывает детали матча (отмеченных игроков и их события). -->
 <template>
   <div
-    class="px-3 pb-3 pt-2.5"
+    class="pb-3 pt-2.5"
     :class="[
       props.omitTopBorder ? 'border-t-0' : 'border-t',
       props.embedded
@@ -128,7 +128,11 @@ const props = withDefaults(
     /** Убрать верхнюю линию — если родитель уже дал разделитель (строка «Детали» над блоком). */
     omitTopBorder?: boolean
   }>(),
-  { embedded: false, omitTopBorder: false },
+  {
+    embedded: false,
+    omitTopBorder: false,
+    playerAvatarsById: () => ({}),
+  },
 )
 
 // Конфигурация бейджей — полностью совпадает с StepStandingsTeamRosterColumn,

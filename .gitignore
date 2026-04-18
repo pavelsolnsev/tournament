@@ -1,4 +1,6 @@
 node_modules
+# Проект на Yarn — не коммитить lock от npm (см. yarn.lock).
+package-lock.json
 # Nuxt build output
 .nuxt
 .output

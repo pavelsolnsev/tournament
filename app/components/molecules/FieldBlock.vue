@@ -21,6 +21,6 @@ withDefaults(
     labelSize?: 'xs' | 'sm'
     wrapperClass?: string
   }>(),
-  { labelSize: 'xs' },
+  { labelSize: 'xs', id: '', label: '', wrapperClass: '' },
 )
 </script>

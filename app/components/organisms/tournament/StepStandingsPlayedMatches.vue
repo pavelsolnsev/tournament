@@ -30,7 +30,7 @@
     </div>
 
     <!-- Список матчей -->
-    <ul v-else class="max-h-96 px-2 space-y-1.5 overflow-y-auto" role="list">
+    <ul v-else class="max-h-96 space-y-1.5 overflow-y-auto" role="list">
       <li
         v-for="m in playedMatchesList"
         :key="m.matchNumber"
@@ -231,7 +231,10 @@ const props = withDefaults(
   /** true — режим только просмотра, без редактирования и удаления. */
   readonly?: boolean
 }>(),
-  { teamColorByName: () => ({}) },
+  {
+    teamColorByName: () => ({}),
+    playerAvatarsById: () => ({}),
+  },
 )
 
 const { getMatchScorePillClass } = useTeamColors()
@@ -288,15 +291,6 @@ function toggleEdit(m: PlayedMatch) {
 
 function cancelEdit() {
   editMatch.value = null
-}
-
-// Глубокое копирование stats — черновик не ссылается на оригинал.
-function homePlayers(m: PlayedMatch): Player[] {
-  return props.playersByTeam(m.homeTeam)
-}
-
-function awayPlayers(m: PlayedMatch): Player[] {
-  return props.playersByTeam(m.awayTeam)
 }
 
 // Плашка счёта: ничья — серая; победа — цвет победителя из teamColorByName.

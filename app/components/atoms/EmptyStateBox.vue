@@ -17,7 +17,7 @@ const props = withDefaults(
     size?: 'xs' | 'sm'
     rootClass?: string
   }>(),
-  { align: 'center', size: 'xs' },
+  { align: 'center', size: 'xs', rootClass: '' },
 )
 
 const boxClass = computed(() => {

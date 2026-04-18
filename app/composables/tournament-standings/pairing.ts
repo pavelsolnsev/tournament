@@ -199,6 +199,7 @@ export function unrecordFinishedMatch(
   const sorted = [...allRemainingMatches].sort((a, b) => a.matchNumber - b.matchNumber)
   for (let i = sorted.length - 1; i >= 0; i--) {
     const m = sorted[i]
+    if (!m) break
     const playedTeams = new Set([m.homeTeam, m.awayTeam])
     // Если команда уже получила ненулевую серию — её серия прервана остальными.
     let anyBroke = false
@@ -271,6 +272,7 @@ export function recalibratePairingState(
   for (const t of teams) newConsecutive[t] = 0
   for (let i = sorted.length - 1; i >= 0; i--) {
     const m = sorted[i]
+    if (!m) break
     const playedTeams = new Set([m.homeTeam, m.awayTeam])
     // Если какая-то команда уже имеет серию, но не играла в этом матче — серия прервана.
     let anyBroke = false

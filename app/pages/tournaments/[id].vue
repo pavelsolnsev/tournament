@@ -199,6 +199,7 @@
 
 <script setup lang="ts">
 import { useTournamentSummary } from '~/composables/useTournamentSummary'
+import type { TournamentArchiveApiResponse } from '~/types/tournamentArchive'
 import { normalizeTeamColorsMap, normalizeTeamName } from '~/utils/teamNames'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 
@@ -206,7 +207,7 @@ const route = useRoute()
 const id = route.params.id as string
 
 // Загружаем данные турнира по id из URL.
-const { data: tournament, error } = await useFetch(`/api/tournaments/${id}`)
+const { data: tournament, error } = await useFetch<TournamentArchiveApiResponse>(`/api/tournaments/${id}`)
 
 // Абсолютный URL страницы — для canonical и Open Graph (превью в соцсетях).
 const requestURL = useRequestURL()

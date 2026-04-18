@@ -216,11 +216,12 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, watch } from 'vue'
 import type { LiveViewerPlayerRow } from '~/composables/useTournamentViewerLivePlayerRows'
+import type { MatchStatus } from '~/types/tournament'
 import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
 
 const props = defineProps<{
   tournamentName: string
-  matchStatus: string
+  matchStatus: MatchStatus
   isRefreshing: boolean
   liveHomeTeam: string
   liveAwayTeam: string

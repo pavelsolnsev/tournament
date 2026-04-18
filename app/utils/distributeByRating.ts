@@ -61,9 +61,12 @@ export function distributePlayersByRating(
   for (let i = 0; i < sorted.length; i++) {
     const player = sorted[i]
     const teamIndex = snakeOrder[i]
+    if (player === undefined || teamIndex === undefined) continue
     const teamName = teamNames[teamIndex]
-    teamAssignments[teamName].push(player.id)
-    teamRatings[teamName] += player.rating ?? 0
+    if (!teamName) continue
+    // Ключи teamAssignments / teamRatings совпадают с teamNames — после проверки teamName слоты гарантированы.
+    teamAssignments[teamName]!.push(player.id)
+    teamRatings[teamName]! += player.rating ?? 0
   }
 
   return { teamAssignments, teamRatings }

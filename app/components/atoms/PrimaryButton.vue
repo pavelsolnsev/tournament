@@ -21,7 +21,7 @@ const props = withDefaults(
     nativeType?: 'button' | 'submit'
     title?: string
   }>(),
-  { variant: 'solid', size: 'sm', disabled: false, nativeType: 'button' },
+  { variant: 'solid', size: 'sm', disabled: false, nativeType: 'button', title: '' },
 )
 
 const mergedClass = computed(() => {

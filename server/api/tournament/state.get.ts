@@ -2,7 +2,7 @@ import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 
 // API: GET /api/tournament/state — возвращает текущее состояние турнира из базы данных.
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (_event) => {
   await ensureTablesExist()
 
   // Читаем сохранённое состояние турнира из базы (с retry при обрыве соединения).

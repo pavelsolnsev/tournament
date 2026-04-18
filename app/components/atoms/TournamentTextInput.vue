@@ -24,7 +24,15 @@ const props = withDefaults(
     inputClass?: string
     block?: boolean
   }>(),
-  { variant: 'field', size: 'xs', disabled: false, block: true },
+  {
+    variant: 'field',
+    size: 'xs',
+    disabled: false,
+    block: true,
+    placeholder: '',
+    id: '',
+    inputClass: '',
+  },
 )
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()

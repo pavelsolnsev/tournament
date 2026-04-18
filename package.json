@@ -2,6 +2,9 @@
   "name": "footboal-admin",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",
@@ -10,16 +13,22 @@
     "postinstall": "nuxt prepare",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint": "node ./node_modules/eslint/bin/eslint.js .",
+    "lint:fix": "node ./node_modules/eslint/bin/eslint.js . --fix",
+    "typecheck": "nuxt typecheck",
+    "qa": "yarn lint && yarn typecheck && yarn test --run && yarn build"
   },
   "dependencies": {
     "@tanstack/vue-query": "latest",
     "mysql2": "latest",
     "nuxt": "latest"
   },
+  "resolutions": {
+    "rollup-plugin-visualizer": "6.0.5"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@nuxt/eslint": "latest",
     "@nuxtjs/tailwindcss": "latest",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/vue": "^8.1.0",
@@ -37,6 +46,8 @@
     "typescript": "latest",
     "typescript-eslint": "^8.50.0",
     "vue-eslint-parser": "^9.4.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "vue-tsc": "^2.2.10",
+    "@vue/language-core": "^2.2.10"
   }
 }

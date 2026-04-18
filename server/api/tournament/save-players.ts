@@ -1,4 +1,4 @@
-import { getPool } from '../../utils/db'
+import type { PoolConnection } from 'mysql2/promise'
 import { normalizePlayerUsername } from '../../utils/normalizePlayerUsername'
 
 // Тип данных игрока, который приходит с клиента при завершении турнира.
@@ -20,7 +20,7 @@ export type PlayerTournamentData = {
 
 // Сохраняет/обновляет статистику игроков после завершения турнира.
 // Логика: поля статистики накапливаются (+=), rating обновляется (текущий + delta).
-export async function savePlayersToDb(players: PlayerTournamentData[], conn: Awaited<ReturnType<ReturnType<typeof getPool>['getConnection']>>) {
+export async function savePlayersToDb(players: PlayerTournamentData[], conn: PoolConnection) {
   if (players.length === 0) return
 
   // Получаем текущие рейтинги игроков одним запросом — нужны для точного прибавления delta.

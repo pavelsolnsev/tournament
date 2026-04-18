@@ -115,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Player } from '~/types/tournament'
+import type { MatchStatus, Player } from '~/types/tournament'
 import type { SavedTournamentContext, SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTeamColors } from '~/composables/useTeamColors'
@@ -184,7 +184,7 @@ const finishedPlayedMatches = computed(
   () => initialSnapshot.value?.playedMatchesList ?? [],
 )
 
-const matchStatus = computed(() => props.state?.matchStatus ?? 'upcoming')
+const matchStatus = computed<MatchStatus>(() => props.state?.matchStatus ?? 'upcoming')
 
 const tournamentSummary = computed(() => {
   const snap = initialSnapshot.value

@@ -2,7 +2,8 @@ export default defineNuxtConfig({
   // Дата совместимости Nitro — убирает предупреждение и фиксирует поведение деплоя.
   compatibilityDate: '2026-04-18',
   srcDir: 'app',
-  modules: ['@nuxtjs/tailwindcss'],
+  // @nuxt/eslint первым — генерирует .nuxt/eslint.config.mjs (автоимпорты Nuxt/Vue для ESLint).
+  modules: ['@nuxt/eslint', '@nuxtjs/tailwindcss'],
   css: ['~/assets/css/tailwind.css'],
   // Фиксируем порт 3000 — чтобы он не прыгал на 3001 если что-то занимает порт.
   devServer: {

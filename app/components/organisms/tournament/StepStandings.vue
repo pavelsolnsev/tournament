@@ -261,7 +261,8 @@
         :go-to-next-match="handleGoToNextMatch"
         :reset-match-stats="resetMatchStats"
         :reset-tournament-marks="handleResetTournamentMarks"
-        :finish-match="handleFinishMatch"
+        :finish-match="handleFinishMatchShowResults"
+        :finish-match-silent="handleFinishMatchSilent"
         :finish-tournament-status="finishStatus"
         :finish-tournament-error="finishErrorMessage"
         :on-finish-tournament="handleFinishTournament"
@@ -440,7 +441,8 @@ async function pullRemoteMarksIntoCurrentMatch() {
   }
 }
 
-async function handleFinishMatch() {
+/** Полный админ: зритель видит статус «завершён» и экран итогов матча. */
+async function handleFinishMatchShowResults() {
   await pullRemoteMarksIntoCurrentMatch()
   // Ставим статус finished ДО сброса команд внутри finishMatch(), чтобы зритель успел увидеть «Завершён».
   if (homeTeam.value && awayTeam.value) {
@@ -450,6 +452,14 @@ async function handleFinishMatch() {
   }
   finishMatch()
   // Сразу отдаём зрителю результат матча — не ждём очередного поллинга.
+  await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
+}
+
+/** Судья: матч записывается в историю, зритель остаётся без экрана «итоги» (без matchStatus finished). */
+async function handleFinishMatchSilent() {
+  await pullRemoteMarksIntoCurrentMatch()
+  finishMatch()
+  emit('update:matchStatus', 'upcoming', '', '')
   await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
 }
 

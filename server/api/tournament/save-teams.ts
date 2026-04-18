@@ -1,4 +1,4 @@
-import { getPool } from '../../utils/db'
+import type { PoolConnection } from 'mysql2/promise'
 import { normalizePlayerUsername } from '../../utils/normalizePlayerUsername'
 
 // Тип одной команды для сохранения.
@@ -20,10 +20,7 @@ export type TeamTournamentData = {
 
 // Сохраняет команды и составы (team_players) после завершения турнира.
 // Логика точно совпадает с saveTeams.js бота.
-export async function saveTeamsToDb(
-  teams: TeamTournamentData[],
-  conn: Awaited<ReturnType<ReturnType<typeof getPool>['getConnection']>>,
-) {
+export async function saveTeamsToDb(teams: TeamTournamentData[], conn: PoolConnection) {
   // Паттерн дефолтных названий — такие команды не сохраняем.
   const defaultNamePattern = /^Команда \d+$/
 

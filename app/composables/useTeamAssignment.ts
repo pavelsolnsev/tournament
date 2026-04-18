@@ -115,9 +115,9 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
   }
 
   function removeFromTeam(playerId: number) {
-    const next = { ...assignment.value }
-    delete next[playerId]
-    assignment.value = next
+    assignment.value = Object.fromEntries(
+      Object.entries(assignment.value).filter(([id]) => Number(id) !== playerId),
+    ) as Record<number, string>
   }
 
   /**
@@ -182,14 +182,12 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
       newTeamNames.value = newTeamNames.value.filter((n) => normalizeTeamName(n) !== normalized)
     }
 
-    // Сбрасываем назначения игроков
-    const nextAssignment: Record<number, string> = { ...assignment.value }
-    for (const [playerIdStr, name] of Object.entries(nextAssignment)) {
-      if (normalizeTeamName(name) === normalized) {
-        delete nextAssignment[Number(playerIdStr)]
-      }
-    }
-    assignment.value = nextAssignment
+    // Сбрасываем назначения игроков (без delete по динамическому ключу — правило ESLint).
+    assignment.value = Object.fromEntries(
+      Object.entries(assignment.value).filter(
+        ([, name]) => normalizeTeamName(name) !== normalized,
+      ),
+    ) as Record<number, string>
 
     // Убираем участие и цвет (ищем ключ подтверждения по нормализованному имени).
     const nextConfirmed = new Set<string>()

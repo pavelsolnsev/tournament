@@ -2,7 +2,6 @@
 // Каждый файл — тёмный фон #0f172a + логотип по центру нужного размера.
 
 import sharp from 'sharp'
-import { readFileSync, existsSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 

@@ -62,7 +62,7 @@
           @toggle="onTopMatchDetailsToggle"
         >
           <summary
-            class="flex cursor-pointer list-none items-center gap-2 rounded-xl px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 [&::-webkit-details-marker]:hidden"
+            class="flex cursor-pointer list-none items-center gap-2 rounded-xl py-2 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 [&::-webkit-details-marker]:hidden"
           >
             <span
               class="inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-medium transition-colors"

@@ -76,7 +76,7 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import type { MaybeRef, ComputedRef, Ref } from 'vue'
-import { ref, computed, unref } from 'vue'
+import { ref, computed } from 'vue'
 
 // Этот шаг распределяет игроков по командам.
 const props = defineProps<{

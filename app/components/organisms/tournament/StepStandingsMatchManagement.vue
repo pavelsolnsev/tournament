@@ -178,9 +178,9 @@
           :aria-labelledby="mgmtToggleId"
           class="flex flex-col gap-2 border-t border-slate-200 dark:border-slate-700/60 px-3 py-3"
         >
-          <!-- Завершить матч — активна только когда есть текущий матч -->
+          <!-- Полный админ: показать зрителю итоги матча (статус finished на сайте). -->
           <button
-            v-if="canFinishMatchAction"
+            v-if="canFinishMatchShowResults"
             type="button"
             class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-white dark:text-slate-900
                    transition-colors md:hover:bg-emerald-400 active:bg-emerald-600
@@ -189,19 +189,47 @@
             :disabled="!canFinishMatch"
             @click="openActionConfirm('finish')"
           >
-            Завершить матч
+            Показать итоги
           </button>
 
-          <!-- Подтверждение «Завершить матч» — 3 секунды до кнопки подтверждения, как при сбросе турнира -->
-          <div v-if="canFinishMatchAction" ref="finishConfirmAnchor">
+          <div v-if="canFinishMatchShowResults" ref="finishConfirmAnchor">
             <MoleculesDangerConfirmInline
               :open="isActionConfirmOpen && pendingAction === 'finish'"
               :seconds-left="finishMatchSecondsLeft"
               :busy="false"
-              aria-label="Подтверждение завершения матча"
-              title="Завершить матч? Результат текущего матча будет записан в историю."
+              aria-label="Подтверждение показа итогов матча зрителю"
+              title="Показать итоги зрителям? Матч будет записан в историю, на сайте откроется экран итогов."
               cancel-text="Отмена"
-              confirm-text="Завершить"
+              confirm-text="Показать итоги"
+              @cancel="closeActionConfirm"
+              @confirm="confirmPendingAction"
+            />
+          </div>
+
+          <!-- Судья: только запись матча в историю, без экрана итогов для зрителя. -->
+          <button
+            v-if="canFinishMatchSilent"
+            type="button"
+            class="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800/80 px-4 text-sm font-semibold text-slate-800 dark:text-slate-100
+                   transition-colors md:hover:bg-slate-50 dark:md:hover:bg-slate-800
+                   disabled:cursor-not-allowed disabled:opacity-40
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50"
+            :disabled="!canFinishMatch"
+            @click="openActionConfirm('finishSilent')"
+          >
+            Завершить матч
+          </button>
+
+          <div v-if="canFinishMatchSilent" ref="finishSilentConfirmAnchor">
+            <MoleculesConfirmInline
+              class="mt-0"
+              :open="isActionConfirmOpen && pendingAction === 'finishSilent'"
+              :busy="false"
+              tone="neutral"
+              aria-label="Подтверждение фиксации матча без показа итогов"
+              title="Зафиксировать матч в истории? Отметки сохранятся, зрителю не покажем экран итогов этого матча."
+              cancel-text="Отмена"
+              confirm-text="Зафиксировать"
               @cancel="closeActionConfirm"
               @confirm="confirmPendingAction"
             />
@@ -457,6 +485,8 @@ const props = defineProps<{
   resetMatchStats: () => void
   resetTournamentMarks: () => void
   finishMatch: () => void
+  /** Судья: завершить матч без показа итогов зрителю (без matchStatus finished). */
+  finishMatchSilent: () => void | Promise<void>
   finishTournamentStatus: 'idle' | 'loading' | 'success' | 'error'
   finishTournamentError: string | null
   onFinishTournament: () => void
@@ -481,7 +511,8 @@ const { getMatchScorePillClass } = useTeamColors()
 const { adminRole } = useAdminAuth()
 const canFinishTournament = computed(() => adminRole.value === 'full')
 const canClearTournament = computed(() => adminRole.value === 'full')
-const canFinishMatchAction = computed(() => adminRole.value === 'full')
+const canFinishMatchShowResults = computed(() => adminRole.value === 'full')
+const canFinishMatchSilent = computed(() => adminRole.value === 'limited')
 const canViewVkStatus = computed(() => adminRole.value === 'full')
 const isLimitedAdmin = computed(() => adminRole.value === 'limited')
 
@@ -532,7 +563,7 @@ const mgmtToggleId = `match-mgmt-toggle-${uid}`
 const mgmtPanelId = `match-mgmt-panel-${uid}`
 const isMgmtOpen = ref(false)
 
-const pendingAction = ref<'next' | 'finish' | null>(null)
+const pendingAction = ref<'next' | 'finish' | 'finishSilent' | null>(null)
 const isActionConfirmOpen = computed(() => pendingAction.value !== null)
 
 // Simple10: Отдельное подтверждение для «Сбросить отметки» (обнуляет результаты и события).
@@ -593,7 +624,7 @@ async function refreshVkStatus() {
     const res = await $fetch<VkStatusResponse>('/api/tournament/vk-status', { method: 'GET' })
     vkStatusLinked.value = res.linked === true
     vkPeerId.value = res.peerId ?? null
-  } catch (e: unknown) {
+  } catch (_e: unknown) {
     // Ошибку показываем коротко, чтобы было понятно что проверить (сессия/сервер).
     vkStatusError.value = 'Не удалось получить VK статус (проверьте админ-сессию и сервер).'
   } finally {
@@ -692,6 +723,7 @@ watch(
 // Якоря под панели подтверждения — после клика прокручиваем, чтобы кнопки были в зоне видимости.
 const nextConfirmAnchor = useTemplateRef<HTMLDivElement>('nextConfirmAnchor')
 const finishConfirmAnchor = useTemplateRef<HTMLDivElement>('finishConfirmAnchor')
+const finishSilentConfirmAnchor = useTemplateRef<HTMLDivElement>('finishSilentConfirmAnchor')
 const finishTournamentConfirmAnchor = useTemplateRef<HTMLDivElement>('finishTournamentConfirmAnchor')
 const clearDataConfirmAnchor = useTemplateRef<HTMLDivElement>('clearDataConfirmAnchor')
 const matchCardRef = useTemplateRef<HTMLElement>('matchCardRef')
@@ -721,19 +753,27 @@ function closeActionConfirm() {
   pendingAction.value = null
 }
 
-function openActionConfirm(action: 'next' | 'finish') {
+function openActionConfirm(action: 'next' | 'finish' | 'finishSilent') {
   pendingAction.value = action
-  const el = action === 'next' ? nextConfirmAnchor.value : finishConfirmAnchor.value
+  const el =
+    action === 'next'
+      ? nextConfirmAnchor.value
+      : action === 'finishSilent'
+        ? finishSilentConfirmAnchor.value
+        : finishConfirmAnchor.value
   scrollConfirmIntoView(el)
 }
 
 async function confirmPendingAction() {
-  // Выполняем действие только когда таймер дошёл до нуля.
   const action = pendingAction.value
   closeActionConfirm()
 
   if (action === 'finish') {
     props.finishMatch()
+    return
+  }
+  if (action === 'finishSilent') {
+    await props.finishMatchSilent()
     return
   }
   if (action === 'next') {

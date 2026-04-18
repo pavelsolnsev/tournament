@@ -1,6 +1,6 @@
 <template>
   <!-- Simple10: Список игроков с жёлтыми карточками и визуализацией количества. -->
-  <div id="summary-yellows" class="scroll-mt-24 px-4 pb-5 sm:px-6">
+  <div id="summary-yellows" class="scroll-mt-24 py-5 sm:px-6">
     <p class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">🟨 Жёлтые карточки</p>
 
     <div class="flex flex-col gap-1.5">
