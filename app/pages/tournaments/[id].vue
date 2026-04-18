@@ -177,6 +177,7 @@
           :summary="tournamentSummary"
           :venue-label="tournament.venueLabel"
           :format-label="tournament.formatLabel"
+          :tournament-date="tournament.tournamentDate"
           :team-colors="teamColors"
           :players="players"
           :assignment-by-player-id="assignmentByPlayerId"

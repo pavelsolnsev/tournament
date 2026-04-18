@@ -7,6 +7,15 @@ import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { selectMvp, type MvpCandidate, type MvpTeamStat } from '~/composables/tournament-standings/mvp'
 import { round1 } from '~/composables/tournament-standings/ratingCalc'
 
+// Сегодня по локальному календарю браузера — запасной вариант, если в мастере дата не задана.
+function localCalendarDateString(): string {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 type FinishTournamentParams = {
   // Все игроки турнира с их базовыми данными.
   players: Player[]
@@ -35,6 +44,13 @@ export type FinishStatus = 'idle' | 'loading' | 'success' | 'error'
 export function useFinishTournament(params: FinishTournamentParams) {
   const status = ref<FinishStatus>('idle')
   const errorMessage = ref<string | null>(null)
+
+  // Дата для архива при «Завершить турнир»: из поля даты в мастере; если пусто/бито — сегодня локально.
+  function archiveTournamentDateForPayload(): string {
+    const raw = (params.tournamentDate.value ?? '').trim().slice(0, 10)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw
+    return localCalendarDateString()
+  }
 
   function normalizeUsername(text: string | null | undefined): string | null {
     const cleaned = (text ?? '').replace(/^@+/, '').trim()
@@ -214,7 +230,7 @@ export function useFinishTournament(params: FinishTournamentParams) {
           teams: buildTeamsPayload(),
           // Данные для архива — передаём вместе с основными данными в одной транзакции.
           tournamentName: params.tournamentName.value,
-          tournamentDate: params.tournamentDate.value,
+          tournamentDate: archiveTournamentDateForPayload(),
           venueLabel: params.venueLabel.value,
           formatLabel: params.formatLabel.value,
           snapshot: params.standingsSnapshot.value,

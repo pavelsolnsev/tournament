@@ -250,7 +250,7 @@
 
     <!-- main: если шапка в два ряда — больше pt на мобилке; одна строка — как h-14. -->
     <main
-      class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 transition-[padding] duration-300 print:max-w-none print:px-4 sm:px-6 print:!pt-6"
+      class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-0 transition-[padding] duration-300 print:max-w-none print:px-4 sm:px-6 print:!pt-6"
       :class="mainTopPaddingClass"
     >
       <div class="flex flex-1 flex-col py-5 sm:py-8">
@@ -296,12 +296,13 @@
         >
           <!-- Обёртка даёт чуть более тёмный фон в светлой теме для контраста со страницей -->
           <div
-            class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white/90 dark:border-slate-700/50 dark:bg-slate-900/60 print:border-slate-300 print:shadow-none"
+            class="overflow-hidden bg-white/90 dark:bg-slate-900/60 sm:rounded-2xl sm:border sm:border-slate-200/90 dark:sm:border-slate-700/50 print:rounded-2xl print:border print:border-slate-300 print:shadow-none"
           >
             <OrganismsViewerTournamentSummary
               :summary="tournamentSummary"
               :venue-label="venueLabel"
               :format-label="formatLabel"
+              :tournament-date="tournamentDate"
               :team-colors="teamColors"
               :players="players"
               :assignment-by-player-id="assignmentByPlayerId"

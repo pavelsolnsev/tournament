@@ -116,24 +116,51 @@
         <div
           v-for="tournament in localTournaments"
           :key="tournament.id"
-          class="group relative flex items-start gap-3 rounded-2xl border border-slate-200/90 bg-white/95 px-4 py-4 dark:border-slate-700/70 dark:bg-slate-800/70 sm:gap-4 sm:px-5 sm:py-5
-                 transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-400/60 dark:hover:border-emerald-500/40 hover:shadow-md hover:shadow-emerald-100/60 dark:hover:shadow-emerald-950/20"
+          class="group relative flex items-start gap-3 rounded-2xl border border-slate-200/90 bg-white/95 px-4 py-4 transition-colors hover:border-emerald-400/60 dark:border-slate-700/70 dark:bg-slate-800/70 dark:hover:border-emerald-500/40 sm:gap-4 sm:px-5 sm:py-5"
         >
           <!-- Ссылка на весь блок (кроме кнопки удаления) -->
           <NuxtLink
             :to="`/tournaments/${tournament.id}`"
-            class="absolute inset-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+            class="absolute inset-0 z-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
             :aria-label="archiveCardAriaLabel(tournament)"
           />
 
-          <div class="relative min-w-0 flex-1 pointer-events-none">
+          <div class="relative z-10 min-w-0 flex-1 pointer-events-none">
             <!-- Заголовок и дата: на широком экране в одну линию -->
             <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
               <h2 class="min-w-0 text-base font-semibold leading-snug text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-slate-50 dark:group-hover:text-emerald-400 sm:text-lg">
                 {{ archiveCardTitle(tournament) }}
               </h2>
+              <!-- Админ: вид как у зрителя; клик открывает нативный календарь (showPicker / click), ссылка карточки не перехватывает (z-10 контент над z-0 ссылкой). -->
               <div
-                v-if="formatDate(tournament.tournament_date)"
+                v-if="isAdmin"
+                role="button"
+                tabindex="0"
+                aria-label="Изменить дату турнира в архиве"
+                class="relative z-20 inline-flex min-h-7 max-w-full shrink-0 cursor-pointer items-center gap-1.5 self-start rounded-lg border border-slate-200/80 bg-slate-50 px-2 py-1 text-xs text-slate-600 pointer-events-auto hover:border-slate-300/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:border-slate-600/50 dark:bg-slate-900/50 dark:text-slate-400 dark:hover:border-slate-500"
+                @click.stop="(e) => void openArchiveDatePickerUi(e.currentTarget as HTMLElement)"
+                @keydown.enter.prevent="(e) => void openArchiveDatePickerUi(e.currentTarget as HTMLElement)"
+                @keydown.space.prevent="(e) => void openArchiveDatePickerUi(e.currentTarget as HTMLElement)"
+              >
+                <svg class="pointer-events-none h-3.5 w-3.5 shrink-0 text-slate-500 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                <span class="pointer-events-none whitespace-nowrap tabular-nums">{{ formatDate(tournament.tournament_date) || 'Указать дату' }}</span>
+                <input
+                  type="date"
+                  data-archive-date-input
+                  class="sr-only"
+                  :value="archiveDateInputValue(tournament.tournament_date)"
+                  :disabled="savingDateId === tournament.id"
+                  :aria-label="`Дата турнира в архиве: ${formatDate(tournament.tournament_date) || 'не задана'}`"
+                  @change="onArchiveDateInputChange(tournament, $event)"
+                />
+              </div>
+              <div
+                v-else-if="formatDate(tournament.tournament_date)"
                 class="inline-flex max-w-full shrink-0 items-center gap-1.5 self-start rounded-lg border border-slate-200/80 bg-slate-50 px-2 py-1 text-xs text-slate-600 dark:border-slate-600/50 dark:bg-slate-900/50 dark:text-slate-400"
               >
                 <svg class="h-3.5 w-3.5 shrink-0 text-slate-500 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -155,11 +182,11 @@
                 v-if="championTeamLabel(tournament)"
                 class="flex min-w-0 flex-1 gap-3 rounded-xl border border-slate-200/90 border-l-4 border-l-amber-400 bg-slate-50/90 px-3 py-3 dark:border-slate-600/50 dark:border-l-amber-500 dark:bg-slate-900/40"
               >
-                <div class="shrink-0 self-start pt-0.5">
+                <div class="shrink-0 self-center">
                   <AtomsTeamMarkerOrLogo
                     :team-name="championTeamLabel(tournament)"
                     :marker="championMarker(championTeamLabel(tournament))"
-                    size="sm"
+                    size="lg"
                   />
                 </div>
                 <div class="min-w-0 flex-1">
@@ -180,12 +207,25 @@
                 v-if="mvpPlayerLabel(tournament)"
                 class="flex min-w-0 flex-1 gap-3 rounded-xl border border-slate-200/90 border-l-4 border-l-violet-500 bg-slate-50/90 px-3 py-3 dark:border-slate-600/50 dark:border-l-violet-400 dark:bg-slate-900/40"
               >
-                <div class="shrink-0 self-start pt-0.5">
+                <div class="relative shrink-0 self-center h-8 w-8">
                   <AtomsPlayerAvatar
                     :photo="tournament.mvp_photo"
                     :fallback-name="mvpPlayerLabel(tournament)"
-                    size="sm"
+                    size="md"
                   />
+                  <div
+                    v-if="mvpTeamLabel(tournament)"
+                    class="pointer-events-none absolute -bottom-px -right-px flex h-3.5 w-3.5 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-slate-300/90 dark:bg-slate-900 dark:ring-slate-600/80"
+                    aria-hidden="true"
+                  >
+                    <span class="inline-flex shrink-0 scale-[0.78]">
+                      <AtomsTeamMarkerOrLogo
+                        :team-name="mvpTeamLabel(tournament)"
+                        :marker="championMarker(mvpTeamLabel(tournament))"
+                        size="xs"
+                      />
+                    </span>
+                  </div>
                 </div>
                 <div class="min-w-0 flex-1">
                   <p class="text-[10px] font-semibold uppercase tracking-wider text-violet-800 dark:text-violet-200/90">
@@ -207,7 +247,7 @@
           <button
             v-if="isAdmin"
             type="button"
-            class="relative z-10 mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-slate-400 dark:text-slate-600 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
+            class="relative z-30 mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-slate-400 dark:text-slate-600 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
             :aria-label="`Удалить запись: ${archiveCardTitle(tournament)}`"
             :disabled="deletingId === tournament.id"
             @click.prevent="deleteTournament(tournament.id)"
@@ -226,7 +266,7 @@
           </button>
 
           <!-- Стрелка вправо — только не для администратора -->
-          <svg v-if="!isAdmin" class="relative my-auto h-4 w-4 shrink-0 text-slate-400 dark:text-slate-600 group-hover:text-emerald-500 transition-colors pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg v-if="!isAdmin" class="relative my-auto h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-emerald-500 dark:text-slate-600 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
         </div>
@@ -262,6 +302,7 @@ type ArchiveListRow = {
   mvp_player_id: number | null
   mvp_player_name: string | null
   mvp_photo: string | null
+  mvp_team_name: string | null
 }
 
 // Загружаем список всех завершённых турниров из API.
@@ -285,6 +326,9 @@ function onAdminEnter() {
 // id турнира, который сейчас удаляется — для спиннера на кнопке.
 const deletingId = ref<string | null>(null)
 
+// id турнира, для которого сохраняем дату — блокируем поле даты на время запроса.
+const savingDateId = ref<string | null>(null)
+
 // Строка заголовка карточки: место и формат; если пусто — сохранённое имя турнира или «Турнир».
 function archiveCardTitle(t: {
   venue_label?: string
@@ -306,7 +350,10 @@ function archiveCardAriaLabel(t: ArchiveListRow): string {
   const champ = championTeamLabel(t)
   if (champ) parts.push(`Чемпион: ${champ}`)
   const mvp = mvpPlayerLabel(t)
-  if (mvp) parts.push(`MVP: ${mvp}`)
+  if (mvp) {
+    const mvpTeam = mvpTeamLabel(t)
+    parts.push(mvpTeam ? `MVP: ${mvp}, команда ${mvpTeam}` : `MVP: ${mvp}`)
+  }
   return parts.join('. ')
 }
 
@@ -324,6 +371,57 @@ function championMarker(teamName: string): string {
 // Подпись MVP с сервера — пусто, если не удалось посчитать.
 function mvpPlayerLabel(t: ArchiveListRow): string {
   return (t.mvp_player_name ?? '').trim()
+}
+
+// Команда MVP из assignment — для значка на аватаре; пусто, если в снапшоте не было привязки.
+function mvpTeamLabel(t: ArchiveListRow): string {
+  return (t.mvp_team_name ?? '').trim()
+}
+
+// YYYY-MM-DD для input type=date — только если строка валидна.
+function archiveDateInputValue(raw: string | undefined): string {
+  const t = (raw ?? '').trim().slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(t) ? t : ''
+}
+
+// Открываем системный выбор даты — overlay-ссылка иначе перехватывала бы клик.
+async function openArchiveDatePickerUi(host: HTMLElement) {
+  const input = host.querySelector('input[data-archive-date-input]') as HTMLInputElement | null
+  if (!input || input.disabled) return
+  if (typeof input.showPicker === 'function') {
+    try {
+      await input.showPicker()
+    } catch {
+      input.click()
+    }
+  } else {
+    input.click()
+  }
+}
+
+// Сохраняем дату архива на сервер и обновляем список без перезагрузки.
+async function onArchiveDateInputChange(row: ArchiveListRow, ev: Event) {
+  const el = ev.target as HTMLInputElement
+  const next = el.value
+  const prev = archiveDateInputValue(row.tournament_date)
+  if (!next || next === prev) return
+
+  savingDateId.value = row.id
+  try {
+    await $fetch(`/api/tournaments/${row.id}`, {
+      method: 'PATCH',
+      body: { tournament_date: next },
+    })
+    if (tournaments.value) {
+      const found = tournaments.value.find((t) => t.id === row.id)
+      if (found) found.tournament_date = next
+    }
+  } catch {
+    el.value = prev
+    alert('Не удалось сохранить дату. Попробуйте ещё раз.')
+  } finally {
+    savingDateId.value = null
+  }
 }
 
 // Удаляем турнир — спрашиваем подтверждение, затем DELETE в API.
@@ -346,10 +444,14 @@ async function deleteTournament(id: string) {
   }
 }
 
-// Форматируем дату из YYYY-MM-DD в «12 апреля 2025» — читаемо для пользователя.
+// Форматируем дату из YYYY-MM-DD в «12 апреля 2025» — парсим как локальную дату, без сдвига из-за UTC.
 function formatDate(dateStr: string): string {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
+  const t = (dateStr ?? '').trim().slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return ''
+  const y = Number(t.slice(0, 4))
+  const m = Number(t.slice(5, 7))
+  const d = Number(t.slice(8, 10))
+  const date = new Date(y, m - 1, d)
   return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 </script>

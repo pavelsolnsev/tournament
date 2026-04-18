@@ -29,6 +29,7 @@ type TournamentArchiveListItem = {
   mvp_player_id: number | null
   mvp_player_name: string | null
   mvp_photo: string | null
+  mvp_team_name: string | null
 }
 
 // Парсим JSON из MySQL — приходит строкой или уже объектом.
@@ -83,6 +84,7 @@ export default defineEventHandler(async () => {
       let mvp_player_id: number | null = null
       let mvp_player_name: string | null = null
       let mvp_photo: string | null = null
+      let mvp_team_name: string | null = null
 
       const snapshot = parseJsonField<SavedStandingsSnapshot>(row.snapshot)
       const players = parseJsonField<Player[]>(row.players)
@@ -94,6 +96,7 @@ export default defineEventHandler(async () => {
           mvp_player_id = mvp.player_id
           mvp_player_name = mvp.name
           mvp_photo = mvp.photo
+          mvp_team_name = mvp.team_name || null
         }
       }
 
@@ -108,6 +111,7 @@ export default defineEventHandler(async () => {
         mvp_player_id,
         mvp_player_name,
         mvp_photo,
+        mvp_team_name,
       })
     }
 

@@ -1,5 +1,5 @@
 <template>
-  <div id="summary-intro" class="scroll-mt-24 space-y-4 px-4 pt-5 sm:px-6">
+  <div id="summary-intro" class="scroll-mt-24 space-y-4 px-4 pt-5 pb-5 sm:px-6">
     <!-- Сводка цифр: матчи, голы, передачи и сейвы по всему турниру. -->
     <div
       class="grid grid-cols-2 gap-3 rounded-2xl border border-slate-200/90 bg-slate-50 p-3 dark:border-slate-700/60 dark:bg-slate-800/40 sm:grid-cols-4 sm:p-4"

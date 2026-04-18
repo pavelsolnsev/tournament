@@ -9,6 +9,8 @@ export type ArchiveMvpCard = {
   player_id: number
   name: string
   photo: string | null
+  /** Команда MVP из assignment — для маленького значка на аватаре в списке архива. */
+  team_name: string
 }
 
 // Разбираем снапшот и списки игроков — возвращаем null, если данных не хватает.
@@ -82,9 +84,13 @@ export function computeArchiveTournamentMvp(
   const winnerPlayer = players.find((p) => p.id === tournamentMvp.id)
   if (!winnerPlayer) return null
 
+  const teamRaw = assignmentByPlayerId[String(winnerPlayer.id)]
+  const team_name = typeof teamRaw === 'string' ? teamRaw.trim() : ''
+
   return {
     player_id: winnerPlayer.id,
     name: displayPlayerLabelWithoutRating(winnerPlayer),
     photo: winnerPlayer.photo ? String(winnerPlayer.photo).trim() || null : null,
+    team_name,
   }
 }

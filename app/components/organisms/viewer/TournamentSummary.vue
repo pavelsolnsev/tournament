@@ -2,20 +2,24 @@
   <!-- print: чёрный текст на белом — чтобы PDF не зависел от тёмной темы. -->
   <section class="flex flex-col print:bg-white print:text-black">
 
-    <!-- ─── ШАПКА: место, формат (дата не показываем) ───────────── -->
-    <div v-if="props.venueLabel || props.formatLabel" class="px-4 pt-5 pb-4 sm:px-6">
+    <!-- ─── ШАПКА: место, формат, дата турнира (если есть в пропах) ───────────── -->
+    <div v-if="props.venueLabel || props.formatLabel || headerDateLabel" class="px-4 pt-5 pb-4 sm:px-6">
       <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
         <span v-if="props.venueLabel" class="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">
           <span aria-hidden="true">🏟️</span>{{ props.venueLabel }}
         </span>
-        <span v-if="props.venueLabel && props.formatLabel" class="text-slate-300 dark:text-slate-700" aria-hidden="true">·</span>
+        <span v-if="props.venueLabel && (props.formatLabel || headerDateLabel)" class="text-slate-300 dark:text-slate-700" aria-hidden="true">·</span>
         <span v-if="props.formatLabel" class="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">
           <span aria-hidden="true">⚽</span>{{ props.formatLabel }}
+        </span>
+        <span v-if="props.formatLabel && headerDateLabel" class="text-slate-300 dark:text-slate-700" aria-hidden="true">·</span>
+        <span v-if="headerDateLabel" class="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500">
+          <span aria-hidden="true">📅</span><time :datetime="tournamentDateIso">{{ headerDateLabel }}</time>
         </span>
       </div>
     </div>
 
-    <div v-if="props.venueLabel || props.formatLabel" class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6" />
+    <div v-if="props.venueLabel || props.formatLabel || headerDateLabel" class="mx-4 border-t border-slate-200 dark:border-slate-700/50 sm:mx-6" />
 
     <!-- Цифры, чемпион, якорная навигация и печать — компактный вводный блок. -->
     <MoleculesViewerTournamentSummaryIntroBar
@@ -203,7 +207,7 @@
     <template v-if="hasRosterData">
       <div id="summary-rosters" class="scroll-mt-24 px-4 pt-5 pb-5 sm:px-6">
         <div
-          class="overflow-hidden rounded-2xl border bg-slate-50/90 dark:bg-slate-900/60 transition-colors"
+          class="w-full min-w-0 overflow-hidden rounded-2xl border bg-slate-50/90 dark:bg-slate-900/60 transition-colors"
           :class="isRosterOpen ? 'border-slate-300 dark:border-slate-700/60' : 'border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700/50'"
         >
           <button
@@ -225,19 +229,26 @@
                 {{ isRosterOpen ? 'Открыт' : 'Скрыт' }}
               </span>
             </span>
-            <svg
-              class="h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200"
-              :class="isRosterOpen && 'rotate-180'"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                clip-rule="evenodd"
-              />
-            </svg>
+            <div class="flex shrink-0 items-center gap-2">
+              <span
+                class="rounded-full bg-slate-100/90 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+              >
+                {{ rosterTeams.length }}
+              </span>
+              <svg
+                class="h-5 w-5 text-slate-400 transition-transform duration-200"
+                :class="isRosterOpen && 'rotate-180'"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
           </button>
 
           <Transition
@@ -254,7 +265,7 @@
               :id="rosterPanelId"
               role="region"
               :aria-labelledby="rosterToggleId"
-              class="border-t border-slate-200 px-3 pb-4 pt-3 dark:border-slate-700/60"
+              class="w-full min-w-0 border-t border-slate-200 px-3 pb-4 pt-3 dark:border-slate-700/60 sm:px-4"
             >
               <OrganismsTournamentStepStandingsTeamRosterTotals
                 :teams="rosterTeams"
@@ -389,7 +400,7 @@
             :id="resultsPanelId"
             role="region"
             :aria-labelledby="resultsToggleId"
-            class="border-t border-slate-200 px-3 pb-3 pt-1 dark:border-slate-700/60"
+            class="w-full min-w-0 border-t border-slate-200 px-3 pb-3 pt-1 dark:border-slate-700/60 sm:px-4"
           >
             <OrganismsTournamentStepStandingsPlayedMatches
               :played-matches-list="playedMatchesForResults"
@@ -589,6 +600,8 @@ const props = defineProps<{
   venueLabel?: string
   /** Формат турнира — отображается в шапке итогов. */
   formatLabel?: string
+  /** Дата турнира YYYY-MM-DD — в шапке показываем в виде «12 апреля 2026». */
+  tournamentDate?: string
   /** Цвета команд с мастера; если пусто — индекс берём из места в таблице. */
   teamColors?: Record<string, number>
   /** Игроки турнира — нужны для раздела «Составы». */
@@ -602,6 +615,26 @@ const props = defineProps<{
   /** Сыгранные матчи — тот же список, что в шаге «Результаты» у админа. */
   playedMatchesList?: PlayedMatch[]
 }>()
+
+// Дата для <time datetime="..."> — только если строка валидна как календарный день.
+const tournamentDateIso = computed(() => {
+  const t = (props.tournamentDate ?? '').trim().slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(t) ? t : undefined
+})
+
+// Подпись даты в шапке: парсим y/m/d как локальную дату, без сдвига UTC.
+const headerDateLabel = computed(() => {
+  const raw = (props.tournamentDate ?? '').trim().slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return ''
+  const y = Number(raw.slice(0, 4))
+  const m = Number(raw.slice(5, 7))
+  const d = Number(raw.slice(8, 10))
+  return new Date(y, m - 1, d).toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+})
 
 const { teamMarkers, getMarkerByIndex, getMatchScorePillClass } = useTeamColors()
 

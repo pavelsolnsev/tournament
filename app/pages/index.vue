@@ -52,34 +52,31 @@
             </div>
 
             <section v-else class="flex w-full flex-col gap-6 py-5 sm:py-8">
-              <!-- На шаге 0 крошку не показываем: заголовок уже «Выберите игроков», подпись «Игроки» лишняя. -->
-              <nav v-if="!isLimitedAdmin && wizard.step.value > 0" aria-label="Шаги мастера">
+              <!-- Все три крошки всегда: можно вернуться на «Игроки» с «Таблицы» и сразу увидеть «Таблица» на шаге «Команды». -->
+              <nav v-if="!isLimitedAdmin" aria-label="Шаги мастера">
                 <ol class="flex min-w-0 flex-wrap items-center gap-1">
                   <li
-                    v-for="(crumb, idx) in breadcrumbs.filter(c => c.step <= wizard.step.value)"
+                    v-for="(crumb, idx) in breadcrumbs"
                     :key="crumb.step"
                     class="flex items-center gap-1"
                   >
-                    <!-- Разделитель между шагами -->
                     <span
                       v-if="idx > 0"
                       class="select-none text-slate-400 dark:text-slate-700"
                       aria-hidden="true"
                     >/</span>
 
-                    <!-- Пройденный шаг — кликабельный -->
                     <button
-                      v-if="crumb.step < wizard.step.value"
+                      v-if="crumb.step !== wizard.step.value"
                       type="button"
                       class="inline-flex items-center rounded-lg px-2 py-1 text-sm font-medium
                              text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-700 dark:hover:text-slate-200
                              focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-                      @click="wizard.step.value = crumb.step as 0 | 1 | 2"
+                      @click="navigateBreadcrumb(crumb.step)"
                     >
                       {{ crumb.label }}
                     </button>
 
-                    <!-- Текущий шаг — не кликабельный, выделен -->
                     <span
                       v-else
                       class="inline-flex items-center rounded-lg px-2 py-1 text-sm font-semibold text-slate-800 dark:text-slate-100"
@@ -417,6 +414,13 @@ async function goToStandings() {
   wizard.step.value = 2
   // Принудительно инвалидируем кэш state — следующий опрос зрителя вернёт свежие данные.
   await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
+}
+
+// Клик по крошке: шаг 2 — тот же сценарий, что «Переход к турниру» (обновление state для зрителя).
+function navigateBreadcrumb(step: 0 | 1 | 2) {
+  if (step === wizard.step.value) return
+  if (step === 2) void goToStandings()
+  else wizard.step.value = step
 }
 
 // После «Завершить турнир»: статус finished уже в мастере — сохраняем для зрителей, затем сразу сбрасываем мастер (выбор игроков), без промежуточной плашки.

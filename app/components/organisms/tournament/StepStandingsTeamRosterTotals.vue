@@ -1,6 +1,6 @@
 <!-- Составы команд и суммарная статистика игроков за весь турнир. -->
 <template>
-  <section class="min-w-0 space-y-3">
+  <section class="min-w-0 w-full space-y-3">
 
     <div v-if="showHeading">
       <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-400">
@@ -12,15 +12,15 @@
     </div>
 
     <!-- Команды — все открыты сразу, без аккордеона -->
-    <div class="space-y-3">
-      <!-- Карточка команды: только slate и рамка — без красного/синего фона от цвета команды. -->
+    <div class="w-full min-w-0 space-y-3">
+      <!-- Карточка команды: без рамки, на всю ширину — в итогах турнира и в шаге состава одинаково. -->
       <div
         v-for="teamName in teams"
         :key="teamName"
-        class="overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50/90 dark:border-slate-700/60 dark:bg-slate-900/30"
+        class="w-full min-w-0 overflow-hidden rounded-none bg-slate-50/90 dark:bg-slate-900/30"
       >
         <!-- Заголовок команды -->
-        <div class="flex items-center gap-2 px-3 py-2.5">
+        <div class="flex items-center gap-2 py-2.5">
           <span class="shrink-0 text-base leading-none" aria-hidden="true">
             <AtomsTeamMarkerOrLogo :team-name="teamName" :marker="teamMarker(teamName)" size="sm" />
           </span>
@@ -30,7 +30,7 @@
         </div>
 
         <!-- Список игроков -->
-        <div class="px-2 pb-2">
+        <div class="pb-2">
           <p v-if="playersByTeam(teamName).length === 0" class="px-1 py-1.5 text-xs text-slate-400 dark:text-slate-600">
             В составе нет игроков.
           </p>
