@@ -159,6 +159,7 @@
                 @clear-tournament="canClearTournament && (showClearTournamentConfirm = true)"
                 @cancel-clear-tournament="cancelClearTournament"
                 @confirm-clear-tournament="confirmClearTournament"
+                :fetch-remote-standings-snapshot="fetchRemoteStandingsSnapshotForMerge"
               />
 
               <!-- Сброс турнира — показываем внизу только на шагах 0 и 1.
@@ -272,6 +273,13 @@ onMounted(() => {
 const clearTournamentBottomAnchor = useTemplateRef<HTMLDivElement>('clearTournamentBottomAnchor')
 
 const tournamentState = useTournamentState()
+
+// Перед «Завершить матч» / «Следующий матч» подмешиваем отметки из БД с других устройств.
+async function fetchRemoteStandingsSnapshotForMerge() {
+  await tournamentState.refresh()
+  return tournamentState.serverState.value?.standingsSnapshot ?? null
+}
+
 const wizard = useTournamentWizard({
   serverState: tournamentState.serverState,
   isLoading: tournamentState.isLoading,
@@ -291,7 +299,7 @@ function onAdminVisibilitySync() {
 // Обновляем кэш Nuxt и перезаливаем refs мастера из serverState — без этого вторая вкладка остаёт со старым UI.
 async function syncWizardFromServerAfterExternalChange() {
   if (!isAdmin.value) return
-  await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
+  await tournamentState.refresh()
   await nextTick()
   wizard.reapplyFromServer()
 }

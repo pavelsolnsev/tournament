@@ -13,6 +13,36 @@ import type {
   StatKey,
   TournamentStandingsParams,
 } from './tournament-standings/types'
+
+function emptyPlayerMatchStats(): PlayerMatchStats {
+  return { goals: 0, assists: 0, saves: 0, yellows: 0 }
+}
+
+function mergePlayerMatchStatsMax(a: PlayerMatchStats, b: PlayerMatchStats): PlayerMatchStats {
+  return {
+    goals: Math.max(a.goals, b.goals),
+    assists: Math.max(a.assists, b.assists),
+    saves: Math.max(a.saves, b.saves),
+    yellows: Math.max(a.yellows, b.yellows),
+  }
+}
+
+/** Объединяет две карты статистики по игрокам: по каждому полю берём максимум (вклад с разных устройств). */
+export function mergePlayerStatsRecords(
+  local: Record<number, PlayerMatchStats>,
+  remote: Record<number, PlayerMatchStats>,
+): Record<number, PlayerMatchStats> {
+  const ids = new Set<number>([
+    ...Object.keys(local).map(Number),
+    ...Object.keys(remote).map(Number),
+  ])
+  const out: Record<number, PlayerMatchStats> = {}
+  for (const id of ids) {
+    if (!Number.isFinite(id)) continue
+    out[id] = mergePlayerMatchStatsMax(local[id] ?? emptyPlayerMatchStats(), remote[id] ?? emptyPlayerMatchStats())
+  }
+  return out
+}
 import type { ActiveSelection } from './tournament-standings/matchStats'
 import type { PairingState } from './tournament-standings/pairing'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
@@ -532,6 +562,22 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     resetMatchHistoryIfBalanced(pairingState, params.teams)
   }
 
+  /**
+   * Подмешивает отметки с сервера в текущий матч, если пара команд совпадает.
+   * Нужно при работе с двух устройств: иначе «Следующий матч» финализирует только локальные отметки.
+   */
+  function mergeCurrentMatchFromRemoteSnapshot(remote: SavedStandingsSnapshot | null | undefined) {
+    if (!remote) return
+    const rh = normalizeTeamName(remote.currentHomeTeam ?? '')
+    const ra = normalizeTeamName(remote.currentAwayTeam ?? '')
+    const lh = normalizeTeamName(homeTeam.value)
+    const la = normalizeTeamName(awayTeam.value)
+    if (!rh || !ra || !lh || !la) return
+    if (rh !== lh || ra !== la) return
+    homeStats.value = mergePlayerStatsRecords(homeStats.value, remote.currentHomeStats ?? {})
+    awayStats.value = mergePlayerStatsRecords(awayStats.value, remote.currentAwayStats ?? {})
+  }
+
   function goToNextMatch() {
     // Если текущий матч не финализировали, можно сделать это автоматически.
     if (homeTeam.value && awayTeam.value && !matchFinalized.value) finishMatch()
@@ -616,6 +662,7 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     resetTournamentMarks,
     finishMatch,
     goToNextMatch,
+    mergeCurrentMatchFromRemoteSnapshot,
     // Полная подпись с рейтингом — для ростеров и выбора игроков во время матча.
     displayPlayerLabel,
     aggregatePlayerStats,

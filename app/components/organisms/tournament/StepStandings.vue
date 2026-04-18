@@ -310,6 +310,8 @@ const props = defineProps<{
   showClearTournamentConfirm: boolean
   clearTournamentSecondsLeft: number
   clearTournamentBusy: boolean
+  /** Перед финализацией матча подтягиваем снапшот с сервера и сливаем отметки (несколько устройств). */
+  fetchRemoteStandingsSnapshot?: () => Promise<SavedStandingsSnapshot | null>
 }>()
 
 // Simple10: Ограниченный админ (limited) не должен видеть панель таймера внизу.
@@ -353,6 +355,7 @@ const {
   resetTournamentMarks,
   finishMatch,
   goToNextMatch,
+  mergeCurrentMatchFromRemoteSnapshot,
   displayPlayerLabel,
   aggregatePlayerStats,
   playerRatingDeltas,
@@ -427,7 +430,18 @@ async function handleUpdateAwayTeam(next: string) {
 }
 // Это обновляет гостевую команду, когда пользователь меняет select в дочернем UI.
 
+async function pullRemoteMarksIntoCurrentMatch() {
+  if (!props.fetchRemoteStandingsSnapshot) return
+  try {
+    const remote = await props.fetchRemoteStandingsSnapshot()
+    mergeCurrentMatchFromRemoteSnapshot(remote)
+  } catch {
+    /* сеть: финализируем хотя бы локальные отметки */
+  }
+}
+
 async function handleFinishMatch() {
+  await pullRemoteMarksIntoCurrentMatch()
   // Ставим статус finished ДО сброса команд внутри finishMatch(), чтобы зритель успел увидеть «Завершён».
   if (homeTeam.value && awayTeam.value) {
     emit('update:matchStatus', 'finished', homeTeam.value, awayTeam.value)
@@ -450,6 +464,7 @@ async function handleResetTournamentMarks() {
 // даже если админский UI очищает выбранные команды.
 
 async function handleGoToNextMatch() {
+  await pullRemoteMarksIntoCurrentMatch()
   // Переходим к следующему матчу (может автоматически завершить текущий).
   goToNextMatch()
   // После подбора следующей пары проверяем команды и обновляем статус для зрителя.
