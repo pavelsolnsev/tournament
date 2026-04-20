@@ -284,174 +284,36 @@
 
 <script setup lang="ts">
 import { useAdminAuth } from '~/composables/useAdminAuth'
-import { useTeamColors } from '~/composables/useTeamColors'
-import { resolveTeamColorIndex } from '~/utils/teamNames'
+import type { ArchiveListRow } from '~/composables/tournamentsArchiveTypes'
+import { useTournamentsArchiveList } from '~/composables/useTournamentsArchiveList'
 
 // Мета-теги страницы — для SEO и вкладки браузера.
 useHead({ title: 'Архив турниров' })
 
-// Тип строки списка — совпадает с ответом GET /api/tournaments (в т.ч. чемпион из snapshot).
-type ArchiveListRow = {
-  id: string
-  tournament_name: string
-  tournament_date: string
-  venue_label: string
-  format_label: string
-  created_at: string
-  champion_team_name: string | null
-  mvp_player_id: number | null
-  mvp_player_name: string | null
-  mvp_photo: string | null
-  mvp_team_name: string | null
-}
-
-// Загружаем список всех завершённых турниров из API.
 const { data: tournaments, status } = await useFetch<ArchiveListRow[]>('/api/tournaments')
 
-// Маркер цвета для команды без карты цветов в списке — как запасной вариант для эмодзи.
-const { getMarkerByIndex } = useTeamColors()
+const {
+  localTournaments,
+  deletingId,
+  savingDateId,
+  archiveCardTitle,
+  archiveCardAriaLabel,
+  championTeamLabel,
+  championMarker,
+  mvpPlayerLabel,
+  mvpTeamLabel,
+  archiveDateInputValue,
+  openArchiveDatePickerUi,
+  onArchiveDateInputChange,
+  deleteTournament,
+  formatDate,
+} = useTournamentsArchiveList(tournaments)
 
-// Локальная копия списка — чтобы удалять записи без перезагрузки страницы.
-const localTournaments = computed(() => tournaments.value ?? [])
-
-// Логика входа/выхода администратора.
 const showLoginModal = ref(false)
 const { isAdmin, restoreSession, logout } = useAdminAuth()
 
 function onAdminEnter() {
   if (restoreSession()) return
   showLoginModal.value = true
-}
-
-// id турнира, который сейчас удаляется — для спиннера на кнопке.
-const deletingId = ref<string | null>(null)
-
-// id турнира, для которого сохраняем дату — блокируем поле даты на время запроса.
-const savingDateId = ref<string | null>(null)
-
-// Строка заголовка карточки: место и формат; если пусто — сохранённое имя турнира или «Турнир».
-function archiveCardTitle(t: {
-  venue_label?: string
-  format_label?: string
-  tournament_name?: string
-}): string {
-  const venue = (t.venue_label ?? '').trim()
-  const format = (t.format_label ?? '').trim()
-  if (venue && format) return `${venue} · ${format}`
-  if (venue) return venue
-  if (format) return format
-  return (t.tournament_name ?? '').trim() || 'Турнир'
-}
-
-// Подпись для скринридера — добавляем чемпиона, если сервер его вытащил из снапшота.
-function archiveCardAriaLabel(t: ArchiveListRow): string {
-  const base = archiveCardTitle(t)
-  const parts = [base]
-  const champ = championTeamLabel(t)
-  if (champ) parts.push(`Чемпион: ${champ}`)
-  const mvp = mvpPlayerLabel(t)
-  if (mvp) {
-    const mvpTeam = mvpTeamLabel(t)
-    parts.push(mvpTeam ? `MVP: ${mvp}, команда ${mvpTeam}` : `MVP: ${mvp}`)
-  }
-  return parts.join('. ')
-}
-
-// Имя чемпиона без лишних пробелов — пустая строка значит блок не показываем.
-function championTeamLabel(t: ArchiveListRow): string {
-  return (t.champion_team_name ?? '').trim()
-}
-
-// Эмодзи-маркер для чемпиона, если нет файла логотипа в teamLogos.
-function championMarker(teamName: string): string {
-  const idx = resolveTeamColorIndex(teamName, null, 0)
-  return getMarkerByIndex(idx)
-}
-
-// Подпись MVP с сервера — пусто, если не удалось посчитать.
-function mvpPlayerLabel(t: ArchiveListRow): string {
-  return (t.mvp_player_name ?? '').trim()
-}
-
-// Команда MVP из assignment — для значка на аватаре; пусто, если в снапшоте не было привязки.
-function mvpTeamLabel(t: ArchiveListRow): string {
-  return (t.mvp_team_name ?? '').trim()
-}
-
-// YYYY-MM-DD для input type=date — только если строка валидна.
-function archiveDateInputValue(raw: string | undefined): string {
-  const t = (raw ?? '').trim().slice(0, 10)
-  return /^\d{4}-\d{2}-\d{2}$/.test(t) ? t : ''
-}
-
-// Открываем системный выбор даты — overlay-ссылка иначе перехватывала бы клик.
-async function openArchiveDatePickerUi(host: HTMLElement) {
-  const input = host.querySelector('input[data-archive-date-input]') as HTMLInputElement | null
-  if (!input || input.disabled) return
-  if (typeof input.showPicker === 'function') {
-    try {
-      await input.showPicker()
-    } catch {
-      input.click()
-    }
-  } else {
-    input.click()
-  }
-}
-
-// Сохраняем дату архива на сервер и обновляем список без перезагрузки.
-async function onArchiveDateInputChange(row: ArchiveListRow, ev: Event) {
-  const el = ev.target as HTMLInputElement
-  const next = el.value
-  const prev = archiveDateInputValue(row.tournament_date)
-  if (!next || next === prev) return
-
-  savingDateId.value = row.id
-  try {
-    await $fetch(`/api/tournaments/${row.id}`, {
-      method: 'PATCH',
-      body: { tournament_date: next },
-    })
-    if (tournaments.value) {
-      const found = tournaments.value.find((t) => t.id === row.id)
-      if (found) found.tournament_date = next
-    }
-  } catch {
-    el.value = prev
-    alert('Не удалось сохранить дату. Попробуйте ещё раз.')
-  } finally {
-    savingDateId.value = null
-  }
-}
-
-// Удаляем турнир — спрашиваем подтверждение, затем DELETE в API.
-async function deleteTournament(id: string) {
-  const row = localTournaments.value.find(entry => entry.id === id)
-  const name = row ? archiveCardTitle(row) : 'этот турнир'
-  if (!confirm(`Удалить «${name}» из архива? Это действие нельзя отменить.`)) return
-
-  deletingId.value = id
-  try {
-    await $fetch(`/api/tournaments/${id}`, { method: 'DELETE' })
-    // Убираем турнир из реактивного массива после успешного удаления.
-    if (tournaments.value) {
-      tournaments.value = tournaments.value.filter(t => t.id !== id)
-    }
-  } catch {
-    alert('Не удалось удалить турнир. Попробуйте ещё раз.')
-  } finally {
-    deletingId.value = null
-  }
-}
-
-// Форматируем дату из YYYY-MM-DD в «12 апреля 2025» — парсим как локальную дату, без сдвига из-за UTC.
-function formatDate(dateStr: string): string {
-  const t = (dateStr ?? '').trim().slice(0, 10)
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return ''
-  const y = Number(t.slice(0, 4))
-  const m = Number(t.slice(5, 7))
-  const d = Number(t.slice(8, 10))
-  const date = new Date(y, m - 1, d)
-  return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 </script>

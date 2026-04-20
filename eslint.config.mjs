@@ -41,25 +41,4 @@ export default withNuxt(
       'vue/attributes-order': 'off',
     },
   },
-  {
-    files: [
-      'app/composables/useTournamentStandingsRefactored.ts',
-      'app/components/organisms/tournament/StepStandingsMatchManagement.vue',
-    ],
-    rules: {
-      'max-lines': [
-        'error',
-        { max: 720, skipBlankLines: true, skipComments: true },
-      ],
-    },
-  },
-  {
-    files: ['app/components/organisms/tournament/StepStandings.vue'],
-    rules: {
-      'max-lines': [
-        'error',
-        { max: 480, skipBlankLines: true, skipComments: true },
-      ],
-    },
-  },
 )

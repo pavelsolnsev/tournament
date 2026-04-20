@@ -171,261 +171,49 @@
         leave-to-class="max-h-0 opacity-0"
         @after-enter="scrollExpandedPanelIntoView"
       >
-        <div
+        <OrganismsTournamentStepStandingsMatchManagementPanel
           v-if="isMgmtOpen"
-          :id="mgmtPanelId"
-          role="region"
-          :aria-labelledby="mgmtToggleId"
-          class="flex flex-col gap-2 border-t border-slate-200 dark:border-slate-700/60 px-3 py-3"
-        >
-          <!-- Полный админ: показать зрителю итоги матча (статус finished на сайте). -->
-          <button
-            v-if="canFinishMatchShowResults"
-            type="button"
-            class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-white dark:text-slate-900
-                   transition-colors md:hover:bg-emerald-400 active:bg-emerald-600
-                   disabled:cursor-not-allowed disabled:opacity-40
-                   focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-            :disabled="!canFinishMatch"
-            @click="openActionConfirm('finish')"
-          >
-            Показать итоги
-          </button>
-
-          <div v-if="canFinishMatchShowResults" ref="finishConfirmAnchor">
-            <MoleculesDangerConfirmInline
-              :open="isActionConfirmOpen && pendingAction === 'finish'"
-              :seconds-left="finishMatchSecondsLeft"
-              :busy="false"
-              aria-label="Подтверждение показа итогов матча зрителю"
-              title="Показать итоги зрителям? Матч будет записан в историю, на сайте откроется экран итогов."
-              cancel-text="Отмена"
-              confirm-text="Показать итоги"
-              @cancel="closeActionConfirm"
-              @confirm="confirmPendingAction"
-            />
-          </div>
-
-          <!-- Судья: только запись матча в историю, без экрана итогов для зрителя. -->
-          <button
-            v-if="canFinishMatchSilent"
-            type="button"
-            class="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800/80 px-4 text-sm font-semibold text-slate-800 dark:text-slate-100
-                   transition-colors md:hover:bg-slate-50 dark:md:hover:bg-slate-800
-                   disabled:cursor-not-allowed disabled:opacity-40
-                   focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50"
-            :disabled="!canFinishMatch"
-            @click="openActionConfirm('finishSilent')"
-          >
-            Завершить матч
-          </button>
-
-          <div v-if="canFinishMatchSilent" ref="finishSilentConfirmAnchor">
-            <MoleculesConfirmInline
-              class="mt-0"
-              :open="isActionConfirmOpen && pendingAction === 'finishSilent'"
-              :busy="false"
-              tone="neutral"
-              aria-label="Подтверждение фиксации матча без показа итогов"
-              title="Зафиксировать матч в истории? Отметки сохранятся, зрителю не покажем экран итогов этого матча."
-              cancel-text="Отмена"
-              confirm-text="Зафиксировать"
-              @cancel="closeActionConfirm"
-              @confirm="confirmPendingAction"
-            />
-          </div>
-
-          <div class="border-t border-slate-200 dark:border-slate-700/60" />
-
-          <!-- Сообщение об успехе / ошибке завершения турнира -->
-          <div
-            v-if="finishTournamentStatus === 'success'"
-            class="flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300"
-          >
-            <span aria-hidden="true">✅</span>
-            <span>Данные сохранены в базу!</span>
-          </div>
-          <div
-            v-else-if="finishTournamentStatus === 'error' && finishTournamentError"
-            class="flex items-start gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-600 dark:text-red-300"
-          >
-            <span aria-hidden="true" class="mt-0.5 shrink-0">⚠️</span>
-            <span>{{ finishTournamentError }}</span>
-          </div>
-
-          <!-- Завершить турнир — сначала панель с отсчётом 3 сек, потом сохранение в БД -->
-          <button
-            v-if="canFinishTournament"
-            type="button"
-            class="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border px-4
-                   text-sm font-semibold transition-all
-                   disabled:cursor-not-allowed disabled:opacity-40
-                   focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
-            :class="finishTournamentStatus === 'success'
-              ? 'border-emerald-600/40 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
-              : finishTournamentStatus === 'loading'
-                ? 'border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                : 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 md:hover:bg-amber-500/20 md:hover:border-amber-500/50'"
-            :disabled="!canFinishTournament || !hasPlayedMatches || finishTournamentStatus === 'loading' || finishTournamentStatus === 'success' || showFinishTournamentConfirm"
-            @click="openFinishTournamentConfirm"
-          >
-            <span
-              v-if="finishTournamentStatus === 'loading'"
-              class="h-4 w-4 animate-spin rounded-full border-2 border-slate-400 dark:border-slate-500 border-t-slate-700 dark:border-t-slate-200"
-              aria-hidden="true"
-            />
-            <span v-else class="text-base leading-none" aria-hidden="true">
-              {{ finishTournamentStatus === 'success' ? '✅' : '🏆' }}
-            </span>
-            <span>{{
-              finishTournamentStatus === 'loading' ? 'Сохранение...'
-              : finishTournamentStatus === 'success' ? 'Турнир завершён'
-              : 'Завершить турнир'
-            }}</span>
-          </button>
-
-          <div ref="finishTournamentConfirmAnchor">
-            <MoleculesDangerConfirmInline
-              :open="showFinishTournamentConfirm && canFinishTournament"
-              :seconds-left="finishTournamentConfirmSecondsLeft"
-              :busy="finishTournamentStatus === 'loading'"
-              aria-label="Подтверждение завершения турнира"
-              title="Завершить турнир? Статистика игроков и команд будет сохранена в базу."
-              cancel-text="Отмена"
-              confirm-text="Сохранить и завершить"
-              busy-text="Сохранение…"
-              @cancel="closeFinishTournamentConfirm"
-              @confirm="confirmFinishTournament"
-            />
-          </div>
-
-          <!-- Разделитель перед опасной зоной сброса -->
-          <div class="border-t border-slate-200 dark:border-slate-700/60" />
-
-          <!-- Кнопка «Очистить данные» — сбрасывает турнир полностью -->
-          <button
-            v-if="canClearTournament && !showClearTournamentConfirm"
-            type="button"
-            class="inline-flex h-10 w-full items-center justify-center rounded-xl border border-red-300/70 bg-red-50
-                   px-4 text-sm font-semibold text-red-700 transition-colors
-                   hover:bg-red-100 dark:border-red-800/60 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-950/50
-                   focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50"
-            @click="$emit('clear-tournament')"
-          >
-            Очистить данные
-          </button>
-          <!-- Инлайн-подтверждение сброса — обёртка для прокрутки к отсчёту и кнопкам -->
-          <div v-else-if="canClearTournament" ref="clearDataConfirmAnchor">
-            <MoleculesDangerConfirmInline
-              :open="true"
-              :seconds-left="clearTournamentSecondsLeft"
-              :busy="clearTournamentBusy"
-              title="Сбросить турнир? Игроки в турнире, команды, таблица и статус матча обнулятся. Список игроков в базе не трогаем."
-              cancel-text="Отмена"
-              confirm-text="Очистить всё"
-              busy-text="Очищаем…"
-              aria-label="Подтверждение полного сброса турнира"
-              @cancel="$emit('cancel-clear-tournament')"
-              @confirm="$emit('confirm-clear-tournament')"
-            />
-          </div>
-
-          <!-- VK статус — внизу управления, чтобы не мешал кнопкам. -->
-          <div
-            v-if="canViewVkStatus"
-            class="mt-1 rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white/60 dark:bg-slate-900/40 px-3 py-2.5"
-          >
-            <div class="flex items-center justify-between gap-3">
-              <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                VK статус
-              </p>
-              <button
-                type="button"
-                class="inline-flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200
-                       transition-colors hover:bg-slate-200 dark:hover:bg-slate-700
-                       disabled:cursor-not-allowed disabled:opacity-50
-                       focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
-                :disabled="vkStatusPending"
-                @click="refreshVkStatus"
-              >
-                {{ vkStatusPending ? 'Обновляем…' : 'Обновить' }}
-              </button>
-            </div>
-
-            <p v-if="vkStatusError" class="mt-2 text-[11px] text-red-600 dark:text-red-300">
-              {{ vkStatusError }}
-            </p>
-
-            <div v-else class="mt-2 flex flex-wrap gap-2">
-              <span
-                class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                :class="vkStatusLinked ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
-              >
-                {{ vkStatusLinked ? 'Привязка: есть' : 'Привязка: нет' }}
-              </span>
-              <span
-                v-if="vkStatusLinked && vkPeerId"
-                class="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300"
-              >
-                peerId: {{ vkPeerId }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Сбросить отметки — под VK статусом (по просьбе), чтобы не мешать основным действиям. -->
-          <button
-            v-if="!showResetMarksConfirm"
-            type="button"
-            class="inline-flex h-10 w-full items-center justify-center rounded-xl border border-slate-300/70 bg-slate-100/70
-                   px-4 text-sm font-semibold text-slate-700 transition-colors
-                   hover:bg-slate-200/70 dark:border-slate-700/60 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:bg-slate-800
-                   focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
-            @click="openResetMarksConfirm"
-          >
-            Сбросить отметки
-          </button>
-          <div v-else>
-            <MoleculesDangerConfirmInline
-              :open="true"
-              :seconds-left="isLimitedAdmin ? 0 : resetMarksSecondsLeft"
-              :busy="false"
-              aria-label="Подтверждение сброса отметок"
-              title="Сбросить отметки и результаты?"
-              subtitle="Сыгранные матчи, счёт и отметки игроков будут обнулены. Команды и игроки останутся."
-              cancel-text="Отмена"
-              :confirm-text="(isLimitedAdmin ? 0 : resetMarksSecondsLeft) > 0 ? `Сбросить через ${(isLimitedAdmin ? 0 : resetMarksSecondsLeft)}с` : 'Сбросить'"
-              @cancel="closeResetMarksConfirm"
-              @confirm="confirmResetMarks"
-            />
-          </div>
-
-          <div class="border-t border-slate-200 dark:border-slate-700/60" />
-
-          <!-- Обновить страницу — в самом низу управления, чтобы не мешала основным действиям. -->
-          <button
-            type="button"
-            class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-300/70 bg-white/70 px-4 text-sm font-semibold text-slate-700 transition-colors
-                   hover:bg-slate-50 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-200 dark:hover:bg-slate-900/70
-                   focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
-            aria-label="Обновить страницу"
-            @click="reloadPage"
-          >
-            <svg
-              class="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
-              <path d="M21 3v5h-5" />
-            </svg>
-            Обновить страницу
-          </button>
-        </div>
+          :mgmt-panel-id="mgmtPanelId"
+          :mgmt-toggle-id="mgmtToggleId"
+          :can-finish-match-show-results="canFinishMatchShowResults"
+          :can-finish-match-silent="canFinishMatchSilent"
+          :can-finish-match="canFinishMatch"
+          :can-finish-tournament="canFinishTournament"
+          :can-clear-tournament="canClearTournament"
+          :can-view-vk-status="canViewVkStatus"
+          :is-limited-admin="isLimitedAdmin"
+          :has-played-matches="hasPlayedMatches"
+          :finish-tournament-status="finishTournamentStatus"
+          :finish-tournament-error="finishTournamentError"
+          :show-clear-tournament-confirm="showClearTournamentConfirm"
+          :clear-tournament-seconds-left="clearTournamentSecondsLeft"
+          :clear-tournament-busy="clearTournamentBusy"
+          :is-action-confirm-open="isActionConfirmOpen"
+          :pending-action="pendingAction"
+          :finish-match-seconds-left="finishMatchSecondsLeft"
+          :show-finish-tournament-confirm="showFinishTournamentConfirm"
+          :finish-tournament-confirm-seconds-left="finishTournamentConfirmSecondsLeft"
+          :show-reset-marks-confirm="showResetMarksConfirm"
+          :reset-marks-seconds-left="resetMarksSecondsLeft"
+          :vk-status-pending="vkStatusPending"
+          :vk-status-error="vkStatusError"
+          :vk-status-linked="vkStatusLinked"
+          :vk-peer-id="vkPeerId"
+          :open-action-confirm="openActionConfirm"
+          :close-action-confirm="closeActionConfirm"
+          :confirm-pending-action="confirmPendingAction"
+          :open-finish-tournament-confirm="openFinishTournamentConfirm"
+          :close-finish-tournament-confirm="closeFinishTournamentConfirm"
+          :confirm-finish-tournament="confirmFinishTournament"
+          :open-reset-marks-confirm="openResetMarksConfirm"
+          :close-reset-marks-confirm="closeResetMarksConfirm"
+          :confirm-reset-marks="confirmResetMarks"
+          :refresh-vk-status="refreshVkStatus"
+          :reload-page="reloadPage"
+          @clear-tournament="$emit('clear-tournament')"
+          @cancel-clear-tournament="$emit('cancel-clear-tournament')"
+          @confirm-clear-tournament="$emit('confirm-clear-tournament')"
+        />
       </Transition>
     </div>
 
@@ -433,393 +221,75 @@
 </template>
 
 <script setup lang="ts">
-import type { Player } from '~/types/tournament'
-import type { StatKey } from '~/composables/tournament-standings/types'
-import { computed, nextTick, onUnmounted, watch } from 'vue'
+import { provide } from 'vue'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
-import { useAdminAuth } from '~/composables/useAdminAuth'
-import { useTeamColors } from '~/composables/useTeamColors'
-import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
-import MoleculesDangerConfirmInline from '~/components/molecules/DangerConfirmInline.vue'
-import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
-import { reloadWithScrollRestore } from '~/utils/reloadWithScrollRestore'
-import { resolveTeamColorIndex } from '~/utils/teamNames'
+import { matchManagementConfirmAnchorsKey } from '~/composables/stepStandingsMatchManagementAnchors'
+import {
+  useStepStandingsMatchManagement,
+  type StepStandingsMatchManagementProps,
+} from '~/composables/useStepStandingsMatchManagement'
 
-type Side = 'home' | 'away'
-
-type PlayerMatchStats = {
-  goals: number
-  assists: number
-  saves: number
-  yellows: number
-}
-
-type VkStatusResponse = {
-  ok: true
-  linked: boolean
-  closeVkListRequested: boolean
-  peerId: number | null
-  gameEventId: string | null
-}
-
-const props = defineProps<{
-  teams: string[]
-  homeTeam: string
-  awayTeam: string
-  homeGoals: number
-  awayGoals: number
-  hasNextMatch: boolean
-  canFinishMatch: boolean
-  hasPlayedMatches: boolean
-  playersByTeam: (teamName: string) => Player[]
-  teamMarker: (teamName: string) => string
-  effectiveTeamColors: Record<string, number>
-  displayPlayerLabel: (player: Player) => string
-  isActivePlayer: (side: Side, playerId: number) => boolean
-  selectPlayerForMark: (side: Side, playerId: number) => void
-  playerStat: (side: Side, playerId: number) => PlayerMatchStats
-  onSelectAction: (side: Side, playerId: number, event: Event) => void
-  addPlayerEvent: (side: Side, playerId: number, key: StatKey) => void
-  removePlayerEvent: (side: Side, playerId: number, key: StatKey) => void
-  goToNextMatch: () => void
-  resetMatchStats: () => void
-  resetTournamentMarks: () => void
-  finishMatch: () => void
-  /** Судья: завершить матч без показа итогов зрителю (без matchStatus finished). */
-  finishMatchSilent: () => void | Promise<void>
-  finishTournamentStatus: 'idle' | 'loading' | 'success' | 'error'
-  finishTournamentError: string | null
-  onFinishTournament: () => void
-  // Данные для кнопки «Очистить данные» — управляются родителем.
-  showClearTournamentConfirm: boolean
-  clearTournamentSecondsLeft: number
-  clearTournamentBusy: boolean
-}>()
-
+const props = defineProps<StepStandingsMatchManagementProps>()
 defineEmits<{
   'update:homeTeam': [value: string]
   'update:awayTeam': [value: string]
-  // Три события для управления сбросом турнира из родителя.
   'clear-tournament': []
   'cancel-clear-tournament': []
   'confirm-clear-tournament': []
 }>()
 
-const { getMatchScorePillClass } = useTeamColors()
+const {
+  scrollExpandedPanelIntoView,
+  canFinishTournament,
+  canClearTournament,
+  canFinishMatchShowResults,
+  canFinishMatchSilent,
+  canViewVkStatus,
+  isLimitedAdmin,
+  homeTeamColorIndex,
+  awayTeamColorIndex,
+  teamColorIndexForName,
+  reloadPage,
+  boardScorePillClass,
+  nextMatchConfirmSubtitle,
+  teamPickersAccordionRef,
+  mgmtToggleId,
+  mgmtPanelId,
+  isMgmtOpen,
+  pendingAction,
+  isActionConfirmOpen,
+  showResetMarksConfirm,
+  resetMarksSecondsLeft,
+  openResetMarksConfirm,
+  closeResetMarksConfirm,
+  confirmResetMarks,
+  vkStatusPending,
+  vkStatusError,
+  vkStatusLinked,
+  vkPeerId,
+  refreshVkStatus,
+  finishMatchSecondsLeft,
+  showFinishTournamentConfirm,
+  finishTournamentConfirmSecondsLeft,
+  openFinishTournamentConfirm,
+  closeFinishTournamentConfirm,
+  confirmFinishTournament,
+  nextConfirmAnchor,
+  finishConfirmAnchor,
+  finishSilentConfirmAnchor,
+  finishTournamentConfirmAnchor,
+  clearDataConfirmAnchor,
+  matchCardRef,
+  matchScoreBoardRef,
+  closeActionConfirm,
+  openActionConfirm,
+  confirmPendingAction,
+} = useStepStandingsMatchManagement(props)
 
-// Simple10: Ограниченный админ (limited) может управлять матчем, но не может делать опасные действия.
-const { adminRole } = useAdminAuth()
-const canFinishTournament = computed(() => adminRole.value === 'full')
-const canClearTournament = computed(() => adminRole.value === 'full')
-const canFinishMatchShowResults = computed(() => adminRole.value === 'full')
-const canFinishMatchSilent = computed(() => adminRole.value === 'limited')
-const canViewVkStatus = computed(() => adminRole.value === 'full')
-const isLimitedAdmin = computed(() => adminRole.value === 'limited')
-
-// Simple10: Индекс цвета команды в турнире — для маленького кружка рядом с названием (только при логотипе).
-const homeTeamColorIndex = computed(() =>
-  resolveTeamColorIndex(props.homeTeam, props.effectiveTeamColors, 0),
-)
-const awayTeamColorIndex = computed(() =>
-  resolveTeamColorIndex(props.awayTeam, props.effectiveTeamColors, 1),
-)
-
-function teamColorIndexForName(teamName: string): number {
-  return resolveTeamColorIndex(teamName, props.effectiveTeamColors, 0)
-}
-
-function reloadPage() {
-  reloadWithScrollRestore()
-}
-
-// Табло: ничья — серая плашка; лидер — в цвете его команды.
-const boardScorePillClass = computed(() =>
-  getMatchScorePillClass(
-    props.homeGoals,
-    props.awayGoals,
-    props.homeTeam,
-    props.awayTeam,
-    (name) => resolveTeamColorIndex(name, props.effectiveTeamColors, 0),
-  ),
-)
-
-// Подпись в диалоге «Следующий матч»: предупреждаем о счёте 0:0 чтобы не записать пустой матч случайно.
-const nextMatchConfirmSubtitle = computed(() => {
-  const isZeroZero = props.homeGoals === 0 && props.awayGoals === 0
-  if (isZeroZero) {
-    return `Внимание: счёт ${props.homeGoals}:${props.awayGoals}. Матч будет записан с нулевым счётом.`
-  }
-  return 'Текущий матч будет завершён и записан в историю.'
+provide(matchManagementConfirmAnchorsKey, {
+  finishConfirmAnchor,
+  finishSilentConfirmAnchor,
+  finishTournamentConfirmAnchor,
+  clearDataConfirmAnchor,
 })
-
-const uid = useId?.() ?? Math.random().toString(36).slice(2)
-
-const teamPickersAccordionRef = useTemplateRef<{
-  collapseTeamPickersSection: () => void
-}>('teamPickersAccordionRef')
-
-// Управление видимостью блока "Управление" (Завершить матч, Завершить турнир).
-const mgmtToggleId = `match-mgmt-toggle-${uid}`
-const mgmtPanelId = `match-mgmt-panel-${uid}`
-const isMgmtOpen = ref(false)
-
-const pendingAction = ref<'next' | 'finish' | 'finishSilent' | null>(null)
-const isActionConfirmOpen = computed(() => pendingAction.value !== null)
-
-// Simple10: Отдельное подтверждение для «Сбросить отметки» (обнуляет результаты и события).
-const showResetMarksConfirm = ref(false)
-const resetMarksSecondsLeft = ref(3)
-let resetMarksCountdown: ReturnType<typeof setInterval> | null = null
-
-function startResetMarksCountdown() {
-  resetMarksSecondsLeft.value = 3
-  if (resetMarksCountdown) clearInterval(resetMarksCountdown)
-  resetMarksCountdown = setInterval(() => {
-    resetMarksSecondsLeft.value -= 1
-    if (resetMarksSecondsLeft.value <= 0 && resetMarksCountdown) {
-      clearInterval(resetMarksCountdown)
-      resetMarksCountdown = null
-    }
-  }, 1000)
-}
-
-function stopResetMarksCountdown() {
-  if (resetMarksCountdown) {
-    clearInterval(resetMarksCountdown)
-    resetMarksCountdown = null
-  }
-  resetMarksSecondsLeft.value = 3
-}
-
-function openResetMarksConfirm() {
-  showResetMarksConfirm.value = true
-  startResetMarksCountdown()
-}
-
-function closeResetMarksConfirm() {
-  showResetMarksConfirm.value = false
-  stopResetMarksCountdown()
-}
-
-function confirmResetMarks() {
-  // Simple10: Сбрасываем результаты и отметки через функцию родителя.
-  props.resetTournamentMarks()
-  closeResetMarksConfirm()
-}
-
-// VK статус: отдельный запрос, чтобы админ видел — закрыт ли список и снята ли привязка.
-const vkStatusPending = ref(false)
-const vkStatusError = ref<string | null>(null)
-const vkStatusLinked = ref(false)
-const vkPeerId = ref<number | null>(null)
-
-async function refreshVkStatus() {
-  // Simple10: Ограниченный админ не должен видеть VK статус и не должен делать запросы к VK статусу.
-  if (!canViewVkStatus.value) return
-  // Делаем запрос только по кнопке: это не критично для UI и не должно спамить сервер.
-  if (vkStatusPending.value) return
-  vkStatusPending.value = true
-  vkStatusError.value = null
-  try {
-    const res = await $fetch<VkStatusResponse>('/api/tournament/vk-status', { method: 'GET' })
-    vkStatusLinked.value = res.linked === true
-    vkPeerId.value = res.peerId ?? null
-  } catch (_e: unknown) {
-    // Ошибку показываем коротко, чтобы было понятно что проверить (сессия/сервер).
-    vkStatusError.value = 'Не удалось получить VK статус (проверьте админ-сессию и сервер).'
-  } finally {
-    vkStatusPending.value = false
-  }
-}
-
-// Simple10: Первый запрос делаем только для полного админа — limited не должен видеть VK статус.
-if (canViewVkStatus.value) {
-  void refreshVkStatus()
-}
-
-// Отсчёт 3 секунды перед «Завершить матч» — та же идея что у «Очистить данные».
-const finishMatchSecondsLeft = ref(3)
-let finishMatchCountdown: ReturnType<typeof setInterval> | null = null
-
-function startFinishMatchCountdown() {
-  finishMatchSecondsLeft.value = 3
-  if (finishMatchCountdown) clearInterval(finishMatchCountdown)
-  finishMatchCountdown = setInterval(() => {
-    finishMatchSecondsLeft.value -= 1
-    if (finishMatchSecondsLeft.value <= 0 && finishMatchCountdown) {
-      clearInterval(finishMatchCountdown)
-      finishMatchCountdown = null
-    }
-  }, 1000)
-}
-
-function stopFinishMatchCountdown() {
-  if (finishMatchCountdown) {
-    clearInterval(finishMatchCountdown)
-    finishMatchCountdown = null
-  }
-  finishMatchSecondsLeft.value = 3
-}
-
-watch(pendingAction, (action) => {
-  if (action === 'finish') startFinishMatchCountdown()
-  else stopFinishMatchCountdown()
-})
-
-// Подтверждение «Завершить турнир» с отсчётом 3 секунды перед сохранением в БД.
-const showFinishTournamentConfirm = ref(false)
-const finishTournamentConfirmSecondsLeft = ref(3)
-let finishTournamentConfirmCountdown: ReturnType<typeof setInterval> | null = null
-
-function startFinishTournamentConfirmCountdown() {
-  finishTournamentConfirmSecondsLeft.value = 3
-  if (finishTournamentConfirmCountdown) clearInterval(finishTournamentConfirmCountdown)
-  finishTournamentConfirmCountdown = setInterval(() => {
-    finishTournamentConfirmSecondsLeft.value -= 1
-    if (finishTournamentConfirmSecondsLeft.value <= 0 && finishTournamentConfirmCountdown) {
-      clearInterval(finishTournamentConfirmCountdown)
-      finishTournamentConfirmCountdown = null
-    }
-  }, 1000)
-}
-
-function stopFinishTournamentConfirmCountdown() {
-  if (finishTournamentConfirmCountdown) {
-    clearInterval(finishTournamentConfirmCountdown)
-    finishTournamentConfirmCountdown = null
-  }
-  finishTournamentConfirmSecondsLeft.value = 3
-}
-
-function openFinishTournamentConfirm() {
-  // Simple10: Для limited блокируем действие на всякий случай (даже если кто-то снимет disabled в DOM).
-  if (!canFinishTournament.value) return
-  showFinishTournamentConfirm.value = true
-  startFinishTournamentConfirmCountdown()
-}
-
-function closeFinishTournamentConfirm() {
-  if (props.finishTournamentStatus === 'loading') return
-  showFinishTournamentConfirm.value = false
-  stopFinishTournamentConfirmCountdown()
-}
-
-function confirmFinishTournament() {
-  // Simple10: Для limited блокируем действие на всякий случай (даже если панель подтверждения была открыта).
-  if (!canFinishTournament.value) return
-  props.onFinishTournament()
-}
-
-watch(
-  () => props.finishTournamentStatus,
-  (s) => {
-    if (s === 'success') {
-      showFinishTournamentConfirm.value = false
-      stopFinishTournamentConfirmCountdown()
-    }
-  },
-)
-
-// Якоря под панели подтверждения — после клика прокручиваем, чтобы кнопки были в зоне видимости.
-const nextConfirmAnchor = useTemplateRef<HTMLDivElement>('nextConfirmAnchor')
-const finishConfirmAnchor = useTemplateRef<HTMLDivElement>('finishConfirmAnchor')
-const finishSilentConfirmAnchor = useTemplateRef<HTMLDivElement>('finishSilentConfirmAnchor')
-const finishTournamentConfirmAnchor = useTemplateRef<HTMLDivElement>('finishTournamentConfirmAnchor')
-const clearDataConfirmAnchor = useTemplateRef<HTMLDivElement>('clearDataConfirmAnchor')
-const matchCardRef = useTemplateRef<HTMLElement>('matchCardRef')
-const matchScoreBoardRef = useTemplateRef<HTMLDivElement>('matchScoreBoardRef')
-
-// Simple10: Прокрутка к строке табло со счётом (не ко всей карточке), чтобы 0:0 был в кадре под шапкой.
-function scrollMatchCardIntoView() {
-  if (import.meta.server) return
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const el = matchScoreBoardRef.value ?? matchCardRef.value
-      el?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' })
-    })
-  })
-}
-
-function scrollConfirmIntoView(el: HTMLElement | null | undefined) {
-  // Ждём кадр: v-if внутри Confirm отрисовал панель, иначе scroll может не попасть в нужную высоту.
-  void nextTick(() => {
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
-  })
-}
-
-function closeActionConfirm() {
-  // Закрываем подтверждение и сбрасываем таймер «Завершить матч».
-  stopFinishMatchCountdown()
-  pendingAction.value = null
-}
-
-function openActionConfirm(action: 'next' | 'finish' | 'finishSilent') {
-  pendingAction.value = action
-  const el =
-    action === 'next'
-      ? nextConfirmAnchor.value
-      : action === 'finishSilent'
-        ? finishSilentConfirmAnchor.value
-        : finishConfirmAnchor.value
-  scrollConfirmIntoView(el)
-}
-
-async function confirmPendingAction() {
-  const action = pendingAction.value
-  closeActionConfirm()
-
-  if (action === 'finish') {
-    props.finishMatch()
-    return
-  }
-  if (action === 'finishSilent') {
-    await props.finishMatchSilent()
-    return
-  }
-  if (action === 'next') {
-    props.goToNextMatch()
-    await nextTick()
-    await nextTick()
-    scrollMatchCardIntoView()
-  }
-}
-
-// «Очистить данные» открывает подтверждение в родителе — прокручиваем к красной панели.
-watch(
-  () => props.showClearTournamentConfirm,
-  (open) => {
-    if (!open) return
-    scrollConfirmIntoView(clearDataConfirmAnchor.value)
-  },
-  // После отрисовки v-else с ref — иначе якорь ещё null в том же тике.
-  { flush: 'post' },
-)
-
-watch(
-  () => showFinishTournamentConfirm.value,
-  (open) => {
-    if (open) scrollConfirmIntoView(finishTournamentConfirmAnchor.value)
-  },
-  { flush: 'post' },
-)
-
-onUnmounted(() => {
-  stopFinishMatchCountdown()
-  stopFinishTournamentConfirmCountdown()
-  stopResetMarksCountdown()
-})
-
-// Только что выбрали вторую команду: сворачиваем «Команды (дом/гость)» и крутим скролл к карточке матча.
-watch(
-  () => [props.homeTeam, props.awayTeam] as const,
-  async ([home, away], prevPair) => {
-    const both = !!(home && away)
-    const hadBothBefore = !!(prevPair?.[0] && prevPair?.[1])
-    if (!both || hadBothBefore) return
-    teamPickersAccordionRef.value?.collapseTeamPickersSection()
-    await nextTick()
-    scrollMatchCardIntoView()
-  },
-  { flush: 'post' },
-)
 </script>

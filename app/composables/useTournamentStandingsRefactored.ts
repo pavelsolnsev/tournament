@@ -21,8 +21,7 @@ import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 import { normalizeTeamColorsMap, normalizeTeamName, resolveTeamColorIndex } from '~/utils/teamNames'
 
 import { extractMarkedPlayers } from './tournament-standings/events'
-import { pickNextMatchPair, recordFinishedMatch, recalibratePairingState, resetMatchHistoryIfBalanced } from './tournament-standings/pairing'
-import { resortStandings, updateStandingsForTeam } from './tournament-standings/standings'
+import { pickNextMatchPair, recalibratePairingState, resetMatchHistoryIfBalanced } from './tournament-standings/pairing'
 import {
   isActivePlayer as isActivePlayerFn,
   incrementStat,
@@ -32,9 +31,9 @@ import {
   resetMatchStats as resetMatchStatsFn,
   selectPlayerForMark as selectPlayerForMarkFn,
 } from './tournament-standings/matchStats'
-import { mergeFinishedMatchIntoAggregate, subtractMatchFromAggregate } from './tournament-standings/aggregateTournamentPlayerStats'
-import { applyRatingDeltas, computeTeamRatingDeltas, revertRatingDeltas } from './tournament-standings/ratings'
-import { subtractPlayedMatchFromStandingsRows } from './tournament-standings/subtractPlayedMatchFromStandingsRows'
+import { finishMatchAndRecord } from './tournament-standings/refactoredFinishMatch'
+import { resetTournamentMarksState } from './tournament-standings/refactoredResetMarks'
+import { deletePlayedMatchFromList, updatePlayedMatchInList } from './tournament-standings/refactoredPlayedMatchEdit'
 
 // Дополнительные параметры composable — начальный снапшот и callback для сохранения.
 type StandingsOptions = {
@@ -210,118 +209,43 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
   }
 
   function resetTournamentMarks() {
-    // Simple10: Это "мягкий сброс" только результатов и отметок внутри текущего турнира.
-    // Simple10: Игроков, команды и назначение по командам НЕ трогаем — только матчи/таблицу/дельты рейтинга/счётчики.
-
-    // Simple10: Сбрасываем турнирную таблицу в ноль по текущему списку команд.
-    standingsRows.value = params.teams.map((name, index) => ({
-      place: index + 1,
-      teamName: name,
-      played: 0,
-      wins: 0,
-      draws: 0,
-      losses: 0,
-      goalsFor: 0,
-      goalsAgainst: 0,
-      goalDiff: 0,
-      points: 0,
-    }))
-
-    // Simple10: Очищаем историю матчей и все счётчики подбора следующей пары.
-    matchCount.value = 0
-    teamGamesCount.value = {}
-    consecutiveGames.value = {}
-    matchHistory.value = {}
-    lastMatchIndex.value = {}
-    playedSingleMatch.value = false
-    playedMatchesList.value = []
-
-    // Simple10: Очищаем суммарную статистику игроков и накопленные дельты рейтинга за турнир.
-    aggregatePlayerStats.value = {}
-    playerRatingDeltas.value = {}
-
-    // Simple10: Сбрасываем текущий матч (выбранные команды и текущие отметки).
-    resetMatchStats()
-    homeTeam.value = ''
-    awayTeam.value = ''
+    resetTournamentMarksState(
+      { teams: params.teams },
+      standingsRows,
+      matchCount,
+      teamGamesCount,
+      consecutiveGames,
+      matchHistory,
+      lastMatchIndex,
+      playedSingleMatch,
+      playedMatchesList,
+      aggregatePlayerStats,
+      playerRatingDeltas,
+      resetMatchStats,
+      homeTeam,
+      awayTeam,
+    )
   }
 
-  // Рейтинг: функции вынесены в отдельный модуль, чтобы файл был меньше.
-  const applyRating = (deltas: Record<number, number>) =>
-    applyRatingDeltas({ playerRatingDeltas, deltas })
-  const revertRating = (deltas: Record<number, number>) =>
-    revertRatingDeltas({ playerRatingDeltas, deltas })
-
   function finishMatch() {
-    if (!homeTeam.value || !awayTeam.value) return
-    if (matchFinalized.value) return
-
-    const hg = homeGoals.value
-    const ag = awayGoals.value
-
-    // Обновляем таблицу (очки/голы) для обеих команд.
-    updateStandingsForTeam(standingsRows, homeTeam.value, hg, ag)
-    updateStandingsForTeam(standingsRows, awayTeam.value, ag, hg)
-
-    // Считаем пометки по игрокам (какие события были).
-    const homePlayers = buildMarkedPlayers(homeStats.value)
-    const awayPlayers = buildMarkedPlayers(awayStats.value)
-
-    // Записываем результат матча в историю автоподбора пар.
-    const matchNumber = recordFinishedMatch(pairingState, homeTeam.value, awayTeam.value, params.teams)
-    resetMatchHistoryIfBalanced(pairingState, params.teams)
-
-    // Сначала в список сыгранных — сортировка с личками смотрит только завершённые матчи.
-    playedMatchesList.value.push({
-      matchNumber,
-      homeTeam: homeTeam.value,
-      awayTeam: awayTeam.value,
-      homeGoals: hg,
-      awayGoals: ag,
-      homePlayers,
-      awayPlayers,
-      homeStats: { ...homeStats.value },
-      awayStats: { ...awayStats.value },
+    finishMatchAndRecord({
+      homeTeam,
+      awayTeam,
+      matchFinalized,
+      homeGoals,
+      awayGoals,
+      homeStats,
+      awayStats,
+      standingsRows,
+      playedMatchesList,
+      aggregatePlayerStats,
+      playerRatingDeltas,
+      pairingState,
+      teams: params.teams,
+      playersById,
+      buildMarkedPlayers,
+      resetMatchStats,
     })
-
-    resortStandings(standingsRows, playedMatchesList.value)
-
-    aggregatePlayerStats.value = mergeFinishedMatchIntoAggregate(
-      aggregatePlayerStats.value,
-      homeStats.value,
-      awayStats.value,
-    )
-
-    // Считаем дельты рейтинга для обеих команд и сохраняем в БД.
-    const isHomeDraw = hg === ag
-    const isHomeWin = hg > ag
-    const homeDeltas = computeTeamRatingDeltas({
-      playersById: playersById.value,
-      statsRecord: homeStats.value,
-      isWin: isHomeWin,
-      isDraw: isHomeDraw,
-      isLose: !isHomeWin && !isHomeDraw,
-      teamGoals: hg,
-      opponentGoals: ag,
-    })
-    const awayDeltas = computeTeamRatingDeltas({
-      playersById: playersById.value,
-      statsRecord: awayStats.value,
-      isWin: !isHomeWin && !isHomeDraw,
-      isDraw: isHomeDraw,
-      isLose: isHomeWin,
-      teamGoals: ag,
-      opponentGoals: hg,
-    })
-    // Накапливаем дельты рейтинга в памяти — в БД запишем только при завершении турнира.
-    applyRating({ ...homeDeltas, ...awayDeltas })
-
-    // Сбрасываем то, что относится только к текущему "управлению" матчем:
-    // 1) обнуляем результат и статистику игроков;
-    // 2) очищаем выбранные команды, чтобы показывался плейсхолдер "— Выберите команду —".
-    resetMatchStats()
-    homeTeam.value = ''
-    awayTeam.value = ''
   }
 
   function updatePlayedMatch(
@@ -331,163 +255,32 @@ export function useTournamentStandingsRefactored(params: TournamentStandingsPara
     newHomeStats: Record<number, PlayerMatchStats>,
     newAwayStats: Record<number, PlayerMatchStats>,
   ) {
-    const idx = playedMatchesList.value.findIndex((m) => m.matchNumber === matchNumber)
-    if (idx === -1) return
-
-    const old = playedMatchesList.value[idx]
-    if (!old) return
-
-    subtractPlayedMatchFromStandingsRows(standingsRows.value, old)
-
-    // Применяем новый результат в таблицу.
-    updateStandingsForTeam(standingsRows, old.homeTeam, newHomeGoals, newAwayGoals)
-    updateStandingsForTeam(standingsRows, old.awayTeam, newAwayGoals, newHomeGoals)
-
-    // Пересчитываем подписи игроков из новой статистики.
-    const newHomePlayers = extractMarkedPlayers({
-      statsRecord: newHomeStats,
-      playersById: playersById.value,
-      displayPlayerLabel: displayPlayerLabelWithoutRating,
-    })
-    const newAwayPlayers = extractMarkedPlayers({
-      statsRecord: newAwayStats,
-      playersById: playersById.value,
-      displayPlayerLabel: displayPlayerLabelWithoutRating,
-    })
-
-    // Обновляем запись матча в истории.
-    playedMatchesList.value[idx] = {
-      ...old,
-      homeGoals: newHomeGoals,
-      awayGoals: newAwayGoals,
-      homeStats: { ...newHomeStats },
-      awayStats: { ...newAwayStats },
-      homePlayers: newHomePlayers,
-      awayPlayers: newAwayPlayers,
-    }
-
-    resortStandings(standingsRows, playedMatchesList.value)
-
-    // Обновляем агрегатную статистику игроков: вычитаем старый матч, добавляем новый.
-    aggregatePlayerStats.value = subtractMatchFromAggregate(
-      aggregatePlayerStats.value,
-      old.homeStats,
-      old.awayStats,
-    )
-    aggregatePlayerStats.value = mergeFinishedMatchIntoAggregate(
-      aggregatePlayerStats.value,
+    updatePlayedMatchInList({
+      matchNumber,
+      newHomeGoals,
+      newAwayGoals,
       newHomeStats,
       newAwayStats,
-    )
-
-    // Откатываем рейтинг старого матча и применяем новый.
-    const oldIsHomeDraw = old.homeGoals === old.awayGoals
-    const oldIsHomeWin = old.homeGoals > old.awayGoals
-    const oldHomeDeltas = computeTeamRatingDeltas({
-      playersById: playersById.value,
-      statsRecord: old.homeStats,
-      isWin: oldIsHomeWin,
-      isDraw: oldIsHomeDraw,
-      isLose: !oldIsHomeWin && !oldIsHomeDraw,
-      teamGoals: old.homeGoals,
-      opponentGoals: old.awayGoals,
+      playedMatchesList,
+      standingsRows,
+      aggregatePlayerStats,
+      playerRatingDeltas,
+      playersById,
+      displayPlayerLabelWithoutRating,
     })
-    const oldAwayDeltas = computeTeamRatingDeltas({
-      playersById: playersById.value,
-      statsRecord: old.awayStats,
-      isWin: !oldIsHomeWin && !oldIsHomeDraw,
-      isDraw: oldIsHomeDraw,
-      isLose: oldIsHomeWin,
-      teamGoals: old.awayGoals,
-      opponentGoals: old.homeGoals,
-    })
-    const newIsHomeDraw = newHomeGoals === newAwayGoals
-    const newIsHomeWin = newHomeGoals > newAwayGoals
-    const newHomeDeltas = computeTeamRatingDeltas({
-      playersById: playersById.value,
-      statsRecord: newHomeStats,
-      isWin: newIsHomeWin,
-      isDraw: newIsHomeDraw,
-      isLose: !newIsHomeWin && !newIsHomeDraw,
-      teamGoals: newHomeGoals,
-      opponentGoals: newAwayGoals,
-    })
-    const newAwayDeltas = computeTeamRatingDeltas({
-      playersById: playersById.value,
-      statsRecord: newAwayStats,
-      isWin: !newIsHomeWin && !newIsHomeDraw,
-      isDraw: newIsHomeDraw,
-      isLose: newIsHomeWin,
-      teamGoals: newAwayGoals,
-      opponentGoals: newHomeGoals,
-    })
-    revertRating({ ...oldHomeDeltas, ...oldAwayDeltas })
-    applyRating({ ...newHomeDeltas, ...newAwayDeltas })
   }
 
   function deletePlayedMatch(matchNumber: number) {
-    const idx = playedMatchesList.value.findIndex((m) => m.matchNumber === matchNumber)
-    if (idx === -1) return
-
-    const old = playedMatchesList.value[idx]
-    if (!old) return
-
-    subtractPlayedMatchFromStandingsRows(standingsRows.value, old)
-
-    // Убираем матч из списка.
-    playedMatchesList.value.splice(idx, 1)
-
-    // Переиндексируем оставшиеся матчи: убираем "дырки" в нумерации.
-    // Это нужно чтобы matchNumber в UI шёл подряд (1, 2, 3...) и lastMatchIndex
-    // в pairingState ссылался на актуальные номера после пересчёта.
-    playedMatchesList.value.forEach((m, i) => {
-      m.matchNumber = i + 1
-    })
-
-    resortStandings(standingsRows, playedMatchesList.value)
-
-    // Пересчитываем aggregate-статистику игроков без этого матча.
-    aggregatePlayerStats.value = subtractMatchFromAggregate(
-      aggregatePlayerStats.value,
-      old.homeStats,
-      old.awayStats,
-    )
-
-    // Откатываем рейтинг удалённого матча в БД и в локальных дельтах.
-    const delIsHomeDraw = old.homeGoals === old.awayGoals
-    const delIsHomeWin = old.homeGoals > old.awayGoals
-    const delHomeDeltas = computeTeamRatingDeltas({
-      playersById: playersById.value,
-      statsRecord: old.homeStats,
-      isWin: delIsHomeWin,
-      isDraw: delIsHomeDraw,
-      isLose: !delIsHomeWin && !delIsHomeDraw,
-      teamGoals: old.homeGoals,
-      opponentGoals: old.awayGoals,
-    })
-    const delAwayDeltas = computeTeamRatingDeltas({
-      playersById: playersById.value,
-      statsRecord: old.awayStats,
-      isWin: !delIsHomeWin && !delIsHomeDraw,
-      isDraw: delIsHomeDraw,
-      isLose: delIsHomeWin,
-      teamGoals: old.awayGoals,
-      opponentGoals: old.homeGoals,
-    })
-    revertRating({ ...delHomeDeltas, ...delAwayDeltas })
-
-    // Полностью пересинхронизируем pairingState по переиндексированному списку.
-    // recalibrate надёжнее unrecord: пересчитывает всё с нуля, не зависит от порядка удалений.
-    recalibratePairingState(
+    deletePlayedMatchFromList({
+      matchNumber,
+      playedMatchesList,
+      standingsRows,
+      aggregatePlayerStats,
+      playerRatingDeltas,
       pairingState,
-      params.teams,
-      playedMatchesList.value.map((m) => ({
-        homeTeam: m.homeTeam,
-        awayTeam: m.awayTeam,
-        matchNumber: m.matchNumber,
-      })),
-    )
-    resetMatchHistoryIfBalanced(pairingState, params.teams)
+      teams: params.teams,
+      playersById,
+    })
   }
 
   /**

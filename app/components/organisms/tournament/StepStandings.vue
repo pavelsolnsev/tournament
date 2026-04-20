@@ -138,7 +138,7 @@
           :id="rosterTotalsPanelId"
           role="region"
           :aria-labelledby="rosterTotalsToggleId"
-          class="pt-1"
+          class="w-full min-w-0 border-t border-slate-200 px-3 pb-4 pt-3 dark:border-slate-700/60 sm:px-4"
         >
           <AtomsEmptyStateBox v-if="teams.length === 0" align="center" size="sm" root-class="mx-4 mb-4">
             Пока нет команд — составы появятся после подтверждения команд.
@@ -220,6 +220,7 @@
             :id="playedMatchesPanelId"
             role="region"
             :aria-labelledby="playedMatchesToggleId"
+            class="w-full min-w-0 border-t border-slate-200 px-3 pb-3 pt-1 dark:border-slate-700/60 sm:px-4"
           >
             <!-- В деталях и редакторе матча рейтинг не нужен — передаём версию без него. -->
             <OrganismsTournamentStepStandingsPlayedMatches
@@ -286,14 +287,8 @@
 <script setup lang="ts">
 import type { Player, MatchStatus } from '~/types/tournament'
 import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
-import { useTournamentStandingsRefactored } from '~/composables/useTournamentStandingsRefactored'
-import { useFinishTournament } from '~/composables/useFinishTournament'
-import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
-import { useAdminAuth } from '~/composables/useAdminAuth'
-import { TOURNAMENT_STATE_NUXT_KEY } from '~/composables/useTournamentState'
-import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
+import { useStepStandingsPage, type StepStandingsPageEmit } from '~/composables/useStepStandingsPage'
 
-// Этот шаг показывает матчи и турнирную таблицу.
 const props = defineProps<{
   tournamentName: string
   tournamentDate: string
@@ -303,36 +298,25 @@ const props = defineProps<{
   teamColors: Record<string, number>
   players: Player[]
   assignmentByPlayerId: Record<number, string>
-  // Начальный снапшот из куки — восстанавливает матчи и таблицу после обновления страницы.
   initialSnapshot?: SavedStandingsSnapshot | null
-  // Режим только чтения: одинаковый UI без действий управления.
   readonly?: boolean
-  // Данные для кнопки «Очистить данные» внутри блока Управление.
   showClearTournamentConfirm: boolean
   clearTournamentSecondsLeft: number
   clearTournamentBusy: boolean
-  /** Перед финализацией матча подтягиваем снапшот с сервера и сливаем отметки (несколько устройств). */
   fetchRemoteStandingsSnapshot?: () => Promise<SavedStandingsSnapshot | null>
 }>()
 
-// Simple10: Ограниченный админ (limited) не должен видеть панель таймера внизу.
-const { adminRole } = useAdminAuth()
-const hideCountdownTimerBar = computed(() => adminRole.value === 'limited')
-
 const emit = defineEmits<{
-  // Вызывается при каждом изменении матчей/таблицы — родитель сохраняет снапшот в куку.
   'update:snapshot': [snapshot: SavedStandingsSnapshot]
-  // Вызывается после успешного завершения турнира — родитель сбрасывает wizard.
   'tournament-finished': []
-  // Статус матча изменился — родитель (wizard) должен сохранить его в БД.
   'update:matchStatus': [status: MatchStatus, homeTeam: string, awayTeam: string]
-  // Пробрасываем события сброса турнира от MatchManagement наверх к index.vue.
   'clear-tournament': []
   'cancel-clear-tournament': []
   'confirm-clear-tournament': []
 }>()
 
 const {
+  hideCountdownTimerBar,
   effectiveTeamColors,
   teamMarker,
   standingsRows,
@@ -353,170 +337,31 @@ const {
   updatePlayedMatch,
   deletePlayedMatch,
   resetMatchStats,
-  resetTournamentMarks,
-  finishMatch,
-  goToNextMatch,
-  mergeCurrentMatchFromRemoteSnapshot,
   displayPlayerLabel,
+  displayPlayerLabelWithoutRating,
   aggregatePlayerStats,
   playerRatingDeltas,
-} = useTournamentStandingsRefactored(
-  {
-    teams: props.teams,
-    teamColors: props.teamColors,
-    players: props.players,
-    assignmentByPlayerId: props.assignmentByPlayerId,
-  },
-  {
-    // Передаём сохранённое состояние — composable восстановит таблицу и матчи из него.
-    initialSnapshot: props.initialSnapshot,
-    // Когда что-то меняется — сообщаем родителю, чтобы он сохранил в куку.
-    onSnapshot: (snapshot) => emit('update:snapshot', snapshot),
-  },
-)
-// Здесь подключаем логику турнира и достаём нужные refs/функции для UI.
-
-// id → фото и имя для аватаров в деталях сыгранного матча (там в матче только MarkedPlayer).
-const playerAvatarsById = computed(() => {
-  const out: Record<number, { photo: string | null; name: string }> = {}
-  for (const p of props.players) {
-    out[p.id] = { photo: p.photo ?? null, name: p.name }
-  }
-  return out
-})
-
-// В «Составах» убираем «⭐️ N», когда уже есть сыгранные матчи или выбрана пара команд (идёт матч).
-const hideBasePlayerRating = computed(
-  () =>
-    playedMatchesList.value.length > 0 || Boolean(homeTeam.value && awayTeam.value),
-)
-
-const standingsUid = useId?.() ?? Math.random().toString(36).slice(2)
-const standingsToggleId = `standings-block-toggle-${standingsUid}`
-const standingsPanelId = `standings-block-panel-${standingsUid}`
-const rosterTotalsToggleId = `roster-totals-toggle-${standingsUid}`
-const rosterTotalsPanelId = `roster-totals-panel-${standingsUid}`
-const playedMatchesToggleId = `played-matches-toggle-${standingsUid}`
-const playedMatchesPanelId = `played-matches-panel-${standingsUid}`
-
-// Для зрителя (readonly) турнирная таблица открыта сразу — основное видно без клика.
-const isStandingsBlockOpen = ref(props.readonly === true)
-// Составы и статистика — отдельная карточка, по умолчанию свёрнута.
-const isRosterTotalsOpen = ref(false)
-const isPlayedMatchesOpen = ref(false)
-
-async function handleUpdateHomeTeam(next: string) {
-  homeTeam.value = next
-  // Если обе команды выбраны — матч идёт сейчас. Иначе — ожидается.
-  if (homeTeam.value && awayTeam.value) {
-    emit('update:matchStatus', 'live', homeTeam.value, awayTeam.value)
-    // Сразу обновляем payload state — зритель без задержки увидит выбранную пару команд.
-    await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
-  } else {
-    emit('update:matchStatus', 'upcoming', '', '')
-  }
-}
-// Это обновляет домашнюю команду, когда пользователь меняет select в дочернем UI.
-
-async function handleUpdateAwayTeam(next: string) {
-  awayTeam.value = next
-  // Если обе команды выбраны — матч идёт сейчас. Иначе — ожидается.
-  if (homeTeam.value && awayTeam.value) {
-    emit('update:matchStatus', 'live', homeTeam.value, awayTeam.value)
-    // Сразу обновляем payload state — зритель без задержки увидит выбранную пару команд.
-    await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
-  } else {
-    emit('update:matchStatus', 'upcoming', '', '')
-  }
-}
-// Это обновляет гостевую команду, когда пользователь меняет select в дочернем UI.
-
-async function pullRemoteMarksIntoCurrentMatch() {
-  if (!props.fetchRemoteStandingsSnapshot) return
-  try {
-    const remote = await props.fetchRemoteStandingsSnapshot()
-    mergeCurrentMatchFromRemoteSnapshot(remote)
-  } catch {
-    /* сеть: финализируем хотя бы локальные отметки */
-  }
-}
-
-/** Полный админ: зритель видит статус «завершён» и экран итогов матча. */
-async function handleFinishMatchShowResults() {
-  await pullRemoteMarksIntoCurrentMatch()
-  // Ставим статус finished ДО сброса команд внутри finishMatch(), чтобы зритель успел увидеть «Завершён».
-  if (homeTeam.value && awayTeam.value) {
-    emit('update:matchStatus', 'finished', homeTeam.value, awayTeam.value)
-  } else {
-    emit('update:matchStatus', 'finished', '', '')
-  }
-  finishMatch()
-  // Сразу отдаём зрителю результат матча — не ждём очередного поллинга.
-  await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
-}
-
-/** Судья: матч записывается в историю, зритель остаётся без экрана «итоги» (без matchStatus finished). */
-async function handleFinishMatchSilent() {
-  await pullRemoteMarksIntoCurrentMatch()
-  finishMatch()
-  emit('update:matchStatus', 'upcoming', '', '')
-  await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
-}
-
-async function handleResetTournamentMarks() {
-  // Simple10: Сбрасываем результаты и отметки, но не трогаем команды/игроков турнира.
-  resetTournamentMarks()
-  emit('update:matchStatus', 'upcoming', '', '')
-  // Simple10: Сразу обновляем payload state — зритель увидит сброс без ожидания поллинга.
-  await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
-}
-// Этот обработчик централизует статус: после нажатия «Завершить матч» он остаётся finished,
-// даже если админский UI очищает выбранные команды.
-
-async function handleGoToNextMatch() {
-  await pullRemoteMarksIntoCurrentMatch()
-  // Переходим к следующему матчу (может автоматически завершить текущий).
-  goToNextMatch()
-  // После подбора следующей пары проверяем команды и обновляем статус для зрителя.
-  if (homeTeam.value && awayTeam.value) {
-    emit('update:matchStatus', 'live', homeTeam.value, awayTeam.value)
-  } else {
-    emit('update:matchStatus', 'upcoming', '', '')
-  }
-  // Сразу показываем зрителю новую пару команд — не ждём поллинга.
-  await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
-}
-// Этот обработчик даёт зрителю максимально актуальный статус после «Следующий матч».
-
-// Подключаем логику завершения турнира.
-// toRef нужен чтобы передать props-поля как реактивные Ref — composable ожидает Ref<T>.
-const {
-  finishTournament,
-  status: finishStatus,
-  errorMessage: finishErrorMessage,
-} = useFinishTournament({
-  players: props.players,
-  assignmentByPlayerId: props.assignmentByPlayerId,
-  standingsRows,
-  aggregatePlayerStats,
-  playerRatingDeltas,
-  playedMatchesList,
-  tournamentName: toRef(props, 'tournamentName'),
-  tournamentDate: toRef(props, 'tournamentDate'),
-  venueLabel: toRef(props, 'venueLabel') as Ref<string>,
-  formatLabel: toRef(props, 'formatLabel') as Ref<string>,
-  standingsSnapshot: toRef(props, 'initialSnapshot') as Ref<import('~/composables/useTournamentWizard').SavedStandingsSnapshot | null>,
-  teamColors: toRef(props, 'teamColors'),
-})
-
-async function handleFinishTournament() {
-  await finishTournament()
-  // После успешного завершения турнира переводим статус в finished и сообщаем родителю.
-  if (finishStatus.value === 'success') {
-    emit('update:matchStatus', 'finished', '', '')
-    emit('tournament-finished')
-    // Обновление кэша state выполняет родитель (сохранение finished → сброс мастера).
-  }
-}
+  playerAvatarsById,
+  hideBasePlayerRating,
+  standingsToggleId,
+  standingsPanelId,
+  rosterTotalsToggleId,
+  rosterTotalsPanelId,
+  playedMatchesToggleId,
+  playedMatchesPanelId,
+  isStandingsBlockOpen,
+  isRosterTotalsOpen,
+  isPlayedMatchesOpen,
+  finishStatus,
+  finishErrorMessage,
+  handleUpdateHomeTeam,
+  handleUpdateAwayTeam,
+  handleFinishMatchShowResults,
+  handleFinishMatchSilent,
+  handleResetTournamentMarks,
+  handleGoToNextMatch,
+  handleFinishTournament,
+  scrollExpandedPanelIntoView,
+} = useStepStandingsPage(props, emit as StepStandingsPageEmit)
 </script>
 
