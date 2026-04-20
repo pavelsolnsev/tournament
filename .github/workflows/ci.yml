@@ -1,4 +1,5 @@
 # Линт, типы, тесты и production-сборка на каждый push/PR.
+# На push в master полную сборку не дублируем: тот же commit уже собирает deploy-vps.yml (меньше минут и денег в Actions).
 name: CI
 
 on:
@@ -30,5 +31,7 @@ jobs:
       - name: Unit tests
         run: yarn test --run
 
+      # На master push сборка только в Deploy Nuxt to VPS — иначе два полных build подряд на один коммит.
       - name: Production build
+        if: github.event_name == 'pull_request' || github.ref != 'refs/heads/master'
         run: yarn build
