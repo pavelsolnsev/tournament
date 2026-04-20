@@ -1,11 +1,14 @@
-# Линт, типы, тесты и production-сборка на каждый push/PR.
-# На push в master полную сборку не дублируем: тот же commit уже собирает deploy-vps.yml (меньше минут и денег в Actions).
+# Линт, типы, тесты и production-сборка.
+# Push в master не триггерит CI — на мерже в master запускается только deploy-vps.yml (один workflow на коммит).
+# Проверки перед мерджем идут через pull_request.
 name: CI
 
 on:
-  push:
-    branches: [main, master]
   pull_request:
+  push:
+    branches-ignore:
+      - master
+      - main
 
 jobs:
   qa:
@@ -31,7 +34,5 @@ jobs:
       - name: Unit tests
         run: yarn test --run
 
-      # На master push сборка только в Deploy Nuxt to VPS — иначе два полных build подряд на один коммит.
       - name: Production build
-        if: github.event_name == 'pull_request' || github.ref != 'refs/heads/master'
         run: yarn build
