@@ -2,6 +2,7 @@ import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
 import { readVkListClosePending } from '../../utils/vkListCloseRequest'
+import { readVkStartRequested } from '../../utils/vkStartRequest'
 
 const LINK_KEY = 'tournament_vk_link'
 const TOURNAMENT_KEY = 'tournament'
@@ -68,6 +69,7 @@ export default defineEventHandler(async (event) => {
   requireVkBotToken(event)
 
   const closeVkListRequested = await readVkListClosePending()
+  const startVkRequested = await readVkStartRequested()
 
   const stateRows = await queryWithRetry<Array<{ value: string }>>(
     'SELECT value FROM app_state WHERE key_name = ?',
@@ -81,20 +83,20 @@ export default defineEventHandler(async (event) => {
   )
 
   if (linkRows.length === 0 || !linkRows[0]?.value) {
-    return { linked: false, closeVkListRequested }
+    return { linked: false, closeVkListRequested, startVkRequested }
   }
 
   let link: LinkJson
   try {
     link = JSON.parse(linkRows[0].value) as LinkJson
   } catch {
-    return { linked: false, closeVkListRequested }
+    return { linked: false, closeVkListRequested, startVkRequested }
   }
 
   const peerId = Number(link.peerId)
   const gameEventId = typeof link.gameEventId === 'string' ? link.gameEventId.trim() : ''
   if (!peerId || !Number.isFinite(peerId) || !gameEventId) {
-    return { linked: false, closeVkListRequested }
+    return { linked: false, closeVkListRequested, startVkRequested }
   }
 
   const { selectedIds, matchStatus, liveHomeTeam, liveAwayTeam, vkMuted } = parsed
@@ -106,6 +108,7 @@ export default defineEventHandler(async (event) => {
       gameEventId,
       rosterVkUserIds: [] as number[],
       closeVkListRequested,
+      startVkRequested,
       matchStatus,
       liveHomeTeam,
       liveAwayTeam,
@@ -140,6 +143,7 @@ export default defineEventHandler(async (event) => {
     gameEventId,
     rosterVkUserIds,
     closeVkListRequested,
+    startVkRequested,
     matchStatus,
     liveHomeTeam,
     liveAwayTeam,

@@ -16,7 +16,16 @@
         :id="dateInputId"
         type="date"
         :value="tournamentDate"
-        class="rounded-lg border border-slate-300 dark:border-slate-700/60 bg-white dark:bg-slate-800/40 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 transition-colors focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+        class="min-h-[2.75rem] w-full cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium tabular-nums text-slate-800 transition-colors
+               hover:border-slate-400
+               focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20
+               dark:border-slate-700/60 dark:bg-slate-800/40 dark:text-slate-100 dark:scheme-dark
+               dark:hover:border-slate-600
+               scheme-light
+               [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-70
+               hover:[&::-webkit-calendar-picker-indicator]:opacity-100
+               dark:[&::-webkit-calendar-picker-indicator]:opacity-80 dark:hover:[&::-webkit-calendar-picker-indicator]:opacity-100
+               dark:[&::-webkit-calendar-picker-indicator]:invert"
         @input="emit('update:tournamentDate', ($event.target as HTMLInputElement).value)"
       />
     </div>

@@ -31,3 +31,16 @@
   }
 }
 
+/* Спиннер загрузки: явные keyframes; в тёмной теме без dark:border-t-emerald верхняя грань сливалась с кольцом. */
+@keyframes app-loader-ring {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@layer utilities {
+  .app-loader-ring {
+    animation: app-loader-ring 0.9s linear infinite;
+  }
+}
+

@@ -18,6 +18,8 @@ export type TournamentStateSyncApi = {
   isLoading: Ref<boolean>
   saveTournamentState: (state: SavedTournamentContext) => void
   saveTournamentStateNow: (state: SavedTournamentContext) => Promise<void>
+  /** Сбрасывает отложенный PUT (debounce) — нужен перед полным сбросом и при синхронизации с другой вкладкой. */
+  cancelPendingSave: () => void
 }
 
 export function useTournamentState() {
@@ -46,6 +48,13 @@ export function useTournamentState() {
     pollTimer = setInterval(() => {
       void refresh()
     }, interval)
+  }
+
+  function cancelPendingSave() {
+    if (saveTimer) {
+      clearTimeout(saveTimer)
+      saveTimer = null
+    }
   }
 
   function syncPoll() {
@@ -79,10 +88,7 @@ export function useTournamentState() {
 
   onUnmounted(() => {
     stopPoll()
-    if (saveTimer) {
-      clearTimeout(saveTimer)
-      saveTimer = null
-    }
+    cancelPendingSave()
   })
 
   // Проверяем куку admin_session на клиенте — не делаем PUT если пользователь не администратор.
@@ -97,7 +103,7 @@ export function useTournamentState() {
   }
 
   function saveTournamentState(state: SavedTournamentContext) {
-    if (saveTimer) clearTimeout(saveTimer)
+    cancelPendingSave()
 
     saveTimer = setTimeout(async () => {
       if (!isAdmin()) return
@@ -115,11 +121,10 @@ export function useTournamentState() {
   }
 
   async function saveTournamentStateNow(state: SavedTournamentContext) {
-    if (saveTimer) {
-      clearTimeout(saveTimer)
-      saveTimer = null
+    cancelPendingSave()
+    if (!isAdmin()) {
+      throw new Error('Tournament state: admin session required')
     }
-    if (!isAdmin()) return
     try {
       await $fetch('/api/tournament/state', {
         method: 'PUT',
@@ -128,6 +133,7 @@ export function useTournamentState() {
       await refresh()
     } catch (err) {
       console.error('Failed to save tournament state (immediate):', err)
+      throw err
     }
   }
 
@@ -136,6 +142,7 @@ export function useTournamentState() {
     isLoading: pending,
     saveTournamentState,
     saveTournamentStateNow,
+    cancelPendingSave,
     refresh,
   }
 }

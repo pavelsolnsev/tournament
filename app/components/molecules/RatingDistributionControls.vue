@@ -2,23 +2,66 @@
 <!-- Шаг 1: список свободных игроков + кнопка-триггер.                -->
 <!-- Шаг 2: выбор количества команд + подтверждение.                   -->
 <template>
-  <div class="rounded-xl bg-slate-100 dark:bg-slate-800/50 p-3 sm:px-4 sm:py-3">
+  <div
+    class="rounded-xl border border-slate-200/90 bg-slate-100 p-3 shadow-sm dark:border-slate-700/60 dark:bg-slate-800/50 dark:shadow-none sm:px-4 sm:py-3.5"
+    :class="
+      open || freePlayers.length === 0
+        ? 'ring-1 ring-emerald-500/15 dark:ring-emerald-500/10'
+        : ''
+    "
+  >
 
     <!-- ─── Шаг 1: список свободных игроков ─── -->
     <template v-if="!open">
 
-      <!-- Заголовок -->
-      <span class="text-sm font-medium text-slate-600 dark:text-slate-300">
-        <template v-if="freePlayers.length > 0">
+      <!-- Есть свободные — заголовок + чипы -->
+      <template v-if="freePlayers.length > 0">
+        <span class="text-sm font-medium text-slate-600 dark:text-slate-300">
           Свободные игроки
           <span class="ml-1 rounded bg-slate-200 dark:bg-slate-700/80 px-1.5 py-0.5 text-xs tabular-nums text-slate-600 dark:text-slate-400">
             {{ freePlayers.length }}
           </span>
-        </template>
-        <template v-else>
-          <span class="text-slate-600 dark:text-slate-500">Все игроки распределены</span>
-        </template>
-      </span>
+        </span>
+      </template>
+
+      <!-- Никого свободно — компактный статус + кнопка -->
+      <div
+        v-else
+        class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+      >
+        <div class="flex min-w-0 items-center gap-3">
+          <span
+            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
+            aria-hidden="true"
+          >
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          </span>
+          <div class="min-w-0">
+            <p class="text-sm font-semibold leading-tight text-slate-800 dark:text-slate-100">
+              Все игроки распределены
+            </p>
+            <p class="mt-0.5 text-xs leading-snug text-slate-500 dark:text-slate-400">
+              Появятся свободные игроки — снова можно будет распределить по рейтингу.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          disabled
+          title="Нет свободных игроков для распределения"
+          class="flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors
+                 border-slate-300/90 bg-white text-slate-400 shadow-none
+                 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-500
+                 sm:w-auto sm:min-w-[10.5rem]"
+          aria-disabled="true"
+        >
+          <span aria-hidden="true" class="text-base leading-none opacity-60">⚡</span>
+          По рейтингу
+        </button>
+      </div>
 
       <!-- Чипы свободных игроков -->
       <ul
@@ -53,12 +96,10 @@
         </li>
       </ul>
 
-      <!-- Кнопка-триггер — под игроками, во всю ширину.
-           В светлой теме: насыщенный зелёный текст на слабом зелёном фоне — контраст достаточный.
-           В тёмной теме: text-emerald-300 как раньше. -->
+      <!-- Кнопка-триггер — только если есть свободные (без них — отдельный блок выше). -->
       <button
+        v-if="freePlayers.length > 0"
         type="button"
-        :disabled="freePlayers.length === 0"
         title="Автоматически распределить по рейтингу"
         class="flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-5 text-sm font-semibold
                transition-colors
@@ -68,8 +109,7 @@
                dark:border-emerald-500/60 dark:bg-emerald-500/10 dark:text-emerald-300
                dark:hover:border-emerald-500 dark:hover:bg-emerald-500/20 dark:hover:text-emerald-200
                dark:active:bg-emerald-500/30
-               focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50
-               disabled:cursor-not-allowed disabled:opacity-40"
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
         @click="open = true"
       >
         <span aria-hidden="true" class="text-base leading-none">⚡</span>
@@ -79,61 +119,84 @@
 
     <!-- ─── Шаг 2: выбор количества команд ─── -->
     <template v-else>
-      <p class="mb-3 text-sm font-medium text-slate-700 dark:text-slate-200">На сколько команд делим?</p>
-
-      <!-- Три карточки 2 / 3 / 4 — всегда 3 колонки, на мобиле чуть меньше паддинг -->
-      <div class="mb-3 grid grid-cols-3 gap-2" role="group" aria-label="Количество команд">
-        <button
-          v-for="n in [2, 3, 4]"
-          :key="n"
-          type="button"
-          class="flex flex-col items-center gap-0.5 rounded-xl border py-3 transition-colors
-                 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-          :class="
-            modelValue === n
-              ? 'border-emerald-500/60 bg-emerald-500/10'
-              : 'border-slate-300 dark:border-slate-700/60 bg-white dark:bg-slate-900/40 md:hover:border-slate-400 dark:md:hover:border-slate-600 md:hover:bg-slate-50 dark:md:hover:bg-slate-800/60'
-          "
-          :aria-pressed="modelValue === n"
-          @click="emit('update:modelValue', n)"
-        >
-          <!-- Цифра -->
+      <div class="flex flex-col gap-4">
+        <div class="flex gap-3">
           <span
-            class="text-2xl font-bold leading-none"
-            :class="modelValue === n ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-200'"
+            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
+            aria-hidden="true"
           >
-            {{ n }}
+            <span class="text-lg leading-none">⚡</span>
           </span>
-          <!-- ~N игр/к — не переносится, уменьшается вместе с экраном -->
-          <span class="mt-0.5 text-[11px] font-normal text-slate-600 dark:text-slate-400">
-            ~{{ Math.ceil(freePlayers.length / n) }}&nbsp;игр/к
-          </span>
-        </button>
-      </div>
+          <div class="min-w-0">
+            <h3 class="text-base font-semibold leading-tight text-slate-800 dark:text-slate-100">
+              На сколько команд делим?
+            </h3>
+            <p class="mt-1 text-xs leading-snug text-slate-500 dark:text-slate-400">
+              В распределении {{ freePlayers.length }} чел. — в карточках примерно игр на команду.
+            </p>
+          </div>
+        </div>
 
-      <!-- Кнопки: Отмена + Распределить — во всю ширину, стек на очень узких -->
-      <div class="flex flex-col gap-2 sm:flex-row">
-        <button
-          type="button"
-          class="min-h-[2.75rem] flex-1 rounded-xl border border-slate-300 dark:border-slate-700/60 px-4 text-sm font-medium text-slate-600 dark:text-slate-400
-                 transition-colors md:hover:border-slate-400 dark:md:hover:border-slate-600 md:hover:text-slate-700 dark:md:hover:text-slate-200
-                 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40"
-          @click="open = false"
+        <div
+          class="grid grid-cols-3 gap-2.5 sm:gap-3"
+          role="group"
+          aria-label="Количество команд"
         >
-          Отмена
-        </button>
+          <button
+            v-for="n in [2, 3, 4]"
+            :key="n"
+            type="button"
+            class="flex min-h-[4.75rem] flex-col items-center justify-center gap-1 rounded-xl border px-1 py-3 transition-colors
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100 dark:focus-visible:ring-offset-slate-800"
+            :class="
+              modelValue === n
+                ? 'border-emerald-500/70 bg-emerald-500/15 shadow-sm ring-1 ring-emerald-500/30 dark:bg-emerald-500/20 dark:ring-emerald-500/25'
+                : 'border-slate-200/90 bg-white/90 dark:border-slate-600/70 dark:bg-slate-900/50 md:hover:border-slate-300 dark:md:hover:border-slate-500 md:hover:bg-slate-50/90 dark:md:hover:bg-slate-800/70'
+            "
+            :aria-pressed="modelValue === n"
+            @click="emit('update:modelValue', n)"
+          >
+            <span
+              class="text-2xl font-bold tabular-nums leading-none"
+              :class="modelValue === n ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-800 dark:text-slate-100'"
+            >
+              {{ n }}
+            </span>
+            <span
+              class="text-[11px] font-medium leading-tight text-slate-500 dark:text-slate-400"
+              :class="modelValue === n && 'text-emerald-700/90 dark:text-emerald-400/90'"
+            >
+              ~{{ Math.ceil(freePlayers.length / n) }}&nbsp;игр/к
+            </span>
+          </button>
+        </div>
 
-        <button
-          type="button"
-          class="min-h-[2.75rem] flex-[2] rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-white dark:text-slate-900
-                 transition-colors md:hover:bg-emerald-400 active:bg-emerald-600
-                 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-          @click="onConfirm"
+        <div
+          class="flex flex-col gap-2.5 border-t border-slate-200/80 pt-4 dark:border-slate-600/60 sm:flex-row sm:items-stretch sm:gap-3"
         >
-          <!-- На узком экране текст короче -->
-          <span class="sm:hidden">Распределить ({{ modelValue }})</span>
-          <span class="hidden sm:inline">Распределить на {{ modelValue }}</span>
-        </button>
+          <button
+            type="button"
+            class="order-2 min-h-[2.75rem] flex-1 rounded-xl border border-slate-300/90 bg-white/80 px-4 text-sm font-medium text-slate-600 transition-colors
+                   dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-300
+                   md:hover:border-slate-400 dark:md:hover:border-slate-500 md:hover:bg-slate-50 dark:md:hover:bg-slate-800/80 md:hover:text-slate-800 dark:md:hover:text-slate-100
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/40 sm:order-1"
+            @click="open = false"
+          >
+            Отмена
+          </button>
+
+          <button
+            type="button"
+            class="order-1 min-h-[2.75rem] flex-[2] rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-white shadow-sm transition-colors
+                   dark:text-slate-900 dark:shadow-emerald-950/20
+                   md:hover:bg-emerald-400 active:bg-emerald-600 dark:md:hover:bg-emerald-400
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100 dark:focus-visible:ring-offset-slate-800 sm:order-2"
+            @click="onConfirm"
+          >
+            <span class="sm:hidden">Распределить ({{ modelValue }})</span>
+            <span class="hidden sm:inline">Распределить на {{ modelValue }}</span>
+          </button>
+        </div>
       </div>
     </template>
   </div>

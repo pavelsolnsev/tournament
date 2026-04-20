@@ -76,7 +76,10 @@
 
       <!-- Загрузка — спиннер пока данные ещё не пришли. -->
       <div v-if="isLoading" class="flex items-center gap-3 py-2 text-sm text-slate-600 dark:text-slate-500">
-        <span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-slate-300 dark:border-slate-700 border-t-emerald-500" aria-hidden="true" />
+        <span
+          class="app-loader-ring inline-block h-5 w-5 rounded-full border-2 border-slate-300 border-t-emerald-500 dark:border-slate-700 dark:border-t-emerald-400"
+          aria-hidden="true"
+        />
         Загружаем пожелания…
       </div>
 

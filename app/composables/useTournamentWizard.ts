@@ -6,7 +6,11 @@ import { useTeamAssignment } from '~/composables/useTeamAssignment'
 import type { TournamentStateSyncApi } from '~/composables/useTournamentState'
 import { dedupeTeamNamesPreservingOrder, normalizeTeamColorsMap } from '~/utils/teamNames'
 import type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
-import { applyLoadedContext, selectedIdsFingerprint } from '~/composables/tournament-wizard/applyServerContext'
+import {
+  applyEmptyTournamentContextLocal,
+  applyLoadedContext,
+  selectedIdsFingerprint,
+} from '~/composables/tournament-wizard/applyServerContext'
 
 export type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
 
@@ -91,7 +95,23 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   const stateRestored = ref(false)
   const lastAppliedSelectedIdsKey = ref('')
 
-  const { serverState, isLoading, saveTournamentState, saveTournamentStateNow } = stateSync
+  const { serverState, isLoading, saveTournamentState, saveTournamentStateNow, cancelPendingSave } = stateSync
+
+  const emptyResetState = (): SavedTournamentContext => ({
+    step: 0,
+    tournamentName: '',
+    tournamentDate: '',
+    venueLabel: '',
+    formatLabel: '',
+    selectedIds: [],
+    assignmentByPlayerId: {},
+    confirmedTeamNames: [],
+    teamColors: {},
+    standingsSnapshot: null,
+    matchStatus: 'upcoming',
+    liveHomeTeam: '',
+    liveAwayTeam: '',
+  })
 
   const serverContextDeps = computed(() => ({
     lastAppliedSelectedIdsKey,
@@ -201,43 +221,14 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   }
 
   async function resetWizard() {
-    step.value = 0
-    tournamentName.value = ''
-    tournamentDate.value = ''
-
-    selectedIds.value = new Set()
-    playerSearch.value = ''
-
-    assignment.assignment.value = {}
-    assignment.confirmedTeamNames.value = new Set()
-    assignment.teamColors.value = {}
-    assignment.newTeamNames.value = []
-    assignment.newTeamName.value = ''
-
-    standingsSnapshot.value = null
-
-    matchStatus.value = 'upcoming'
-    liveHomeTeam.value = ''
-    liveAwayTeam.value = ''
-
-    venueLabel.value = ''
-    formatLabel.value = ''
-
-    await saveTournamentStateNow({
-      step: 0,
-      tournamentName: '',
-      tournamentDate: '',
-      venueLabel: '',
-      formatLabel: '',
-      selectedIds: [],
-      assignmentByPlayerId: {},
-      confirmedTeamNames: [],
-      teamColors: {},
-      standingsSnapshot: null,
-      matchStatus: 'upcoming',
-      liveHomeTeam: '',
-      liveAwayTeam: '',
-    })
+    // Сначала отменяем отложенный PUT — иначе через ~800мс в БД улетит старый снимок и перетрёт очистку.
+    cancelPendingSave()
+    await saveTournamentStateNow(emptyResetState())
+    if (stateRestored.value) {
+      reapplyFromServer()
+    } else {
+      applyEmptyTournamentContextLocal(serverContextDeps.value)
+    }
   }
 
   async function saveCurrentTournamentStateNow() {

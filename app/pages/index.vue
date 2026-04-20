@@ -48,7 +48,10 @@
           <main class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 sm:px-6 pt-[calc(theme(spacing.14)+env(safe-area-inset-top))]">
             <!-- До onMounted держим тот же узел, что на SSR: иначе pending useFetch на сервере и payload на клиенте дают разный v-if и ломают гидрацию. -->
             <div v-if="!adminClientShellReady || !wizard.stateRestored.value" class="flex flex-1 items-center justify-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-              <div class="h-9 w-9 shrink-0 animate-spin rounded-full border-2 border-slate-300 dark:border-slate-700 border-t-emerald-500" />
+              <div
+                class="app-loader-ring h-9 w-9 shrink-0 rounded-full border-2 border-slate-300 border-t-emerald-500 dark:border-slate-700 dark:border-t-emerald-400"
+                aria-hidden="true"
+              />
               <span>Загрузка…</span>
             </div>
 
@@ -93,6 +96,8 @@
                 <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-50 sm:text-3xl">
                   {{ wizard.step.value === 0 ? 'Выберите игроков' : 'Команды' }}
                 </h1>
+
+                <OrganismsTournamentVkStartFromSiteCard :show="wizard.step.value === 0" />
 
                 <OrganismsTournamentStepTeams
                   v-if="wizard.step.value === 1"
@@ -217,6 +222,7 @@ import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTournamentWizard } from '~/composables/useTournamentWizard'
 import { TOURNAMENT_STATE_NUXT_KEY, useTournamentState } from '~/composables/useTournamentState'
 import { reloadWithScrollRestore } from '~/utils/reloadWithScrollRestore'
+import { isTournamentVisuallyCleared } from '~/utils/tournamentClearVerify'
 
 definePageMeta({ layout: 'landing' })
 
@@ -285,6 +291,7 @@ const wizard = useTournamentWizard({
   isLoading: tournamentState.isLoading,
   saveTournamentState: tournamentState.saveTournamentState,
   saveTournamentStateNow: tournamentState.saveTournamentStateNow,
+  cancelPendingSave: tournamentState.cancelPendingSave,
 })
 
 const viewerState = computed(() => tournamentState.serverState.value)
@@ -299,6 +306,8 @@ function onAdminVisibilitySync() {
 // Обновляем кэш Nuxt и перезаливаем refs мастера из serverState — без этого вторая вкладка остаёт со старым UI.
 async function syncWizardFromServerAfterExternalChange() {
   if (!isAdmin.value) return
+  // Иначе отложенный PUT этой вкладки может перезаписать то, что только что сделала другая.
+  tournamentState.cancelPendingSave()
   await tournamentState.refresh()
   await nextTick()
   wizard.reapplyFromServer()
@@ -388,23 +397,32 @@ function cancelClearTournament() {
 async function confirmClearTournament() {
   clearTournamentBusy.value = true
   clearTournamentError.value = null
+  const maxAttempts = 5
+  let lastError: unknown
   try {
-    // Simple10: Иногда очистка может не пройти с первого раза (сеть/таймаут). Делаем одну попытку повтора.
-    try {
-      await wizard.resetWizard()
-    } catch (e) {
-      // Simple10: В dev выводим реальную ошибку, чтобы понять почему не очистилось.
-      if (import.meta.dev) console.error('[clear-tournament] resetWizard failed (first try):', e)
-      await new Promise((r) => setTimeout(r, 500))
-      await wizard.resetWizard()
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        tournamentState.cancelPendingSave()
+        await wizard.resetWizard()
+        await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
+        await tournamentState.refresh()
+        await nextTick()
+        if (!isTournamentVisuallyCleared(tournamentState.serverState.value)) {
+          throw new Error('clear-verify: server state not empty after reset')
+        }
+        broadcastAdminTournamentStateChanged()
+        showClearTournamentConfirm.value = false
+        lastError = undefined
+        break
+      } catch (e) {
+        lastError = e
+        if (import.meta.dev) console.error(`[clear-tournament] attempt ${attempt}/${maxAttempts}:`, e)
+        if (attempt < maxAttempts) await new Promise((r) => setTimeout(r, 180 * attempt))
+      }
     }
-    await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
-    broadcastAdminTournamentStateChanged()
-    showClearTournamentConfirm.value = false
-  } catch (e) {
-    // Simple10: Если очистка не удалась — оставляем панель открытой и показываем короткую ошибку.
-    if (import.meta.dev) console.error('[clear-tournament] failed:', e)
-    clearTournamentError.value = 'Не удалось очистить данные. Попробуйте ещё раз.'
+    if (lastError != null) {
+      clearTournamentError.value = 'Не удалось очистить данные. Попробуйте ещё раз.'
+    }
   } finally {
     clearTournamentBusy.value = false
   }
