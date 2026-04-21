@@ -4,7 +4,8 @@
     :class="[
       rootClass,
       splitActions
-        ? 'grid grid-cols-[auto,1fr,3.75rem,auto] items-stretch gap-2 sm:gap-2.5 sm:py-1.5'
+        // На узких экранах переносим кнопки на 2-ю строку, чтобы они никогда не «выпирали» за границы li (в т.ч. в Safari/Firefox).
+        ? 'grid min-w-0 grid-cols-[auto,minmax(0,1fr),3.25rem] items-center gap-2 sm:gap-2.5 sm:py-1.5 sm:grid-cols-[auto,minmax(0,1fr),3.75rem,auto]'
         : 'flex items-center gap-2 sm:gap-2.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 md:hover:bg-slate-100 dark:md:hover:bg-slate-700/60 active:scale-[0.99]',
     ]"
     :role="splitActions ? 'listitem' : 'button'"
@@ -26,7 +27,7 @@
         {{ label }}
       </span>
       <span
-        class="shrink-0 self-center w-[3.75rem] text-right whitespace-nowrap text-sm font-medium leading-tight text-slate-800 dark:text-slate-100 tabular-nums"
+        class="shrink-0 self-center w-[3.25rem] sm:w-[3.75rem] text-right whitespace-nowrap text-sm font-medium leading-tight text-slate-800 dark:text-slate-100 tabular-nums"
         aria-label="Рейтинг"
       >
         {{ rating ?? '' }}
@@ -49,11 +50,11 @@
     <!-- Выбранные в турнире: отдельные кнопки — не кликать по всей строке. -->
     <div
       v-if="splitActions"
-      class="flex shrink-0 self-stretch items-center justify-end gap-1 border-l border-slate-200/90 pl-2 dark:border-slate-600/70"
+      class="col-span-3 flex min-w-0 items-center justify-end gap-1 pt-1 sm:col-span-1 sm:pt-0 sm:self-stretch sm:border-l sm:border-slate-200/90 sm:pl-2 dark:sm:border-slate-600/70"
     >
       <button
         type="button"
-        class="inline-flex min-h-9 w-[5.25rem] touch-manipulation items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+        class="inline-flex min-h-9 min-w-[3.5rem] px-2 touch-manipulation items-center justify-center rounded-lg text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:min-w-[5.25rem]"
         :class="playerPaid
           ? 'bg-emerald-500/20 text-emerald-900 ring-1 ring-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-200 dark:ring-emerald-400/35'
           : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:bg-slate-800'"
@@ -62,7 +63,8 @@
         :title="playerPaid ? 'Снять отметку оплаты' : 'Отметить оплату'"
         @click.stop.prevent="emit('togglePaid')"
       >
-        {{ playerPaid ? 'Оплачено' : 'Оплата' }}
+        <span class="sm:hidden">{{ playerPaid ? 'Опл.' : '₽' }}</span>
+        <span class="hidden sm:inline">{{ playerPaid ? 'Оплачено' : 'Оплата' }}</span>
       </button>
       <button
         type="button"

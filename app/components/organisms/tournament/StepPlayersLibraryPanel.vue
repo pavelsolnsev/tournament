@@ -69,7 +69,7 @@
         <!-- Строка игрока с двумя кнопками: добавить в турнир и удалить из базы. -->
         <div class="flex min-w-0 items-center gap-1">
           <MoleculesPlayerListRow
-            class="flex-1"
+            class="min-w-0 flex-1"
             v-bind="libraryPlayerRowBind(p)"
             action="add"
             @activate="emit('selectPlayer', p.id)"
