@@ -1,4 +1,9 @@
 // Отметка оплаты на шаге «Игроки» + поллинг state, чтобы изменения из ВК подтягивались.
+// Simple10: Поллинг реже, чем раньше — на 3G лишние GET /api/tournament/state бьют по скорости.
+// Плюс не даём двум событиям (таймер + вкладка + BroadcastChannel) дернуть sync подряд без паузы.
+const PAID_SYNC_POLL_MS = 45_000
+const PAID_SYNC_MIN_GAP_MS = 1_500
+
 export function useAdminTournamentPlayerPaidSync(opts: {
   wizard: {
     paidPlayerIds: Ref<Set<number>>
@@ -18,6 +23,22 @@ export function useAdminTournamentPlayerPaidSync(opts: {
   }
 
   let pollTimer: ReturnType<typeof setInterval> | null = null
+  let syncInFlight = false
+  let lastSyncAt = 0
+
+  async function runPaidSyncThrottled() {
+    const now = Date.now()
+    if (syncInFlight) return
+    if (now - lastSyncAt < PAID_SYNC_MIN_GAP_MS) return
+    syncInFlight = true
+    lastSyncAt = now
+    try {
+      await opts.syncWizardFromServerAfterExternalChange()
+    } finally {
+      syncInFlight = false
+    }
+  }
+
   function clearPoll() {
     if (pollTimer) {
       clearInterval(pollTimer)
@@ -29,8 +50,8 @@ export function useAdminTournamentPlayerPaidSync(opts: {
     clearPoll()
     if (!opts.isAdmin.value || opts.isLimitedAdmin.value || opts.wizard.step.value !== 0) return
     pollTimer = setInterval(() => {
-      void opts.syncWizardFromServerAfterExternalChange()
-    }, 15_000)
+      void runPaidSyncThrottled()
+    }, PAID_SYNC_POLL_MS)
   }
   watch(
     () => [opts.isAdmin.value, opts.isLimitedAdmin.value, opts.wizard.step.value] as const,

@@ -5,13 +5,17 @@
     role="img"
     :aria-label="ariaLabel"
   >
-    <img
-      v-if="src && !imageBroken"
-      :src="src"
-      alt=""
-      class="h-full w-full object-cover"
-      @error="onImgError"
-    />
+    <picture v-if="src && !imageBroken" class="h-full w-full">
+      <source v-if="webpSrc" :srcset="webpSrc" type="image/webp" />
+      <img
+        :src="src"
+        alt=""
+        class="h-full w-full object-cover"
+        loading="lazy"
+        decoding="async"
+        @error="onImgError"
+      />
+    </picture>
     <span
       v-else
       class="select-none font-semibold uppercase leading-none"
@@ -21,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { playerPhotoPublicUrl } from '~/utils/playerPhotoUrl'
+import { playerPhotoPublicUrl, playerPhotoWebpPublicUrl } from '~/utils/playerPhotoUrl'
 
 const props = defineProps<{
   /** Имя файла из БД (колонка photo), без папок. */
@@ -51,6 +55,7 @@ const initialsSizeClass = computed(() => {
 })
 
 const src = computed(() => playerPhotoPublicUrl(props.photo))
+const webpSrc = computed(() => playerPhotoWebpPublicUrl(props.photo))
 
 const imageBroken = ref(false)
 
