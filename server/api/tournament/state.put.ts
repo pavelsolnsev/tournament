@@ -1,5 +1,11 @@
 import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
+import {
+  filterPaidToSelected,
+  parsePaidIds,
+  parseSelectedIds,
+  readTournamentStateRow,
+} from '../../utils/tournamentPaidPlayers'
 
 const TOURNAMENT_KEY = 'tournament'
 
@@ -25,6 +31,11 @@ export default defineEventHandler(async (event) => {
   // Флаг читает VK-бот (roster-snapshot): при true уведомления по составу/матчу не шлём.
   // Режим судьи (limited) должен вести себя как полный админ — уведомления в ВК включены.
   state.vkMuted = false
+  // Оплата (paidPlayerIds) меняется отдельными POST и из ВК — не затираем автосохранением мастера.
+  const prev = await readTournamentStateRow()
+  const preservedPaid = parsePaidIds(prev?.json.paidPlayerIds)
+  const newSelected = parseSelectedIds(state.selectedIds)
+  state.paidPlayerIds = filterPaidToSelected(preservedPaid, newSelected)
   const json = JSON.stringify(state)
 
   await queryWithRetry(

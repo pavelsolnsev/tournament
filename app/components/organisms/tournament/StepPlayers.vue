@@ -12,7 +12,7 @@
     />
 
     <!-- Правая колонка: выбранные игроки + блок место/формат -->
-    <div class="flex min-w-0 flex-col gap-4 lg:col-span-2">
+    <div class="flex min-w-0 flex-col gap-4 lg:col-span-3">
       <!-- Блок дата/место/формат — всё должно быть заполнено перед переходом к командам -->
       <OrganismsTournamentStepPlayersVenueFormat
         :venue-label="venueLabel"
@@ -26,8 +26,10 @@
       <OrganismsTournamentStepPlayersSelectedPanel
         :selected-players="selectedPlayers"
         :can-go-to-teams="canGoToTeams"
+        :paid-player-ids="paidPlayerIds"
         @remove-player="emit('removePlayer', $event)"
         @go-to-teams="emit('goToTeams')"
+        @toggle-player-paid="(id, paid) => emit('togglePlayerPaid', id, paid)"
       />
     </div>
   </div>
@@ -46,6 +48,7 @@ const props = defineProps<{
   venueLabel: string
   formatLabel: string
   tournamentDate: string
+  paidPlayerIds: Set<number>
 }>()
 
 const emit = defineEmits<{
@@ -57,6 +60,7 @@ const emit = defineEmits<{
   'update:tournamentDate': [value: string]
   refreshPlayers: []
   goToTeams: []
+  togglePlayerPaid: [playerId: number, paid: boolean]
 }>()
 
 // Переход к командам разрешён только если выбраны игроки, место и формат.

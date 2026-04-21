@@ -97,8 +97,6 @@
                   {{ wizard.step.value === 0 ? 'Выберите игроков' : 'Команды' }}
                 </h1>
 
-                <OrganismsTournamentVkStartFromSiteCard :show="wizard.step.value === 0" />
-
                 <OrganismsTournamentStepTeams
                   v-if="wizard.step.value === 1"
                   :selected-players="wizard.selectedPlayers.value"
@@ -141,6 +139,8 @@
                   @update:tournament-date="(v) => { wizard.tournamentDate.value = v }"
                   @refresh-players="wizard.refreshPlayers()"
                   @go-to-teams="wizard.goToTeams()"
+                  :paid-player-ids="paidPlayerIdsView"
+                  @toggle-player-paid="onTogglePlayerPaid"
                 />
               </template>
 
@@ -220,40 +220,15 @@ import type { Player } from '~/types/tournament'
 import { computed } from 'vue'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTournamentWizard } from '~/composables/useTournamentWizard'
+import { useAdminTournamentPlayerPaidSync } from '~/composables/useAdminTournamentPlayerPaidSync'
+import { useIndexPageSeo } from '~/composables/useIndexPageSeo'
 import { TOURNAMENT_STATE_NUXT_KEY, useTournamentState } from '~/composables/useTournamentState'
 import { reloadWithScrollRestore } from '~/utils/reloadWithScrollRestore'
 import { isTournamentVisuallyCleared } from '~/utils/tournamentClearVerify'
 
 definePageMeta({ layout: 'landing' })
 
-// Абсолютный URL страницы — для og:url и canonical (картинки в шаринге не задаём — только текст).
-const requestURL = useRequestURL()
-const canonicalHref = requestURL.href.split('#')[0]
-
-// Мета для поиска и шаринга: описание и Open Graph/Twitter без og:image — превью в соцсетях текстовое.
-useSeoMeta({
-  title: 'РФОИ',
-  description:
-    'Веб-приложение для футбольных турниров: распределение игроков по командам, матчи и турнирная таблица. Режим администратора и просмотр для зрителей.',
-  ogSiteName: 'РФОИ',
-  ogTitle: 'РФОИ — турниры, команды и таблица',
-  ogDescription:
-    'Составы команд, матчи и турнирная таблица в одном месте — для организатора и зрителей.',
-  ogType: 'website',
-  ogUrl: canonicalHref,
-  ogLocale: 'ru_RU',
-  twitterCard: 'summary',
-  twitterTitle: 'РФОИ — турниры, команды и таблица',
-  twitterDescription:
-    'Составы команд, матчи и турнирная таблица — для организатора и зрителей.',
-  // Разрешаем индексацию главной и обход ссылок ботами (если позже закроете сайт — поменяйте на noindex).
-  robots: 'index, follow',
-})
-
-// Один канонический URL без хеша — чтобы поиск не плодил дубли.
-useHead({
-  link: [{ rel: 'canonical', href: canonicalHref }],
-})
+useIndexPageSeo()
 
 const { isAdmin, adminRole, logout, restoreSession } = useAdminAuth()
 
@@ -292,6 +267,7 @@ const wizard = useTournamentWizard({
   saveTournamentState: tournamentState.saveTournamentState,
   saveTournamentStateNow: tournamentState.saveTournamentStateNow,
   cancelPendingSave: tournamentState.cancelPendingSave,
+  refresh: tournamentState.refresh,
 })
 
 const viewerState = computed(() => tournamentState.serverState.value)
@@ -322,6 +298,18 @@ function broadcastAdminTournamentStateChanged() {
     /* BroadcastChannel может быть недоступен — тогда остаётся sync по visibility */
   }
 }
+
+const { paidPlayerIdsView, onTogglePlayerPaid } = useAdminTournamentPlayerPaidSync({
+  wizard: {
+    paidPlayerIds: wizard.paidPlayerIds,
+    setPlayerPaid: wizard.setPlayerPaid,
+    step: wizard.step,
+  },
+  isAdmin,
+  isLimitedAdmin,
+  syncWizardFromServerAfterExternalChange,
+  broadcastAdminTournamentStateChanged,
+})
 
 onMounted(() => {
   if (!import.meta.client) return

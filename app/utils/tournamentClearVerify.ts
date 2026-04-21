@@ -5,11 +5,13 @@ export function isTournamentVisuallyCleared(s: SavedTournamentContext | null): b
   if (s == null) return true
   const hasAssignments = Object.keys(s.assignmentByPlayerId ?? {}).length > 0
   const hasConfirmed = (s.confirmedTeamNames?.length ?? 0) > 0
+  const hasPaid = (s.paidPlayerIds?.length ?? 0) > 0
   return (
     s.step === 0 &&
     (s.selectedIds?.length ?? 0) === 0 &&
     !hasAssignments &&
     !hasConfirmed &&
+    !hasPaid &&
     s.standingsSnapshot == null
   )
 }

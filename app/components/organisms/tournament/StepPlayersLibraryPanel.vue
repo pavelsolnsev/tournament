@@ -1,6 +1,9 @@
 <!-- Компонент StepPlayersLibraryPanel: создание игрока, поиск, список — на общих атомах турнира. -->
 <template>
-  <AtomsTournamentPanel as="section" root-class="lg:col-span-3">
+  <AtomsTournamentPanel
+    as="section"
+    root-class="w-full min-w-0 overflow-x-hidden lg:col-span-2 lg:max-w-md lg:justify-self-start xl:max-w-lg"
+  >
     <!-- Сначала добавление игрока, ниже поиск по списку — так порядок действий сверху вниз. -->
     <form class="flex w-full min-w-0 flex-col gap-2" @submit.prevent="onCreatePlayer">
       <p class="text-xs font-medium text-slate-600 dark:text-slate-400">Добавьте игрока</p>

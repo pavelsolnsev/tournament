@@ -1,6 +1,5 @@
 import { ensureTablesExist } from '../../utils/initDb'
 import { queryWithRetry } from '../../utils/db'
-import { readVkListClosePending } from '../../utils/vkListCloseRequest'
 
 const LINK_KEY = 'tournament_vk_link'
 
@@ -9,21 +8,15 @@ type VkLinkJson = {
   gameEventId?: string
 }
 
-// API: GET /api/tournament/vk-status — статус VK-хвостов (только админ).
+// API: GET /api/tournament/vk-status — привязка турнира к событию ВК (только админ).
 export default defineEventHandler(async (event) => {
   await ensureTablesExist()
 
-  // Проверяем админскую сессию — этот эндпоинт не нужен зрителям.
   const session = getCookie(event, 'admin_session')
-  // Simple10: VK статус можно смотреть любому админу (full или limited).
   if (session !== 'full' && session !== 'limited') {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
   }
 
-  // Флаг «бот должен закрыть список» — ставится после «Завершить турнир».
-  const closeVkListRequested = await readVkListClosePending()
-
-  // Читаем привязку сайта к беседе/событию ВК, чтобы понять — есть ли активная связь.
   const linkRows = await queryWithRetry<Array<{ value: string }>>(
     'SELECT value FROM app_state WHERE key_name = ?',
     [LINK_KEY],
@@ -33,7 +26,6 @@ export default defineEventHandler(async (event) => {
     return {
       ok: true,
       linked: false,
-      closeVkListRequested,
       peerId: null as number | null,
       gameEventId: null as string | null,
     }
@@ -43,11 +35,9 @@ export default defineEventHandler(async (event) => {
   try {
     link = JSON.parse(linkRows[0].value) as VkLinkJson
   } catch {
-    // Если битый JSON — считаем что привязки нет, чтобы UI не завис.
     return {
       ok: true,
       linked: false,
-      closeVkListRequested,
       peerId: null as number | null,
       gameEventId: null as string | null,
     }
@@ -60,7 +50,6 @@ export default defineEventHandler(async (event) => {
     return {
       ok: true,
       linked: false,
-      closeVkListRequested,
       peerId: null as number | null,
       gameEventId: null as string | null,
     }
@@ -69,9 +58,7 @@ export default defineEventHandler(async (event) => {
   return {
     ok: true,
     linked: true,
-    closeVkListRequested,
     peerId,
     gameEventId,
   }
 })
-

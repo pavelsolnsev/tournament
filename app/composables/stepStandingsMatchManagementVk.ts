@@ -1,9 +1,9 @@
 import type { ComputedRef } from 'vue'
+import { watch } from 'vue'
 
 type VkStatusResponse = {
   ok: true
   linked: boolean
-  closeVkListRequested: boolean
   peerId: number | null
   gameEventId: string | null
 }
@@ -31,9 +31,13 @@ export function useMatchManagementVkStatus(canViewVkStatus: ComputedRef<boolean>
     }
   }
 
-  if (canViewVkStatus.value) {
-    void refreshVkStatus()
-  }
+  watch(
+    canViewVkStatus,
+    (v) => {
+      if (v) void refreshVkStatus()
+    },
+    { immediate: true },
+  )
 
   return {
     vkStatusPending,

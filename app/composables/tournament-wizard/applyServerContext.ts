@@ -20,6 +20,7 @@ export type WizardServerContextDeps = {
   venueLabel: Ref<string>
   formatLabel: Ref<string>
   selectedIds: Ref<Set<number>>
+  paidPlayerIds: Ref<Set<number>>
   playerSearch: Ref<string>
   assignment: WizardAssignmentSlice
   standingsSnapshot: Ref<SavedStandingsSnapshot | null>
@@ -43,6 +44,7 @@ export function applyEmptyTournamentContextLocal(deps: WizardServerContextDeps):
   deps.venueLabel.value = ''
   deps.formatLabel.value = ''
   deps.selectedIds.value = new Set()
+  deps.paidPlayerIds.value = new Set()
   deps.playerSearch.value = ''
   deps.assignment.assignment.value = {}
   deps.assignment.confirmedTeamNames.value = new Set()
@@ -88,6 +90,10 @@ export function applyLoadedContext(
 
   deps.selectedIds.value = new Set(
     (ctx.selectedIds ?? []).filter((id) => Number.isFinite(id)),
+  )
+
+  deps.paidPlayerIds.value = new Set(
+    (ctx.paidPlayerIds ?? []).filter((id) => Number.isFinite(id) && id > 0),
   )
 
   const rawAssign = ctx.assignmentByPlayerId ?? {}

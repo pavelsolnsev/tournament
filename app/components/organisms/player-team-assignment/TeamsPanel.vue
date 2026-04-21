@@ -16,25 +16,40 @@
       </span>
     </div>
 
-    <!-- Поле создания команды: инпут + кнопка на одной высоте -->
-    <div class="flex shrink-0 items-center gap-2">
+    <!-- Поле создания команды: на телефоне столбиком на всю ширину, на sm+ — строка. -->
+    <div class="flex min-w-0 shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
       <AtomsTournamentTextInput
         :model-value="newTeamNameValue"
         variant="field"
         size="sm"
         placeholder="Название команды"
-        class="flex-1"
+        class="min-w-0 w-full sm:flex-1"
         :disabled="!canManageTeams"
         @update:model-value="emit('update:newTeamName', $event)"
         @keydown.enter.prevent="canManageTeams && emit('addNewTeam')"
       />
       <AtomsPrimaryButton
         size="md"
+        class="w-full shrink-0 sm:w-auto sm:min-w-[9rem]"
         title="Создать команду"
+        aria-label="Добавить команду"
         :disabled="!canManageTeams"
         @click="canManageTeams && emit('addNewTeam')"
       >
-        +
+        <span class="inline-flex items-center justify-center gap-2">
+          <svg
+            class="h-5 w-5 shrink-0"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <span>Добавить</span>
+        </span>
       </AtomsPrimaryButton>
     </div>
 

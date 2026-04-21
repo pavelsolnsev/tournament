@@ -29,6 +29,84 @@
       font-size: 1rem;
     }
   }
+
+  /*
+   * Safari/WebKit: внутренности type="date" (datetime-edit) иначе дают лишние отступы,
+   * смещение текста и обрезку. Область действия — обёртка [data-app-date], чтобы не трогать скрытые input.
+   */
+  [data-app-date] input[type='date'] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  [data-app-date] input[type='date']::-webkit-date-and-time-value {
+    text-align: left;
+  }
+
+  [data-app-date] input[type='date']::-webkit-datetime-edit {
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  [data-app-date] input[type='date']::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+  }
+
+  [data-app-date] input[type='date']::-webkit-datetime-edit-text {
+    padding: 0 2px;
+  }
+
+  /*
+   * Скроллбар под палитру slate/emerald: тонкий трек, «таблетка» ползунка.
+   * Firefox — scrollbar-color; WebKit — ::-webkit-scrollbar*. На iOS полоса часто оверлейная — стили могут не примениться.
+   */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(148 163 184) rgb(230 234 239);
+  }
+
+  html.dark * {
+    scrollbar-color: rgb(71 85 105) rgb(30 41 59);
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    border-radius: 9999px;
+    background: rgb(230 234 239);
+  }
+
+  html.dark *::-webkit-scrollbar-track {
+    background: rgb(30 41 59);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    border: 2px solid rgb(230 234 239);
+    background: rgb(148 163 184);
+  }
+
+  html.dark *::-webkit-scrollbar-thumb {
+    border-color: rgb(30 41 59);
+    background: rgb(71 85 105);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgb(16 185 129);
+  }
+
+  html.dark *::-webkit-scrollbar-thumb:hover {
+    background: rgb(52 211 153);
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
 }
 
 /* Спиннер загрузки: явные keyframes; в тёмной теме без dark:border-t-emerald верхняя грань сливалась с кольцом. */

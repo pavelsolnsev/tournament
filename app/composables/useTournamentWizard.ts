@@ -95,7 +95,9 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   const stateRestored = ref(false)
   const lastAppliedSelectedIdsKey = ref('')
 
-  const { serverState, isLoading, saveTournamentState, saveTournamentStateNow, cancelPendingSave } = stateSync
+  const { serverState, isLoading, saveTournamentState, saveTournamentStateNow, cancelPendingSave, refresh } = stateSync
+
+  const paidPlayerIds = ref<Set<number>>(new Set())
 
   const emptyResetState = (): SavedTournamentContext => ({
     step: 0,
@@ -104,6 +106,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     venueLabel: '',
     formatLabel: '',
     selectedIds: [],
+    paidPlayerIds: [],
     assignmentByPlayerId: {},
     confirmedTeamNames: [],
     teamColors: {},
@@ -121,6 +124,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     venueLabel,
     formatLabel,
     selectedIds,
+    paidPlayerIds,
     playerSearch,
     assignment: {
       assignment: assignment.assignment,
@@ -220,6 +224,16 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     step.value = 1
   }
 
+  async function setPlayerPaid(playerId: number, paid: boolean) {
+    cancelPendingSave()
+    await $fetch('/api/tournament/player-paid', {
+      method: 'POST',
+      body: { playerId, paid },
+    })
+    await refresh()
+    reapplyFromServer()
+  }
+
   async function resetWizard() {
     // Сначала отменяем отложенный PUT — иначе через ~800мс в БД улетит старый снимок и перетрёт очистку.
     cancelPendingSave()
@@ -252,6 +266,8 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     filteredAvailablePlayers,
     selectPlayer,
     removePlayer,
+    paidPlayerIds,
+    setPlayerPaid,
     onAddNewTeam,
     standingsSnapshot,
     saveStandingsSnapshot,

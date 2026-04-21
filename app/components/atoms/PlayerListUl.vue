@@ -1,6 +1,6 @@
 <template>
   <ul
-    class="max-h-72 min-h-0 space-y-1 overflow-y-auto pr-1"
+    class="max-h-72 min-h-0 space-y-1 overflow-y-auto overflow-x-hidden pr-1"
     :class="listClass"
     role="list"
   >

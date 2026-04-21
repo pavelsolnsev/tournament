@@ -16,7 +16,7 @@
         @click="isRosterOpen = !isRosterOpen"
       >
         <span class="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
-          <span class="truncate">👥 Составы</span>
+          <span class="truncate">Составы</span>
           <span
             class="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
             :class="isRosterOpen ? 'bg-emerald-400/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'"

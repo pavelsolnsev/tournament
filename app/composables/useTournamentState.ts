@@ -20,6 +20,8 @@ export type TournamentStateSyncApi = {
   saveTournamentStateNow: (state: SavedTournamentContext) => Promise<void>
   /** Сбрасывает отложенный PUT (debounce) — нужен перед полным сбросом и при синхронизации с другой вкладкой. */
   cancelPendingSave: () => void
+  /** Перечитать state из БД (после отметки оплаты, смены из ВК). */
+  refresh: () => Promise<void>
 }
 
 export function useTournamentState() {

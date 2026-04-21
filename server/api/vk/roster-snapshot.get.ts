@@ -2,7 +2,6 @@ import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
 import { readVkListClosePending } from '../../utils/vkListCloseRequest'
-import { readVkStartRequested } from '../../utils/vkStartRequest'
 
 const LINK_KEY = 'tournament_vk_link'
 const TOURNAMENT_KEY = 'tournament'
@@ -11,6 +10,7 @@ type MatchStatus = 'upcoming' | 'live' | 'finished'
 
 interface TournamentJson {
   selectedIds?: unknown
+  paidPlayerIds?: unknown
   matchStatus?: unknown
   liveHomeTeam?: unknown
   liveAwayTeam?: unknown
@@ -25,6 +25,7 @@ interface LinkJson {
 
 interface ParsedTournament {
   selectedIds: number[]
+  paidPlayerIds: number[]
   matchStatus: MatchStatus
   liveHomeTeam: string
   liveAwayTeam: string
@@ -34,6 +35,7 @@ interface ParsedTournament {
 function parseTournamentValue(value: string | undefined): ParsedTournament {
   const empty: ParsedTournament = {
     selectedIds: [],
+    paidPlayerIds: [],
     matchStatus: 'upcoming',
     liveHomeTeam: '',
     liveAwayTeam: '',
@@ -46,12 +48,17 @@ function parseTournamentValue(value: string | undefined): ParsedTournament {
     const selectedIds = Array.isArray(raw)
       ? raw.map((n) => Number(n)).filter((n) => Number.isFinite(n) && n > 0)
       : []
+    const rawPaid = st.paidPlayerIds
+    const paidPlayerIds = Array.isArray(rawPaid)
+      ? rawPaid.map((n) => Number(n)).filter((n) => Number.isFinite(n) && n > 0)
+      : []
     const ms = st.matchStatus
     const matchStatus: MatchStatus =
       ms === 'live' || ms === 'finished' || ms === 'upcoming' ? ms : 'upcoming'
     const vkMuted = st.vkMuted === true
     return {
       selectedIds,
+      paidPlayerIds,
       matchStatus,
       liveHomeTeam: typeof st.liveHomeTeam === 'string' ? st.liveHomeTeam : '',
       liveAwayTeam: typeof st.liveAwayTeam === 'string' ? st.liveAwayTeam : '',
@@ -62,53 +69,23 @@ function parseTournamentValue(value: string | undefined): ParsedTournament {
   }
 }
 
-// Снимок состава для бота + флаг закрытия списка + статус матча (live → уведомление в ВК).
+type RosterBlock = {
+  rosterVkUserIds: number[]
+  paidVkUserIds: number[]
+  matchStatus: MatchStatus
+  liveHomeTeam: string
+  liveAwayTeam: string
+  vkMuted: boolean
+}
 
-export default defineEventHandler(async (event) => {
-  await ensureTablesExist()
-  requireVkBotToken(event)
-
-  const closeVkListRequested = await readVkListClosePending()
-  const startVkRequested = await readVkStartRequested()
-
-  const stateRows = await queryWithRetry<Array<{ value: string }>>(
-    'SELECT value FROM app_state WHERE key_name = ?',
-    [TOURNAMENT_KEY],
-  )
-  const parsed = parseTournamentValue(stateRows[0]?.value)
-
-  const linkRows = await queryWithRetry<Array<{ value: string }>>(
-    'SELECT value FROM app_state WHERE key_name = ?',
-    [LINK_KEY],
-  )
-
-  if (linkRows.length === 0 || !linkRows[0]?.value) {
-    return { linked: false, closeVkListRequested, startVkRequested }
-  }
-
-  let link: LinkJson
-  try {
-    link = JSON.parse(linkRows[0].value) as LinkJson
-  } catch {
-    return { linked: false, closeVkListRequested, startVkRequested }
-  }
-
-  const peerId = Number(link.peerId)
-  const gameEventId = typeof link.gameEventId === 'string' ? link.gameEventId.trim() : ''
-  if (!peerId || !Number.isFinite(peerId) || !gameEventId) {
-    return { linked: false, closeVkListRequested, startVkRequested }
-  }
-
-  const { selectedIds, matchStatus, liveHomeTeam, liveAwayTeam, vkMuted } = parsed
+async function computeRosterBlock(parsed: ParsedTournament): Promise<RosterBlock> {
+  const { selectedIds, paidPlayerIds, matchStatus, liveHomeTeam, liveAwayTeam, vkMuted } = parsed
+  const paidSet = new Set(paidPlayerIds)
 
   if (selectedIds.length === 0) {
     return {
-      linked: true,
-      peerId,
-      gameEventId,
-      rosterVkUserIds: [] as number[],
-      closeVkListRequested,
-      startVkRequested,
+      rosterVkUserIds: [],
+      paidVkUserIds: [],
       matchStatus,
       liveHomeTeam,
       liveAwayTeam,
@@ -128,25 +105,94 @@ export default defineEventHandler(async (event) => {
   }
 
   const rosterVkUserIds: number[] = []
+  const paidVkUserIds: number[] = []
   const seenVk = new Set<number>()
+  const seenPaidVk = new Set<number>()
   for (const pid of selectedIds) {
     const vkId = byId.get(pid)
     if (vkId == null || !Number.isFinite(vkId) || vkId === 0) continue
     if (seenVk.has(vkId)) continue
     seenVk.add(vkId)
     rosterVkUserIds.push(vkId)
+    if (paidSet.has(pid)) {
+      if (!seenPaidVk.has(vkId)) {
+        seenPaidVk.add(vkId)
+        paidVkUserIds.push(vkId)
+      }
+    }
+  }
+
+  return {
+    rosterVkUserIds,
+    paidVkUserIds,
+    matchStatus,
+    liveHomeTeam,
+    liveAwayTeam,
+    vkMuted,
+  }
+}
+
+// Снимок состава для бота + флаг закрытия списка + статус матча (live → уведомление в ВК).
+
+export default defineEventHandler(async (event) => {
+  await ensureTablesExist()
+  requireVkBotToken(event)
+
+  const closeVkListRequested = await readVkListClosePending()
+
+  const stateRows = await queryWithRetry<Array<{ value: string }>>(
+    'SELECT value FROM app_state WHERE key_name = ?',
+    [TOURNAMENT_KEY],
+  )
+  const parsed = parseTournamentValue(stateRows[0]?.value)
+  const rosterBlock = await computeRosterBlock(parsed)
+
+  const linkRows = await queryWithRetry<Array<{ value: string }>>(
+    'SELECT value FROM app_state WHERE key_name = ?',
+    [LINK_KEY],
+  )
+
+  const tail = {
+    closeVkListRequested,
+    ...rosterBlock,
+  }
+
+  if (linkRows.length === 0 || !linkRows[0]?.value) {
+    return {
+      linked: false,
+      peerId: null as number | null,
+      gameEventId: null as string | null,
+      ...tail,
+    }
+  }
+
+  let link: LinkJson
+  try {
+    link = JSON.parse(linkRows[0].value) as LinkJson
+  } catch {
+    return {
+      linked: false,
+      peerId: null as number | null,
+      gameEventId: null as string | null,
+      ...tail,
+    }
+  }
+
+  const peerId = Number(link.peerId)
+  const gameEventId = typeof link.gameEventId === 'string' ? link.gameEventId.trim() : ''
+  if (!peerId || !Number.isFinite(peerId) || !gameEventId) {
+    return {
+      linked: false,
+      peerId: null as number | null,
+      gameEventId: null as string | null,
+      ...tail,
+    }
   }
 
   return {
     linked: true,
     peerId,
     gameEventId,
-    rosterVkUserIds,
-    closeVkListRequested,
-    startVkRequested,
-    matchStatus,
-    liveHomeTeam,
-    liveAwayTeam,
-    vkMuted,
+    ...tail,
   }
 })

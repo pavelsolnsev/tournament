@@ -28,6 +28,8 @@ export type SavedTournamentContext = {
   venueLabel: string
   formatLabel: string
   selectedIds: number[]
+  /** id игроков с отметкой оплаты (синхрон с ВК через roster-snapshot и POST vk/player-paid). */
+  paidPlayerIds?: number[]
   assignmentByPlayerId: Record<number, string>
   confirmedTeamNames: string[]
   teamColors: Record<string, number>
