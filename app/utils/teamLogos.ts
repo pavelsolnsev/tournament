@@ -39,6 +39,8 @@ const TEAM_LOGO_PATH_BY_NORMALIZED_KEY: Record<string, string> = {
   челси: '/team-photos/сhelsea.jpg',
   chelsea: '/team-photos/сhelsea.jpg',
   'fc chelsea': '/team-photos/сhelsea.jpg',
+  артемида: '/team-photos/artemida.webp',
+  artemida: '/team-photos/artemida.webp',
 }
 
 function logoLookupKey(teamName: string): string {
