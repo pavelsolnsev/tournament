@@ -2,6 +2,7 @@ import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
 import { clearVkListCloseRequest } from '../../utils/vkListCloseRequest'
+import { clearSelectedIdsOnVkLinkIfAfterUnlink } from '../../utils/vkUnlinkRelinkPolicy'
 
 const LINK_KEY = 'tournament_vk_link'
 
@@ -30,6 +31,9 @@ export default defineEventHandler(async (event) => {
      ON DUPLICATE KEY UPDATE value = VALUES(value)`,
     [LINK_KEY, payload],
   )
+
+  // После старой привязки: убрать «хвост» selectedIds, чтобы в новый лист ВК не уехал прошлый состав.
+  await clearSelectedIdsOnVkLinkIfAfterUnlink()
 
   // Сбрасываем «закрыть список»: иначе после прошлого «Завершить матч» флаг мог остаться в БД, если ack бота не дошёл.
   // Первый тик поллинга тогда делал бы runCloseEvent и сразу гасил только что созданный список (редкий, но реальный баг).
