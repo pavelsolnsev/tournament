@@ -1,6 +1,7 @@
 import { ensureTablesExist } from '../../utils/initDb'
 import { queryWithRetry } from '../../utils/db'
 import { readVkStartListPending } from '../../utils/vkStartListRequest'
+import { readVkListClosePending } from '../../utils/vkListCloseRequest'
 
 const LINK_KEY = 'tournament_vk_link'
 
@@ -18,12 +19,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden: admin only' })
   }
 
-  const [linkRows, pendingStart] = await Promise.all([
+  const [linkRows, pendingStart, vkListClosePending] = await Promise.all([
     queryWithRetry<Array<{ value: string }>>(
       'SELECT value FROM app_state WHERE key_name = ?',
       [LINK_KEY],
     ),
     readVkStartListPending(),
+    readVkListClosePending(),
   ])
 
   const pendingVkStart = pendingStart
@@ -38,6 +40,7 @@ export default defineEventHandler(async (event) => {
     return {
       ok: true,
       linked: false,
+      vkListClosePending,
       peerId: null as number | null,
       gameEventId: null as string | null,
       pendingVkStart,
@@ -51,6 +54,7 @@ export default defineEventHandler(async (event) => {
     return {
       ok: true,
       linked: false,
+      vkListClosePending,
       peerId: null as number | null,
       gameEventId: null as string | null,
       pendingVkStart,
@@ -64,6 +68,7 @@ export default defineEventHandler(async (event) => {
     return {
       ok: true,
       linked: false,
+      vkListClosePending,
       peerId: null as number | null,
       gameEventId: null as string | null,
       pendingVkStart,
@@ -73,6 +78,7 @@ export default defineEventHandler(async (event) => {
   return {
     ok: true,
     linked: true,
+    vkListClosePending,
     peerId,
     gameEventId,
     pendingVkStart,

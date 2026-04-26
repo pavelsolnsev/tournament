@@ -5,148 +5,252 @@
     as="section"
     root-class="min-w-0 w-full max-w-full overflow-x-hidden"
   >
-    <div class="flex flex-wrap items-start justify-between gap-2">
-      <div class="flex min-w-0 items-center gap-1.5">
-        <AtomsVkLogoIcon size="sm" />
-        <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">
-          Список в ВКонтакте
-        </p>
-      </div>
-      <button
-        type="button"
-        class="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700/60 dark:bg-slate-800/40 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-800/60 dark:hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-        aria-label="Обновить статус"
-        :disabled="vkStatusPending"
-        @click="() => void refreshVkStatus()"
-      >
-        <svg
-          class="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400"
-          :class="vkStatusPending && 'animate-spin'"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
-          <path d="M21 3v5h-5" />
-        </svg>
-      </button>
-    </div>
-
+    <!-- Один блок: статус ВК + либо «Отменить матч», либо форма «Создать матч». -->
     <div
-      v-if="vkStatus?.linked"
-      class="flex items-start gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-700 dark:border-slate-700/50 dark:bg-slate-900/30 dark:text-slate-200"
+      class="rounded-xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/90 px-3 py-3 shadow-sm ring-1 ring-slate-200/40 dark:border-slate-600/50 dark:from-slate-800/80 dark:to-slate-900/40 dark:ring-slate-700/30 sm:px-4 sm:py-4"
     >
-      <span
-        class="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400"
-        aria-hidden="true"
-      >
-        <svg
-          class="h-4 w-4"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-          <polyline points="22 4 12 14.01 9 11.01" />
-        </svg>
-      </span>
-      <span>
-        Чат привязан:
-        <span class="font-mono tabular-nums">peer {{ vkStatus.peerId }}</span>
-      </span>
-    </div>
-    <div v-else class="space-y-1.5">
-      <p class="flex items-start gap-2 text-xs font-medium text-amber-800 dark:text-amber-200/90">
-        <span
-          class="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400"
-          aria-hidden="true"
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex min-w-0 items-start gap-2.5">
+          <span
+            class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700/50"
+            aria-hidden="true"
+          >
+            <AtomsVkLogoIcon size="sm" />
+          </span>
+          <div class="min-w-0 self-center">
+            <p class="text-xs font-semibold leading-tight text-slate-800 dark:text-slate-100">
+              Список в ВКонтакте
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-200/90 active:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-700/60 dark:text-slate-200 dark:hover:bg-slate-700 dark:active:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/35"
+          :disabled="vkStatusPending"
+          @click="() => void refreshVkStatus()"
         >
           <svg
-            class="h-4 w-4"
+            v-if="!vkStatusPending"
+            class="h-3.5 w-3.5 shrink-0"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+            <path d="M21 3v5h-5" />
+          </svg>
+          <svg
+            v-else
+            class="h-3.5 w-3.5 shrink-0 animate-spin"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+          {{ vkStatusPending ? 'Обновляем…' : 'Обновить' }}
+        </button>
+      </div>
+
+      <p v-if="vkStatusError" class="mt-3 rounded-lg bg-red-500/10 px-2.5 py-2 text-[11px] leading-snug text-red-700 dark:text-red-300">
+        {{ vkStatusError }}
+      </p>
+
+      <div v-else class="mt-3 flex flex-wrap items-center gap-2">
+        <template v-if="vkStatus?.linked && vkStatus?.vkListClosePending">
+          <div class="flex w-full min-w-0 flex-wrap items-center justify-between gap-2">
+            <span
+              class="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1.5 text-[11px] font-semibold text-amber-900 ring-1 ring-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-500/25"
+              role="status"
+            >
+              <svg
+                class="h-3.5 w-3.5 shrink-0 animate-spin text-amber-600 dark:text-amber-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+              Закрытие в боте (e!)
+            </span>
+            <MoleculesTournamentVkPeerEnvironmentChip
+              :environment="vkPeerEnvironment"
+              :label="vkDefaultPeerLabel"
+            />
+          </div>
+        </template>
+        <template v-else>
+          <template v-if="!vkStatus?.linked">
+            <div class="flex w-full min-w-0 flex-wrap items-center justify-between gap-2">
+              <span
+                class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200/90 dark:bg-slate-800/80 dark:text-slate-400 dark:ring-slate-600/50"
+              >
+                <svg
+                  class="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v4M12 16h.01" />
+                </svg>
+                Список не создан
+              </span>
+              <MoleculesTournamentVkPeerEnvironmentChip
+                :environment="vkPeerEnvironment"
+                :label="vkDefaultPeerLabel"
+              />
+            </div>
+          </template>
+          <template v-else>
+            <div class="flex w-full min-w-0 flex-wrap items-center justify-between gap-2">
+              <span
+                class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-3 py-1.5 text-[11px] font-semibold text-emerald-800 ring-1 ring-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/20"
+              >
+                <svg
+                  class="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                Матч создан
+              </span>
+              <MoleculesTournamentVkPeerEnvironmentChip
+                :environment="vkPeerEnvironment"
+                :label="vkDefaultPeerLabel"
+              />
+            </div>
+          </template>
+        </template>
+        <span
+          v-if="vkStatus?.pendingVkStart"
+          class="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full bg-amber-500/12 px-3 py-1.5 text-[11px] font-semibold text-amber-900 ring-1 ring-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-500/25"
+          role="status"
+          :title="vkStatus.pendingVkStart.commandText"
+        >
+          <svg
+            class="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
           >
             <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
+            <polyline points="12 6 12 12 16 14" />
           </svg>
+          <span class="shrink-0">В очереди</span>
+          <span class="min-w-0 truncate font-mono text-[10px] font-normal opacity-90">{{ vkStatus.pendingVkStart.commandText }}</span>
         </span>
-        <span>Привязки нет — введите peer_id беседы (число из ссылки чата ВК) или сначала создайте список из бота.</span>
+      </div>
+
+      <p
+        v-if="vkStatus?.linked && vkStatus?.vkListClosePending && !vkStatusError"
+        class="mt-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400"
+      >
+        Нужен запущенный vk-bot; привязка пропадёт после ответа бота.
       </p>
-      <input
-        v-model="peerIdManual"
-        type="text"
-        inputmode="numeric"
-        autocomplete="off"
-        :placeholder="`Например ${defaultPeerHint}`"
-        class="box-border block w-full max-w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 transition-colors focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700/60 dark:bg-slate-800/40 dark:text-slate-100 dark:placeholder-slate-600 dark:focus:border-emerald-500/50 dark:focus:ring-emerald-500/25"
-      >
-    </div>
 
-    <div
-      v-if="vkStatus?.pendingVkStart"
-      class="flex items-start gap-2 rounded-lg border border-amber-300/70 bg-amber-50 px-2.5 py-2 text-xs text-amber-950 dark:border-amber-700/50 dark:bg-amber-950/35 dark:text-amber-100"
-      role="status"
-    >
-      <span
-        class="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400"
-        aria-hidden="true"
+      <div
+        v-if="vkStatus?.pendingVkStart && !vkStatusError"
+        class="mt-2 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400"
       >
-        <svg
-          class="h-4 w-4"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+        Ожидайте сообщение в чате или проверьте логи бота.
+      </div>
+
+      <div
+        v-if="vkStatus?.linked && !vkStatus?.vkListClosePending"
+        class="mt-4 border-t border-slate-200/90 pt-3 dark:border-slate-700/50"
+      >
+        <button
+          v-if="!vkCancelConfirmOpen"
+          type="button"
+          class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50/95 px-3 py-2 text-xs font-semibold text-red-800 shadow-sm transition-colors hover:border-red-300 hover:bg-red-100/90 active:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/50 dark:bg-red-950/45 dark:text-red-200 dark:hover:border-red-800/60 dark:hover:bg-red-950/65 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/35 sm:w-auto"
+          :disabled="clearTournamentBusy || vkBusy"
+          title="Запросить закрытие списка в ВК и сбросить турнир на сайте (как e! в боте)"
+          @click="openVkCancelConfirm"
         >
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
-        </svg>
-      </span>
-      <span class="min-w-0">
-        <span class="font-medium">В очереди:</span>
-        <span class="ml-1 font-mono text-[11px]">{{ vkStatus.pendingVkStart.commandText }}</span>
-        <span class="mt-1 block text-[11px] opacity-90">Ожидайте публикации в чате или проверьте логи бота.</span>
-      </span>
-    </div>
+          <svg
+            class="h-3.5 w-3.5 shrink-0 opacity-90"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          </svg>
+          Отменить матч
+        </button>
+        <MoleculesDangerConfirmInline
+          v-else
+          :open="true"
+          :seconds-left="vkCancelSecondsLeft"
+          :busy="clearTournamentBusy"
+          title="Отменить матч? Бот закроет список в чате (как e!), на сайте сбросится мастер турнира. Пока бот не ответит, привязка в статусе может оставаться."
+          cancel-text="Отмена"
+          confirm-text="Отменить матч"
+          busy-text="Отменяем…"
+          aria-label="Подтверждение отмены матча и сброса турнира"
+          @cancel="closeVkCancelConfirm"
+          @confirm="confirmVkCancelTournament"
+        />
+      </div>
 
-    <div class="border-t border-slate-200 dark:border-slate-700/40" />
-
-    <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">
-      Тип матча
-    </p>
-    <div class="flex min-w-0 flex-wrap gap-1.5">
-      <button
-        v-for="item in presetButtons"
-        :key="item.preset"
-        type="button"
-        class="inline-flex items-center rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 disabled:cursor-not-allowed disabled:opacity-50"
-        :class="presetChipClass(item.preset)"
-        :disabled="vkBusy"
-        @click="selectPreset(item.preset)"
+      <div
+        v-else-if="!vkStatus?.linked && !vkStatus?.pendingVkStart"
+        class="mt-4 border-t border-slate-200/90 pt-3 dark:border-slate-700/50"
       >
-        {{ item.label }}
-      </button>
-    </div>
+        <p class="mb-3 text-xs font-semibold text-slate-700 dark:text-slate-300">
+          Создать матч
+        </p>
+        <div class="flex min-w-0 flex-wrap gap-2">
+        <button
+          v-for="item in presetButtons"
+          :key="item.preset"
+          type="button"
+          class="inline-flex items-center rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 disabled:cursor-not-allowed disabled:opacity-50"
+          :class="presetChipClass(item.preset)"
+          :disabled="vkBusy"
+          @click="selectPreset(item.preset)"
+        >
+          {{ item.label }}
+        </button>
+      </div>
 
-    <!-- Дата и время — те же обёртки и иконки, что «Дата проведения» в StepPlayersVenueFormat -->
-    <div
-      v-if="selectedPreset === 'prof' || selectedPreset === 'tr'"
-      class="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap"
-    >
+      <!-- Дата и время — те же обёртки и иконки, что «Дата проведения» в StepPlayersVenueFormat -->
+      <div
+        v-if="selectedPreset === 'prof' || selectedPreset === 'tr'"
+        class="mt-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap"
+      >
       <div class="flex min-w-0 flex-1 flex-col gap-1.5 sm:min-w-[11rem]">
         <label
           :for="vkEventDateId"
@@ -220,13 +324,13 @@
           </span>
         </div>
       </div>
-    </div>
+      </div>
 
-    <!-- Только режим турнира (s tr) — слоты команд для кнопок в чате -->
-    <div
-      v-if="selectedPreset === 'tr'"
-      class="flex min-w-0 flex-col gap-1.5"
-    >
+      <!-- Только режим турнира (s tr) — слоты команд для кнопок в чате -->
+      <div
+        v-if="selectedPreset === 'tr'"
+        class="mt-3 flex min-w-0 flex-col gap-1.5"
+      >
       <label
         :for="trSlotsId"
         class="text-xs font-medium text-slate-600 dark:text-slate-400"
@@ -240,55 +344,57 @@
         placeholder="Красные, Синие"
         class="box-border block w-full max-w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 transition-colors focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700/60 dark:bg-slate-800/40 dark:text-slate-100 dark:placeholder-slate-600 dark:focus:border-emerald-500/50 dark:focus:ring-emerald-500/25"
       >
-    </div>
+      </div>
 
-    <div v-if="selectedPreset">
-      <button
-        type="button"
-        class="inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-lg border border-emerald-500/60 bg-emerald-500/15 px-4 py-2.5 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-600/50 dark:bg-emerald-500/10 dark:text-emerald-200 dark:hover:bg-emerald-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 sm:w-auto"
-        :disabled="!canSubmitCreateMatch"
-        @click="submitCreateMatch"
+      <div v-if="selectedPreset" class="mt-4">
+        <button
+          type="button"
+          class="inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-emerald-500/55 bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-600 active:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-950 dark:hover:bg-emerald-400 dark:active:bg-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/45 sm:w-auto"
+          :disabled="!canSubmitCreateMatch"
+          @click="submitCreateMatch"
+        >
+          <svg
+            class="h-5 w-5 shrink-0"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <polygon points="5 3 19 12 5 21 5 3" />
+          </svg>
+          Создать матч
+        </button>
+      </div>
+      </div>
+
+      <div
+        v-if="vkStartError"
+        class="mt-3 flex items-start gap-2 rounded-xl border border-red-300/70 bg-red-50 px-3 py-2.5 text-xs text-red-800 dark:border-red-800/50 dark:bg-red-950/40 dark:text-red-200"
+        role="alert"
       >
-        <svg
-          class="h-5 w-5 shrink-0"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+        <span
+          class="mt-0.5 shrink-0 text-red-600 dark:text-red-400"
           aria-hidden="true"
         >
-          <polygon points="5 3 19 12 5 21 5 3" />
-        </svg>
-        Создать матч
-      </button>
-    </div>
-
-    <div
-      v-if="vkStartError"
-      class="flex items-start gap-2 rounded-lg border border-red-300/70 bg-red-50 px-2.5 py-2 text-xs text-red-800 dark:border-red-800/50 dark:bg-red-950/40 dark:text-red-200"
-      role="alert"
-    >
-      <span
-        class="mt-0.5 shrink-0 text-red-600 dark:text-red-400"
-        aria-hidden="true"
-      >
-        <svg
-          class="h-4 w-4"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-          <line x1="12" y1="9" x2="12" y2="13" />
-          <line x1="12" y1="17" x2="12.01" y2="17" />
-        </svg>
-      </span>
-      <span class="min-w-0">{{ vkStartError }}</span>
+          <svg
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+        </span>
+        <span class="min-w-0">{{ vkStartError }}</span>
+      </div>
     </div>
   </AtomsTournamentPanel>
 </template>
@@ -296,13 +402,25 @@
 <script setup lang="ts">
 import { useTournamentVkListStart } from '~/composables/useTournamentVkListStart'
 
+const props = withDefaults(
+  defineProps<{
+    clearTournamentBusy?: boolean
+  }>(),
+  { clearTournamentBusy: false },
+)
+
+const emit = defineEmits<{
+  'cancel-tournament': []
+}>()
+
 const {
   showPanel,
-  defaultPeerHint,
+  vkPeerEnvironment,
+  vkDefaultPeerLabel,
   vkStatus,
   refreshVkStatus,
   vkStatusPending,
-  peerIdManual,
+  vkStatusError,
   selectedPreset,
   vkEventDate,
   vkEventTime,
@@ -318,4 +436,51 @@ const {
   selectPreset,
   submitCreateMatch,
 } = useTournamentVkListStart()
+
+const vkCancelConfirmOpen = ref(false)
+const vkCancelSecondsLeft = ref(0)
+const vkCancelIntervalId = ref<ReturnType<typeof setInterval> | null>(null)
+
+function closeVkCancelConfirm() {
+  vkCancelConfirmOpen.value = false
+  vkCancelSecondsLeft.value = 0
+  if (vkCancelIntervalId.value) {
+    clearInterval(vkCancelIntervalId.value)
+    vkCancelIntervalId.value = null
+  }
+}
+
+function openVkCancelConfirm() {
+  if (props.clearTournamentBusy || vkBusy.value) return
+  closeVkCancelConfirm()
+  vkCancelConfirmOpen.value = true
+  vkCancelSecondsLeft.value = 3
+  vkCancelIntervalId.value = setInterval(() => {
+    vkCancelSecondsLeft.value = Math.max(0, vkCancelSecondsLeft.value - 1)
+    if (vkCancelSecondsLeft.value === 0 && vkCancelIntervalId.value) {
+      clearInterval(vkCancelIntervalId.value)
+      vkCancelIntervalId.value = null
+    }
+  }, 1000)
+}
+
+function confirmVkCancelTournament() {
+  emit('cancel-tournament')
+}
+
+watch(
+  () => props.clearTournamentBusy,
+  (busy, wasBusy) => {
+    if (wasBusy === true && busy === false && vkCancelConfirmOpen.value) {
+      closeVkCancelConfirm()
+    }
+  },
+)
+
+onUnmounted(() => {
+  if (vkCancelIntervalId.value) {
+    clearInterval(vkCancelIntervalId.value)
+    vkCancelIntervalId.value = null
+  }
+})
 </script>

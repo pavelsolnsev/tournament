@@ -7,6 +7,8 @@ export type VkListPreset = 'prof' | 'tr'
 type VkStatusResponse = {
   ok: boolean
   linked: boolean
+  /** Сайт попросил бота закрыть список в чате (как e!); ждём бота и unlink. */
+  vkListClosePending?: boolean
   peerId: number | null
   gameEventId: string | null
   pendingVkStart: { commandText: string; peerId: number; requestedAt: string } | null
@@ -17,16 +19,43 @@ export function useTournamentVkListStart() {
   const showPanel = computed(() => adminRole.value === 'full')
 
   const config = useRuntimeConfig()
-  const defaultPeerHint = computed(() => {
+
+  /** local / production — дефолтные peer из nuxt.config; иначе other. */
+  const vkPeerEnvironment = computed(() => {
     const s = String(config.public.vkDefaultPeerId ?? '').trim()
-    return /^\d+$/.test(s) ? s : '2000000001'
+    if (s === '2000000001') return 'local' as const
+    if (s === '2000000002') return 'production' as const
+    return 'other' as const
   })
 
-  const { data: vkStatus, refresh: refreshVkStatus, pending: vkStatusPending } =
-    useFetch<VkStatusResponse>('/api/tournament/vk-status', {
-      credentials: 'include',
-      immediate: false,
-    })
+  /** Подпись для UI: Локалка / Продакшен или число / «Не задано». */
+  const vkDefaultPeerLabel = computed(() => {
+    const env = vkPeerEnvironment.value
+    if (env === 'local') return 'Локалка'
+    if (env === 'production') return 'Продакшен'
+    const s = String(config.public.vkDefaultPeerId ?? '').trim()
+    if (/^\d+$/.test(s)) return s
+    return 'Не задано'
+  })
+
+  const {
+    data: vkStatus,
+    refresh: refreshVkStatus,
+    pending: vkStatusPending,
+    error: vkStatusFetchError,
+  } = useFetch<VkStatusResponse>('/api/tournament/vk-status', {
+    credentials: 'include',
+    immediate: false,
+  })
+
+  const vkStatusError = computed(() => {
+    const e = vkStatusFetchError.value
+    if (!e) return null
+    const msg = e instanceof Error ? e.message : String(e)
+    return msg && msg !== '[object Object]'
+      ? msg
+      : 'Не удалось загрузить статус ВК. Проверьте сеть и админ-сессию.'
+  })
 
   watch(
     showPanel,
@@ -36,19 +65,13 @@ export function useTournamentVkListStart() {
     { immediate: true },
   )
 
-  const peerIdManual = ref('')
-  const defaultPeerApplied = ref(false)
-  watch([showPanel, vkStatus], () => {
-    if (!showPanel.value || defaultPeerApplied.value) return
-    if (vkStatus.value?.linked === true) return
-    if (peerIdManual.value.trim()) {
-      defaultPeerApplied.value = true
-      return
+  if (import.meta.client) {
+    const onVkStatusRefresh = () => {
+      if (showPanel.value) void refreshVkStatus()
     }
-    const id = String(config.public.vkDefaultPeerId ?? '').trim()
-    if (id && /^\d+$/.test(id)) peerIdManual.value = id
-    defaultPeerApplied.value = true
-  }, { immediate: true })
+    window.addEventListener('football-vk-status-refresh', onVkStatusRefresh)
+    onUnmounted(() => window.removeEventListener('football-vk-status-refresh', onVkStatusRefresh))
+  }
 
   const selectedPreset = ref<VkListPreset | null>(null)
   const vkEventDate = ref('')
@@ -101,17 +124,8 @@ export function useTournamentVkListStart() {
     }
   }
 
-  function manualPeerNumber(): number | undefined {
-    const raw = peerIdManual.value.trim()
-    if (!raw) return undefined
-    const n = Number(raw)
-    if (!Number.isFinite(n) || n === 0) return undefined
-    return Math.trunc(n)
-  }
-
+  /** Peer беседы для vk-request-start, если ещё нет привязки — только из runtimeConfig (локалка/прод). */
   function resolvedPeerForRequest(): number | undefined {
-    const fromInput = manualPeerNumber()
-    if (fromInput != null) return fromInput
     const id = String(config.public.vkDefaultPeerId ?? '').trim()
     if (!id || !/^\d+$/.test(id)) return undefined
     const n = Number(id)
@@ -125,7 +139,8 @@ export function useTournamentVkListStart() {
     if (!linked) {
       const p = resolvedPeerForRequest()
       if (p == null) {
-        vkStartError.value = 'Укажите peer_id беседы ВК (целое число).'
+        vkStartError.value =
+          'Не задан peer беседы ВК. Укажите NUXT_PUBLIC_VK_DEFAULT_PEER_ID или vkDefaultPeerId в runtimeConfig.'
         return
       }
     }
@@ -179,11 +194,12 @@ export function useTournamentVkListStart() {
 
   return {
     showPanel,
-    defaultPeerHint,
+    vkPeerEnvironment,
+    vkDefaultPeerLabel,
     vkStatus,
     refreshVkStatus,
     vkStatusPending,
-    peerIdManual,
+    vkStatusError,
     selectedPreset,
     vkEventDate,
     vkEventTime,

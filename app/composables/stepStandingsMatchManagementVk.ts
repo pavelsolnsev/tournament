@@ -4,8 +4,10 @@ import { watch } from 'vue'
 type VkStatusResponse = {
   ok: true
   linked: boolean
+  vkListClosePending?: boolean
   peerId: number | null
   gameEventId: string | null
+  pendingVkStart?: { commandText: string; peerId: number; requestedAt: string } | null
 }
 
 /** VK-статус в панели управления матчем (только полный админ). */

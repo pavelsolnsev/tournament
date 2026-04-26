@@ -100,7 +100,11 @@
                   {{ wizard.step.value === 0 ? 'Выберите игроков' : 'Команды' }}
                 </h1>
 
-                <OrganismsTournamentStepVkListStartPanel v-if="wizard.step.value === 0" />
+                <OrganismsTournamentStepVkListStartPanel
+                  v-if="wizard.step.value === 0"
+                  :clear-tournament-busy="clearTournamentBusy"
+                  @cancel-tournament="handleVkCancelTournament"
+                />
 
                 <OrganismsTournamentStepTeams
                   v-if="wizard.step.value === 1"
@@ -282,6 +286,11 @@ const wizard = useTournamentWizard({
   refresh: tournamentState.refresh,
 })
 
+/** Пустой мастер: без таймерных GET /api/tournament/state; после появления состава или vkListTournament — поллинг включается. */
+const rosterSyncRelevant = computed(
+  () => wizard.vkListTournament.value === true || wizard.selectedPlayers.value.length > 0,
+)
+
 const viewerState = computed(() => tournamentState.serverState.value)
 
 // Когда вкладка снова видна — подтягиваем турнир из БД (другая вкладка могла завершить турнир).
@@ -316,6 +325,7 @@ const { paidPlayerIdsView, onTogglePlayerPaid } = useAdminTournamentPlayerPaidSy
     paidPlayerIds: wizard.paidPlayerIds,
     setPlayerPaid: wizard.setPlayerPaid,
     step: wizard.step,
+    rosterSyncRelevant,
   },
   isAdmin,
   isLimitedAdmin,
@@ -340,9 +350,11 @@ onMounted(() => {
   document.addEventListener('visibilitychange', onAdminVisibilitySync)
 })
 
-// Пока открыт шаг «Игроки», подтягиваем state с сервера — подписи команд с кнопок ВК без ручного обновления страницы.
+// Шаг «Игроки»: периодически тянем state только при rosterSyncRelevant; в пустом мастере — только sync по вкладке / BroadcastChannel / после сохранений.
+const ADMIN_ROSTER_POLL_MS = 12_000
+
 watch(
-  [isAdmin, isLimitedAdmin, () => wizard.step.value],
+  [isAdmin, isLimitedAdmin, () => wizard.step.value, rosterSyncRelevant],
   () => {
     if (adminRosterPoll) {
       clearInterval(adminRosterPoll)
@@ -351,9 +363,10 @@ watch(
     if (!import.meta.client) return
     if (!isAdmin.value || isLimitedAdmin.value) return
     if (wizard.step.value !== 0) return
+    if (!rosterSyncRelevant.value) return
     adminRosterPoll = setInterval(() => {
       void tournamentState.refresh()
-    }, 4000)
+    }, ADMIN_ROSTER_POLL_MS)
   },
   { immediate: true },
 )
@@ -416,6 +429,35 @@ onUnmounted(() => {
 
 function cancelClearTournament() {
   showClearTournamentConfirm.value = false
+}
+
+async function handleVkCancelTournament() {
+  if (!canClearTournament.value) return
+  clearTournamentBusy.value = true
+  clearTournamentError.value = null
+  try {
+    tournamentState.cancelPendingSave()
+    await $fetch('/api/tournament/vk-unlink-and-reset', {
+      method: 'POST',
+      credentials: 'include',
+    })
+    await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
+    await tournamentState.refresh()
+    await nextTick()
+    wizard.reapplyFromServer()
+    broadcastAdminTournamentStateChanged()
+    if (import.meta.client) {
+      window.dispatchEvent(new CustomEvent('football-vk-status-refresh'))
+    }
+  } catch (e) {
+    if (import.meta.dev) console.error('[vk-unlink-and-reset]', e)
+    clearTournamentError.value =
+      (e as { data?: { statusMessage?: string }; statusMessage?: string })?.data?.statusMessage
+      ?? (e as { statusMessage?: string })?.statusMessage
+      ?? 'Не удалось отменить матч. Попробуйте ещё раз.'
+  } finally {
+    clearTournamentBusy.value = false
+  }
 }
 
 async function confirmClearTournament() {
