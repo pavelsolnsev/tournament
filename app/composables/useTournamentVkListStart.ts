@@ -56,6 +56,25 @@ export function useTournamentVkListStart() {
     immediate: false,
   })
 
+  /** Одно обновление через N мс (после «Обновить», «Создать матч», отмена матча). */
+  const VK_STATUS_FOLLOWUP_MS = 10_000
+  let followupTimer: ReturnType<typeof setTimeout> | null = null
+
+  function clearFollowupTimer() {
+    if (followupTimer) {
+      clearTimeout(followupTimer)
+      followupTimer = null
+    }
+  }
+
+  function scheduleOneVkStatusRefreshIn(ms: number) {
+    clearFollowupTimer()
+    followupTimer = setTimeout(() => {
+      followupTimer = null
+      if (showPanel.value) void refreshVkStatus()
+    }, ms)
+  }
+
   const vkStatusError = computed(() => {
     const e = vkStatusFetchError.value
     if (!e) return null
@@ -77,9 +96,33 @@ export function useTournamentVkListStart() {
     const onVkStatusRefresh = () => {
       if (showPanel.value) void refreshVkStatus()
     }
+    const onScheduleFollowup = () => {
+      scheduleOneVkStatusRefreshIn(VK_STATUS_FOLLOWUP_MS)
+    }
     window.addEventListener('football-vk-status-refresh', onVkStatusRefresh)
-    onUnmounted(() => window.removeEventListener('football-vk-status-refresh', onVkStatusRefresh))
+    window.addEventListener('football-vk-status-schedule-followup', onScheduleFollowup)
+    onUnmounted(() => {
+      window.removeEventListener('football-vk-status-refresh', onVkStatusRefresh)
+      window.removeEventListener('football-vk-status-schedule-followup', onScheduleFollowup)
+      clearFollowupTimer()
+    })
   }
+
+  // Бот снял очередь (s…/tr) или обработал e! — догоняем статус ещё раз через 10 с.
+  watch(
+    () =>
+      [vkStatus.value?.pendingVkStart ?? null, vkStatus.value?.vkListClosePending === true] as const,
+    (next, prev) => {
+      if (!prev) return
+      const [nP, nC] = next
+      const [pP, pC] = prev
+      const queueCleared = pP != null && nP == null
+      const eCloseDone = pC === true && nC === false
+      if (queueCleared || eCloseDone) {
+        scheduleOneVkStatusRefreshIn(VK_STATUS_FOLLOWUP_MS)
+      }
+    },
+  )
 
   const selectedPreset = ref<VkListPreset | null>(null)
   const vkEventDate = ref('')
@@ -134,6 +177,15 @@ export function useTournamentVkListStart() {
       return 'border-emerald-500/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
     }
     return 'border-slate-300 bg-white text-slate-600 hover:border-slate-400 dark:border-slate-700/60 dark:bg-slate-800/40 dark:text-slate-400 dark:hover:border-slate-600'
+  }
+
+  async function manualRefreshVkStatus() {
+    clearFollowupTimer()
+    try {
+      await refreshVkStatus()
+    } finally {
+      scheduleOneVkStatusRefreshIn(VK_STATUS_FOLLOWUP_MS)
+    }
   }
 
   function selectPreset(preset: VkListPreset) {
@@ -205,6 +257,7 @@ export function useTournamentVkListStart() {
         body,
       })
       await refreshVkStatus()
+      scheduleOneVkStatusRefreshIn(VK_STATUS_FOLLOWUP_MS)
     } catch (err: unknown) {
       const msg =
         (err as { data?: { statusMessage?: string }; statusMessage?: string })?.data?.statusMessage
@@ -234,6 +287,7 @@ export function useTournamentVkListStart() {
     vkDefaultPeerLabel,
     vkStatus,
     refreshVkStatus,
+    manualRefreshVkStatus,
     vkStatusPending,
     vkStatusError,
     selectedPreset,

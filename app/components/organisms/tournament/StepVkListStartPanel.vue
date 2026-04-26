@@ -27,7 +27,7 @@
           type="button"
           class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-200/90 active:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-700/60 dark:text-slate-200 dark:hover:bg-slate-700 dark:active:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/35"
           :disabled="vkStatusPending"
-          @click="() => void refreshVkStatus()"
+          @click="() => void manualRefreshVkStatus()"
         >
           <svg
             v-if="!vkStatusPending"
@@ -432,7 +432,7 @@ const {
   vkPeerEnvironment,
   vkDefaultPeerLabel,
   vkStatus,
-  refreshVkStatus,
+  manualRefreshVkStatus,
   vkStatusPending,
   vkStatusError,
   selectedPreset,

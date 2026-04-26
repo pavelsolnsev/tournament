@@ -461,6 +461,7 @@ async function handleVkCancelTournament() {
     broadcastAdminTournamentStateChanged()
     if (import.meta.client) {
       window.dispatchEvent(new CustomEvent('football-vk-status-refresh'))
+      window.dispatchEvent(new CustomEvent('football-vk-status-schedule-followup'))
     }
   } catch (e) {
     if (import.meta.dev) console.error('[vk-unlink-and-reset]', e)
