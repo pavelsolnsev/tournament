@@ -30,9 +30,12 @@
         role="region"
         aria-label="Команды для кнопок в чате ВК"
       >
-        <p class="text-xs font-medium text-slate-600 dark:text-slate-400">
-          Команды в списке ВК
-        </p>
+        <div class="flex min-w-0 items-center gap-2">
+          <AtomsVkLogoIcon size="md" />
+          <p class="min-w-0 text-xs font-medium text-slate-600 dark:text-slate-400">
+            Команды в списке ВК
+          </p>
+        </div>
         <ul
           v-if="vkTeamSlots.length"
           class="flex flex-wrap gap-1.5"
@@ -54,12 +57,6 @@
             </button>
           </li>
         </ul>
-        <p
-          v-else
-          class="text-xs text-slate-500 dark:text-slate-500"
-        >
-          Пока нет — добавьте ниже (как кнопки <span class="whitespace-nowrap">+team</span> в боте).
-        </p>
         <div class="flex min-w-0 items-center gap-1.5">
           <input
             v-model="newVkSlotDraft"
@@ -80,18 +77,48 @@
             +
           </button>
         </div>
-        <p class="text-center text-[10px] text-slate-500 dark:text-slate-500">
-          Синхронизуется с ботом при следующем опросе
-        </p>
+      </div>
+
+      <div
+        v-if="selectedPlayers.length > 0"
+        class="flex flex-wrap gap-2"
+        role="group"
+        aria-label="Порядок отображения игроков в списке"
+      >
+        <button
+          v-if="hasTeamsForFilter"
+          type="button"
+          class="rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+          :class="[
+            sortByTeam && 'border-emerald-500/50 bg-emerald-500/10 text-emerald-900 dark:border-emerald-400/40 dark:bg-emerald-500/15 dark:text-emerald-100',
+            !sortByTeam && 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800',
+          ]"
+          :aria-pressed="sortByTeam"
+          @click="sortByTeam = !sortByTeam"
+        >
+          По командам
+        </button>
+        <button
+          type="button"
+          class="rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+          :class="[
+            sortPaidFirst && 'border-emerald-500/50 bg-emerald-500/10 text-emerald-900 dark:border-emerald-400/40 dark:bg-emerald-500/15 dark:text-emerald-100',
+            !sortPaidFirst && 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800',
+          ]"
+          :aria-pressed="sortPaidFirst"
+          @click="sortPaidFirst = !sortPaidFirst"
+        >
+          Сначала оплатившие
+        </button>
       </div>
 
       <AtomsEmptyStateBox v-if="selectedPlayers.length === 0">
-        Выберите игроков слева
+        Выберите игроков в списке доступных.
       </AtomsEmptyStateBox>
 
       <AtomsPlayerListUl v-else>
         <MoleculesPlayerListRow
-          v-for="p in selectedPlayers"
+          v-for="p in displayedSelectedPlayers"
           :key="p.id"
           v-bind="selectedPlayerRowBind(p)"
           :caption="vkTeamOptionsForPicker.length > 0 ? null : (vkTeamLabelByPlayerId[p.id] || null)"
@@ -127,9 +154,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { Player } from '~/types/tournament'
 import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
+
+const sortByTeam = ref(false)
+const sortPaidFirst = ref(false)
 
 const newVkSlotDraft = ref('')
 
@@ -152,6 +182,51 @@ const props = defineProps<{
   /** Имена команд с кнопок бота (s tr …). */
   vkTeamSlots: string[]
 }>()
+
+/** Есть ли смысл показывать сортировку по командам: слоты ВК или хотя бы одна подпись у выбранных. */
+const hasTeamsForFilter = computed(() => {
+  if (props.vkTeamSlots.length > 0) {
+    return true
+  }
+  return props.selectedPlayers.some((p) => (props.vkTeamLabelByPlayerId[p.id] || '').trim().length > 0)
+})
+
+function vkTeamSortKey(playerId: number): string {
+  const t = (props.vkTeamLabelByPlayerId[playerId] || '').replace(/\s+/g, ' ').trim().toLowerCase()
+  return t || '\uffff'
+}
+
+const displayedSelectedPlayers = computed(() => {
+  const list = [...props.selectedPlayers]
+  if (list.length <= 1) {
+    return list
+  }
+  const origIdx = new Map(list.map((p, i) => [p.id, i] as const))
+  const teamOn = sortByTeam.value && hasTeamsForFilter.value
+  const paidOn = sortPaidFirst.value
+
+  if (!teamOn && !paidOn) {
+    return list
+  }
+
+  list.sort((a, b) => {
+    if (teamOn) {
+      const cmpTeam = vkTeamSortKey(a.id).localeCompare(vkTeamSortKey(b.id), 'ru')
+      if (cmpTeam !== 0) {
+        return cmpTeam
+      }
+    }
+    if (paidOn) {
+      const pa = props.paidPlayerIds.has(a.id) ? 1 : 0
+      const pb = props.paidPlayerIds.has(b.id) ? 1 : 0
+      if (pa !== pb) {
+        return pb - pa
+      }
+    }
+    return (origIdx.get(a.id) ?? 0) - (origIdx.get(b.id) ?? 0)
+  })
+  return list
+})
 
 /** Слоты бота + фактические подписи в составе — чтобы смена команды была в строке даже до синка слотов. */
 const vkTeamOptionsForPicker = computed(() => {

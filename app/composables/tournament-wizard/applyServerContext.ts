@@ -116,13 +116,11 @@ export function applyEmptyTournamentContextLocal(deps: WizardServerContextDeps):
 export function applyLoadedContext(
   deps: WizardServerContextDeps,
   ctx: SavedTournamentContext | null,
-  mode: 'initial' | 'resync',
+  _mode: 'initial' | 'resync',
 ): void {
   if (!ctx) {
     deps.lastAppliedRosterKey.value = ''
-    if (mode === 'resync') {
-      applyEmptyTournamentContextLocal(deps)
-    }
+    // При resync null из GET не чистим мастер — иначе сбой сети/парсинга обнуляет состав без действия админа.
     return
   }
 

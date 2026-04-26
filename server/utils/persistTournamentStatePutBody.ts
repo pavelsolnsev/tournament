@@ -1,3 +1,4 @@
+import { createError } from 'h3'
 import { queryWithRetry } from './db'
 import {
   filterPaidToSelected,
@@ -12,18 +13,51 @@ import {
 
 const TOURNAMENT_KEY = 'tournament'
 
+function tournamentMetaPresent(s: Record<string, unknown>): boolean {
+  return (
+    String(s.tournamentName ?? '').trim() !== '' ||
+    String(s.tournamentDate ?? '').trim() !== '' ||
+    String(s.venueLabel ?? '').trim() !== '' ||
+    String(s.formatLabel ?? '').trim() !== ''
+  )
+}
+
 /**
  * Сохраняет состояние турнира по тем же правилам, что PUT /api/tournament/state (тело body.state).
  * Используется мастером в браузере и, при полном сбросе, ботом (e! / clear-tournament).
  */
 export async function persistTournamentStatePutBody(state: Record<string, unknown>) {
+  // __fullReset: только в теле PUT — явное разрешение полного сброса (сайт: emptyResetState; бот: clear-tournament).
+  const withFlag = state as { __fullReset?: boolean }
+  const fullResetAuthorized = withFlag.__fullReset === true
+  delete withFlag.__fullReset
+
   state.vkMuted = false
   const prev = await readTournamentStateRow()
-  const preservedPaid = parsePaidIds(prev?.json.paidPlayerIds)
+  const prevJson = (prev?.json && typeof prev.json === 'object' ? prev.json : {}) as Record<string, unknown>
+  const preservedPaid = parsePaidIds(prevJson.paidPlayerIds)
   const newSelected = parseSelectedIds(state.selectedIds)
+
   const stepRaw = (state as { step?: unknown }).step
   const stepIsInitial = stepRaw === undefined || stepRaw === null || Number(stepRaw) === 0
   const snapshotEmpty = (state as { standingsSnapshot?: unknown }).standingsSnapshot == null
+  const looksLikeFullWipe =
+    newSelected.length === 0 && snapshotEmpty && stepIsInitial && !tournamentMetaPresent(state)
+
+  const prevStepNum = Number(prevJson.step)
+  const prevHadStructuredTournament =
+    tournamentMetaPresent(prevJson) ||
+    prevJson.standingsSnapshot != null ||
+    (Number.isFinite(prevStepNum) && prevStepNum > 0)
+
+  if (looksLikeFullWipe && prevHadStructuredTournament && !fullResetAuthorized) {
+    throw createError({
+      statusCode: 409,
+      statusMessage:
+        'Refusing full tournament clear: missing __fullReset (use «Очистить данные», «Завершить турнир», or bot e!)',
+    })
+  }
+
   const isFullTournamentReset = newSelected.length === 0 && snapshotEmpty && stepIsInitial
 
   state.paidPlayerIds = filterPaidToSelected(preservedPaid, newSelected)

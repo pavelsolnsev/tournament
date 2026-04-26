@@ -25,6 +25,7 @@ export default defineEventHandler(async (event) => {
     matchStatus: 'upcoming',
     liveHomeTeam: '',
     liveAwayTeam: '',
+    __fullReset: true,
   }
   await persistTournamentStatePutBody(state)
   return { ok: true }

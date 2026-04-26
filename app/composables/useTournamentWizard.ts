@@ -127,6 +127,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     matchStatus: 'upcoming',
     liveHomeTeam: '',
     liveAwayTeam: '',
+    __fullReset: true,
   })
 
   const serverContextDeps = computed(() => ({

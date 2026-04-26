@@ -41,4 +41,9 @@ export type SavedTournamentContext = {
   matchStatus: MatchStatus
   liveHomeTeam: string
   liveAwayTeam: string
+  /**
+   * Только в теле PUT /api/tournament/state: явное разрешение полного сброса (кнопки «Очистить данные» / «Завершить турнир»).
+   * На сервере удаляется и в БД не попадает.
+   */
+  __fullReset?: true
 }
