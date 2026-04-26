@@ -1,34 +1,37 @@
 <!-- Внутренний компонент: одна строка команды в панели. Выбор строки — на уровне li в TeamsPanel. -->
 <template>
-  <div class="flex min-h-[2.5rem] items-start gap-2 lg:items-center">
-    <!-- Маркер + имя + бейдж: имя в одну строку с «…», если колонка узкая (title показывает полное имя). -->
-    <div class="flex min-w-0 flex-1 items-start gap-2 lg:items-center">
+  <!-- Сетка: название | число игроков | действия — одна линия по центру, без «лесенки» на мобилке. -->
+  <div
+    class="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-2 sm:gap-x-3"
+  >
+    <div class="flex min-w-0 items-center gap-2">
       <AtomsTeamMarkerOrLogo
         :team-name="name"
         :marker="teamMarker(name)"
-        class="pt-0.5 lg:pt-0"
+        class="shrink-0"
         size="md"
       />
-      <span class="flex min-w-0 flex-1 items-start gap-1.5 lg:items-center">
-        <span
-          class="min-w-0 flex-1 truncate text-sm font-medium leading-snug text-slate-800 dark:text-slate-100"
-          :title="name"
-        >{{ name }}</span>
-        <span
-          v-if="isTeamConfirmed(name)"
-          class="shrink-0 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[11px] leading-none text-emerald-700 dark:text-emerald-300"
-        >
-          ✓
-        </span>
+      <span
+        class="min-w-0 flex-1 truncate text-sm font-medium leading-snug text-slate-800 dark:text-slate-100"
+        :title="name"
+      >{{ name }}</span>
+      <span
+        v-if="isTeamConfirmed(name)"
+        class="shrink-0 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-emerald-700 dark:text-emerald-300"
+      >
+        ✓
       </span>
     </div>
 
-    <span class="w-6 shrink-0 text-center text-xs tabular-nums text-slate-600 dark:text-slate-500">
+    <span
+      class="min-w-[2rem] shrink-0 text-right text-xs font-semibold tabular-nums text-slate-600 dark:text-slate-400 sm:min-w-[2.25rem]"
+      :aria-label="`Игроков в команде: ${teamPlayerCounts[name] ?? 0}`"
+    >
       {{ teamPlayerCounts[name] ?? 0 }}
     </span>
 
     <!-- Клики здесь не должны всплывать до li (выбор команды) -->
-    <div data-team-row-stop class="flex shrink-0 items-center gap-1">
+    <div data-team-row-stop class="flex shrink-0 items-center justify-end gap-1">
 
       <!-- Выбор цвета (маркер): кастомный список вместо нативного select — единая стилистика с выпадашками матчей. -->
       <MoleculesDropdownSelect

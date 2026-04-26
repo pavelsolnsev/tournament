@@ -29,6 +29,22 @@ export function teamNameCollides(candidate: string, list: string[]): boolean {
 }
 
 /**
+ * Если label (например подпись команды из ВК) совпадает с именем из справочника команд (БД)
+ * с учётом normalize и регистра — возвращает каноническое имя из списка. Иначе null.
+ */
+export function resolveExistingTeamNameForLabel(label: string, existingTeamNames: string[]): string | null {
+  const needle = normalizeTeamName(label)
+  if (!needle) return null
+  const needleKey = needle.toLowerCase()
+  for (const name of existingTeamNames) {
+    const canon = normalizeTeamName(name)
+    if (!canon) continue
+    if (canon.toLowerCase() === needleKey) return canon
+  }
+  return null
+}
+
+/**
  * Приводит ключи карты цветов к канону (trim + один пробел).
  * Нужно чтобы зритель и админка совпадали, даже если в БД лежали «старые» ключи.
  */

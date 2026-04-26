@@ -4,7 +4,8 @@
 import type { Player, Team, MatchStatus } from '~/types/tournament'
 import { useTeamAssignment } from '~/composables/useTeamAssignment'
 import type { TournamentStateSyncApi } from '~/composables/useTournamentState'
-import { dedupeTeamNamesPreservingOrder, normalizeTeamColorsMap } from '~/utils/teamNames'
+import { useSyncAssignmentFromVkTeamLabels } from '~/composables/useSyncAssignmentFromVkTeamLabels'
+import { dedupeTeamNamesPreservingOrder, normalizeTeamColorsMap, normalizeTeamName } from '~/utils/teamNames'
 import type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
 import {
   applyEmptyTournamentContextLocal,
@@ -34,7 +35,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     default: () => [],
   })
 
-  const { data: teamsFromApi } = useFetch<Team[]>('/api/teams', {
+  const { data: teamsFromApi, refresh: refreshTeams } = useFetch<Team[]>('/api/teams', {
     default: () => [],
   })
 
@@ -92,9 +93,25 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     ) as Record<number, string>
   }
 
+  const DEFAULT_AUTO_TEAM_NAME = /^Команда \d+$/i
+
+  async function persistNewTeamToDb(name: string) {
+    if (!import.meta.client) return
+    if (DEFAULT_AUTO_TEAM_NAME.test(normalizeTeamName(name))) return
+    try {
+      await $fetch('/api/teams', { method: 'POST' as const, body: { name } })
+      await refreshTeams()
+    } catch (e) {
+      console.error('[teams] persist new team failed:', e)
+    }
+  }
+
   function onAddNewTeam() {
-    assignment.addNewTeam(assignment.newTeamName.value)
+    const added = assignment.addNewTeam(assignment.newTeamName.value)
     assignment.newTeamName.value = ''
+    if (added) {
+      void persistNewTeamToDb(added)
+    }
   }
 
   const standingsSnapshot = ref<SavedStandingsSnapshot | null>(null)
@@ -283,6 +300,15 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
       }
     })
   }
+
+  useSyncAssignmentFromVkTeamLabels({
+    stateRestored,
+    existingTeamNames,
+    selectedIds,
+    selectedPlayers,
+    vkTeamLabelByPlayerId,
+    assignment,
+  })
 
   watch(
     () =>

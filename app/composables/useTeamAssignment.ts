@@ -107,11 +107,13 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
     return assignment.value[playerId] ?? ''
   }
 
-  function addNewTeam(name: string) {
+  /** @returns Нормализованное имя, если команда добавлена; иначе null. */
+  function addNewTeam(name: string): string | null {
     const trimmed = normalizeTeamName(name)
-    if (trimmed.length < 2) return
-    if (teamNameCollides(trimmed, listedTeamNamesRaw())) return
+    if (trimmed.length < 2) return null
+    if (teamNameCollides(trimmed, listedTeamNamesRaw())) return null
     newTeamNames.value = [...newTeamNames.value, trimmed]
+    return trimmed
   }
 
   function removeFromTeam(playerId: number) {
