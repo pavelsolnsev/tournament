@@ -140,6 +140,11 @@
                   @refresh-players="wizard.refreshPlayers()"
                   @go-to-teams="wizard.goToTeams()"
                   :paid-player-ids="paidPlayerIdsView"
+                  :vk-team-label-by-player-id="wizard.vkTeamLabelByPlayerId.value"
+                  :vk-team-slots="wizard.vkTeamSlots.value"
+                  @set-player-vk-team="(id, t) => wizard.setPlayerVkTeam(id, t)"
+                  @add-vk-team-slot="(n) => wizard.addVkTeamSlot(n)"
+                  @remove-vk-team-slot="(v, l) => wizard.removeVkTeamSlot(l)"
                   @toggle-player-paid="onTogglePlayerPaid"
                 />
               </template>
@@ -217,7 +222,7 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTournamentWizard } from '~/composables/useTournamentWizard'
 import { useAdminTournamentPlayerPaidSync } from '~/composables/useAdminTournamentPlayerPaidSync'
@@ -311,6 +316,8 @@ const { paidPlayerIdsView, onTogglePlayerPaid } = useAdminTournamentPlayerPaidSy
   broadcastAdminTournamentStateChanged,
 })
 
+let adminRosterPoll: ReturnType<typeof setInterval> | null = null
+
 onMounted(() => {
   if (!import.meta.client) return
   const match = document.cookie.match(/(?:^|; )admin_session=([^;]*)/)
@@ -325,6 +332,24 @@ onMounted(() => {
   }
   document.addEventListener('visibilitychange', onAdminVisibilitySync)
 })
+
+// Пока открыт шаг «Игроки», подтягиваем state с сервера — подписи команд с кнопок ВК без ручного обновления страницы.
+watch(
+  [isAdmin, isLimitedAdmin, () => wizard.step.value],
+  () => {
+    if (adminRosterPoll) {
+      clearInterval(adminRosterPoll)
+      adminRosterPoll = null
+    }
+    if (!import.meta.client) return
+    if (!isAdmin.value || isLimitedAdmin.value) return
+    if (wizard.step.value !== 0) return
+    adminRosterPoll = setInterval(() => {
+      void tournamentState.refresh()
+    }, 4000)
+  },
+  { immediate: true },
+)
 
 
 // Панель «Очистить данные» — обратный отсчёт как у очистки пожеланий.
@@ -373,6 +398,10 @@ watch(
 
 onUnmounted(() => {
   if (clearTournamentCountdown) clearInterval(clearTournamentCountdown)
+  if (adminRosterPoll) {
+    clearInterval(adminRosterPoll)
+    adminRosterPoll = null
+  }
   document.removeEventListener('visibilitychange', onAdminVisibilitySync)
   adminTournamentBc?.close()
   adminTournamentBc = null

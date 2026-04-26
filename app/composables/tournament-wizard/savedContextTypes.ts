@@ -30,6 +30,10 @@ export type SavedTournamentContext = {
   selectedIds: number[]
   /** id игроков с отметкой оплаты (синхрон с ВК через roster-snapshot и POST vk/player-paid). */
   paidPlayerIds?: number[]
+  /** Подписи команд из ВК (кнопки teamSlots); ключ — id игрока в виде строки для JSON. */
+  vkTeamLabelByPlayerId?: Record<string, string>
+  /** Слоты с кнопок бота (s tr A B) — заданы при link-event. */
+  vkTeamSlots?: string[]
   assignmentByPlayerId: Record<number, string>
   confirmedTeamNames: string[]
   teamColors: Record<string, number>

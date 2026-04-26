@@ -23,9 +23,25 @@
     />
     <!-- В режиме splitActions держим строгие колонки: имя и рейтинг не должны сдвигать кнопки оплаты. -->
     <template v-if="splitActions">
-      <span class="min-w-0 self-center truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-        {{ label }}
-      </span>
+      <div class="min-w-0 self-center">
+        <span class="block truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+          {{ label }}
+        </span>
+        <MoleculesDropdownSelect
+          v-if="hasVkTeamPicker"
+          :model-value="vkTeamPickerValue"
+          :options="vkTeamPickerOptions"
+          title="Команда (как в списке ВК)"
+          trigger-class="!h-auto !min-h-7 !w-full !max-w-full !justify-start px-2 py-0.5 text-left text-xs font-medium sm:max-w-[18rem]"
+          @update:model-value="onVkTeamPick"
+        />
+        <span
+          v-else-if="caption"
+          class="mt-0.5 block truncate text-xs font-medium text-slate-500 dark:text-slate-400"
+        >
+          {{ caption }}
+        </span>
+      </div>
       <span
         class="shrink-0 self-center w-[3.25rem] sm:w-[3.75rem] text-right whitespace-nowrap text-sm font-medium leading-tight text-slate-800 dark:text-slate-100 tabular-nums"
         aria-label="Рейтинг"
@@ -34,8 +50,25 @@
       </span>
     </template>
     <template v-else>
+      <div
+        v-if="caption"
+        class="min-w-0 flex-1"
+      >
+        <span
+          v-if="rating == null || rating === ''"
+          class="block truncate text-sm font-medium text-slate-800 dark:text-slate-100"
+        >{{ label }}</span>
+        <span
+          v-else
+          class="flex min-w-0 items-center gap-1 overflow-hidden"
+        >
+          <span class="min-w-0 truncate text-sm font-medium text-slate-800 dark:text-slate-100">{{ label }}</span>
+          <span class="shrink-0 whitespace-nowrap text-sm font-medium leading-tight text-slate-800 dark:text-slate-100 tabular-nums">{{ rating }}</span>
+        </span>
+        <span class="mt-0.5 block truncate text-xs font-medium text-slate-500 dark:text-slate-400">{{ caption }}</span>
+      </div>
       <span
-        v-if="rating == null || rating === ''"
+        v-else-if="rating == null || rating === ''"
         class="min-w-0 flex-1 truncate text-sm font-medium text-slate-800 dark:text-slate-100"
       >{{ label }}</span>
       <span
@@ -108,6 +141,12 @@ import { computed } from 'vue'
 
 const props = defineProps<{
   label: string
+  /** Вторая строка (например команда с кнопки ВК). */
+  caption?: string | null
+  /** Слоты с кнопок бота. */
+  vkTeamSlotOptions?: string[] | null
+  /** Текущая команда (как на сайте / в ВК). */
+  vkTeamValue?: string | null
   title: string
   action: 'add' | 'remove' | 'none'
   rootClass?: string
@@ -122,5 +161,38 @@ const splitActions = computed(
   () => props.showPaidToggle === true && props.action === 'remove',
 )
 
-const emit = defineEmits<{ activate: [], togglePaid: [] }>()
+const hasVkTeamPicker = computed(
+  () => splitActions.value && (props.vkTeamSlotOptions?.length ?? 0) > 0,
+)
+
+const vkTeamPickerOptions = computed(() => {
+  const slots = props.vkTeamSlotOptions ?? []
+  if (slots.length === 0) return []
+  return [
+    ...slots.map((t) => ({ value: t, label: t })),
+    { value: '__none', label: 'Без команды' },
+  ]
+})
+
+const vkTeamPickerValue = computed(() => {
+  const v = props.vkTeamValue
+  if (v && String(v).trim()) {
+    return String(v).trim()
+  }
+  return '__none'
+})
+
+const emit = defineEmits<{
+  activate: []
+  togglePaid: []
+  updateVkTeam: [value: string | null]
+}>()
+
+function onVkTeamPick(v: string | number) {
+  if (v === '__none') {
+    emit('updateVkTeam', null)
+    return
+  }
+  emit('updateVkTeam', String(v))
+}
 </script>

@@ -13,13 +13,18 @@ export type WizardAssignmentSlice = {
 
 /** Всё состояние refs, которое переносится из SavedTournamentContext при загрузке с сервера. */
 export type WizardServerContextDeps = {
-  lastAppliedSelectedIdsKey: Ref<string>
+  /** Составной отпечаток: selectedIds + vkTeamLabelByPlayerId (синхрон с ботом без затирания локальных правок). */
+  lastAppliedRosterKey: Ref<string>
   step: Ref<0 | 1 | 2>
   tournamentName: Ref<string>
   tournamentDate: Ref<string>
   venueLabel: Ref<string>
   formatLabel: Ref<string>
   selectedIds: Ref<Set<number>>
+  /** Подпись команды из ВК для игрока в списке турнира. */
+  vkTeamLabelByPlayerId: Ref<Record<number, string>>
+  /** Список кнопок команд из бота. */
+  vkTeamSlots: Ref<string[]>
   paidPlayerIds: Ref<Set<number>>
   playerSearch: Ref<string>
   assignment: WizardAssignmentSlice
@@ -36,14 +41,65 @@ export function selectedIdsFingerprint(ids: Iterable<number> | undefined | null)
   return arr.join(',')
 }
 
+/** Стабильная строка для сравнения карты подписей команд (ВК). */
+export function vkTeamLabelsFingerprint(m: Record<number, string> | undefined | null): string {
+  if (!m || typeof m !== 'object') return ''
+  const entries = Object.entries(m)
+    .map(([k, v]) => [Number(k), String(v).trim()] as const)
+    .filter(([id, v]) => Number.isFinite(id) && id > 0 && v.length > 0)
+    .sort((a, b) => a[0] - b[0])
+  return entries.map(([id, v]) => `${id}:${v}`).join(',')
+}
+
+function vkTeamSlotsFingerprint(slots: string[] | undefined | null): string {
+  if (!slots || !Array.isArray(slots)) return ''
+  return slots
+    .map((s) => String(s).trim())
+    .filter(Boolean)
+    .join('\x1e')
+}
+
+export function rosterSyncFingerprint(
+  selectedIds: Set<number> | Iterable<number> | undefined | null,
+  vkTeamLabelByPlayerId: Record<number, string> | undefined | null,
+  vkTeamSlots?: string[] | null,
+): string {
+  return `${selectedIdsFingerprint(selectedIds)}|${vkTeamLabelsFingerprint(vkTeamLabelByPlayerId)}|${vkTeamSlotsFingerprint(vkTeamSlots)}`
+}
+
+export function vkTeamSlotsFromSavedContext(ctx: SavedTournamentContext | null): string[] {
+  const raw = ctx?.vkTeamSlots
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map((s) => String(s).replace(/\s+/g, ' ').trim().slice(0, 40))
+    .filter(Boolean)
+    .filter((s, i, a) => a.findIndex((x) => x.toLowerCase() === s.toLowerCase()) === i)
+    .slice(0, 9)
+}
+
+export function vkTeamLabelMapFromSavedContext(ctx: SavedTournamentContext | null): Record<number, string> {
+  const raw = ctx?.vkTeamLabelByPlayerId
+  if (!raw || typeof raw !== 'object') return {}
+  const out: Record<number, string> = {}
+  for (const [k, v] of Object.entries(raw)) {
+    const id = Number(k)
+    if (!Number.isFinite(id) || id <= 0) continue
+    if (typeof v !== 'string' || !v.trim()) continue
+    out[id] = v.trim()
+  }
+  return out
+}
+
 export function applyEmptyTournamentContextLocal(deps: WizardServerContextDeps): void {
-  deps.lastAppliedSelectedIdsKey.value = ''
+  deps.lastAppliedRosterKey.value = ''
   deps.step.value = 0
   deps.tournamentName.value = ''
   deps.tournamentDate.value = ''
   deps.venueLabel.value = ''
   deps.formatLabel.value = ''
   deps.selectedIds.value = new Set()
+  deps.vkTeamLabelByPlayerId.value = {}
+  deps.vkTeamSlots.value = []
   deps.paidPlayerIds.value = new Set()
   deps.playerSearch.value = ''
   deps.assignment.assignment.value = {}
@@ -63,7 +119,7 @@ export function applyLoadedContext(
   mode: 'initial' | 'resync',
 ): void {
   if (!ctx) {
-    deps.lastAppliedSelectedIdsKey.value = ''
+    deps.lastAppliedRosterKey.value = ''
     if (mode === 'resync') {
       applyEmptyTournamentContextLocal(deps)
     }
@@ -91,6 +147,9 @@ export function applyLoadedContext(
   deps.selectedIds.value = new Set(
     (ctx.selectedIds ?? []).filter((id) => Number.isFinite(id)),
   )
+
+  deps.vkTeamLabelByPlayerId.value = vkTeamLabelMapFromSavedContext(ctx)
+  deps.vkTeamSlots.value = vkTeamSlotsFromSavedContext(ctx)
 
   deps.paidPlayerIds.value = new Set(
     (ctx.paidPlayerIds ?? []).filter((id) => Number.isFinite(id) && id > 0),
@@ -129,5 +188,9 @@ export function applyLoadedContext(
     (name) => !existingKeys.has(normalizeTeamName(name)),
   )
 
-  deps.lastAppliedSelectedIdsKey.value = selectedIdsFingerprint(deps.selectedIds.value)
+  deps.lastAppliedRosterKey.value = rosterSyncFingerprint(
+    deps.selectedIds.value,
+    deps.vkTeamLabelByPlayerId.value,
+    deps.vkTeamSlots.value,
+  )
 }

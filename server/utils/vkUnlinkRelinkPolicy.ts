@@ -49,6 +49,8 @@ export async function clearSelectedIdsOnVkLinkIfAfterUnlink() {
   }
   // Simple10: состав и оплаты только по текущему списку — как в state.put при пустом selected.
   state.selectedIds = []
+  delete state.vkTeamLabelByPlayerId
+  delete state.vkTeamSlots
   const paid = parsePaidIds(state.paidPlayerIds)
   state.paidPlayerIds = filterPaidToSelected(paid, [])
 

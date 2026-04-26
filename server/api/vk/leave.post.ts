@@ -14,6 +14,7 @@ interface VkLeaveBody {
 // Тип строки состояния турнира из базы.
 interface TournamentState {
   selectedIds?: number[]
+  vkTeamLabelByPlayerId?: Record<string, string>
   /** При live выход через бота из списка турнира запрещён (состав на сайте заморожен). */
   matchStatus?: string
   [key: string]: unknown
@@ -112,6 +113,18 @@ export default defineEventHandler(async (event) => {
       }
 
       state.selectedIds = newIds
+      if (state.vkTeamLabelByPlayerId && typeof state.vkTeamLabelByPlayerId === 'object') {
+        const vk = { ...state.vkTeamLabelByPlayerId }
+        const k = String(playerId)
+        if (k in vk) {
+          delete vk[k]
+        }
+        if (Object.keys(vk).length === 0) {
+          delete state.vkTeamLabelByPlayerId
+        } else {
+          state.vkTeamLabelByPlayerId = vk
+        }
+      }
       const next = JSON.stringify(state)
       const ok = await persistTournamentStateCas(prev, next)
       if (ok) return { ok: true, removed: true, playerId }

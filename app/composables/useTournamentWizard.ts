@@ -9,8 +9,14 @@ import type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composabl
 import {
   applyEmptyTournamentContextLocal,
   applyLoadedContext,
-  selectedIdsFingerprint,
+  rosterSyncFingerprint,
+  vkTeamLabelMapFromSavedContext,
+  vkTeamSlotsFromSavedContext,
 } from '~/composables/tournament-wizard/applyServerContext'
+
+/** Согласовано с server/utils/tournamentPaidPlayers parseVkTeamSlots. */
+const VK_TEAM_SLOT_NAME_MAX = 40
+const VK_TEAM_SLOT_MAX = 9
 
 export type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
 
@@ -41,6 +47,8 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   const confirmedTeamsList = computed(() => Array.from(assignment.confirmedTeamNames.value))
 
   const selectedIds = ref<Set<number>>(new Set())
+  const vkTeamLabelByPlayerId = ref<Record<number, string>>({})
+  const vkTeamSlots = ref<string[]>([])
 
   const selectedPlayers = computed(() => {
     const list = players.value ?? []
@@ -79,6 +87,9 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     const next = new Set(selectedIds.value)
     next.delete(id)
     selectedIds.value = next
+    vkTeamLabelByPlayerId.value = Object.fromEntries(
+      Object.entries(vkTeamLabelByPlayerId.value).filter(([k]) => Number(k) !== id),
+    ) as Record<number, string>
   }
 
   function onAddNewTeam() {
@@ -93,7 +104,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   const liveAwayTeam = ref('')
 
   const stateRestored = ref(false)
-  const lastAppliedSelectedIdsKey = ref('')
+  const lastAppliedRosterKey = ref('')
 
   const { serverState, isLoading, saveTournamentState, saveTournamentStateNow, cancelPendingSave, refresh } = stateSync
 
@@ -107,6 +118,8 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     formatLabel: '',
     selectedIds: [],
     paidPlayerIds: [],
+    vkTeamLabelByPlayerId: {},
+    vkTeamSlots: [],
     assignmentByPlayerId: {},
     confirmedTeamNames: [],
     teamColors: {},
@@ -117,13 +130,15 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   })
 
   const serverContextDeps = computed(() => ({
-    lastAppliedSelectedIdsKey,
+    lastAppliedRosterKey,
     step,
     tournamentName,
     tournamentDate,
     venueLabel,
     formatLabel,
     selectedIds,
+    vkTeamLabelByPlayerId,
+    vkTeamSlots,
     paidPlayerIds,
     playerSearch,
     assignment: {
@@ -157,8 +172,125 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     { immediate: true },
   )
 
+  function serializeVkTeamLabelsForSave(): Record<string, string> {
+    const out: Record<string, string> = {}
+    for (const id of selectedIds.value) {
+      if (Object.prototype.hasOwnProperty.call(vkTeamLabelByPlayerId.value, id)) {
+        const v = vkTeamLabelByPlayerId.value[id]
+        out[String(id)] = v && String(v).trim() ? String(v).trim() : ''
+      }
+    }
+    return out
+  }
+
+  function findMatchingSlot(raw: string, slots: string[]) {
+    const t = String(raw || '').replace(/\s+/g, ' ').trim()
+    if (!t) return null
+    const low = t.toLowerCase()
+    for (const s of slots) {
+      if (s.replace(/\s+/g, ' ').trim().toLowerCase() === low) {
+        return s
+      }
+    }
+    return null
+  }
+
+  function addVkTeamSlot(rawName: string) {
+    const t = String(rawName ?? '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, VK_TEAM_SLOT_NAME_MAX)
+    if (!t) {
+      return
+    }
+    const next = [...vkTeamSlots.value]
+    if (findMatchingSlot(t, next) != null) {
+      return
+    }
+    if (next.length >= VK_TEAM_SLOT_MAX) {
+      return
+    }
+    next.push(t)
+    vkTeamSlots.value = next
+    if (!stateRestored.value) {
+      return
+    }
+    void nextTick(async () => {
+      cancelPendingSave()
+      try {
+        await saveTournamentStateNow(savedContext.value)
+      } catch {
+        /* ignore */
+      }
+    })
+  }
+
+  function removeVkTeamSlot(rawName: string) {
+    const beforeSlots = [...vkTeamSlots.value]
+    const m = findMatchingSlot(rawName, beforeSlots)
+    if (m == null) {
+      return
+    }
+    const next = beforeSlots.filter((s) => s !== m)
+    const v = { ...vkTeamLabelByPlayerId.value }
+    for (const id of selectedIds.value) {
+      const cur = v[id] != null ? String(v[id]).trim() : ''
+      if (cur && findMatchingSlot(cur, beforeSlots) === m) {
+        v[id] = ''
+      }
+    }
+    vkTeamSlots.value = next
+    vkTeamLabelByPlayerId.value = v
+    if (!stateRestored.value) {
+      return
+    }
+    void nextTick(async () => {
+      cancelPendingSave()
+      try {
+        await saveTournamentStateNow(savedContext.value)
+      } catch {
+        /* ignore */
+      }
+    })
+  }
+
+  function setPlayerVkTeam(playerId: number, nextTeam: string | null) {
+    const slots = vkTeamSlots.value
+    const v = { ...vkTeamLabelByPlayerId.value }
+    if (nextTeam == null || !String(nextTeam).trim()) {
+      v[playerId] = ''
+    } else {
+      const raw = String(nextTeam).trim()
+      if (slots.length > 0) {
+        const m = findMatchingSlot(raw, slots)
+        v[playerId] = m != null && m !== '' ? m : raw
+      } else {
+        v[playerId] = raw
+      }
+    }
+    vkTeamLabelByPlayerId.value = v
+    if (!stateRestored.value) {
+      return
+    }
+    // Сразу пишем в БД, чтобы бот в roster-snapshot увидел смену без debounce 800ms.
+    void nextTick(async () => {
+      cancelPendingSave()
+      try {
+        await saveTournamentStateNow(savedContext.value)
+      } catch {
+        /* 403 / сеть — debounced put попробует снова при следующем изменении */
+      }
+    })
+  }
+
   watch(
-    () => [isLoading.value, selectedIdsFingerprint(serverState.value?.selectedIds)] as const,
+    () =>
+      [
+        isLoading.value,
+        serverState.value?.selectedIds,
+        serverState.value?.vkTeamLabelByPlayerId,
+        serverState.value?.vkTeamSlots,
+      ] as const,
     () => {
       if (!stateRestored.value || isLoading.value) {
         return
@@ -167,17 +299,27 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
       if (!ctx) {
         return
       }
-      const serverKey = selectedIdsFingerprint(ctx.selectedIds)
-      const localKey = selectedIdsFingerprint(selectedIds.value)
+      const serverKey = rosterSyncFingerprint(
+        new Set((ctx.selectedIds ?? []).filter((id) => Number.isFinite(id))),
+        vkTeamLabelMapFromSavedContext(ctx),
+        vkTeamSlotsFromSavedContext(ctx),
+      )
+      const localKey = rosterSyncFingerprint(
+        selectedIds.value,
+        vkTeamLabelByPlayerId.value,
+        vkTeamSlots.value,
+      )
       if (serverKey === localKey) {
-        lastAppliedSelectedIdsKey.value = serverKey
+        lastAppliedRosterKey.value = serverKey
         return
       }
-      if (localKey === lastAppliedSelectedIdsKey.value) {
+      if (localKey === lastAppliedRosterKey.value) {
         selectedIds.value = new Set(
           (ctx.selectedIds ?? []).filter((id) => Number.isFinite(id)),
         )
-        lastAppliedSelectedIdsKey.value = serverKey
+        vkTeamLabelByPlayerId.value = vkTeamLabelMapFromSavedContext(ctx)
+        vkTeamSlots.value = vkTeamSlotsFromSavedContext(ctx)
+        lastAppliedRosterKey.value = serverKey
       }
     },
   )
@@ -189,6 +331,8 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     venueLabel: venueLabel.value,
     formatLabel: formatLabel.value,
     selectedIds: Array.from(selectedIds.value),
+    vkTeamLabelByPlayerId: serializeVkTeamLabelsForSave(),
+    vkTeamSlots: [...vkTeamSlots.value],
     assignmentByPlayerId: assignment.assignment.value,
     confirmedTeamNames: Array.from(assignment.confirmedTeamNames.value),
     teamColors: normalizeTeamColorsMap(assignment.teamColors.value),
@@ -266,6 +410,11 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     filteredAvailablePlayers,
     selectPlayer,
     removePlayer,
+    vkTeamLabelByPlayerId,
+    vkTeamSlots,
+    setPlayerVkTeam,
+    addVkTeamSlot,
+    removeVkTeamSlot,
     paidPlayerIds,
     setPlayerPaid,
     onAddNewTeam,

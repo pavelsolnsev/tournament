@@ -12,17 +12,51 @@ interface VkJoinBody {
   vk_user_id: number
   first_name: string
   last_name: string
+  /** Подпись команды с кнопки в чате (турнир с teamSlots). */
+  team?: string
 }
 
 // Тип строки состояния турнира из базы.
 interface TournamentState {
   selectedIds?: number[]
+  /** Подпись команды из ВК (id игрока → название), строковые ключи для JSON. */
+  vkTeamLabelByPlayerId?: Record<string, string>
   /** upcoming | live | finished — при live запись через бота в список турнира запрещена. */
   matchStatus?: string
   [key: string]: unknown
 }
 
 const TOURNAMENT_KEY = 'tournament'
+const VK_TEAM_MAX = 64
+
+function normalizeVkTeamLabel(raw: string | undefined): string | null {
+  const t = String(raw ?? '').trim()
+  if (!t) return null
+  return t.slice(0, VK_TEAM_MAX)
+}
+
+function setVkLabelOnState(
+  state: TournamentState,
+  playerId: number,
+  team: string | null,
+) {
+  const next: Record<string, string> = {
+    ...((state.vkTeamLabelByPlayerId && typeof state.vkTeamLabelByPlayerId === 'object'
+      ? state.vkTeamLabelByPlayerId
+      : {}) as Record<string, string>),
+  }
+  const k = String(playerId)
+  if (team) {
+    next[k] = team
+  } else {
+    delete next[k]
+  }
+  if (Object.keys(next).length === 0) {
+    delete state.vkTeamLabelByPlayerId
+  } else {
+    state.vkTeamLabelByPlayerId = next
+  }
+}
 
 type AppStateRow = { value: string }
 type DbWriteResult = { affectedRows?: number }
@@ -80,6 +114,8 @@ export default defineEventHandler(async (event) => {
     if (!name) {
       throw createError({ statusCode: 400, statusMessage: 'Name is required' })
     }
+
+    const teamLabel = normalizeVkTeamLabel(body?.team)
 
     // Пока идёт live-матч — не добавляем в список турнира и не создаём игрока «в никуда».
     const stateRowsEarly = await queryWithRetry<AppStateRow[]>(
@@ -185,10 +221,23 @@ export default defineEventHandler(async (event) => {
 
       const selected = Array.isArray(state.selectedIds) ? state.selectedIds : []
       if (selected.includes(playerId)) {
+        if (teamLabel) {
+          setVkLabelOnState(state, playerId, teamLabel)
+          const next = JSON.stringify(state)
+          const ok = await persistTournamentStateCas(prev, next)
+          if (ok) {
+            persisted = true
+            break
+          }
+          continue
+        }
         persisted = true
         break
       }
       state.selectedIds = [...selected, playerId]
+      if (teamLabel) {
+        setVkLabelOnState(state, playerId, teamLabel)
+      }
       const next = JSON.stringify(state)
 
       const ok = await persistTournamentStateCas(prev, next)

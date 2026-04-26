@@ -24,6 +24,81 @@ export function filterPaidToSelected(paid: number[], selectedIds: number[]): num
   return paid.filter((id) => set.has(id)).sort((a, b) => a - b)
 }
 
+const VK_TEAM_LABEL_MAX = 64
+
+/** Подписи команд из ВК: ключ — id игрока (строка), как в JSON. */
+export function parseVkTeamLabelMap(raw: unknown): Record<string, string> {
+  if (!raw || typeof raw !== 'object') return {}
+  const out: Record<string, string> = {}
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const id = Number(k)
+    if (!Number.isFinite(id) || id <= 0) continue
+    if (typeof v !== 'string' || !v.trim()) continue
+    out[String(id)] = v.trim().slice(0, VK_TEAM_LABEL_MAX)
+  }
+  return out
+}
+
+/**
+ * Тело PUT /api/tournament/state: пустая строка по id — снятие команды, ключ должен сохраняться
+ * (и не затираться через parseVkTeamLabelMap, который пустые отбрасывает).
+ */
+export function parseVkTeamLabelMapForPutBody(raw: unknown): Record<string, string> {
+  if (!raw || typeof raw !== 'object') return {}
+  const out: Record<string, string> = {}
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const id = Number(k)
+    if (!Number.isFinite(id) || id <= 0) continue
+    if (typeof v !== 'string') continue
+    out[String(id)] = v.replace(/\s+/g, ' ').trim().slice(0, VK_TEAM_LABEL_MAX)
+  }
+  return out
+}
+
+/**
+ * PUT /api/tournament/state: по ключу из тела (явно задано админом) — значение с сайта; иначе — как в БД
+ * (в т.ч. после /api/vk/join). Пустая строка в client снимает метку.
+ */
+export function mergeVkTeamLabelsForPut(
+  prev: Record<string, string>,
+  client: Record<string, string>,
+  selectedIds: number[],
+): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const id of selectedIds) {
+    const k = String(id)
+    if (Object.prototype.hasOwnProperty.call(client, k)) {
+      if (client[k] && String(client[k]).trim()) {
+        out[k] = String(client[k]).trim().slice(0, VK_TEAM_LABEL_MAX)
+      }
+      // Явно передали пусто — out[k] не добавляем (сброс), не падаем в prev.
+    } else if (prev[k] && String(prev[k]).trim()) {
+      out[k] = String(prev[k]).trim().slice(0, VK_TEAM_LABEL_MAX)
+    }
+  }
+  return out
+}
+
+const VK_TEAM_SLOT_MAX = 9
+
+/** Список кнопок команд из бота (как в parseTeamSlotNames). */
+export function parseVkTeamSlots(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return []
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const s of raw) {
+    if (typeof s !== 'string') continue
+    const t = s.replace(/\s+/g, ' ').trim().slice(0, 40)
+    if (!t) continue
+    const k = t.toLowerCase()
+    if (seen.has(k)) continue
+    seen.add(k)
+    out.push(t)
+    if (out.length >= VK_TEAM_SLOT_MAX) break
+  }
+  return out
+}
+
 /** Читает JSON турнира из app_state и возвращает распарсенный объект или null. */
 export async function readTournamentStateRow(): Promise<{ json: TournamentJson, raw: string } | null> {
   const rows = await queryWithRetry<Array<{ value: string }>>(

@@ -7,7 +7,7 @@
       class="inline-flex h-8 w-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-sm text-slate-800
              transition-colors hover:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40
              dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-100 dark:hover:border-slate-500"
-      :class="open && 'border-emerald-400/60 ring-2 ring-emerald-500/25 dark:border-emerald-500/40'"
+      :class="[open && 'border-emerald-400/60 ring-2 ring-emerald-500/25 dark:border-emerald-500/40', props.triggerClass]"
       :title="title"
       :aria-expanded="open"
       aria-haspopup="listbox"
@@ -32,7 +32,7 @@
         <div
           v-if="open"
           ref="panelRef"
-          class="fixed z-[100] min-w-[2.5rem] touch-manipulation rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700/60 dark:bg-slate-900"
+          class="fixed z-[100] min-w-[2.5rem] max-w-[min(100vw-1rem,20rem)] touch-manipulation rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700/60 dark:bg-slate-900"
           :style="panelStyle"
           role="listbox"
           :aria-label="title"
@@ -42,14 +42,14 @@
             :key="String(opt.value)"
             type="button"
             role="option"
-            class="flex h-8 w-full items-center justify-center px-2 text-sm text-slate-800 transition-colors
+            class="flex h-8 w-full min-w-0 items-center px-2 text-left text-sm text-slate-800 transition-colors
                    hover:bg-slate-50 focus:outline-none focus-visible:bg-slate-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500/30
                    dark:text-slate-100 dark:hover:bg-slate-800/60 dark:focus-visible:bg-slate-800/60"
             :class="isSelected(opt.value) && 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-200'"
             :aria-selected="isSelected(opt.value)"
             @click="choose(opt.value)"
           >
-            <span class="leading-none">{{ opt.label }}</span>
+            <span class="min-w-0 truncate leading-tight">{{ opt.label }}</span>
           </button>
         </div>
       </Transition>
@@ -64,6 +64,8 @@ const props = defineProps<{
   modelValue: string | number
   options: ReadonlyArray<{ value: string | number; label: string }>
   title?: string
+  /** Доп. классы на кнопку-триггер (ширина, у таблиц команд и т.п.). */
+  triggerClass?: string
 }>()
 
 const emit = defineEmits<{

@@ -27,7 +27,12 @@
         :selected-players="selectedPlayers"
         :can-go-to-teams="canGoToTeams"
         :paid-player-ids="paidPlayerIds"
+        :vk-team-label-by-player-id="vkTeamLabelByPlayerId"
+        :vk-team-slots="vkTeamSlots"
         @remove-player="emit('removePlayer', $event)"
+        @set-player-vk-team="(id, t) => emit('setPlayerVkTeam', id, t)"
+        @add-vk-team-slot="emit('addVkTeamSlot', $event)"
+        @remove-vk-team-slot="(v, l) => emit('removeVkTeamSlot', v, l)"
         @go-to-teams="emit('goToTeams')"
         @toggle-player-paid="(id, paid) => emit('togglePlayerPaid', id, paid)"
       />
@@ -49,6 +54,9 @@ const props = defineProps<{
   formatLabel: string
   tournamentDate: string
   paidPlayerIds: Set<number>
+  /** Подписи команд из чата ВК (кнопки), по id игрока. */
+  vkTeamLabelByPlayerId: Record<number, string>
+  vkTeamSlots: string[]
 }>()
 
 const emit = defineEmits<{
@@ -61,6 +69,9 @@ const emit = defineEmits<{
   refreshPlayers: []
   goToTeams: []
   togglePlayerPaid: [playerId: number, paid: boolean]
+  setPlayerVkTeam: [playerId: number, team: string | null]
+  addVkTeamSlot: [name: string]
+  removeVkTeamSlot: [value: string, label: string]
 }>()
 
 // Переход к командам разрешён только если выбраны игроки, место и формат.

@@ -2,6 +2,7 @@ import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
 import { readVkListClosePending } from '../../utils/vkListCloseRequest'
+import { parseVkTeamLabelMap, parseVkTeamSlots } from '../../utils/tournamentPaidPlayers'
 
 const LINK_KEY = 'tournament_vk_link'
 const TOURNAMENT_KEY = 'tournament'
@@ -11,6 +12,8 @@ type MatchStatus = 'upcoming' | 'live' | 'finished'
 interface TournamentJson {
   selectedIds?: unknown
   paidPlayerIds?: unknown
+  vkTeamLabelByPlayerId?: unknown
+  vkTeamSlots?: unknown
   matchStatus?: unknown
   liveHomeTeam?: unknown
   liveAwayTeam?: unknown
@@ -26,6 +29,8 @@ interface LinkJson {
 interface ParsedTournament {
   selectedIds: number[]
   paidPlayerIds: number[]
+  vkTeamLabelByPlayerId: Record<string, string>
+  vkTeamSlots: string[]
   matchStatus: MatchStatus
   liveHomeTeam: string
   liveAwayTeam: string
@@ -36,6 +41,8 @@ function parseTournamentValue(value: string | undefined): ParsedTournament {
   const empty: ParsedTournament = {
     selectedIds: [],
     paidPlayerIds: [],
+    vkTeamLabelByPlayerId: {},
+    vkTeamSlots: [],
     matchStatus: 'upcoming',
     liveHomeTeam: '',
     liveAwayTeam: '',
@@ -59,6 +66,8 @@ function parseTournamentValue(value: string | undefined): ParsedTournament {
     return {
       selectedIds,
       paidPlayerIds,
+      vkTeamLabelByPlayerId: parseVkTeamLabelMap(st.vkTeamLabelByPlayerId),
+      vkTeamSlots: parseVkTeamSlots(st.vkTeamSlots),
       matchStatus,
       liveHomeTeam: typeof st.liveHomeTeam === 'string' ? st.liveHomeTeam : '',
       liveAwayTeam: typeof st.liveAwayTeam === 'string' ? st.liveAwayTeam : '',
@@ -72,6 +81,10 @@ function parseTournamentValue(value: string | undefined): ParsedTournament {
 type RosterBlock = {
   rosterVkUserIds: number[]
   paidVkUserIds: number[]
+  /** Метка команды с сайта по vk id (для списка в боте). */
+  rosterTeamLabelByVkUserId: Record<string, string>
+  /** Слоты команд из link-event. */
+  vkTeamSlots: string[]
   matchStatus: MatchStatus
   liveHomeTeam: string
   liveAwayTeam: string
@@ -81,11 +94,15 @@ type RosterBlock = {
 async function computeRosterBlock(parsed: ParsedTournament): Promise<RosterBlock> {
   const { selectedIds, paidPlayerIds, matchStatus, liveHomeTeam, liveAwayTeam, vkMuted } = parsed
   const paidSet = new Set(paidPlayerIds)
+  const labelByPlayerId = parsed.vkTeamLabelByPlayerId
+  const teamSlots = parsed.vkTeamSlots
 
   if (selectedIds.length === 0) {
     return {
       rosterVkUserIds: [],
       paidVkUserIds: [],
+      rosterTeamLabelByVkUserId: {},
+      vkTeamSlots: teamSlots,
       matchStatus,
       liveHomeTeam,
       liveAwayTeam,
@@ -108,9 +125,14 @@ async function computeRosterBlock(parsed: ParsedTournament): Promise<RosterBlock
   const paidVkUserIds: number[] = []
   const seenVk = new Set<number>()
   const seenPaidVk = new Set<number>()
+  const rosterTeamLabelByVkUserId: Record<string, string> = {}
+
   for (const pid of selectedIds) {
     const vkId = byId.get(pid)
     if (vkId == null || !Number.isFinite(vkId) || vkId === 0) continue
+    const lbl = labelByPlayerId[String(pid)]
+    // Всегда передаём ключ (в т.ч. ''): иначе бот не поймёт сброс «Без команды» и оставит prevTeams.
+    rosterTeamLabelByVkUserId[String(vkId)] = lbl && String(lbl).trim() ? String(lbl).trim() : ''
     if (seenVk.has(vkId)) continue
     seenVk.add(vkId)
     rosterVkUserIds.push(vkId)
@@ -125,6 +147,8 @@ async function computeRosterBlock(parsed: ParsedTournament): Promise<RosterBlock
   return {
     rosterVkUserIds,
     paidVkUserIds,
+    rosterTeamLabelByVkUserId,
+    vkTeamSlots: teamSlots,
     matchStatus,
     liveHomeTeam,
     liveAwayTeam,
