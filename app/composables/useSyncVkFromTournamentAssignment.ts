@@ -19,6 +19,7 @@ export function useSyncVkFromTournamentAssignment(opts: {
   stateRestored: Ref<boolean>
   step: Ref<number>
   selectedIds: Ref<Set<number>>
+  vkListTournament: Ref<boolean>
   vkTeamSlots: Ref<string[]>
   vkTeamLabelByPlayerId: Ref<Record<number, string>>
   assignment: AssignmentApi
@@ -30,6 +31,7 @@ export function useSyncVkFromTournamentAssignment(opts: {
   function syncVkFromTournamentAssignment() {
     if (!opts.stateRestored.value) return
     if (opts.step.value === 0) return
+    if (!opts.vkListTournament.value) return
 
     const slots = [...opts.vkTeamSlots.value]
     let slotsMutated = false

@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
     paidPlayerIds: [],
     vkTeamLabelByPlayerId: {},
     vkTeamSlots: [],
+    vkListTournament: false,
     assignmentByPlayerId: {},
     confirmedTeamNames: [],
     teamColors: {},

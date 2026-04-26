@@ -73,9 +73,12 @@
                     <button
                       v-if="crumb.step !== wizard.step.value"
                       type="button"
-                      class="inline-flex items-center rounded-lg px-2 py-1 text-sm font-medium
-                             text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-700 dark:hover:text-slate-200
-                             focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+                      class="inline-flex items-center rounded-lg px-2 py-1 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+                      :class="isBreadcrumbStepEnabled(crumb.step)
+                        ? 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-700 dark:hover:text-slate-200'
+                        : 'cursor-not-allowed text-slate-400 opacity-60 dark:text-slate-600'"
+                      :disabled="!isBreadcrumbStepEnabled(crumb.step)"
+                      :title="breadcrumbDisabledTitle(crumb.step)"
                       @click="navigateBreadcrumb(crumb.step)"
                     >
                       {{ crumb.label }}
@@ -96,6 +99,8 @@
                 <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-50 sm:text-3xl">
                   {{ wizard.step.value === 0 ? 'Выберите игроков' : 'Команды' }}
                 </h1>
+
+                <OrganismsTournamentStepVkListStartPanel v-if="wizard.step.value === 0" />
 
                 <OrganismsTournamentStepTeams
                   v-if="wizard.step.value === 1"
@@ -140,6 +145,7 @@
                   @refresh-players="wizard.refreshPlayers()"
                   @go-to-teams="wizard.goToTeams()"
                   :paid-player-ids="paidPlayerIdsView"
+                  :vk-list-tournament="wizard.vkListTournament.value"
                   :vk-team-label-by-player-id="wizard.vkTeamLabelByPlayerId.value"
                   :vk-team-slots="wizard.vkTeamSlots.value"
                   @set-player-vk-team="(id, t) => wizard.setPlayerVkTeam(id, t)"
@@ -225,6 +231,7 @@ import type { Player } from '~/types/tournament'
 import { computed, watch } from 'vue'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTournamentWizard } from '~/composables/useTournamentWizard'
+import { useTournamentWizardBreadcrumbs } from '~/composables/useTournamentWizardBreadcrumbs'
 import { useAdminTournamentPlayerPaidSync } from '~/composables/useAdminTournamentPlayerPaidSync'
 import { useIndexPageSeo } from '~/composables/useIndexPageSeo'
 import { TOURNAMENT_STATE_NUXT_KEY, useTournamentState } from '~/composables/useTournamentState'
@@ -449,13 +456,6 @@ const { data: allPlayers, error: playersFetchError, refresh: refreshPlayers } = 
   default: () => [],
 })
 
-// Шаги мастера для хлебной крошки.
-const breadcrumbs = [
-  { step: 0, label: 'Игроки' },
-  { step: 1, label: 'Команды' },
-  { step: 2, label: 'Таблица' },
-] as const
-
 // Переход на шаг «Турнирная таблица» с немедленным обновлением state у зрителя.
 // Вызывается при клике на кнопку «Переход к турниру» — так зритель сразу видит актуальные команды и составы.
 async function goToStandings() {
@@ -464,12 +464,8 @@ async function goToStandings() {
   await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
 }
 
-// Клик по крошке: шаг 2 — тот же сценарий, что «Переход к турниру» (обновление state для зрителя).
-function navigateBreadcrumb(step: 0 | 1 | 2) {
-  if (step === wizard.step.value) return
-  if (step === 2) void goToStandings()
-  else wizard.step.value = step
-}
+const { breadcrumbs, isBreadcrumbStepEnabled, breadcrumbDisabledTitle, navigateBreadcrumb } =
+  useTournamentWizardBreadcrumbs(wizard, goToStandings)
 
 // После «Завершить турнир»: статус finished уже в мастере — сохраняем для зрителей, затем сразу сбрасываем мастер (выбор игроков), без промежуточной плашки.
 async function handleTournamentFinished() {

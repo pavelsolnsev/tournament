@@ -149,7 +149,6 @@ const emit = defineEmits<{
   'update:tournamentDate': [value: string]
 }>()
 
-// Уникальные id для label/input — нужны для доступности.
 const uid = useId?.() ?? Math.random().toString(36).slice(2)
 const venueInputId = `venue-input-${uid}`
 const formatInputId = `format-input-${uid}`

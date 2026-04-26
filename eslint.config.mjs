@@ -41,4 +41,11 @@ export default withNuxt(
       'vue/attributes-order': 'off',
     },
   },
+  {
+    files: ['app/pages/index.vue'],
+    rules: {
+      // Оркестрация мастера, зрителя, синка вкладок и очистки — один входной файл.
+      'max-lines': 'off',
+    },
+  },
 )

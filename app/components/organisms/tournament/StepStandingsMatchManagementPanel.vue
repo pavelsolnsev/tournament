@@ -9,9 +9,9 @@
     <div
       class="divide-y divide-slate-200/90 overflow-hidden rounded-xl border border-slate-200/90 bg-white/80 dark:divide-slate-700/60 dark:border-slate-700/50 dark:bg-slate-900/40"
     >
-      <!-- Матч -->
+      <!-- Матч: только пока выбрана пара — после «Показать итоги» команды сбрасываются, кнопки скрыты (не нажать повторно). -->
       <div
-        v-if="canFinishMatchShowResults || canFinishMatchSilent"
+        v-if="(canFinishMatchShowResults || canFinishMatchSilent) && canFinishMatch"
         class="flex flex-col gap-1.5 p-2"
         aria-label="Матч"
       >
@@ -20,9 +20,7 @@
           type="button"
           class="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-3 text-sm font-semibold text-white transition-colors
                  hover:bg-emerald-400 active:bg-emerald-600 dark:text-slate-900
-                 disabled:cursor-not-allowed disabled:opacity-40
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-          :disabled="!(canFinishMatch || hasPlayedMatches)"
           @click="openActionConfirm('finish')"
         >
           <svg
@@ -58,9 +56,7 @@
           type="button"
           class="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white transition-colors
                  hover:bg-emerald-500 active:bg-emerald-700 dark:text-slate-950
-                 disabled:cursor-not-allowed disabled:opacity-40
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-          :disabled="!(canFinishMatch || hasPlayedMatches)"
           @click="openActionConfirm('finishSilent')"
         >
           <svg

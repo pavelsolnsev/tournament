@@ -2,6 +2,7 @@ import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
 import { readVkListClosePending } from '../../utils/vkListCloseRequest'
+import { readVkStartListPending } from '../../utils/vkStartListRequest'
 import { parseVkTeamLabelMap, parseVkTeamSlots } from '../../utils/tournamentPaidPlayers'
 
 const LINK_KEY = 'tournament_vk_link'
@@ -162,7 +163,13 @@ export default defineEventHandler(async (event) => {
   await ensureTablesExist()
   requireVkBotToken(event)
 
-  const closeVkListRequested = await readVkListClosePending()
+  const [closeVkListRequested, startRow] = await Promise.all([
+    readVkListClosePending(),
+    readVkStartListPending(),
+  ])
+  const startVkRequested = startRow
+    ? { commandText: startRow.commandText, peerId: startRow.peerId }
+    : null
 
   const stateRows = await queryWithRetry<Array<{ value: string }>>(
     'SELECT value FROM app_state WHERE key_name = ?',
@@ -178,6 +185,7 @@ export default defineEventHandler(async (event) => {
 
   const tail = {
     closeVkListRequested,
+    startVkRequested,
     ...rosterBlock,
   }
 

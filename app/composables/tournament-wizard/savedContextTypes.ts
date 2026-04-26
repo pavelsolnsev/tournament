@@ -34,6 +34,8 @@ export type SavedTournamentContext = {
   vkTeamLabelByPlayerId?: Record<string, string>
   /** Слоты с кнопок бота (s tr A B) — заданы при link-event. */
   vkTeamSlots?: string[]
+  /** true только для списка турнира в боте (s tr) — на шаге «Игроки» показываются команды ВК. */
+  vkListTournament?: boolean
   assignmentByPlayerId: Record<number, string>
   confirmedTeamNames: string[]
   teamColors: Record<string, number>

@@ -24,8 +24,9 @@
         </span>
       </div>
 
-      <!-- Список кнопок ВК: добавление/удаление под плашкой «В игре», не в выпадашке у игрока. -->
+      <!-- Список кнопок ВК: только для списка турнира в чате (s tr). -->
       <div
+        v-if="vkListTournament"
         class="space-y-2 rounded-xl border border-slate-200/80 bg-white/60 px-3 py-2.5 dark:border-slate-600/50 dark:bg-slate-800/25"
         role="region"
         aria-label="Команды для кнопок в чате ВК"
@@ -121,9 +122,9 @@
           v-for="p in displayedSelectedPlayers"
           :key="p.id"
           v-bind="selectedPlayerRowBind(p)"
-          :caption="vkTeamOptionsForPicker.length > 0 ? null : (vkTeamLabelByPlayerId[p.id] || null)"
-          :vk-team-slot-options="vkTeamOptionsForPicker"
-          :vk-team-value="vkTeamLabelByPlayerId[p.id] || null"
+          :caption="!vkListTournament ? null : (vkTeamOptionsForPicker.length > 0 ? null : (vkTeamLabelByPlayerId[p.id] || null))"
+          :vk-team-slot-options="vkListTournament ? vkTeamOptionsForPicker : []"
+          :vk-team-value="vkListTournament ? (vkTeamLabelByPlayerId[p.id] || null) : null"
           show-paid-toggle
           :player-paid="paidPlayerIds.has(p.id)"
           action="remove"
@@ -181,10 +182,14 @@ const props = defineProps<{
   vkTeamLabelByPlayerId: Record<number, string>
   /** Имена команд с кнопок бота (s tr …). */
   vkTeamSlots: string[]
+  vkListTournament: boolean
 }>()
 
 /** Есть ли смысл показывать сортировку по командам: слоты ВК или хотя бы одна подпись у выбранных. */
 const hasTeamsForFilter = computed(() => {
+  if (!props.vkListTournament) {
+    return false
+  }
   if (props.vkTeamSlots.length > 0) {
     return true
   }
@@ -230,6 +235,9 @@ const displayedSelectedPlayers = computed(() => {
 
 /** Слоты бота + фактические подписи в составе — чтобы смена команды была в строке даже до синка слотов. */
 const vkTeamOptionsForPicker = computed(() => {
+  if (!props.vkListTournament) {
+    return []
+  }
   const seen = new Set<string>()
   const out: string[] = []
   const push = (raw: string) => {

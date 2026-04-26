@@ -41,6 +41,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   const selectedIds = ref<Set<number>>(new Set())
   const vkTeamLabelByPlayerId = ref<Record<number, string>>({})
   const vkTeamSlots = ref<string[]>([])
+  const vkListTournament = ref(false)
 
   const selectedPlayers = computed(() => {
     const list = players.value ?? []
@@ -128,6 +129,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     paidPlayerIds: [],
     vkTeamLabelByPlayerId: {},
     vkTeamSlots: [],
+    vkListTournament: false,
     assignmentByPlayerId: {},
     confirmedTeamNames: [],
     teamColors: {},
@@ -148,6 +150,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     selectedIds,
     vkTeamLabelByPlayerId,
     vkTeamSlots,
+    vkListTournament,
     paidPlayerIds,
     playerSearch,
     assignment: {
@@ -297,6 +300,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     existingTeamNames,
     selectedIds,
     selectedPlayers,
+    vkListTournament,
     vkTeamLabelByPlayerId,
     assignment,
   })
@@ -308,6 +312,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     selectedIds,
     vkTeamLabelByPlayerId,
     vkTeamSlots,
+    vkListTournament,
     lastAppliedRosterKey,
   })
 
@@ -320,6 +325,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     selectedIds: Array.from(selectedIds.value),
     vkTeamLabelByPlayerId: serializeVkTeamLabelsForSave(),
     vkTeamSlots: [...vkTeamSlots.value],
+    vkListTournament: vkListTournament.value,
     assignmentByPlayerId: assignment.assignment.value,
     confirmedTeamNames: Array.from(assignment.confirmedTeamNames.value),
     teamColors: normalizeTeamColorsMap(assignment.teamColors.value),
@@ -333,6 +339,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     stateRestored,
     step,
     selectedIds,
+    vkListTournament,
     vkTeamSlots,
     vkTeamLabelByPlayerId,
     assignment: { getTeam: assignment.getTeam, assignment: assignment.assignment },
@@ -412,6 +419,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     removePlayer,
     vkTeamLabelByPlayerId,
     vkTeamSlots,
+    vkListTournament,
     setPlayerVkTeam,
     addVkTeamSlot,
     removeVkTeamSlot,

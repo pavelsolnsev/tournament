@@ -61,24 +61,54 @@ export async function persistTournamentStatePutBody(state: Record<string, unknow
 
   const isFullTournamentReset = newSelected.length === 0 && snapshotEmpty && stepIsInitial
 
-  state.paidPlayerIds = filterPaidToSelected(preservedPaid, newSelected)
-  const prevVk = parseVkTeamLabelMap(prev?.json.vkTeamLabelByPlayerId)
-  const clientVk = parseVkTeamLabelMapForPutBody(
-    (state as { vkTeamLabelByPlayerId?: unknown }).vkTeamLabelByPlayerId,
-  )
-  ;(state as { vkTeamLabelByPlayerId: Record<string, string> }).vkTeamLabelByPlayerId = mergeVkTeamLabelsForPut(
-    prevVk,
-    clientVk,
-    newSelected,
-  )
-  const clientSlots = parseVkTeamSlots((state as { vkTeamSlots?: unknown }).vkTeamSlots)
-  const prevSlots = parseVkTeamSlots(prev?.json.vkTeamSlots)
-  if (clientSlots.length > 0) {
-    ;(state as { vkTeamSlots: string[] }).vkTeamSlots = clientSlots
+  const clientVkListFlag = (state as { vkListTournament?: unknown }).vkListTournament
+  let vkListTournament: boolean
+  if (typeof clientVkListFlag === 'boolean') {
+    vkListTournament = clientVkListFlag
   } else if (isFullTournamentReset) {
+    vkListTournament = false
+  } else {
+    const prevFlag = prevJson.vkListTournament
+    if (prevFlag === false) {
+      vkListTournament = false
+    } else if (prevFlag === true) {
+      vkListTournament = true
+    } else {
+      const prevSlotsHint = parseVkTeamSlots(prevJson.vkTeamSlots)
+      if (prevSlotsHint.length > 0) {
+        vkListTournament = true
+      } else {
+        const prevLab = parseVkTeamLabelMap(prevJson.vkTeamLabelByPlayerId)
+        vkListTournament = Object.keys(prevLab).length > 0
+      }
+    }
+  }
+  ;(state as { vkListTournament: boolean }).vkListTournament = vkListTournament
+
+  state.paidPlayerIds = filterPaidToSelected(preservedPaid, newSelected)
+
+  if (!vkListTournament) {
+    ;(state as { vkTeamLabelByPlayerId: Record<string, string> }).vkTeamLabelByPlayerId = {}
     ;(state as { vkTeamSlots: string[] }).vkTeamSlots = []
   } else {
-    ;(state as { vkTeamSlots: string[] }).vkTeamSlots = prevSlots
+    const prevVk = parseVkTeamLabelMap(prev?.json.vkTeamLabelByPlayerId)
+    const clientVk = parseVkTeamLabelMapForPutBody(
+      (state as { vkTeamLabelByPlayerId?: unknown }).vkTeamLabelByPlayerId,
+    )
+    ;(state as { vkTeamLabelByPlayerId: Record<string, string> }).vkTeamLabelByPlayerId = mergeVkTeamLabelsForPut(
+      prevVk,
+      clientVk,
+      newSelected,
+    )
+    const clientSlots = parseVkTeamSlots((state as { vkTeamSlots?: unknown }).vkTeamSlots)
+    const prevSlots = parseVkTeamSlots(prev?.json.vkTeamSlots)
+    if (clientSlots.length > 0) {
+      ;(state as { vkTeamSlots: string[] }).vkTeamSlots = clientSlots
+    } else if (isFullTournamentReset) {
+      ;(state as { vkTeamSlots: string[] }).vkTeamSlots = []
+    } else {
+      ;(state as { vkTeamSlots: string[] }).vkTeamSlots = prevSlots
+    }
   }
 
   // Два устройства в live: не теряем отметки по текущему матчу при конкурирующих PUT.

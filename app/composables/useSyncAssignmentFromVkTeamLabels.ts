@@ -17,12 +17,14 @@ export function useSyncAssignmentFromVkTeamLabels(opts: {
   existingTeamNames: ComputedRef<string[]>
   selectedIds: Ref<Set<number>>
   selectedPlayers: ComputedRef<Player[]>
+  vkListTournament: Ref<boolean>
   vkTeamLabelByPlayerId: Ref<Record<number, string>>
   assignment: AssignmentSync
 }) {
   watch(
     () => ({
       restored: opts.stateRestored.value,
+      vkList: opts.vkListTournament.value,
       dbTeams: opts.existingTeamNames.value,
       selectedIds: [...opts.selectedIds.value].sort((a, b) => a - b).join(','),
       vkFingerprint: Object.keys(opts.vkTeamLabelByPlayerId.value)
@@ -34,6 +36,7 @@ export function useSyncAssignmentFromVkTeamLabels(opts: {
     }),
     () => {
       if (!opts.stateRestored.value) return
+      if (!opts.vkListTournament.value) return
       const dbTeams = opts.existingTeamNames.value
       if (dbTeams.length === 0) return
       for (const p of opts.selectedPlayers.value) {

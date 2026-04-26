@@ -26,6 +26,14 @@
         @remove-free-player="emit('removePlayer', $event)"
       />
 
+      <OrganismsTournamentStepTeamsRostersOverview
+        :players="selectedPlayers"
+        :team-options="teamOptions"
+        :get-team="getTeam"
+        :get-team-color="getTeamColor"
+        :confirmed-team-names="confirmedTeamNames"
+      />
+
       <!-- Основная зона: команды + состав -->
       <OrganismsPlayerTeamAssignmentList
         :players="selectedPlayers"

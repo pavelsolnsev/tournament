@@ -6,12 +6,13 @@
     :placeholder="placeholder"
     :disabled="disabled"
     :class="mergedClass"
-    @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+    @input="onInput"
+    @focus="onFocus"
   >
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -23,6 +24,8 @@ const props = withDefaults(
     disabled?: boolean
     inputClass?: string
     block?: boolean
+    /** Каретка в конец строки при фокусе и после ввода (удобно для поиска и контролируемого :value). */
+    caretAtEnd?: boolean
   }>(),
   {
     variant: 'field',
@@ -32,10 +35,30 @@ const props = withDefaults(
     placeholder: '',
     id: '',
     inputClass: '',
+    caretAtEnd: false,
   },
 )
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
+
+function moveCaretToEnd(el: HTMLInputElement) {
+  const n = el.value.length
+  el.setSelectionRange(n, n)
+}
+
+function onInput(e: Event) {
+  const el = e.target as HTMLInputElement
+  emit('update:modelValue', el.value)
+  if (props.caretAtEnd) {
+    void nextTick(() => moveCaretToEnd(el))
+  }
+}
+
+function onFocus(e: FocusEvent) {
+  if (!props.caretAtEnd) return
+  const el = e.target as HTMLInputElement
+  void nextTick(() => moveCaretToEnd(el))
+}
 
 const focusRing =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 disabled:opacity-50 transition-colors'

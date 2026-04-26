@@ -15,12 +15,6 @@
         class="min-w-0 flex-1 truncate text-sm font-medium leading-snug text-slate-800 dark:text-slate-100"
         :title="name"
       >{{ name }}</span>
-      <span
-        v-if="isTeamConfirmed(name)"
-        class="shrink-0 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-emerald-700 dark:text-emerald-300"
-      >
-        ✓
-      </span>
     </div>
 
     <span
@@ -66,9 +60,6 @@
       >
         ↩
       </button>
-
-      <!-- Пустой спейсер — держит ширину когда ни одна из двух кнопок не видна -->
-      <span v-else class="inline-flex h-8 w-8" aria-hidden="true" />
 
       <!-- Удалить команду -->
       <button

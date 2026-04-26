@@ -1,4 +1,18 @@
 export default defineNuxtConfig({
+  // Локалка: дефолтный peer_id беседы ВК в админке; на проде — базовый runtimeConfig ниже.
+  $development: {
+    runtimeConfig: {
+      public: {
+        vkDefaultPeerId: '2000000001',
+      },
+    },
+  },
+  runtimeConfig: {
+    public: {
+      /** Peer чата ВК по умолчанию (форма «Список в ВК»). Переопределение: NUXT_PUBLIC_VK_DEFAULT_PEER_ID */
+      vkDefaultPeerId: '2000000002',
+    },
+  },
   // Дата совместимости Nitro — убирает предупреждение и фиксирует поведение деплоя.
   compatibilityDate: '2026-04-18',
   srcDir: 'app',

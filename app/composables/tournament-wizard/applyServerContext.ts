@@ -25,6 +25,8 @@ export type WizardServerContextDeps = {
   vkTeamLabelByPlayerId: Ref<Record<number, string>>
   /** Список кнопок команд из бота. */
   vkTeamSlots: Ref<string[]>
+  /** Режим списка турнира в ВК (s tr) — иначе команды ВК на сайте скрыты. */
+  vkListTournament: Ref<boolean>
   paidPlayerIds: Ref<Set<number>>
   playerSearch: Ref<string>
   assignment: WizardAssignmentSlice
@@ -63,8 +65,12 @@ export function rosterSyncFingerprint(
   selectedIds: Set<number> | Iterable<number> | undefined | null,
   vkTeamLabelByPlayerId: Record<number, string> | undefined | null,
   vkTeamSlots?: string[] | null,
+  vkListTournament?: boolean,
 ): string {
-  return `${selectedIdsFingerprint(selectedIds)}|${vkTeamLabelsFingerprint(vkTeamLabelByPlayerId)}|${vkTeamSlotsFingerprint(vkTeamSlots)}`
+  const vkOn = vkListTournament === true
+  const labelsPart = vkOn ? vkTeamLabelsFingerprint(vkTeamLabelByPlayerId) : ''
+  const slotsPart = vkOn ? vkTeamSlotsFingerprint(vkTeamSlots) : ''
+  return `${selectedIdsFingerprint(selectedIds)}|${labelsPart}|${slotsPart}|vk:${vkOn ? 1 : 0}`
 }
 
 export function vkTeamSlotsFromSavedContext(ctx: SavedTournamentContext | null): string[] {
@@ -90,6 +96,15 @@ export function vkTeamLabelMapFromSavedContext(ctx: SavedTournamentContext | nul
   return out
 }
 
+/** Явный false — не турнир; true — турнир; иначе по наличию слотов/подписей (старые сохранения до поля vkListTournament). */
+export function vkListTournamentFromSavedContext(ctx: SavedTournamentContext | null): boolean {
+  if (!ctx) return false
+  if (ctx.vkListTournament === false) return false
+  if (ctx.vkListTournament === true) return true
+  if (vkTeamSlotsFromSavedContext(ctx).length > 0) return true
+  return Object.keys(vkTeamLabelMapFromSavedContext(ctx)).length > 0
+}
+
 export function applyEmptyTournamentContextLocal(deps: WizardServerContextDeps): void {
   deps.lastAppliedRosterKey.value = ''
   deps.step.value = 0
@@ -100,6 +115,7 @@ export function applyEmptyTournamentContextLocal(deps: WizardServerContextDeps):
   deps.selectedIds.value = new Set()
   deps.vkTeamLabelByPlayerId.value = {}
   deps.vkTeamSlots.value = []
+  deps.vkListTournament.value = false
   deps.paidPlayerIds.value = new Set()
   deps.playerSearch.value = ''
   deps.assignment.assignment.value = {}
@@ -146,8 +162,15 @@ export function applyLoadedContext(
     (ctx.selectedIds ?? []).filter((id) => Number.isFinite(id)),
   )
 
-  deps.vkTeamLabelByPlayerId.value = vkTeamLabelMapFromSavedContext(ctx)
-  deps.vkTeamSlots.value = vkTeamSlotsFromSavedContext(ctx)
+  const vkListOn = vkListTournamentFromSavedContext(ctx)
+  deps.vkListTournament.value = vkListOn
+  if (!vkListOn) {
+    deps.vkTeamLabelByPlayerId.value = {}
+    deps.vkTeamSlots.value = []
+  } else {
+    deps.vkTeamLabelByPlayerId.value = vkTeamLabelMapFromSavedContext(ctx)
+    deps.vkTeamSlots.value = vkTeamSlotsFromSavedContext(ctx)
+  }
 
   deps.paidPlayerIds.value = new Set(
     (ctx.paidPlayerIds ?? []).filter((id) => Number.isFinite(id) && id > 0),
@@ -190,5 +213,6 @@ export function applyLoadedContext(
     deps.selectedIds.value,
     deps.vkTeamLabelByPlayerId.value,
     deps.vkTeamSlots.value,
+    deps.vkListTournament.value,
   )
 }

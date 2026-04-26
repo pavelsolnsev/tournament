@@ -48,6 +48,7 @@
       variant="search"
       size="xs"
       placeholder="Поиск…"
+      caret-at-end
       @update:model-value="onPlayerSearchInput"
     />
 

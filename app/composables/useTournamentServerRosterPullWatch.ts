@@ -3,6 +3,7 @@ import { watch } from 'vue'
 import type { SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
 import {
   rosterSyncFingerprint,
+  vkListTournamentFromSavedContext,
   vkTeamLabelMapFromSavedContext,
   vkTeamSlotsFromSavedContext,
 } from '~/composables/tournament-wizard/applyServerContext'
@@ -15,6 +16,7 @@ export function useTournamentServerRosterPullWatch(opts: {
   selectedIds: Ref<Set<number>>
   vkTeamLabelByPlayerId: Ref<Record<number, string>>
   vkTeamSlots: Ref<string[]>
+  vkListTournament: Ref<boolean>
   lastAppliedRosterKey: Ref<string>
 }) {
   watch(
@@ -24,20 +26,26 @@ export function useTournamentServerRosterPullWatch(opts: {
         opts.serverState.value?.selectedIds,
         opts.serverState.value?.vkTeamLabelByPlayerId,
         opts.serverState.value?.vkTeamSlots,
+        opts.serverState.value?.vkListTournament,
       ] as const,
     () => {
       if (!opts.stateRestored.value || opts.isLoading.value) return
       const ctx = opts.serverState.value
       if (!ctx) return
+      const serverVkList = vkListTournamentFromSavedContext(ctx)
+      const serverLabels = serverVkList ? vkTeamLabelMapFromSavedContext(ctx) : {}
+      const serverSlots = serverVkList ? vkTeamSlotsFromSavedContext(ctx) : []
       const serverKey = rosterSyncFingerprint(
         new Set((ctx.selectedIds ?? []).filter((id) => Number.isFinite(id))),
-        vkTeamLabelMapFromSavedContext(ctx),
-        vkTeamSlotsFromSavedContext(ctx),
+        serverLabels,
+        serverSlots,
+        serverVkList,
       )
       const localKey = rosterSyncFingerprint(
         opts.selectedIds.value,
         opts.vkTeamLabelByPlayerId.value,
         opts.vkTeamSlots.value,
+        opts.vkListTournament.value,
       )
       if (serverKey === localKey) {
         opts.lastAppliedRosterKey.value = serverKey
@@ -45,8 +53,9 @@ export function useTournamentServerRosterPullWatch(opts: {
       }
       if (localKey === opts.lastAppliedRosterKey.value) {
         opts.selectedIds.value = new Set((ctx.selectedIds ?? []).filter((id) => Number.isFinite(id)))
-        opts.vkTeamLabelByPlayerId.value = vkTeamLabelMapFromSavedContext(ctx)
-        opts.vkTeamSlots.value = vkTeamSlotsFromSavedContext(ctx)
+        opts.vkListTournament.value = serverVkList
+        opts.vkTeamLabelByPlayerId.value = serverLabels
+        opts.vkTeamSlots.value = serverSlots
         opts.lastAppliedRosterKey.value = serverKey
       }
     },

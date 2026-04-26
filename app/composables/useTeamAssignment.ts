@@ -152,25 +152,22 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
     )
     newTeamNames.value = [...newTeamNames.value, ...toAdd]
 
-    // Назначаем игроков, подтверждаем команды и присваиваем цвет по индексу.
+    // Назначаем игроков и цвет по индексу; участие не подтверждаем — только вручную (кнопка ✓).
     // Команда 1 → индекс 0 (🔴), Команда 2 → 1 (🔵), Команда 3 → 2 (🟢), Команда 4 → 3 (🟡).
     const nextAssignment: Record<number, string> = {}
     const nextColors: Record<string, number> = {}
-    const nextConfirmed = new Set<string>()
 
     teamNamesGenerated.forEach((teamName, idx) => {
       const playerIds = teamAssignments[teamName] ?? []
       for (const id of playerIds) {
         nextAssignment[id] = teamName
       }
-      // Цвет совпадает с порядковым номером команды (0-based).
       nextColors[normalizeTeamName(teamName)] = idx
-      nextConfirmed.add(normalizeTeamName(teamName))
     })
 
     assignment.value = nextAssignment
     teamColors.value = nextColors
-    confirmedTeamNames.value = nextConfirmed
+    confirmedTeamNames.value = new Set()
     // Запоминаем нормализованные имена авто-команд — чтобы UI мог их выделить отдельно.
     autoDistributedNames.value = new Set(teamNamesGenerated.map(normalizeTeamName))
   }

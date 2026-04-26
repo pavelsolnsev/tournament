@@ -27,6 +27,7 @@
         :selected-players="selectedPlayers"
         :can-go-to-teams="canGoToTeams"
         :paid-player-ids="paidPlayerIds"
+        :vk-list-tournament="vkListTournament"
         :vk-team-label-by-player-id="vkTeamLabelByPlayerId"
         :vk-team-slots="vkTeamSlots"
         @remove-player="emit('removePlayer', $event)"
@@ -57,6 +58,8 @@ const props = defineProps<{
   /** Подписи команд из чата ВК (кнопки), по id игрока. */
   vkTeamLabelByPlayerId: Record<number, string>
   vkTeamSlots: string[]
+  /** Список в ВК в режиме турнира (s tr) — иначе блок команд ВК скрыт. */
+  vkListTournament: boolean
 }>()
 
 const emit = defineEmits<{

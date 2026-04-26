@@ -15,6 +15,8 @@ interface LinkBody {
   game_event_id?: string
   /** Имена команд с кнопок в чате (s tr A B …) — для выбора на сайте. */
   team_slots?: string[]
+  /** true только для s tr — на сайте показываются команды ВК; false очищает слоты и подписи. */
+  vk_list_tournament?: boolean
 }
 
 export default defineEventHandler(async (event) => {
@@ -43,17 +45,42 @@ export default defineEventHandler(async (event) => {
   // Первый тик поллинга тогда делал бы runCloseEvent и сразу гасил только что созданный список (редкий, но реальный баг).
   await clearVkListCloseRequest()
 
-  // team_slots: только если бот явно прислал массив (в т.ч. [] после удаления всех кнопок), иначе не затираем старые слоты на сайте.
-  if (
+  const patchTournament =
     body &&
     typeof body === 'object' &&
-    'team_slots' in body &&
-    Array.isArray((body as LinkBody).team_slots)
-  ) {
-    const normSlots = parseVkTeamSlots((body as LinkBody).team_slots)
+    (('team_slots' in body && Array.isArray((body as LinkBody).team_slots)) ||
+      'vk_list_tournament' in body)
+
+  if (patchTournament) {
     const row = await readTournamentStateRow()
     const base = (row?.json && typeof row.json === 'object' ? (row.json as Record<string, unknown>) : null) ?? {}
-    const next = { ...base, vkTeamSlots: normSlots }
+    const next = { ...base } as Record<string, unknown>
+
+    if (body && typeof body === 'object' && 'vk_list_tournament' in body) {
+      const vkList = (body as LinkBody).vk_list_tournament === true
+      next.vkListTournament = vkList
+      if (!vkList) {
+        next.vkTeamSlots = []
+        next.vkTeamLabelByPlayerId = {}
+      }
+    }
+
+    if (body && typeof body === 'object' && 'team_slots' in body && Array.isArray((body as LinkBody).team_slots)) {
+      next.vkTeamSlots = parseVkTeamSlots((body as LinkBody).team_slots)
+    }
+
+    // Старый бот без vk_list_tournament: непустые слоты ⇒ режим турнира.
+    if (
+      body &&
+      typeof body === 'object' &&
+      !('vk_list_tournament' in body) &&
+      'team_slots' in body &&
+      Array.isArray((body as LinkBody).team_slots) &&
+      parseVkTeamSlots((body as LinkBody).team_slots).length > 0
+    ) {
+      next.vkListTournament = true
+    }
+
     await queryWithRetry(
       `INSERT INTO app_state (key_name, value) VALUES (?, ?)
        ON DUPLICATE KEY UPDATE value = VALUES(value)`,
