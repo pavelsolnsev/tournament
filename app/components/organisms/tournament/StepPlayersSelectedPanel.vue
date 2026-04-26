@@ -17,11 +17,37 @@
             В игре
           </span>
         </div>
-        <span
-          class="inline-flex min-w-[2.5rem] shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 px-2.5 py-1 text-sm font-bold tabular-nums leading-none text-emerald-800 ring-1 ring-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-400/20"
-        >
-          {{ selectedPlayers.length }}
-        </span>
+        <div class="flex shrink-0 items-center gap-1.5">
+          <button
+            type="button"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-200/80 hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 disabled:pointer-events-none disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-700/60 dark:hover:text-slate-200"
+            :title="tournamentSyncBusy ? 'Обновление…' : 'Обновить с сервера'"
+            :aria-label="tournamentSyncBusy ? 'Обновление данных турнира' : 'Обновить данные турнира с сервера'"
+            :aria-busy="tournamentSyncBusy"
+            :disabled="tournamentSyncBusy"
+            @click="emit('syncTournamentFromServer')"
+          >
+            <svg
+              class="h-4 w-4 transition-transform duration-500"
+              :class="tournamentSyncBusy && 'animate-spin'"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+              <path d="M21 3v5h-5" />
+            </svg>
+          </button>
+          <span
+            class="inline-flex min-w-[2.5rem] items-center justify-center rounded-lg bg-emerald-500/15 px-2.5 py-1 text-sm font-bold tabular-nums leading-none text-emerald-800 ring-1 ring-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-400/20"
+          >
+            {{ selectedPlayers.length }}
+          </span>
+        </div>
       </div>
 
       <!-- Список кнопок ВК: только для списка турнира в чате (s tr). -->
@@ -183,6 +209,8 @@ const props = defineProps<{
   /** Имена команд с кнопок бота (s tr …). */
   vkTeamSlots: string[]
   vkListTournament: boolean
+  /** Пока идёт ручной sync state с сервера — крутим иконку. */
+  tournamentSyncBusy?: boolean
 }>()
 
 /** Есть ли смысл показывать сортировку по командам: слоты ВК или хотя бы одна подпись у выбранных. */
@@ -261,6 +289,7 @@ const vkTeamOptionsForPicker = computed(() => {
 const emit = defineEmits<{
   removePlayer: [id: number]
   goToTeams: []
+  syncTournamentFromServer: []
   togglePlayerPaid: [playerId: number, paid: boolean]
   setPlayerVkTeam: [playerId: number, team: string | null]
   addVkTeamSlot: [name: string]

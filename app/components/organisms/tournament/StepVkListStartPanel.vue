@@ -147,12 +147,14 @@
         </template>
         <span
           v-if="vkStatus?.pendingVkStart"
-          class="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full bg-amber-500/12 px-3 py-1.5 text-[11px] font-semibold text-amber-900 ring-1 ring-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-500/25"
+          class="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full bg-amber-500/12 px-3 py-1.5 text-[11px] font-semibold text-amber-900 ring-1 ring-amber-500/20 motion-safe:animate-pulse dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-500/25"
           role="status"
+          aria-busy="true"
+          :aria-label="`Команда в очереди бота: ${vkStatus.pendingVkStart.commandText}`"
           :title="vkStatus.pendingVkStart.commandText"
         >
           <svg
-            class="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400"
+            class="h-3.5 w-3.5 shrink-0 animate-spin text-amber-600 dark:text-amber-400"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -161,8 +163,7 @@
             stroke-linejoin="round"
             aria-hidden="true"
           >
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>
           <span class="shrink-0">В очереди</span>
           <span class="min-w-0 truncate font-mono text-[10px] font-normal opacity-90">{{ vkStatus.pendingVkStart.commandText }}</span>
@@ -339,11 +340,24 @@
       </label>
       <input
         :id="trSlotsId"
-        v-model="trTeamSlotsInput"
+        :value="trTeamSlotsInput"
         type="text"
         placeholder="Красные, Синие"
-        class="box-border block w-full max-w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 transition-colors focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700/60 dark:bg-slate-800/40 dark:text-slate-100 dark:placeholder-slate-600 dark:focus:border-emerald-500/50 dark:focus:ring-emerald-500/25"
+        :aria-invalid="trTeamSlotsFormatInvalid"
+        autocomplete="off"
+        class="box-border block w-full max-w-full min-w-0 rounded-lg border bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 transition-colors focus:outline-none focus:ring-2 dark:bg-slate-800/40 dark:text-slate-100 dark:placeholder-slate-600"
+        :class="trTeamSlotsFormatInvalid
+          ? 'border-red-400 focus:border-red-500/80 focus:ring-red-500/20 dark:border-red-500/50 dark:focus:border-red-400/60 dark:focus:ring-red-500/25'
+          : 'border-slate-300 focus:border-emerald-500/60 focus:ring-emerald-500/20 dark:border-slate-700/60 dark:focus:border-emerald-500/50 dark:focus:ring-emerald-500/25'"
+        @input="(e) => { onTrTeamSlotsInput((e.target as HTMLInputElement).value) }"
       >
+      <p
+        v-if="trTeamSlotsFormatInvalid"
+        class="text-xs text-red-600 dark:text-red-400"
+        role="alert"
+      >
+        Несколько команд — только через запятую (например: Красные, Синие). Длинное название одной команды пишите без лишнего раздела или с дефисом.
+      </p>
       </div>
 
       <div v-if="selectedPreset" class="mt-4">
@@ -425,6 +439,8 @@ const {
   vkEventDate,
   vkEventTime,
   trTeamSlotsInput,
+  trTeamSlotsFormatInvalid,
+  onTrTeamSlotsInput,
   vkBusy,
   vkStartError,
   trSlotsId,

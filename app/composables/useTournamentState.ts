@@ -22,9 +22,11 @@ export type TournamentStateSyncApi = {
   cancelPendingSave: () => void
   /** Перечитать state из БД (после отметки оплаты, смены из ВК). */
   refresh: () => Promise<void>
+  /** Один refetch + пересчёт live-поллинга — при возврате на вкладку (без дубля с `visibility` на странице). */
+  resyncAfterTabBecameVisible: () => Promise<void>
 }
 
-export function useTournamentState() {
+export function useTournamentState(): TournamentStateSyncApi {
   let saveTimer: ReturnType<typeof setTimeout> | null = null
 
   const { data, pending, refresh } = useFetch<{ state: SavedTournamentContext | null }>('/api/tournament/state', {
@@ -69,6 +71,11 @@ export function useTournamentState() {
     }
   }
 
+  async function resyncAfterTabBecameVisible() {
+    await refresh()
+    syncPoll()
+  }
+
   if (import.meta.client) {
     onMounted(() => {
       // immediate: true — запускаем поллинг сразу при монтировании с нужным интервалом.
@@ -77,14 +84,6 @@ export function useTournamentState() {
         () => syncPoll(),
         { immediate: true },
       )
-
-      // При возврате на вкладку — немедленный refresh + пересинхронизация таймера.
-      const onFocus = () => {
-        void refresh()
-        syncPoll()
-      }
-      window.addEventListener('focus', onFocus)
-      onUnmounted(() => window.removeEventListener('focus', onFocus))
     })
   }
 
@@ -146,5 +145,6 @@ export function useTournamentState() {
     saveTournamentStateNow,
     cancelPendingSave,
     refresh,
+    resyncAfterTabBecameVisible,
   }
 }

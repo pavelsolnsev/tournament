@@ -115,6 +115,9 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   const stateRestored = ref(false)
   const lastAppliedRosterKey = ref('')
 
+  /** Пока перезаливаем мастер из `serverState` — не пишем тот же снимок обратно в БД (PUT + лишний GET). */
+  const suppressContextPersistFromReapply = ref(false)
+
   const { serverState, isLoading, saveTournamentState, saveTournamentStateNow, cancelPendingSave, refresh } = stateSync
 
   const paidPlayerIds = ref<Set<number>>(new Set())
@@ -169,7 +172,12 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
 
   function reapplyFromServer() {
     if (!stateRestored.value) return
+    cancelPendingSave()
+    suppressContextPersistFromReapply.value = true
     applyLoadedContext(serverContextDeps.value, serverState.value ?? null, 'resync')
+    setTimeout(() => {
+      suppressContextPersistFromReapply.value = false
+    }, 0)
   }
 
   watch(
@@ -353,6 +361,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     savedContext,
     (val) => {
       if (!stateRestored.value) return
+      if (suppressContextPersistFromReapply.value) return
       saveTournamentState(val)
     },
     { deep: true },

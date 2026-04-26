@@ -148,6 +148,8 @@
                   @update:tournament-date="(v) => { wizard.tournamentDate.value = v }"
                   @refresh-players="wizard.refreshPlayers()"
                   @go-to-teams="wizard.goToTeams()"
+                  :tournament-sync-busy="tournamentSyncBusy"
+                  @sync-tournament-from-server="onTournamentSyncFromRosterPanel"
                   :paid-player-ids="paidPlayerIdsView"
                   :vk-list-tournament="wizard.vkListTournament.value"
                   :vk-team-label-by-player-id="wizard.vkTeamLabelByPlayerId.value"
@@ -277,14 +279,7 @@ async function fetchRemoteStandingsSnapshotForMerge() {
   return tournamentState.serverState.value?.standingsSnapshot ?? null
 }
 
-const wizard = useTournamentWizard({
-  serverState: tournamentState.serverState,
-  isLoading: tournamentState.isLoading,
-  saveTournamentState: tournamentState.saveTournamentState,
-  saveTournamentStateNow: tournamentState.saveTournamentStateNow,
-  cancelPendingSave: tournamentState.cancelPendingSave,
-  refresh: tournamentState.refresh,
-})
+const wizard = useTournamentWizard(tournamentState)
 
 /** Пустой мастер: без таймерных GET /api/tournament/state; после появления состава или vkListTournament — поллинг включается. */
 const rosterSyncRelevant = computed(
@@ -293,11 +288,17 @@ const rosterSyncRelevant = computed(
 
 const viewerState = computed(() => tournamentState.serverState.value)
 
-// Когда вкладка снова видна — подтягиваем турнир из БД (другая вкладка могла завершить турнир).
-function onAdminVisibilitySync() {
+// Один refetch на возврате на вкладку: и зритель, и админ; для админа — ещё reapply (как в syncWizardFromServerAfterExternalChange).
+function onTabVisibilitySync() {
   if (document.visibilityState !== 'visible') return
-  if (!isAdmin.value) return
-  void syncWizardFromServerAfterExternalChange()
+  tournamentState.cancelPendingSave()
+  void (async () => {
+    await tournamentState.resyncAfterTabBecameVisible()
+    if (isAdmin.value) {
+      await nextTick()
+      wizard.reapplyFromServer()
+    }
+  })()
 }
 
 // Обновляем кэш Nuxt и перезаливаем refs мастера из serverState — без этого вторая вкладка остаёт со старым UI.
@@ -308,6 +309,18 @@ async function syncWizardFromServerAfterExternalChange() {
   await tournamentState.refresh()
   await nextTick()
   wizard.reapplyFromServer()
+}
+
+const tournamentSyncBusy = ref(false)
+
+async function onTournamentSyncFromRosterPanel() {
+  if (!isAdmin.value || tournamentSyncBusy.value) return
+  tournamentSyncBusy.value = true
+  try {
+    await syncWizardFromServerAfterExternalChange()
+  } finally {
+    tournamentSyncBusy.value = false
+  }
 }
 
 // Сообщаем всем вкладкам админки: в БД уже новое состояние турнира, перечитайте.
@@ -337,6 +350,7 @@ let adminRosterPoll: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   if (!import.meta.client) return
+  document.addEventListener('visibilitychange', onTabVisibilitySync)
   const match = document.cookie.match(/(?:^|; )admin_session=([^;]*)/)
   const cookieValue = match ? decodeURIComponent(match[1] ?? '') : ''
   // Simple10: В cookie admin_session теперь роль: full или limited.
@@ -347,7 +361,6 @@ onMounted(() => {
       void syncWizardFromServerAfterExternalChange()
     }
   }
-  document.addEventListener('visibilitychange', onAdminVisibilitySync)
 })
 
 // Шаг «Игроки»: периодически тянем state только при rosterSyncRelevant; в пустом мастере — только sync по вкладке / BroadcastChannel / после сохранений.
@@ -422,7 +435,7 @@ onUnmounted(() => {
     clearInterval(adminRosterPoll)
     adminRosterPoll = null
   }
-  document.removeEventListener('visibilitychange', onAdminVisibilitySync)
+  document.removeEventListener('visibilitychange', onTabVisibilitySync)
   adminTournamentBc?.close()
   adminTournamentBc = null
 })

@@ -4,6 +4,14 @@ import { defaultProfDateTime, defaultTrDateTime } from '~/utils/vkMoscowPresetDe
 
 export type VkListPreset = 'prof' | 'tr'
 
+/** `;` `|` → `,`, схлопываем подряд запятые, убираем недопустимые символы. */
+export function sanitizeTrTeamSlotsInput(s: string): string {
+  return s
+    .replace(/[;|｜]/g, ',')
+    .replace(/,{2,}/g, ',')
+    .replace(/[^\p{L}\p{N}\s,.\-+'«»№#/]/gu, '')
+}
+
 type VkStatusResponse = {
   ok: boolean
   linked: boolean
@@ -90,9 +98,32 @@ export function useTournamentVkListStart() {
     { preset: 'tr' as const, label: 'Турнир (пт)' },
   ]
 
+  /** Нет запятой, но 2+ слов подряд — похоже на несколько команд без разделителя. */
+  const trTeamSlotsFormatInvalid = computed(() => {
+    if (selectedPreset.value !== 'tr') {
+      return false
+    }
+    const t = trTeamSlotsInput.value.trim()
+    if (!t) {
+      return false
+    }
+    if (t.includes(',')) {
+      return false
+    }
+    return t.split(/\s+/).filter(Boolean).length >= 2
+  })
+
+  function onTrTeamSlotsInput(raw: string) {
+    trTeamSlotsInput.value = sanitizeTrTeamSlotsInput(raw)
+  }
+
   const canSubmitCreateMatch = computed(() => {
     if (!selectedPreset.value || vkBusy.value) return false
-    return vkEventDate.value.trim() !== '' && vkEventTime.value.trim() !== ''
+    if (vkEventDate.value.trim() === '' || vkEventTime.value.trim() === '') return false
+    if (selectedPreset.value === 'tr' && trTeamSlotsFormatInvalid.value) {
+      return false
+    }
+    return true
   })
 
   function presetChipClass(preset: VkListPreset) {
@@ -121,6 +152,7 @@ export function useTournamentVkListStart() {
     } else {
       vkEventDate.value = ''
       vkEventTime.value = ''
+      trTeamSlotsInput.value = ''
     }
   }
 
@@ -135,6 +167,9 @@ export function useTournamentVkListStart() {
 
   async function requestVkStart(preset: VkListPreset) {
     vkStartError.value = null
+    if (preset === 'tr' && trTeamSlotsFormatInvalid.value) {
+      return
+    }
     const linked = vkStatus.value?.linked === true
     if (!linked) {
       const p = resolvedPeerForRequest()
@@ -189,6 +224,7 @@ export function useTournamentVkListStart() {
       selectedPreset.value = null
       vkEventDate.value = ''
       vkEventTime.value = ''
+      trTeamSlotsInput.value = ''
     }
   }
 
@@ -204,6 +240,8 @@ export function useTournamentVkListStart() {
     vkEventDate,
     vkEventTime,
     trTeamSlotsInput,
+    trTeamSlotsFormatInvalid,
+    onTrTeamSlotsInput,
     vkBusy,
     vkStartError,
     trSlotsId,

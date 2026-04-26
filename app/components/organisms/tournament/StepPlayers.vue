@@ -30,12 +30,14 @@
         :vk-list-tournament="vkListTournament"
         :vk-team-label-by-player-id="vkTeamLabelByPlayerId"
         :vk-team-slots="vkTeamSlots"
+        :tournament-sync-busy="tournamentSyncBusy"
         @remove-player="emit('removePlayer', $event)"
         @set-player-vk-team="(id, t) => emit('setPlayerVkTeam', id, t)"
         @add-vk-team-slot="emit('addVkTeamSlot', $event)"
         @remove-vk-team-slot="(v, l) => emit('removeVkTeamSlot', v, l)"
         @go-to-teams="emit('goToTeams')"
         @toggle-player-paid="(id, paid) => emit('togglePlayerPaid', id, paid)"
+        @sync-tournament-from-server="emit('syncTournamentFromServer')"
       />
     </div>
   </div>
@@ -60,6 +62,7 @@ const props = defineProps<{
   vkTeamSlots: string[]
   /** Список в ВК в режиме турнира (s tr) — иначе блок команд ВК скрыт. */
   vkListTournament: boolean
+  tournamentSyncBusy?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -75,6 +78,7 @@ const emit = defineEmits<{
   setPlayerVkTeam: [playerId: number, team: string | null]
   addVkTeamSlot: [name: string]
   removeVkTeamSlot: [value: string, label: string]
+  syncTournamentFromServer: []
 }>()
 
 // Переход к командам разрешён только если выбраны игроки, место и формат.
