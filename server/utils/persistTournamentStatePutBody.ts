@@ -10,6 +10,7 @@ import {
   parseVkTeamSlots,
   readTournamentStateRow,
 } from './tournamentPaidPlayers'
+import { mergeLiveCurrentMatchStatsIntoNextState } from './mergeLiveCurrentMatchStatsForPersist'
 
 const TOURNAMENT_KEY = 'tournament'
 
@@ -79,6 +80,10 @@ export async function persistTournamentStatePutBody(state: Record<string, unknow
   } else {
     ;(state as { vkTeamSlots: string[] }).vkTeamSlots = prevSlots
   }
+
+  // Два устройства в live: не теряем отметки по текущему матчу при конкурирующих PUT.
+  mergeLiveCurrentMatchStatsIntoNextState(prevJson, state)
+
   const json = JSON.stringify(state)
 
   await queryWithRetry(
