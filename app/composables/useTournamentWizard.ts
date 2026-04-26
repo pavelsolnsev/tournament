@@ -1,19 +1,13 @@
-// Этот файл: композабл мастера создания турнира (wizard).
-// Он хранит шаги, данные игроков/команд и связывает всё вместе через composables.
-// Состояние теперь сохраняется в базу данных (не в cookie) для синхронизации между устройствами.
+// Мастер турнира: шаги, состав, сохранение в БД.
 import type { Player, Team, MatchStatus } from '~/types/tournament'
 import { useTeamAssignment } from '~/composables/useTeamAssignment'
 import type { TournamentStateSyncApi } from '~/composables/useTournamentState'
 import { useSyncAssignmentFromVkTeamLabels } from '~/composables/useSyncAssignmentFromVkTeamLabels'
+import { useSyncVkFromTournamentAssignment } from '~/composables/useSyncVkFromTournamentAssignment'
+import { useTournamentServerRosterPullWatch } from '~/composables/useTournamentServerRosterPullWatch'
 import { dedupeTeamNamesPreservingOrder, normalizeTeamColorsMap, normalizeTeamName } from '~/utils/teamNames'
 import type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
-import {
-  applyEmptyTournamentContextLocal,
-  applyLoadedContext,
-  rosterSyncFingerprint,
-  vkTeamLabelMapFromSavedContext,
-  vkTeamSlotsFromSavedContext,
-} from '~/composables/tournament-wizard/applyServerContext'
+import { applyEmptyTournamentContextLocal, applyLoadedContext } from '~/composables/tournament-wizard/applyServerContext'
 
 /** Согласовано с server/utils/tournamentPaidPlayers parseVkTeamSlots. */
 const VK_TEAM_SLOT_NAME_MAX = 40
@@ -21,9 +15,6 @@ const VK_TEAM_SLOT_MAX = 9
 
 export type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
 
-// Управляет мастером создания турнира:
-// шаги, загрузка данных, выбор игроков/команд и сохранение состояния в базу данных.
-// stateSync передаётся снаружи — один useTournamentState() на странице, без второго параллельного GET.
 export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   const step = ref<0 | 1 | 2>(0)
   const tournamentName = ref('')
@@ -310,46 +301,15 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     assignment,
   })
 
-  watch(
-    () =>
-      [
-        isLoading.value,
-        serverState.value?.selectedIds,
-        serverState.value?.vkTeamLabelByPlayerId,
-        serverState.value?.vkTeamSlots,
-      ] as const,
-    () => {
-      if (!stateRestored.value || isLoading.value) {
-        return
-      }
-      const ctx = serverState.value
-      if (!ctx) {
-        return
-      }
-      const serverKey = rosterSyncFingerprint(
-        new Set((ctx.selectedIds ?? []).filter((id) => Number.isFinite(id))),
-        vkTeamLabelMapFromSavedContext(ctx),
-        vkTeamSlotsFromSavedContext(ctx),
-      )
-      const localKey = rosterSyncFingerprint(
-        selectedIds.value,
-        vkTeamLabelByPlayerId.value,
-        vkTeamSlots.value,
-      )
-      if (serverKey === localKey) {
-        lastAppliedRosterKey.value = serverKey
-        return
-      }
-      if (localKey === lastAppliedRosterKey.value) {
-        selectedIds.value = new Set(
-          (ctx.selectedIds ?? []).filter((id) => Number.isFinite(id)),
-        )
-        vkTeamLabelByPlayerId.value = vkTeamLabelMapFromSavedContext(ctx)
-        vkTeamSlots.value = vkTeamSlotsFromSavedContext(ctx)
-        lastAppliedRosterKey.value = serverKey
-      }
-    },
-  )
+  useTournamentServerRosterPullWatch({
+    stateRestored,
+    isLoading,
+    serverState,
+    selectedIds,
+    vkTeamLabelByPlayerId,
+    vkTeamSlots,
+    lastAppliedRosterKey,
+  })
 
   const savedContext = computed<SavedTournamentContext>(() => ({
     step: step.value,
@@ -368,6 +328,19 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     liveHomeTeam: liveHomeTeam.value,
     liveAwayTeam: liveAwayTeam.value,
   }))
+
+  useSyncVkFromTournamentAssignment({
+    stateRestored,
+    step,
+    selectedIds,
+    vkTeamSlots,
+    vkTeamLabelByPlayerId,
+    assignment: { getTeam: assignment.getTeam, assignment: assignment.assignment },
+    savedContext,
+    cancelPendingSave,
+    saveTournamentStateNow,
+    findMatchingSlot,
+  })
 
   watch(
     savedContext,

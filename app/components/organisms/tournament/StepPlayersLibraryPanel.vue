@@ -44,11 +44,11 @@
     <div class="border-t border-slate-300 dark:border-slate-700/40" />
 
     <AtomsTournamentTextInput
-      :model-value="playerSearch"
+      v-model="localPlayerSearch"
       variant="search"
       size="xs"
       placeholder="Поиск…"
-      @update:model-value="emit('update:playerSearch', $event)"
+      @update:model-value="onPlayerSearchInput"
     />
 
     <!-- Разделитель между поиском и списком -->
@@ -137,12 +137,12 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
-import { computed, nextTick, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import MoleculesDangerConfirmInline from '~/components/molecules/DangerConfirmInline.vue'
 
-defineProps<{
+const props = defineProps<{
   players: Player[] | null
   availablePlayers: Player[]
   filteredAvailablePlayers: Player[]
@@ -154,6 +154,22 @@ const emit = defineEmits<{
   'update:playerSearch': [value: string]
   refreshPlayers: []
 }>()
+
+/** Локальное значение — иначе при каждом emit родитель перерисовывает :model-value и курсор прыгает при стирании. */
+const localPlayerSearch = ref(props.playerSearch)
+
+watch(
+  () => props.playerSearch,
+  (v) => {
+    if (v !== localPlayerSearch.value) {
+      localPlayerSearch.value = v
+    }
+  },
+)
+
+function onPlayerSearchInput(value: string) {
+  emit('update:playerSearch', value)
+}
 
 const newName = ref('')
 const newUsername = ref('')
