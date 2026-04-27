@@ -16,6 +16,16 @@ export default {
   ],
   theme: {
     extend: {
+      keyframes: {
+        /** Полоска ожидания «Скоро обновим статус ВК…» (панель vk-status). */
+        vkStatusSheen: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(400%)' },
+        },
+      },
+      animation: {
+        vkStatusSheen: 'vkStatusSheen 2.2s ease-in-out infinite',
+      },
       // Плавный переход для всех цветов при смене темы — избегаем резких вспышек.
       transitionProperty: {
         colors: 'color, background-color, border-color, text-decoration-color, fill, stroke',

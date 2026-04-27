@@ -56,9 +56,13 @@ export function useTournamentVkListStart() {
     immediate: false,
   })
 
-  /** Одно обновление через N мс (после «Обновить», «Создать матч», отмена матча). */
+  /** Одно обновление через N мс (после «Создать матч», отмена/бот, или когда очередь/e! снялись). */
   const VK_STATUS_FOLLOWUP_MS = 10_000
   let followupTimer: ReturnType<typeof setTimeout> | null = null
+  /** След. тик watch не планирует второй follow-up (избегаем цепочки 10+10 с после своего таймера). */
+  let vkStatusRefreshFromFollowupTimer = false
+  /** UI: после «Создать матч» / отмены / follow-up — ждём тик vk-status. */
+  const awaitingVkStatusFollowup = ref(false)
 
   function clearFollowupTimer() {
     if (followupTimer) {
@@ -69,9 +73,22 @@ export function useTournamentVkListStart() {
 
   function scheduleOneVkStatusRefreshIn(ms: number) {
     clearFollowupTimer()
+    awaitingVkStatusFollowup.value = true
     followupTimer = setTimeout(() => {
       followupTimer = null
-      if (showPanel.value) void refreshVkStatus()
+      if (!showPanel.value) {
+        awaitingVkStatusFollowup.value = false
+        return
+      }
+      vkStatusRefreshFromFollowupTimer = true
+      void refreshVkStatus()
+        .catch(() => {})
+        .finally(() => {
+          awaitingVkStatusFollowup.value = false
+          nextTick(() => {
+            vkStatusRefreshFromFollowupTimer = false
+          })
+        })
     }, ms)
   }
 
@@ -105,15 +122,17 @@ export function useTournamentVkListStart() {
       window.removeEventListener('football-vk-status-refresh', onVkStatusRefresh)
       window.removeEventListener('football-vk-status-schedule-followup', onScheduleFollowup)
       clearFollowupTimer()
+      awaitingVkStatusFollowup.value = false
     })
   }
 
-  // Бот снял очередь (s…/tr) или обработал e! — догоняем статус ещё раз через 10 с.
+  // Бот в VK: очередь (s tr / s prof / …) снялся или e! отработал — один догон через 10 с (не сразу после таймера follow-up).
   watch(
     () =>
       [vkStatus.value?.pendingVkStart ?? null, vkStatus.value?.vkListClosePending === true] as const,
     (next, prev) => {
       if (!prev) return
+      if (vkStatusRefreshFromFollowupTimer) return
       const [nP, nC] = next
       const [pP, pC] = prev
       const queueCleared = pP != null && nP == null
@@ -181,12 +200,19 @@ export function useTournamentVkListStart() {
 
   async function manualRefreshVkStatus() {
     clearFollowupTimer()
-    try {
-      await refreshVkStatus()
-    } finally {
-      scheduleOneVkStatusRefreshIn(VK_STATUS_FOLLOWUP_MS)
-    }
+    awaitingVkStatusFollowup.value = false
+    await refreshVkStatus()
   }
+
+  const vkStatusFollowupMessage = computed(() => {
+    if (!awaitingVkStatusFollowup.value) {
+      return ''
+    }
+    if (vkStatusPending.value) {
+      return 'Обновляем статус…'
+    }
+    return 'Скоро обновим статус ВК…'
+  })
 
   function selectPreset(preset: VkListPreset) {
     if (vkBusy.value) return
@@ -256,7 +282,6 @@ export function useTournamentVkListStart() {
         credentials: 'include',
         body,
       })
-      await refreshVkStatus()
       scheduleOneVkStatusRefreshIn(VK_STATUS_FOLLOWUP_MS)
     } catch (err: unknown) {
       const msg =
@@ -289,6 +314,8 @@ export function useTournamentVkListStart() {
     refreshVkStatus,
     manualRefreshVkStatus,
     vkStatusPending,
+    awaitingVkStatusFollowup,
+    vkStatusFollowupMessage,
     vkStatusError,
     selectedPreset,
     vkEventDate,

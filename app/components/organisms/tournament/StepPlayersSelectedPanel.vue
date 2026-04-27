@@ -50,9 +50,9 @@
         </div>
       </div>
 
-      <!-- Список кнопок ВК: только для списка турнира в чате (s tr). -->
+      <!-- Список кнопок ВК: только s tr (кнопки команд в чате), не s prof. -->
       <div
-        v-if="vkListTournament"
+        v-if="vkTrTournament"
         class="space-y-2 rounded-xl border border-slate-200/80 bg-white/60 px-3 py-2.5 dark:border-slate-600/50 dark:bg-slate-800/25"
         role="region"
         aria-label="Команды для кнопок в чате ВК"
@@ -209,6 +209,8 @@ const props = defineProps<{
   /** Имена команд с кнопок бота (s tr …). */
   vkTeamSlots: string[]
   vkListTournament: boolean
+  /** Режим s tr — показ блока «Команды в списке ВК» и привязка к кнопкам в чате. */
+  vkTrTournament: boolean
   /** Пока идёт ручной sync state с сервера — крутим иконку. */
   tournamentSyncBusy?: boolean
 }>()

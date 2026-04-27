@@ -28,6 +28,7 @@
         :can-go-to-teams="canGoToTeams"
         :paid-player-ids="paidPlayerIds"
         :vk-list-tournament="vkListTournament"
+        :vk-tr-tournament="vkTrTournament"
         :vk-team-label-by-player-id="vkTeamLabelByPlayerId"
         :vk-team-slots="vkTeamSlots"
         :tournament-sync-busy="tournamentSyncBusy"
@@ -60,8 +61,10 @@ const props = defineProps<{
   /** Подписи команд из чата ВК (кнопки), по id игрока. */
   vkTeamLabelByPlayerId: Record<number, string>
   vkTeamSlots: string[]
-  /** Список в ВК в режиме турнира (s tr) — иначе блок команд ВК скрыт. */
+  /** Список в ВК в режиме «есть слепок ВК» (s tr / s prof + эвристики). */
   vkListTournament: boolean
+  /** Режим s tr — блок редактирования кнопок «Команды в списке ВК». */
+  vkTrTournament: boolean
   tournamentSyncBusy?: boolean
 }>()
 

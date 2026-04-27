@@ -64,7 +64,79 @@
         {{ vkStatusError }}
       </p>
 
-      <div v-else class="mt-3 flex flex-wrap items-center gap-2">
+      <template v-else>
+        <div
+          v-if="awaitingVkStatusFollowup"
+          class="relative mt-3 flex w-full min-w-0 items-center gap-2 overflow-hidden rounded-lg border border-slate-200/80 bg-slate-50/90 px-3 py-2.5 text-[11px] font-medium text-slate-600 shadow-sm dark:border-slate-600/50 dark:bg-slate-800/50 dark:text-slate-300"
+          :class="[
+            vkStatusPending
+              ? 'ring-2 ring-emerald-500/25 motion-safe:animate-[pulse_1.6s_cubic-bezier(0.4,0,0.6,1)_infinite]'
+              : 'motion-safe:animate-[pulse_2.5s_cubic-bezier(0.4,0,0.6,1)_infinite]',
+          ]"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div
+            v-if="!vkStatusPending"
+            class="pointer-events-none absolute inset-y-0 left-0 w-2/5 motion-safe:animate-vkStatusSheen motion-reduce:animate-none"
+            aria-hidden="true"
+          >
+            <div
+              class="h-full w-full skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/60 to-transparent dark:via-white/[0.12]"
+            />
+          </div>
+          <div class="relative z-10 flex min-w-0 items-center gap-2">
+            <span
+              v-if="!vkStatusPending"
+              class="relative flex h-2 w-2 shrink-0"
+              aria-hidden="true"
+            >
+              <span
+                class="absolute inline-flex h-full w-full rounded-full bg-emerald-500/45 motion-safe:animate-ping"
+              />
+              <span
+                class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400"
+              />
+            </span>
+            <svg
+              v-if="vkStatusPending"
+              class="h-3.5 w-3.5 shrink-0 motion-safe:animate-spin text-emerald-600 dark:text-emerald-400"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+            <svg
+              v-else
+              class="h-3.5 w-3.5 shrink-0 text-slate-500 motion-safe:animate-pulse dark:text-slate-400"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 6v6l4 2" />
+            </svg>
+            <span class="min-w-0 leading-snug motion-safe:transition-opacity motion-safe:duration-500">{{ vkStatusFollowupMessage }}</span>
+          </div>
+        </div>
+
+      <div
+        class="flex flex-wrap items-center gap-2 transition-opacity"
+        :class="[
+          awaitingVkStatusFollowup ? 'mt-2' : 'mt-3',
+          awaitingVkStatusFollowup && 'pointer-events-none opacity-55',
+        ]"
+      >
         <template v-if="vkStatus?.linked && vkStatus?.vkListClosePending">
           <div class="flex w-full min-w-0 flex-wrap items-center justify-between gap-2">
             <span
@@ -192,7 +264,7 @@
           v-if="!vkCancelConfirmOpen"
           type="button"
           class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50/95 px-3 py-2 text-xs font-semibold text-red-800 shadow-sm transition-colors hover:border-red-300 hover:bg-red-100/90 active:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/50 dark:bg-red-950/45 dark:text-red-200 dark:hover:border-red-800/60 dark:hover:bg-red-950/65 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/35 sm:w-auto"
-          :disabled="clearTournamentBusy || vkBusy"
+          :disabled="clearTournamentBusy || vkBusy || awaitingVkStatusFollowup"
           title="Запросить закрытие списка в ВК и сбросить турнир на сайте (как e! в боте)"
           @click="openVkCancelConfirm"
         >
@@ -240,7 +312,7 @@
           type="button"
           class="inline-flex items-center rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 disabled:cursor-not-allowed disabled:opacity-50"
           :class="presetChipClass(item.preset)"
-          :disabled="vkBusy"
+          :disabled="vkBusy || awaitingVkStatusFollowup"
           @click="selectPreset(item.preset)"
         >
           {{ item.label }}
@@ -364,7 +436,7 @@
         <button
           type="button"
           class="inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-emerald-500/55 bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-600 active:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-950 dark:hover:bg-emerald-400 dark:active:bg-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/45 sm:w-auto"
-          :disabled="!canSubmitCreateMatch"
+          :disabled="!canSubmitCreateMatch || awaitingVkStatusFollowup"
           @click="submitCreateMatch"
         >
           <svg
@@ -383,6 +455,8 @@
         </button>
       </div>
       </div>
+
+      </template>
 
       <div
         v-if="vkStartError"
@@ -434,6 +508,8 @@ const {
   vkStatus,
   manualRefreshVkStatus,
   vkStatusPending,
+  awaitingVkStatusFollowup,
+  vkStatusFollowupMessage,
   vkStatusError,
   selectedPreset,
   vkEventDate,

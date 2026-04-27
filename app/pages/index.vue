@@ -152,6 +152,7 @@
                   @sync-tournament-from-server="onTournamentSyncFromRosterPanel"
                   :paid-player-ids="paidPlayerIdsView"
                   :vk-list-tournament="wizard.vkListTournament.value"
+                  :vk-tr-tournament="wizard.vkTrTournament.value"
                   :vk-team-label-by-player-id="wizard.vkTeamLabelByPlayerId.value"
                   :vk-team-slots="wizard.vkTeamSlots.value"
                   @set-player-vk-team="(id, t) => wizard.setPlayerVkTeam(id, t)"
@@ -460,7 +461,6 @@ async function handleVkCancelTournament() {
     wizard.reapplyFromServer()
     broadcastAdminTournamentStateChanged()
     if (import.meta.client) {
-      window.dispatchEvent(new CustomEvent('football-vk-status-refresh'))
       window.dispatchEvent(new CustomEvent('football-vk-status-schedule-followup'))
     }
   } catch (e) {

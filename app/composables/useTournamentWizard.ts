@@ -122,6 +122,27 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
 
   const paidPlayerIds = ref<Set<number>>(new Set())
 
+  /**
+   * Режим s tr (кнопки команд в чате) — не s prof. Эвристика `vkListTournament` может дать true из старых подписей
+   * без флага; для блока «Команды в списке ВК» смотрим явный флаг в state и/или слоты.
+   */
+  const vkTrTournament = computed(() => {
+    if (!vkListTournament.value) {
+      return false
+    }
+    const ctx = serverState.value
+    if (ctx?.vkListTournament === false) {
+      return false
+    }
+    if (ctx?.vkListTournament === true) {
+      return true
+    }
+    if (vkTeamSlots.value.length > 0) {
+      return true
+    }
+    return false
+  })
+
   const emptyResetState = (): SavedTournamentContext => ({
     step: 0,
     tournamentName: '',
@@ -429,6 +450,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     vkTeamLabelByPlayerId,
     vkTeamSlots,
     vkListTournament,
+    vkTrTournament,
     setPlayerVkTeam,
     addVkTeamSlot,
     removeVkTeamSlot,
