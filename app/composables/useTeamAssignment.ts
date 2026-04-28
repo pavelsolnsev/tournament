@@ -234,3 +234,6 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
     autoDistributedNames,
   }
 }
+
+/** Тип API composable — нужен в persistence-модуле без value-импорта (ESLint consistent-type-imports). */
+export type TeamAssignmentComposable = ReturnType<typeof useTeamAssignment>
