@@ -40,21 +40,19 @@ function setVkLabelOnState(
   playerId: number,
   team: string | null,
 ) {
-  const next: Record<string, string> = {
-    ...((state.vkTeamLabelByPlayerId && typeof state.vkTeamLabelByPlayerId === 'object'
-      ? state.vkTeamLabelByPlayerId
-      : {}) as Record<string, string>),
-  }
+  const prevMap = (state.vkTeamLabelByPlayerId && typeof state.vkTeamLabelByPlayerId === 'object'
+    ? state.vkTeamLabelByPlayerId
+    : {}) as Record<string, string>
   const k = String(playerId)
+  // Без delete по динамическому ключу — ESLint no-dynamic-delete; собираем новый объект.
+  const entries = Object.entries(prevMap).filter(([key]) => key !== k)
   if (team) {
-    next[k] = team
-  } else {
-    delete next[k]
+    entries.push([k, team])
   }
-  if (Object.keys(next).length === 0) {
-    delete state.vkTeamLabelByPlayerId
+  if (entries.length === 0) {
+    state.vkTeamLabelByPlayerId = undefined
   } else {
-    state.vkTeamLabelByPlayerId = next
+    state.vkTeamLabelByPlayerId = Object.fromEntries(entries)
   }
 }
 

@@ -114,13 +114,13 @@ export default defineEventHandler(async (event) => {
 
       state.selectedIds = newIds
       if (state.vkTeamLabelByPlayerId && typeof state.vkTeamLabelByPlayerId === 'object') {
-        const vk = { ...state.vkTeamLabelByPlayerId }
         const k = String(playerId)
-        if (k in vk) {
-          delete vk[k]
-        }
+        // Убираем подпись команды без delete[key] — так проходит ESLint no-dynamic-delete.
+        const vk = Object.fromEntries(
+          Object.entries(state.vkTeamLabelByPlayerId).filter(([key]) => key !== k),
+        )
         if (Object.keys(vk).length === 0) {
-          delete state.vkTeamLabelByPlayerId
+          state.vkTeamLabelByPlayerId = undefined
         } else {
           state.vkTeamLabelByPlayerId = vk
         }
