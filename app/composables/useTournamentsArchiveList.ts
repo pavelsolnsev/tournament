@@ -43,7 +43,11 @@ export function useTournamentsArchiveList(tournaments: Ref<ArchiveListRow[] | nu
   }
 
   function championMarker(teamName: string): string {
-    const idx = resolveTeamColorIndex(teamName, null, 0)
+    // В списке архива у нас нет teamColors, поэтому берём стабильный fallback из названия ("Команда 2" → индекс 1).
+    // Это нужно, чтобы маркер выглядел так же, как в живом турнире, где fallback зависит от порядка команды.
+    const match = teamName.match(/(\d+)\s*$/)
+    const fallbackIndex = match ? Math.max(0, Number(match[1]) - 1) : 0
+    const idx = resolveTeamColorIndex(teamName, null, fallbackIndex)
     return getMarkerByIndex(idx)
   }
 

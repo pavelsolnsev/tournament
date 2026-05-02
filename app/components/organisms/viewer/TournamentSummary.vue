@@ -172,11 +172,11 @@ const effectiveTeamColors = computed(() => {
       ordered.push(nk)
     }
   }
-  let next = 0
-  for (const nk of ordered) {
+  // Если в teamColors нет части команд (старые архивы/неполные сохранения),
+  // мы назначаем им цвета по порядку (0,1,2,...) — так же, как это делает fallback логика в турнире.
+  for (const [idx, nk] of ordered.entries()) {
     if (map[nk] !== undefined) continue
-    map[nk] = next % teamMarkers.length
-    next += 1
+    map[nk] = idx % teamMarkers.length
   }
   return map
 })
