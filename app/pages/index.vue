@@ -237,6 +237,7 @@
 import type { Player } from '~/types/tournament'
 import { computed, watch } from 'vue'
 import { useAdminAuth } from '~/composables/useAdminAuth'
+import { useConfirmCountdown } from '~/composables/useConfirmCountdown'
 import { useTournamentWizard } from '~/composables/useTournamentWizard'
 import { useTournamentWizardBreadcrumbs } from '~/composables/useTournamentWizardBreadcrumbs'
 import { useAdminTournamentPlayerPaidSync } from '~/composables/useAdminTournamentPlayerPaidSync'
@@ -390,19 +391,7 @@ watch(
 const showClearTournamentConfirm = ref(false)
 const clearTournamentBusy = ref(false)
 const clearTournamentError = ref<string | null>(null)
-const clearTournamentSeconds = ref(3)
-let clearTournamentCountdown: ReturnType<typeof setInterval> | null = null
-
-function startClearTournamentCountdown() {
-  clearTournamentSeconds.value = 3
-  clearTournamentCountdown = setInterval(() => {
-    clearTournamentSeconds.value -= 1
-    if (clearTournamentSeconds.value <= 0 && clearTournamentCountdown) {
-      clearInterval(clearTournamentCountdown)
-      clearTournamentCountdown = null
-    }
-  }, 1000)
-}
+const { secondsLeft: clearTournamentSeconds, start: startClearTournamentCountdown, stop: stopClearTournamentCountdown } = useConfirmCountdown()
 
 watch(showClearTournamentConfirm, (open) => {
   if (open) {
@@ -410,11 +399,7 @@ watch(showClearTournamentConfirm, (open) => {
     startClearTournamentCountdown()
   }
   else {
-    if (clearTournamentCountdown) {
-      clearInterval(clearTournamentCountdown)
-      clearTournamentCountdown = null
-    }
-    clearTournamentSeconds.value = 3
+    stopClearTournamentCountdown()
   }
 })
 
@@ -431,7 +416,6 @@ watch(
 )
 
 onUnmounted(() => {
-  if (clearTournamentCountdown) clearInterval(clearTournamentCountdown)
   if (adminRosterPoll) {
     clearInterval(adminRosterPoll)
     adminRosterPoll = null

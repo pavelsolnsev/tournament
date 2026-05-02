@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs wc *)",
+      "Bash(yarn typecheck *)",
+      "Bash(yarn test *)",
+      "Bash(yarn lint *)",
+      "Bash(git mv *)"
+    ]
+  }
+}

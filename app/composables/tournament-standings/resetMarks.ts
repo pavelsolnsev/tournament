@@ -2,7 +2,7 @@ import type { Ref } from 'vue'
 import type { PlayerMatchStats, PlayedMatch } from './types'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 
-/** Сброс результатов и отметок турнира — логика из useTournamentStandingsRefactored.resetTournamentMarks */
+/** Сброс результатов и отметок турнира — логика из useTournamentStandings.resetTournamentMarks */
 export function resetTournamentMarksState(
   params: { teams: string[] },
   standingsRows: Ref<StandingsRow[]>,

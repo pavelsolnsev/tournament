@@ -1,8 +1,9 @@
 // Логика OrganismsTournamentStepStandingsMatchManagement — вынесена из .vue для лимита max-lines.
 import type { Player } from '~/types/tournament'
 import type { StatKey } from '~/composables/tournament-standings/types'
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useAdminAuth } from '~/composables/useAdminAuth'
+import { useConfirmCountdown } from '~/composables/useConfirmCountdown'
 import { useTeamColors } from '~/composables/useTeamColors'
 import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
 import { reloadWithScrollRestore } from '~/utils/reloadWithScrollRestore'
@@ -108,28 +109,7 @@ export function useStepStandingsMatchManagement(props: StepStandingsMatchManagem
   const isActionConfirmOpen = computed(() => pendingAction.value !== null)
 
   const showResetMarksConfirm = ref(false)
-  const resetMarksSecondsLeft = ref(3)
-  let resetMarksCountdown: ReturnType<typeof setInterval> | null = null
-
-  function startResetMarksCountdown() {
-    resetMarksSecondsLeft.value = 3
-    if (resetMarksCountdown) clearInterval(resetMarksCountdown)
-    resetMarksCountdown = setInterval(() => {
-      resetMarksSecondsLeft.value -= 1
-      if (resetMarksSecondsLeft.value <= 0 && resetMarksCountdown) {
-        clearInterval(resetMarksCountdown)
-        resetMarksCountdown = null
-      }
-    }, 1000)
-  }
-
-  function stopResetMarksCountdown() {
-    if (resetMarksCountdown) {
-      clearInterval(resetMarksCountdown)
-      resetMarksCountdown = null
-    }
-    resetMarksSecondsLeft.value = 3
-  }
+  const { secondsLeft: resetMarksSecondsLeft, start: startResetMarksCountdown, stop: stopResetMarksCountdown } = useConfirmCountdown()
 
   function openResetMarksConfirm() {
     showResetMarksConfirm.value = true
@@ -154,28 +134,7 @@ export function useStepStandingsMatchManagement(props: StepStandingsMatchManagem
     refreshVkStatus,
   } = useMatchManagementVkStatus(canViewVkStatus)
 
-  const finishMatchSecondsLeft = ref(3)
-  let finishMatchCountdown: ReturnType<typeof setInterval> | null = null
-
-  function startFinishMatchCountdown() {
-    finishMatchSecondsLeft.value = 3
-    if (finishMatchCountdown) clearInterval(finishMatchCountdown)
-    finishMatchCountdown = setInterval(() => {
-      finishMatchSecondsLeft.value -= 1
-      if (finishMatchSecondsLeft.value <= 0 && finishMatchCountdown) {
-        clearInterval(finishMatchCountdown)
-        finishMatchCountdown = null
-      }
-    }, 1000)
-  }
-
-  function stopFinishMatchCountdown() {
-    if (finishMatchCountdown) {
-      clearInterval(finishMatchCountdown)
-      finishMatchCountdown = null
-    }
-    finishMatchSecondsLeft.value = 3
-  }
+  const { secondsLeft: finishMatchSecondsLeft, start: startFinishMatchCountdown, stop: stopFinishMatchCountdown } = useConfirmCountdown()
 
   watch(pendingAction, (action) => {
     if (action === 'finish') startFinishMatchCountdown()
@@ -183,28 +142,7 @@ export function useStepStandingsMatchManagement(props: StepStandingsMatchManagem
   })
 
   const showFinishTournamentConfirm = ref(false)
-  const finishTournamentConfirmSecondsLeft = ref(3)
-  let finishTournamentConfirmCountdown: ReturnType<typeof setInterval> | null = null
-
-  function startFinishTournamentConfirmCountdown() {
-    finishTournamentConfirmSecondsLeft.value = 3
-    if (finishTournamentConfirmCountdown) clearInterval(finishTournamentConfirmCountdown)
-    finishTournamentConfirmCountdown = setInterval(() => {
-      finishTournamentConfirmSecondsLeft.value -= 1
-      if (finishTournamentConfirmSecondsLeft.value <= 0 && finishTournamentConfirmCountdown) {
-        clearInterval(finishTournamentConfirmCountdown)
-        finishTournamentConfirmCountdown = null
-      }
-    }, 1000)
-  }
-
-  function stopFinishTournamentConfirmCountdown() {
-    if (finishTournamentConfirmCountdown) {
-      clearInterval(finishTournamentConfirmCountdown)
-      finishTournamentConfirmCountdown = null
-    }
-    finishTournamentConfirmSecondsLeft.value = 3
-  }
+  const { secondsLeft: finishTournamentConfirmSecondsLeft, start: startFinishTournamentConfirmCountdown, stop: stopFinishTournamentConfirmCountdown } = useConfirmCountdown()
 
   function openFinishTournamentConfirm() {
     if (!canFinishTournament.value) return
@@ -309,12 +247,6 @@ export function useStepStandingsMatchManagement(props: StepStandingsMatchManagem
     },
     { flush: 'post' },
   )
-
-  onUnmounted(() => {
-    stopFinishMatchCountdown()
-    stopFinishTournamentConfirmCountdown()
-    stopResetMarksCountdown()
-  })
 
   watch(
     () => [props.homeTeam, props.awayTeam] as const,

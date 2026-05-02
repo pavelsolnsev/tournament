@@ -8,10 +8,7 @@ import { useTournamentServerRosterPullWatch } from '~/composables/useTournamentS
 import { dedupeTeamNamesPreservingOrder, normalizeTeamColorsMap, normalizeTeamName } from '~/utils/teamNames'
 import type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
 import { applyEmptyTournamentContextLocal, applyLoadedContext } from '~/composables/tournament-wizard/applyServerContext'
-
-/** Согласовано с server/utils/tournamentPaidPlayers parseVkTeamSlots. */
-const VK_TEAM_SLOT_NAME_MAX = 40
-const VK_TEAM_SLOT_MAX = 9
+import { findMatchingSlot, useVkTeamSlots } from '~/composables/tournament-wizard/useVkTeamSlots'
 
 export type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
 
@@ -213,116 +210,20 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     { immediate: true },
   )
 
-  function serializeVkTeamLabelsForSave(): Record<string, string> {
-    const out: Record<string, string> = {}
-    for (const id of selectedIds.value) {
-      if (Object.prototype.hasOwnProperty.call(vkTeamLabelByPlayerId.value, id)) {
-        const v = vkTeamLabelByPlayerId.value[id]
-        out[String(id)] = v && String(v).trim() ? String(v).trim() : ''
-      }
-    }
-    return out
-  }
-
-  function findMatchingSlot(raw: string, slots: string[]) {
-    const t = String(raw || '').replace(/\s+/g, ' ').trim()
-    if (!t) return null
-    const low = t.toLowerCase()
-    for (const s of slots) {
-      if (s.replace(/\s+/g, ' ').trim().toLowerCase() === low) {
-        return s
-      }
-    }
-    return null
-  }
-
-  function addVkTeamSlot(rawName: string) {
-    const t = String(rawName ?? '')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, VK_TEAM_SLOT_NAME_MAX)
-    if (!t) {
-      return
-    }
-    const next = [...vkTeamSlots.value]
-    if (findMatchingSlot(t, next) != null) {
-      return
-    }
-    if (next.length >= VK_TEAM_SLOT_MAX) {
-      return
-    }
-    next.push(t)
-    vkTeamSlots.value = next
-    if (!stateRestored.value) {
-      return
-    }
-    void nextTick(async () => {
-      cancelPendingSave()
-      try {
-        await saveTournamentStateNow(savedContext.value)
-      } catch {
-        /* ignore */
-      }
-    })
-  }
-
-  function removeVkTeamSlot(rawName: string) {
-    const beforeSlots = [...vkTeamSlots.value]
-    const m = findMatchingSlot(rawName, beforeSlots)
-    if (m == null) {
-      return
-    }
-    const next = beforeSlots.filter((s) => s !== m)
-    const v = { ...vkTeamLabelByPlayerId.value }
-    for (const id of selectedIds.value) {
-      const cur = v[id] != null ? String(v[id]).trim() : ''
-      if (cur && findMatchingSlot(cur, beforeSlots) === m) {
-        v[id] = ''
-      }
-    }
-    vkTeamSlots.value = next
-    vkTeamLabelByPlayerId.value = v
-    if (!stateRestored.value) {
-      return
-    }
-    void nextTick(async () => {
-      cancelPendingSave()
-      try {
-        await saveTournamentStateNow(savedContext.value)
-      } catch {
-        /* ignore */
-      }
-    })
-  }
-
-  function setPlayerVkTeam(playerId: number, nextTeam: string | null) {
-    const slots = vkTeamSlots.value
-    const v = { ...vkTeamLabelByPlayerId.value }
-    if (nextTeam == null || !String(nextTeam).trim()) {
-      v[playerId] = ''
-    } else {
-      const raw = String(nextTeam).trim()
-      if (slots.length > 0) {
-        const m = findMatchingSlot(raw, slots)
-        v[playerId] = m != null && m !== '' ? m : raw
-      } else {
-        v[playerId] = raw
-      }
-    }
-    vkTeamLabelByPlayerId.value = v
-    if (!stateRestored.value) {
-      return
-    }
-    // Сразу пишем в БД, чтобы бот в roster-snapshot увидел смену без debounce 800ms.
-    void nextTick(async () => {
-      cancelPendingSave()
-      try {
-        await saveTournamentStateNow(savedContext.value)
-      } catch {
-        /* 403 / сеть — debounced put попробует снова при следующем изменении */
-      }
-    })
-  }
+  const {
+    serializeVkTeamLabelsForSave,
+    addVkTeamSlot,
+    removeVkTeamSlot,
+    setPlayerVkTeam,
+  } = useVkTeamSlots({
+    selectedIds,
+    vkTeamLabelByPlayerId,
+    vkTeamSlots,
+    stateRestored,
+    cancelPendingSave,
+    saveTournamentStateNow,
+    getSavedContext: () => savedContext.value,
+  })
 
   useSyncAssignmentFromVkTeamLabels({
     stateRestored,

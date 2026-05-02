@@ -117,7 +117,7 @@ export default defineEventHandler(async (event) => {
         const vk = { ...state.vkTeamLabelByPlayerId }
         const k = String(playerId)
         if (k in vk) {
-          delete vk[k]
+          Reflect.deleteProperty(vk, k)
         }
         if (Object.keys(vk).length === 0) {
           delete state.vkTeamLabelByPlayerId

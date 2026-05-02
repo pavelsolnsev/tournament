@@ -141,6 +141,7 @@ import type { Player } from '~/types/tournament'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
 import { useAdminAuth } from '~/composables/useAdminAuth'
+import { useConfirmCountdown } from '~/composables/useConfirmCountdown'
 import MoleculesDangerConfirmInline from '~/components/molecules/DangerConfirmInline.vue'
 
 const props = defineProps<{
@@ -200,40 +201,24 @@ const resetError = ref('')
 const resetConfirmAnchor = useTemplateRef<HTMLDivElement>('resetConfirmAnchor')
 
 const isResetConfirmOpen = ref(false)
-const resetConfirmSecondsLeft = ref(0)
-const resetConfirmIntervalId = ref<ReturnType<typeof setInterval> | null>(null)
+const { secondsLeft: resetConfirmSecondsLeft, start: startResetConfirmCountdown, stop: stopResetConfirmCountdown } = useConfirmCountdown()
 
 // Состояние удаления игрока — id игрока у которого открыто подтверждение.
 const deleteConfirmId = ref<number | null>(null)
-const deleteConfirmSecondsLeft = ref(0)
-const deleteConfirmIntervalId = ref<ReturnType<typeof setInterval> | null>(null)
+const { secondsLeft: deleteConfirmSecondsLeft, start: startDeleteConfirmCountdown, stop: stopDeleteConfirmCountdown } = useConfirmCountdown()
 const deleting = ref(false)
 
 function openDeleteConfirm(playerId: number) {
   // Simple10: Для limited блокируем удаление игроков.
   if (!canManagePlayers.value) return
-  // Закрываем предыдущее подтверждение если было открыто для другого игрока.
-  closeDeleteConfirm()
   deleteConfirmId.value = playerId
-  deleteConfirmSecondsLeft.value = 3
-
   // Таймер 3 сек — кнопка «Удалить» станет активной только после отсчёта.
-  deleteConfirmIntervalId.value = setInterval(() => {
-    deleteConfirmSecondsLeft.value = Math.max(0, deleteConfirmSecondsLeft.value - 1)
-    if (deleteConfirmSecondsLeft.value === 0 && deleteConfirmIntervalId.value) {
-      clearInterval(deleteConfirmIntervalId.value)
-      deleteConfirmIntervalId.value = null
-    }
-  }, 1000)
+  startDeleteConfirmCountdown()
 }
 
 function closeDeleteConfirm() {
   deleteConfirmId.value = null
-  deleteConfirmSecondsLeft.value = 0
-  if (deleteConfirmIntervalId.value) {
-    clearInterval(deleteConfirmIntervalId.value)
-    deleteConfirmIntervalId.value = null
-  }
+  stopDeleteConfirmCountdown()
 }
 
 async function confirmDelete(playerId: number) {
@@ -287,11 +272,7 @@ async function onCreatePlayer() {
 function closeResetConfirm() {
   // Закрываем подтверждение, чтобы случайно не нажать reset позже.
   isResetConfirmOpen.value = false
-  resetConfirmSecondsLeft.value = 0
-  if (resetConfirmIntervalId.value) {
-    clearInterval(resetConfirmIntervalId.value)
-    resetConfirmIntervalId.value = null
-  }
+  stopResetConfirmCountdown()
 }
 
 function openResetConfirm() {
@@ -301,16 +282,7 @@ function openResetConfirm() {
   if (resetting.value) return
   resetError.value = ''
   isResetConfirmOpen.value = true
-  resetConfirmSecondsLeft.value = 3
-
-  if (resetConfirmIntervalId.value) clearInterval(resetConfirmIntervalId.value)
-  resetConfirmIntervalId.value = setInterval(() => {
-    resetConfirmSecondsLeft.value = Math.max(0, resetConfirmSecondsLeft.value - 1)
-    if (resetConfirmSecondsLeft.value === 0 && resetConfirmIntervalId.value) {
-      clearInterval(resetConfirmIntervalId.value)
-      resetConfirmIntervalId.value = null
-    }
-  }, 1000)
+  startResetConfirmCountdown()
 
   // Прокручиваем к панели подтверждения — на больших экранах блок с Reset внизу панели.
   void nextTick(() => {

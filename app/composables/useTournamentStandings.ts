@@ -31,9 +31,9 @@ import {
   resetMatchStats as resetMatchStatsFn,
   selectPlayerForMark as selectPlayerForMarkFn,
 } from './tournament-standings/matchStats'
-import { finishMatchAndRecord } from './tournament-standings/refactoredFinishMatch'
-import { resetTournamentMarksState } from './tournament-standings/refactoredResetMarks'
-import { deletePlayedMatchFromList, updatePlayedMatchInList } from './tournament-standings/refactoredPlayedMatchEdit'
+import { finishMatchAndRecord } from './tournament-standings/finishMatch'
+import { resetTournamentMarksState } from './tournament-standings/resetMarks'
+import { deletePlayedMatchFromList, updatePlayedMatchInList } from './tournament-standings/playedMatchEdit'
 
 // Дополнительные параметры composable — начальный снапшот и callback для сохранения.
 type StandingsOptions = {
@@ -41,7 +41,7 @@ type StandingsOptions = {
   onSnapshot?: (snapshot: SavedStandingsSnapshot) => void
 }
 
-export function useTournamentStandingsRefactored(params: TournamentStandingsParams, options: StandingsOptions = {}) {
+export function useTournamentStandings(params: TournamentStandingsParams, options: StandingsOptions = {}) {
   const { teamMarkers, getMarkerByIndex } = useTeamColors()
   const { displayPlayerLabel, displayPlayerLabelWithoutRating } = usePlayerDisplay()
 

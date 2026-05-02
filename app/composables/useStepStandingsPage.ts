@@ -2,7 +2,7 @@ import type { Ref } from 'vue'
 import type { Player, MatchStatus } from '~/types/tournament'
 import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { computed, ref, toRef } from 'vue'
-import { useTournamentStandingsRefactored } from '~/composables/useTournamentStandingsRefactored'
+import { useTournamentStandings } from '~/composables/useTournamentStandings'
 import { useFinishTournament } from '~/composables/useFinishTournament'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 import { useAdminAuth } from '~/composables/useAdminAuth'
@@ -71,7 +71,7 @@ export function useStepStandingsPage(props: StepStandingsPageProps, emit: StepSt
     displayPlayerLabel,
     aggregatePlayerStats,
     playerRatingDeltas,
-  } = useTournamentStandingsRefactored(
+  } = useTournamentStandings(
     {
       teams: props.teams,
       teamColors: props.teamColors,

@@ -49,7 +49,7 @@ function setVkLabelOnState(
   if (team) {
     next[k] = team
   } else {
-    delete next[k]
+    Reflect.deleteProperty(next, k)
   }
   if (Object.keys(next).length === 0) {
     delete state.vkTeamLabelByPlayerId

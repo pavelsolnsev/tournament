@@ -12,7 +12,7 @@ export function sanitizeTrTeamSlotsInput(s: string): string {
     .replace(/[^\p{L}\p{N}\s,.\-+'«»№#/]/gu, '')
 }
 
-type VkStatusResponse = {
+export type VkStatusResponse = {
   ok: boolean
   linked: boolean
   /** Сайт попросил бота закрыть список в чате (как e!); ждём бота и unlink. */

@@ -13,7 +13,7 @@
   </span>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts"> 
 // Простой кликаемый чип с текстом.
 defineProps<{
   label: string
