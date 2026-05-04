@@ -7,7 +7,9 @@
       "Read(//c/Users/spas/Downloads/**)"
     ],
     "additionalDirectories": [
-      "D:\\web\\rfoi\\.distr\\blocks\\footer"
+      "D:\\web\\rfoi\\.distr\\blocks\\footer",
+      "D:\\web\\rfoi\\.distr\\blocks\\main",
+      "D:\\web\\rfoi\\.distr\\blocks\\common"
     ]
   }
 }

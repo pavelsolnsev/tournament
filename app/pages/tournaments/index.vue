@@ -288,7 +288,14 @@ import type { ArchiveListRow } from '~/composables/tournamentsArchiveTypes'
 import { useTournamentsArchiveList } from '~/composables/useTournamentsArchiveList'
 
 // Мета-теги страницы — для SEO и вкладки браузера.
-useHead({ title: 'Архив турниров' })
+useSeoMeta({
+  title: 'Архив турниров РФОИ — Раменское Футбол Открытые Игры',
+  description: 'Архив всех турниров РФОИ в Раменском — результаты, чемпионы, MVP и статистика прошедших турниров по любительскому футболу в Раменском (Московская область).',
+  ogTitle: 'Архив турниров РФОИ — Раменское Футбол Открытые Игры',
+  ogDescription: 'Результаты, чемпионы и MVP всех турниров РФОИ по любительскому футболу в Раменском.',
+  ogUrl: 'https://tournament.pavelsolntsev.ru/tournaments',
+  robots: 'index, follow',
+})
 
 const { data: tournaments, status } = await useFetch<ArchiveListRow[]>('/api/tournaments')
 

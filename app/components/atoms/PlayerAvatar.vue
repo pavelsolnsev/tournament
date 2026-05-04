@@ -9,7 +9,7 @@
       <source v-if="webpSrc" :srcset="webpSrc" type="image/webp" />
       <img
         :src="src"
-        alt=""
+        :alt="ariaLabel"
         class="h-full w-full object-cover"
         loading="lazy"
         decoding="async"
@@ -79,6 +79,6 @@ const initials = computed(() => {
 
 const ariaLabel = computed(() => {
   const n = (props.fallbackName || '').trim()
-  return n ? `Аватар: ${n}` : 'Аватар игрока'
+  return n ? `${n} — игрок РФОИ, Раменское` : 'Игрок РФОИ, Раменское'
 })
 </script>
