@@ -3,7 +3,11 @@
     "allow": [
       "Read(//d/web/rfoi/**)",
       "Bash(dir D:\\\\web\\\\rfoi /b /a-d)",
-      "PowerShell(Get-ChildItem D:\\\\web\\\\rfoi\\\\.distr -Recurse | Where-Object {!$_.PSIsContainer} | Select-Object FullName | Format-Table -HideTableHeaders)"
+      "PowerShell(Get-ChildItem D:\\\\web\\\\rfoi\\\\.distr -Recurse | Where-Object {!$_.PSIsContainer} | Select-Object FullName | Format-Table -HideTableHeaders)",
+      "Read(//c/Users/spas/Downloads/**)"
+    ],
+    "additionalDirectories": [
+      "D:\\web\\rfoi\\.distr\\blocks\\footer"
     ]
   }
 }

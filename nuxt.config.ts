@@ -93,6 +93,30 @@ export default defineNuxtConfig({
       // и сразу ставит класс 'dark' на <html>, чтобы не было мигания при загрузке.
       // По умолчанию (если нет сохранения) — тёмная тема, как было раньше.
       script: [
+        // Schema.org: спортивная организация для поисковиков.
+        {
+          type: 'application/ld+json',
+          innerHTML: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SportsOrganization',
+            name: 'РФОИ — Раменское Футбол Открытые Игры',
+            alternateName: 'РФОИ',
+            description: 'Любительский футбол в Раменском — открытые игры, турниры, результаты матчей, рейтинги игроков.',
+            url: 'https://tournament.pavelsolntsev.ru',
+            sport: 'Футбол',
+            address: {
+              '@type': 'PostalAddress',
+              addressLocality: 'Раменское',
+              addressRegion: 'Московская область',
+              addressCountry: 'RU',
+            },
+            sameAs: [
+              'https://vk.com/rmsfootball',
+              'https://t.me/RmsFootball',
+              'https://football.pavelsolntsev.ru',
+            ],
+          }),
+        },
         {
           innerHTML: `(function(){try{var s=localStorage.getItem('theme');var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;if(s==='dark'||(s===null&&prefersDark)||s===null){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){document.documentElement.classList.add('dark');}})();`,
           type: 'text/javascript',
