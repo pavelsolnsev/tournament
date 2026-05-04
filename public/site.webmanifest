@@ -1,7 +1,7 @@
 {
-  "name": "Footboal Admin",
-  "short_name": "Footboal",
-  "description": "Football management app",
+  "name": "РФОИ — Раменское Футбол Открытые Игры",
+  "short_name": "РФОИ",
+  "description": "Любительский футбол в Раменском — турниры, результаты, рейтинги игроков",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",

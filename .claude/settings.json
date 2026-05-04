@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/web/rfoi/**)",
+      "Bash(dir D:\\\\web\\\\rfoi /b /a-d)",
+      "PowerShell(Get-ChildItem D:\\\\web\\\\rfoi\\\\.distr -Recurse | Where-Object {!$_.PSIsContainer} | Select-Object FullName | Format-Table -HideTableHeaders)"
+    ]
+  }
+}

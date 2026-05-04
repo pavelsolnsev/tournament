@@ -28,7 +28,7 @@ export default defineNuxtConfig({
       // Язык документа для поисковиков и скринридеров (контент интерфейса на русском).
       htmlAttrs: { lang: 'ru' },
       // Короткий заголовок по умолчанию; главная страница задаёт полный через useSeoMeta.
-      title: 'РФОИ',
+      title: 'РФОИ — Раменское Футбол | Открытые Игры',
       // Базовый класс на body убран — тема управляется через класс на <html>.
       bodyAttrs: {},
       // Подключаем фавиконки и PWA-иконки глобально для всех страниц сайта.
@@ -57,6 +57,18 @@ export default defineNuxtConfig({
       ],
       // Добавляем мета для iOS, чтобы ярлык на домашнем экране использовал иконку и веб-режим.
       meta: [
+        // SEO: описание и ключевые слова для поисковиков.
+        { name: 'description', content: 'РФОИ — любительский футбол в Раменском. Турниры, расписание, результаты матчей, рейтинги игроков. Раменское Футбол Открытые Игры, Московская область.' },
+        { name: 'keywords', content: 'футбол Раменское, турнир по футболу Раменское, РФОИ, любительский футбол Раменское, футбольный турнир Московская область, Раменское Футбол Открытые Игры' },
+        { name: 'robots', content: 'index, follow' },
+        { name: 'author', content: 'РФОИ — Раменское Футбол Открытые Игры' },
+        // OG-теги для социальных сетей и мессенджеров.
+        { property: 'og:title', content: 'РФОИ — Раменское Футбол | Открытые Игры' },
+        { property: 'og:description', content: 'Любительский футбол в Раменском — турниры, расписание, результаты матчей, рейтинги игроков.' },
+        { property: 'og:url', content: 'https://tournament.pavelsolntsev.ru/' },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:locale', content: 'ru_RU' },
+        { property: 'og:site_name', content: 'РФОИ — Раменское Футбол Открытые Игры' },
         // Задаём поддержку обеих цветовых схем — браузер выберет нужный theme-color.
         { name: 'theme-color', content: '#0f172a', media: '(prefers-color-scheme: dark)' },
         { name: 'theme-color', content: '#f8fafc', media: '(prefers-color-scheme: light)' },
