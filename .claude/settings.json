@@ -4,12 +4,14 @@
       "Read(//d/web/rfoi/**)",
       "Bash(dir D:\\\\web\\\\rfoi /b /a-d)",
       "PowerShell(Get-ChildItem D:\\\\web\\\\rfoi\\\\.distr -Recurse | Where-Object {!$_.PSIsContainer} | Select-Object FullName | Format-Table -HideTableHeaders)",
-      "Read(//c/Users/spas/Downloads/**)"
+      "Read(//c/Users/spas/Downloads/**)",
+      "Bash(del \"D:\\\\web\\\\football\\\\app\\\\plugins\\\\yandex-metrika.client.ts\")"
     ],
     "additionalDirectories": [
       "D:\\web\\rfoi\\.distr\\blocks\\footer",
       "D:\\web\\rfoi\\.distr\\blocks\\main",
-      "D:\\web\\rfoi\\.distr\\blocks\\common"
+      "D:\\web\\rfoi\\.distr\\blocks\\common",
+      "D:\\web\\rfoi\\.distr\\templates"
     ]
   }
 }
