@@ -297,6 +297,22 @@ useSeoMeta({
   robots: 'index, follow',
 })
 
+// Breadcrumbs для поисковиков — улучшает сниппет и навигационный путь в выдаче.
+const { origin } = useRequestURL()
+useHead({
+  script: [{
+    type: 'application/ld+json',
+    innerHTML: JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Главная', item: `${origin}/` },
+        { '@type': 'ListItem', position: 2, name: 'Архив турниров', item: `${origin}/tournaments` },
+      ],
+    }),
+  }],
+})
+
 const { data: tournaments, status } = await useFetch<ArchiveListRow[]>('/api/tournaments')
 
 const {

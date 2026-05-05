@@ -115,7 +115,7 @@
     <!-- Футер с перелинковкой на связанные ресурсы РФОИ для SEO -->
     <footer class="mt-auto border-t border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 py-4 px-4 sm:px-6">
       <div class="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 text-sm text-slate-500 dark:text-slate-400">
-        <span class="font-medium text-slate-600 dark:text-slate-300">РФОИ — Раменское Футбол Открытые Игры</span>
+        <span class="font-medium text-slate-600 dark:text-slate-300">РФОИ — Раменское Футбол | Открытые Игры</span>
         <nav class="flex flex-wrap items-center gap-4" aria-label="Ресурсы РФОИ">
           <a
             href="https://football.pavelsolntsev.ru"

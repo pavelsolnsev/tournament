@@ -286,8 +286,54 @@ useSeoMeta({
   robots: 'index, follow',
 })
 
+// Breadcrumbs для поисковиков — улучшает сниппет в выдаче.
+const breadcrumbSchema = computed(() =>
+  JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Главная', item: `${requestURL.origin}/` },
+      { '@type': 'ListItem', position: 2, name: 'Архив турниров', item: `${requestURL.origin}/tournaments` },
+      { '@type': 'ListItem', position: 3, name: tournament.value?.tournamentName || 'Турнир', item: pageCanonical.value },
+    ],
+  }),
+)
+
+// SportsEvent — поисковик понимает что это спортивное событие с датой и местом.
+const sportsEventSchema = computed(() => {
+  const t = tournament.value
+  if (!t) return null
+  return JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'SportsEvent',
+    name: t.tournamentName,
+    ...(t.tournamentDate ? { startDate: t.tournamentDate } : {}),
+    url: pageCanonical.value,
+    sport: 'Футбол',
+    location: {
+      '@type': 'Place',
+      name: t.venueLabel || 'Раменское',
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Раменское',
+        addressRegion: 'Московская область',
+        addressCountry: 'RU',
+      },
+    },
+    organizer: {
+      '@type': 'SportsOrganization',
+      name: 'РФОИ — Раменское Футбол Открытые Игры',
+      url: requestURL.origin,
+    },
+  })
+})
+
 useHead({
   link: [{ rel: 'canonical', href: pageCanonical }],
+  script: [
+    { type: 'application/ld+json', innerHTML: breadcrumbSchema },
+    { type: 'application/ld+json', innerHTML: sportsEventSchema },
+  ],
 })
 
 // Состояние кнопки «Копировать ссылку» — на 2 секунды меняет иконку на галочку.
