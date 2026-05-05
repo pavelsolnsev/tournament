@@ -1,7 +1,7 @@
 <!-- Компонент PlayedMatchDetails: показывает детали матча (отмеченных игроков и их события). -->
 <template>
   <div
-    class="pb-3 pt-2.5"
+    class="px-3 pb-3 pt-2.5"
     :class="[
       props.omitTopBorder ? 'border-t-0' : 'border-t',
       props.embedded
