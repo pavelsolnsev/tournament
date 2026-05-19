@@ -19,6 +19,7 @@
       :max-visible-badges="maxVisibleBadges"
       :toggle-player-expand="togglePlayerExpand"
       :visible-badge-count="visibleBadgeCount"
+      :on-back-to-admin="props.onBackToAdmin"
       @refresh="handleRefresh"
       @admin-enter="onAdminEnter"
       @header-wrap="headerActionsWrap = $event"
@@ -162,6 +163,7 @@ const props = defineProps<{
   state: SavedTournamentContext | null
   players: Player[]
   onRefresh: () => void | Promise<void>
+  onBackToAdmin?: () => void
 }>()
 
 const showLoginModal = ref(false)

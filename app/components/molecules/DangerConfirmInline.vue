@@ -31,10 +31,13 @@
       </button>
       <button
         type="button"
-        class="inline-flex h-9 items-center rounded-xl bg-red-500 px-4 text-xs font-semibold text-slate-950
+        class="inline-flex h-9 items-center rounded-xl px-4 text-xs font-semibold text-slate-950
                transition-colors active:opacity-80
                disabled:cursor-not-allowed disabled:opacity-40
-               focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
+               focus:outline-none"
+        :class="tone === 'success'
+          ? 'bg-emerald-500 hover:bg-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-500/40'
+          : 'bg-red-500 focus-visible:ring-2 focus-visible:ring-red-500/40'"
         :disabled="busy || secondsLeft > 0"
         @click="emit('confirm')"
       >
@@ -49,6 +52,7 @@ defineProps<{
   open: boolean
   secondsLeft: number
   busy: boolean
+  tone?: 'danger' | 'success'
   ariaLabel?: string
   title: string
   subtitle?: string

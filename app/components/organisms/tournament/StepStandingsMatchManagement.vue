@@ -179,40 +179,23 @@
           :can-finish-match-silent="canFinishMatchSilent"
           :can-finish-match="canFinishMatch"
           :can-finish-tournament="canFinishTournament"
-          :can-clear-tournament="canClearTournament"
-          :can-view-vk-status="canViewVkStatus"
           :is-limited-admin="isLimitedAdmin"
           :has-played-matches="hasPlayedMatches"
           :finish-tournament-status="finishTournamentStatus"
           :finish-tournament-error="finishTournamentError"
-          :show-clear-tournament-confirm="showClearTournamentConfirm"
-          :clear-tournament-seconds-left="clearTournamentSecondsLeft"
-          :clear-tournament-busy="clearTournamentBusy"
           :is-action-confirm-open="isActionConfirmOpen"
           :pending-action="pendingAction"
           :finish-match-seconds-left="finishMatchSecondsLeft"
           :show-finish-tournament-confirm="showFinishTournamentConfirm"
           :finish-tournament-confirm-seconds-left="finishTournamentConfirmSecondsLeft"
-          :show-reset-marks-confirm="showResetMarksConfirm"
-          :reset-marks-seconds-left="resetMarksSecondsLeft"
-          :vk-status-pending="vkStatusPending"
-          :vk-status-error="vkStatusError"
-          :vk-status-linked="vkStatusLinked"
-          :vk-peer-id="vkPeerId"
           :open-action-confirm="openActionConfirm"
           :close-action-confirm="closeActionConfirm"
           :confirm-pending-action="confirmPendingAction"
           :open-finish-tournament-confirm="openFinishTournamentConfirm"
           :close-finish-tournament-confirm="closeFinishTournamentConfirm"
           :confirm-finish-tournament="confirmFinishTournament"
-          :open-reset-marks-confirm="openResetMarksConfirm"
-          :close-reset-marks-confirm="closeResetMarksConfirm"
-          :confirm-reset-marks="confirmResetMarks"
-          :refresh-vk-status="refreshVkStatus"
-          :reload-page="reloadPage"
-          @clear-tournament="$emit('clear-tournament')"
-          @cancel-clear-tournament="$emit('cancel-clear-tournament')"
-          @confirm-clear-tournament="$emit('confirm-clear-tournament')"
+          :is-match-finished="props.isMatchFinished"
+          :on-go-to-results="props.onGoToResults"
         />
       </Transition>
     </div>
@@ -221,35 +204,30 @@
 </template>
 
 <script setup lang="ts">
-import { provide } from 'vue'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
-import { matchManagementConfirmAnchorsKey } from '~/composables/stepStandingsMatchManagementAnchors'
 import {
   useStepStandingsMatchManagement,
   type StepStandingsMatchManagementProps,
 } from '~/composables/useStepStandingsMatchManagement'
 
-const props = defineProps<StepStandingsMatchManagementProps>()
+const props = defineProps<StepStandingsMatchManagementProps & {
+  isMatchFinished: boolean
+  onGoToResults: () => void
+}>()
 defineEmits<{
   'update:homeTeam': [value: string]
   'update:awayTeam': [value: string]
-  'clear-tournament': []
-  'cancel-clear-tournament': []
-  'confirm-clear-tournament': []
 }>()
 
 const {
   scrollExpandedPanelIntoView,
   canFinishTournament,
-  canClearTournament,
   canFinishMatchShowResults,
   canFinishMatchSilent,
-  canViewVkStatus,
   isLimitedAdmin,
   homeTeamColorIndex,
   awayTeamColorIndex,
   teamColorIndexForName,
-  reloadPage,
   boardScorePillClass,
   nextMatchConfirmSubtitle,
   teamPickersAccordionRef,
@@ -258,16 +236,6 @@ const {
   isMgmtOpen,
   pendingAction,
   isActionConfirmOpen,
-  showResetMarksConfirm,
-  resetMarksSecondsLeft,
-  openResetMarksConfirm,
-  closeResetMarksConfirm,
-  confirmResetMarks,
-  vkStatusPending,
-  vkStatusError,
-  vkStatusLinked,
-  vkPeerId,
-  refreshVkStatus,
   finishMatchSecondsLeft,
   showFinishTournamentConfirm,
   finishTournamentConfirmSecondsLeft,
@@ -275,10 +243,6 @@ const {
   closeFinishTournamentConfirm,
   confirmFinishTournament,
   nextConfirmAnchor,
-  finishConfirmAnchor,
-  finishSilentConfirmAnchor,
-  finishTournamentConfirmAnchor,
-  clearDataConfirmAnchor,
   matchCardRef,
   matchScoreBoardRef,
   closeActionConfirm,
@@ -286,10 +250,4 @@ const {
   confirmPendingAction,
 } = useStepStandingsMatchManagement(props)
 
-provide(matchManagementConfirmAnchorsKey, {
-  finishConfirmAnchor,
-  finishSilentConfirmAnchor,
-  finishTournamentConfirmAnchor,
-  clearDataConfirmAnchor,
-})
 </script>

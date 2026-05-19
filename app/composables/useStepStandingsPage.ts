@@ -27,6 +27,7 @@ export type StepStandingsPageProps = {
   clearTournamentSecondsLeft: number
   clearTournamentBusy: boolean
   fetchRemoteStandingsSnapshot?: () => Promise<SavedStandingsSnapshot | null>
+  saveNow?: () => Promise<void>
 }
 
 export type StepStandingsPageEmit = {
@@ -146,6 +147,7 @@ export function useStepStandingsPage(props: StepStandingsPageProps, emit: StepSt
     emit: emitRemote,
     finishTournament,
     finishStatus,
+    saveNow: props.saveNow,
   })
 
   return {

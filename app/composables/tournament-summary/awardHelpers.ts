@@ -95,8 +95,8 @@ export function findTeamMvp(
     const pStats = aggregateStats[p.id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0 }
     const bStats = aggregateStats[best.id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0 }
 
-    const pMark = pStats.goals + pStats.assists + pStats.saves * 0.75
-    const bMark = bStats.goals + bStats.assists + bStats.saves * 0.75
+    const pMark = pStats.goals + pStats.assists + pStats.saves * 0.5
+    const bMark = bStats.goals + bStats.assists + bStats.saves * 0.5
 
     if (pMark > bMark) return p
     if (pMark < bMark) return best

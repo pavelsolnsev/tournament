@@ -5,7 +5,6 @@ export type MatchManagementConfirmAnchors = {
   finishConfirmAnchor: ShallowRef<HTMLDivElement | null>
   finishSilentConfirmAnchor: ShallowRef<HTMLDivElement | null>
   finishTournamentConfirmAnchor: ShallowRef<HTMLDivElement | null>
-  clearDataConfirmAnchor: ShallowRef<HTMLDivElement | null>
 }
 
 export const matchManagementConfirmAnchorsKey: InjectionKey<MatchManagementConfirmAnchors> = Symbol(

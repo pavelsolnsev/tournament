@@ -27,8 +27,7 @@
         <template v-else>
           <div class="flex min-w-0 flex-1 items-center gap-1 sm:gap-1.5">
             <img
-              src="/favicon-96x96.png"
-              srcset="/favicon-96x96.png 1x, /icon-192.png 2x"
+              src="/logorfoi.webp"
               alt=""
               width="36"
               height="36"

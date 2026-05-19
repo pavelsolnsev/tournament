@@ -1,4 +1,5 @@
 import type { Ref } from 'vue'
+import { nextTick } from 'vue'
 import type { MatchStatus } from '~/types/tournament'
 import type { SavedStandingsSnapshot } from '~/composables/tournament-wizard/savedContextTypes'
 import type { FinishStatus } from '~/composables/useFinishTournament'
@@ -21,6 +22,8 @@ export function useStepStandingsRemoteHandlers(args: {
   emit: StepStandingsRemoteEmit
   finishTournament: () => Promise<void>
   finishStatus: Ref<FinishStatus>
+  /** Немедленное сохранение после критических действий — предотвращает затирание стейта отложенным PUT с другого устройства. */
+  saveNow?: () => Promise<void>
 }) {
   const {
     homeTeam,
@@ -33,6 +36,7 @@ export function useStepStandingsRemoteHandlers(args: {
     emit,
     finishTournament,
     finishStatus,
+    saveNow,
   } = args
 
   async function handleUpdateHomeTeam(next: string) {
@@ -73,6 +77,9 @@ export function useStepStandingsRemoteHandlers(args: {
       emit('update:matchStatus', 'finished', '', '')
     }
     finishMatch()
+    // Немедленно сохраняем после завершения матча — отложенный PUT с другого устройства не затрёт новый список матчей.
+    await nextTick()
+    try { await saveNow?.() } catch { /* сеть: локальный стейт уже обновлён */ }
     await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
   }
 
@@ -80,6 +87,8 @@ export function useStepStandingsRemoteHandlers(args: {
     await pullRemoteMarksIntoCurrentMatch()
     finishMatch()
     emit('update:matchStatus', 'upcoming', '', '')
+    await nextTick()
+    try { await saveNow?.() } catch { /* сеть */ }
     await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
   }
 
@@ -97,6 +106,9 @@ export function useStepStandingsRemoteHandlers(args: {
     } else {
       emit('update:matchStatus', 'upcoming', '', '')
     }
+    // Немедленно сохраняем — чтобы новый список матчей попал в БД раньше, чем отложенный PUT с другого устройства.
+    await nextTick()
+    try { await saveNow?.() } catch { /* сеть */ }
     await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
   }
 

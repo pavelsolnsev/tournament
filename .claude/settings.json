@@ -5,13 +5,28 @@
       "Bash(dir D:\\\\web\\\\rfoi /b /a-d)",
       "PowerShell(Get-ChildItem D:\\\\web\\\\rfoi\\\\.distr -Recurse | Where-Object {!$_.PSIsContainer} | Select-Object FullName | Format-Table -HideTableHeaders)",
       "Read(//c/Users/spas/Downloads/**)",
-      "Bash(del \"D:\\\\web\\\\football\\\\app\\\\plugins\\\\yandex-metrika.client.ts\")"
+      "Bash(del \"D:\\\\web\\\\football\\\\app\\\\plugins\\\\yandex-metrika.client.ts\")",
+      "WebFetch(domain:openclaw.ai)",
+      "PowerShell(Get-ChildItem D:\\\\web\\\\rfoi\\\\public\\\\ | Where-Object { $_.Name -match \"logo|favicon\" })",
+      "PowerShell(Get-ChildItem D:\\\\web\\\\football\\\\public\\\\ | Where-Object { $_.Name -match \"logo|favicon\" })",
+      "PowerShell(Get-ChildItem D:\\\\web\\\\rfoi\\\\public\\\\ | Where-Object { $_.Name -match \"apple\" }; Get-ChildItem D:\\\\web\\\\football\\\\public\\\\ | Where-Object { $_.Name -match \"apple\" })",
+      "PowerShell(Copy-Item \"D:\\\\web\\\\rfoi\\\\public\\\\apple-touch-icon.png\" \"D:\\\\web\\\\football\\\\public\\\\apple-touch-icon.png\" -Force)",
+      "PowerShell(Get-ChildItem D:\\\\web\\\\rfoi\\\\public\\\\ | Where-Object { $_.Name -match \"icon|favicon\" })",
+      "PowerShell(Copy-Item \"D:\\\\web\\\\rfoi\\\\public\\\\icon-192.png\" \"D:\\\\web\\\\football\\\\public\\\\icon-192.png\" -Force)",
+      "PowerShell(Copy-Item \"D:\\\\web\\\\rfoi\\\\public\\\\icon-512.png\" \"D:\\\\web\\\\football\\\\public\\\\icon-512.png\" -Force)",
+      "Bash(node _gen-icons.mjs)",
+      "Bash(node _check-colors.mjs)",
+      "Bash(grep -v \"^$\")",
+      "Bash(Get-ChildItem -Path \"app\" -Recurse -Directory)",
+      "Bash(Select-Object -First 20)",
+      "Bash(Format-Table FullName)"
     ],
     "additionalDirectories": [
       "D:\\web\\rfoi\\.distr\\blocks\\footer",
       "D:\\web\\rfoi\\.distr\\blocks\\main",
       "D:\\web\\rfoi\\.distr\\blocks\\common",
-      "D:\\web\\rfoi\\.distr\\templates"
+      "D:\\web\\rfoi\\.distr\\templates",
+      "D:\\web\\rfoi\\public"
     ]
   }
 }

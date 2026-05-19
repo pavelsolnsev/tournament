@@ -14,8 +14,7 @@
     >
       <div ref="headerLeftRef" class="flex min-h-0 min-w-0 flex-1 items-center gap-1 sm:gap-1.5">
         <img
-          src="/favicon-96x96.png"
-          srcset="/favicon-96x96.png 1x, /icon-192.png 2x"
+          src="/logorfoi.webp"
           alt=""
           width="36"
           height="36"
@@ -55,6 +54,19 @@
         <AtomsFeedbackButton />
         <AtomsThemeToggle />
         <button
+          v-if="onBackToAdmin"
+          type="button"
+          class="inline-flex h-10 items-center gap-1 rounded-xl px-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100/60 hover:text-slate-700 active:bg-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:h-11 sm:gap-2 sm:px-3 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200 dark:active:bg-slate-800"
+          aria-label="Вернуться в управление"
+          @click="onBackToAdmin"
+        >
+          <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          <span :class="headerActionsWrap ? 'inline' : 'hidden sm:inline'">Управление</span>
+        </button>
+        <button
+          v-else
           type="button"
           class="inline-flex h-10 items-center gap-1 rounded-xl px-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100/60 hover:text-slate-700 active:bg-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:h-11 sm:gap-2 sm:px-3 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200 dark:active:bg-slate-800"
           aria-label="Войти как администратор"
@@ -235,6 +247,7 @@ const props = defineProps<{
   maxVisibleBadges: number
   togglePlayerExpand: (playerId: number) => void
   visibleBadgeCount: (playerId: number, totalBadges: number) => number
+  onBackToAdmin?: () => void
 }>()
 
 const emit = defineEmits<{

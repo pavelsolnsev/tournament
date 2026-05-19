@@ -1,15 +1,18 @@
 <!-- Компонент StepPlayers: мастер-обёртка шага выбора игроков (библиотека + выбранные + место/формат). -->
 <template>
-  <div class="grid min-w-0 gap-4 lg:grid-cols-5">
-    <OrganismsTournamentStepPlayersLibraryPanel
-      :players="players"
-      :available-players="availablePlayers"
-      :filtered-available-players="filteredAvailablePlayers"
-      :player-search="playerSearch"
-      @update:player-search="emit('update:playerSearch', $event)"
-      @select-player="emit('selectPlayer', $event)"
-      @refresh-players="emit('refreshPlayers')"
-    />
+  <div class="grid min-w-0 gap-4 lg:grid-cols-5 lg:items-start">
+    <!-- Левая колонка: липкая на десктопе — прокручивается независимо от правой. -->
+    <div class="lg:sticky lg:top-20 lg:col-span-2 lg:h-[calc(100dvh-6rem)]">
+      <OrganismsTournamentStepPlayersLibraryPanel
+        :players="players"
+        :available-players="availablePlayers"
+        :filtered-available-players="filteredAvailablePlayers"
+        :player-search="playerSearch"
+        @update:player-search="emit('update:playerSearch', $event)"
+        @select-player="emit('selectPlayer', $event)"
+        @refresh-players="emit('refreshPlayers')"
+      />
+    </div>
 
     <!-- Правая колонка: выбранные игроки + блок место/формат -->
     <div class="flex min-w-0 flex-col gap-4 lg:col-span-3">

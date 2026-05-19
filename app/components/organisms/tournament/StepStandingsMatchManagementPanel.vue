@@ -38,15 +38,16 @@
           </svg>
           Показать итоги
         </button>
-        <div v-if="canFinishMatchShowResults" :ref="anchors.finishConfirmAnchor">
+        <div v-if="canFinishMatchShowResults">
           <MoleculesDangerConfirmInline
             :open="isActionConfirmOpen && pendingAction === 'finish'"
             :seconds-left="finishMatchSecondsLeft"
             :busy="false"
+            tone="success"
             aria-label="Подтверждение показа итогов матча зрителю"
             title="Показать итоги зрителям? Матч будет записан в историю, на сайте откроется экран итогов."
             cancel-text="Отмена"
-            confirm-text="Показать итоги"
+            confirm-text="Да, показать"
             @cancel="closeActionConfirm"
             @confirm="confirmPendingAction"
           />
@@ -73,7 +74,7 @@
           </svg>
           Завершить матч
         </button>
-        <div v-if="canFinishMatchSilent" :ref="anchors.finishSilentConfirmAnchor">
+        <div v-if="canFinishMatchSilent">
           <MoleculesConfirmInline
             class="mt-0"
             :open="isActionConfirmOpen && pendingAction === 'finishSilent'"
@@ -158,7 +159,7 @@
             : 'Завершить турнир'
           }}</span>
         </button>
-        <div :ref="anchors.finishTournamentConfirmAnchor">
+        <div>
           <MoleculesDangerConfirmInline
             :open="showFinishTournamentConfirm && canFinishTournament"
             :seconds-left="finishTournamentConfirmSecondsLeft"
@@ -172,84 +173,61 @@
             @confirm="confirmFinishTournament"
           />
         </div>
+        <button
+          v-if="isMatchFinished"
+          type="button"
+          class="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-slate-300/80 bg-white/90 px-3 text-sm font-semibold text-slate-700 transition-colors
+                 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+          @click="onGoToResults"
+        >
+          <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          Перейти к итогам
+        </button>
+        <NuxtLink
+          to="/tournaments"
+          class="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-slate-300/80 bg-white/90 px-3 text-sm font-semibold text-slate-700 transition-colors
+                 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+        >
+          <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 7h18M3 12h18M3 17h18" />
+          </svg>
+          Архив турниров
+        </NuxtLink>
       </div>
 
-      <!-- Сброс данных турнира -->
+      <!-- Таймер — кнопка показывается только когда таймер скрыт. -->
       <div
-        v-if="canClearTournament"
-        class="bg-red-50/40 p-2 dark:bg-red-950/15"
-        aria-label="Сброс турнира"
+        v-if="canFinishTournament && isTimerCollapsed"
+        class="p-2"
       >
         <button
-          v-if="!showClearTournamentConfirm"
           type="button"
-          class="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-red-300/80 bg-white px-3 text-sm font-semibold text-red-700 transition-colors
-                 hover:bg-red-50 dark:border-red-800/60 dark:bg-red-950/35 dark:text-red-300 dark:hover:bg-red-950/50
-                 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50"
-          @click="$emit('clear-tournament')"
+          class="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-slate-300/80 bg-white/90 px-3 text-sm font-semibold text-slate-700 transition-colors
+                 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+          @click="isTimerCollapsed = false"
         >
-          <svg
-            class="h-3.5 w-3.5 shrink-0"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.07-2.2a48.676 48.676 0 00-2.86 0c-1.16.066-2.07 1.2-2.07 2.2v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+          <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" />
           </svg>
-          Очистить данные
+          Открыть таймер
         </button>
-        <div v-else :ref="anchors.clearDataConfirmAnchor">
-          <MoleculesDangerConfirmInline
-            :open="true"
-            :seconds-left="clearTournamentSecondsLeft"
-            :busy="clearTournamentBusy"
-            title="Сбросить турнир? Игроки в турнире, команды, таблица и статус матча обнулятся. Список игроков в базе не трогаем."
-            cancel-text="Отмена"
-            confirm-text="Очистить всё"
-            busy-text="Очищаем…"
-            aria-label="Подтверждение полного сброса турнира"
-            @cancel="$emit('cancel-clear-tournament')"
-            @confirm="$emit('confirm-clear-tournament')"
-          />
-        </div>
       </div>
 
-      <!-- Сброс отметок + обновление страницы -->
-      <div class="p-2" aria-label="Результаты и страница">
-        <MoleculesTournamentResetMarksAndReloadPanel
-          :show-reset-marks-confirm="showResetMarksConfirm"
-          :reset-marks-seconds-left="resetMarksSecondsLeft"
-          :is-limited-admin="isLimitedAdmin"
-          @open-reset-marks="openResetMarksConfirm"
-          @cancel-reset-marks="closeResetMarksConfirm"
-          @confirm-reset-marks="confirmResetMarks"
-          @reload-page="reloadPage"
-        />
-      </div>
-
-      <!-- VK -->
-      <div v-if="canViewVkStatus" class="p-2" aria-label="VK">
-        <MoleculesTournamentVkLinkStatusPanel
-          :can-view-vk-status="canViewVkStatus"
-          :vk-status-pending="vkStatusPending"
-          :vk-status-error="vkStatusError"
-          :vk-status-linked="vkStatusLinked"
-          :vk-peer-id="vkPeerId"
-          @refresh="refreshVkStatus"
-        />
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { inject } from 'vue'
-import { matchManagementConfirmAnchorsKey } from '~/composables/stepStandingsMatchManagementAnchors'
 import type { StepStandingsMatchManagementProps } from '~/composables/useStepStandingsMatchManagement'
+
+const isTimerCollapsed = useState<boolean>('match-timer-bar-collapsed', () => false)
 
 type Pending = 'next' | 'finish' | 'finishSilent' | null
 
@@ -260,44 +238,22 @@ defineProps<{
   canFinishMatchSilent: boolean
   canFinishMatch: boolean
   canFinishTournament: boolean
-  canClearTournament: boolean
-  canViewVkStatus: boolean
   isLimitedAdmin: boolean
   hasPlayedMatches: boolean
   finishTournamentStatus: StepStandingsMatchManagementProps['finishTournamentStatus']
   finishTournamentError: StepStandingsMatchManagementProps['finishTournamentError']
-  showClearTournamentConfirm: boolean
-  clearTournamentSecondsLeft: number
-  clearTournamentBusy: boolean
   isActionConfirmOpen: boolean
   pendingAction: Pending
   finishMatchSecondsLeft: number
   showFinishTournamentConfirm: boolean
   finishTournamentConfirmSecondsLeft: number
-  showResetMarksConfirm: boolean
-  resetMarksSecondsLeft: number
-  vkStatusPending: boolean
-  vkStatusError: string | null
-  vkStatusLinked: boolean
-  vkPeerId: number | null
   openActionConfirm: (a: 'next' | 'finish' | 'finishSilent') => void
   closeActionConfirm: () => void
   confirmPendingAction: () => void
   openFinishTournamentConfirm: () => void
   closeFinishTournamentConfirm: () => void
   confirmFinishTournament: () => void
-  openResetMarksConfirm: () => void
-  closeResetMarksConfirm: () => void
-  confirmResetMarks: () => void
-  refreshVkStatus: () => void
-  reloadPage: () => void
+  isMatchFinished: boolean
+  onGoToResults: () => void
 }>()
-
-defineEmits<{
-  'clear-tournament': []
-  'cancel-clear-tournament': []
-  'confirm-clear-tournament': []
-}>()
-
-const anchors = inject(matchManagementConfirmAnchorsKey)!
 </script>

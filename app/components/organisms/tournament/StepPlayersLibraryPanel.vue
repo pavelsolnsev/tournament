@@ -2,7 +2,7 @@
 <template>
   <AtomsTournamentPanel
     as="section"
-    root-class="w-full min-w-0 overflow-x-hidden lg:col-span-2 lg:max-w-md lg:justify-self-start xl:max-w-lg"
+    root-class="w-full min-w-0 overflow-x-hidden lg:h-full lg:flex lg:flex-col"
   >
     <!-- Сначала добавление игрока, ниже поиск по списку — так порядок действий сверху вниз. -->
     <form class="flex w-full min-w-0 flex-col gap-2" @submit.prevent="onCreatePlayer">
@@ -61,7 +61,7 @@
     <p v-else-if="availablePlayers.length === 0" class="text-xs text-slate-600 dark:text-slate-400">
       Все игроки уже выбраны.
     </p>
-    <AtomsPlayerListUl v-else>
+    <AtomsPlayerListUl v-else list-class="lg:flex-1 lg:min-h-0 lg:max-h-none">
       <li
         v-for="p in filteredAvailablePlayers"
         :key="p.id"

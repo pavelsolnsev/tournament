@@ -18,6 +18,8 @@ export type SavedStandingsSnapshot = {
   currentAwayTeam: string
   currentHomeStats: Record<number, PlayerMatchStats>
   currentAwayStats: Record<number, PlayerMatchStats>
+  /** Монотонный счётчик локальных изменений отметок текущего матча. Используется для защиты от стale-мёржа с сервером. */
+  currentStatsSeq?: number
 }
 
 /** Полный контекст мастера — сериализуется в БД. */

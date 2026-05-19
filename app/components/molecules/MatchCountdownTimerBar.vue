@@ -92,11 +92,11 @@
   <!-- Панель «прилипает» к низу окна: удобно видеть время при отметке голов. -->
   <Teleport to="body">
     <div
+      v-if="!isCollapsed"
       class="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1"
       role="region"
       aria-label="Таймер матча"
     >
-      <!-- Компактная карточка: мало высоты, не перекрывает весь экран. -->
       <div
         class="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-2xl border border-slate-200/90 bg-white/95 px-2 py-1.5 shadow-lg backdrop-blur-sm dark:border-slate-600/80 dark:bg-slate-900/95 sm:gap-x-2.5 sm:px-3"
       >
@@ -156,6 +156,19 @@
         >
           Сброс
         </AtomsPrimaryButton>
+
+        <!-- Свернуть — прячет управление, оставляет только время. -->
+        <button
+          type="button"
+          class="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          title="Свернуть таймер"
+          aria-label="Свернуть таймер"
+          @click="isCollapsed = true"
+        >
+          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
       </div>
     </div>
   </Teleport>
@@ -164,6 +177,9 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useMatchCountdownTimer } from '~/composables/useMatchCountdownTimer'
+
+// Состояние свёрнутости: useState сохраняет значение при навигации между шагами.
+const isCollapsed = useState<boolean>('match-timer-bar-collapsed', () => false)
 
 // Вся логика секунд и интервала вынесена в composable — здесь только разметка.
 const {

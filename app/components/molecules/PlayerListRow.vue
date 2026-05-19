@@ -4,7 +4,7 @@
     :class="[
       rootClass,
       splitActions
-        ? 'grid min-w-0 grid-cols-[auto,minmax(0,1fr),auto] items-start gap-x-3 gap-y-2 px-3 py-2.5 sm:grid-cols-[auto,minmax(0,1fr),4rem,auto] sm:items-center sm:gap-y-0 sm:py-2'
+        ? 'flex min-h-[3.25rem] min-w-0 items-center gap-2 px-3 py-2'
         : 'flex min-h-11 items-center gap-2 px-2 py-1 sm:min-h-12 sm:gap-2.5 sm:px-3 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 md:hover:bg-slate-100 dark:md:hover:bg-slate-700/60 active:scale-[0.99]',
     ]"
     :role="splitActions ? 'listitem' : 'button'"
@@ -15,14 +15,14 @@
     @keydown.space.prevent="!splitActions && emit('activate')"
   >
     <AtomsPlayerAvatar
-      class="shrink-0 self-center"
+      class="shrink-0"
       :photo="photo"
       :fallback-name="avatarFallbackName ?? label"
       size="sm"
     />
-    <!-- В режиме splitActions держим строгие колонки: имя и рейтинг не должны сдвигать кнопки оплаты. -->
+    <!-- splitActions: одна строка — имя + рейтинг + кнопки оплаты и удаления. -->
     <template v-if="splitActions">
-      <div class="min-w-0 self-center pt-0.5 sm:pt-0">
+      <div class="min-w-0 flex-1">
         <span class="block truncate text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">
           {{ label }}
         </span>
@@ -31,22 +31,60 @@
           :model-value="vkTeamPickerValue"
           :options="vkTeamPickerOptions"
           title="Команда (как в списке ВК)"
-          trigger-class="!h-auto !min-h-8 !w-full !max-w-full !justify-start px-2 py-1 text-left text-xs font-medium"
+          trigger-class="!h-auto !min-h-7 !w-full !max-w-full !justify-start px-2 py-0.5 text-left text-xs font-medium"
           @update:model-value="onVkTeamPick"
         />
         <span
           v-else-if="caption"
-          class="mt-1 block truncate text-xs font-medium leading-snug text-slate-500 dark:text-slate-400"
+          class="block truncate text-xs font-medium leading-snug text-slate-500 dark:text-slate-400"
         >
           {{ caption }}
         </span>
       </div>
       <span
-        class="shrink-0 justify-self-end self-center whitespace-nowrap text-right text-sm font-semibold leading-none tabular-nums text-slate-800 dark:text-slate-100 min-w-[3.5rem] sm:min-w-[4rem]"
+        v-if="rating"
+        class="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-slate-500 dark:text-slate-400"
         aria-label="Рейтинг"
       >
-        {{ rating ?? '' }}
+        {{ rating }}
       </span>
+      <!-- Кнопка оплаты: иконка ₽ / галочка — компактно, без текста. -->
+      <button
+        type="button"
+        class="shrink-0 inline-flex h-11 w-11 touch-manipulation items-center justify-center rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+        :class="playerPaid
+          ? 'bg-emerald-500/20 text-emerald-700 ring-1 ring-emerald-500/35 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-400/30'
+          : 'border border-slate-200 bg-white text-slate-400 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-500 dark:hover:border-emerald-500/50 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300'"
+        :aria-pressed="playerPaid"
+        :aria-label="playerPaid ? 'Оплачено — нажми чтобы снять' : 'Отметить оплату'"
+        :title="playerPaid ? 'Снять отметку оплаты' : 'Отметить оплату'"
+        @click.stop.prevent="emit('togglePaid')"
+      >
+        <svg
+          v-if="playerPaid"
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+        <span v-else class="text-base font-bold leading-none" aria-hidden="true">₽</span>
+      </button>
+      <!-- Кнопка удаления из турнира. -->
+      <button
+        type="button"
+        class="shrink-0 inline-flex h-11 w-11 touch-manipulation items-center justify-center rounded-xl border border-slate-200 bg-white text-lg font-light leading-none text-slate-400 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:border-red-500/50 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+        :title="title"
+        :aria-label="title"
+        @click.stop.prevent="emit('activate')"
+      >
+        <span aria-hidden="true">×</span>
+      </button>
     </template>
     <template v-else>
       <div
@@ -79,36 +117,7 @@
       </span>
     </template>
 
-    <!-- Выбранные в турнире: отдельные кнопки — не кликать по всей строке. -->
-    <div
-      v-if="splitActions"
-      class="col-span-3 flex min-w-0 items-stretch justify-end gap-2 border-t border-slate-100 pt-2.5 dark:border-slate-700/50 sm:col-span-1 sm:col-start-4 sm:row-start-1 sm:items-center sm:self-stretch sm:border-t-0 sm:border-l sm:border-slate-200/90 sm:pl-3 sm:pt-0 dark:sm:border-slate-600/70"
-    >
-      <button
-        type="button"
-        class="inline-flex min-h-11 min-w-0 flex-1 touch-manipulation items-center justify-center rounded-xl px-3 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:h-11 sm:min-w-[5.5rem] sm:flex-none sm:px-3 sm:text-sm"
-        :class="playerPaid
-          ? 'bg-emerald-500/20 text-emerald-900 ring-1 ring-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-200 dark:ring-emerald-400/35'
-          : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:bg-slate-800'"
-        :aria-pressed="playerPaid"
-        :aria-label="playerPaid ? 'Оплачено, нажми чтобы снять отметку' : 'Отметить оплату'"
-        :title="playerPaid ? 'Снять отметку оплаты' : 'Отметить оплату'"
-        @click.stop.prevent="emit('togglePaid')"
-      >
-        {{ playerPaid ? 'Оплачено' : 'Оплата' }}
-      </button>
-      <button
-        type="button"
-        class="inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-xl border border-slate-200 bg-white text-lg font-light leading-none text-slate-500 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:border-red-500/50 dark:hover:bg-red-950/40 dark:hover:text-red-300"
-        :title="title"
-        :aria-label="title"
-        @click.stop.prevent="emit('activate')"
-      >
-        <span aria-hidden="true">×</span>
-      </button>
-    </div>
-
-    <template v-else>
+    <template v-if="!splitActions">
       <button
         v-if="showPaidToggle"
         type="button"

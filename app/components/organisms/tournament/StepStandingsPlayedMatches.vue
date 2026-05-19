@@ -59,7 +59,7 @@
           </div>
         </div>
 
-        <!-- Панель кнопок: детали / редактировать -->
+        <!-- Панель кнопок: детали / редактировать / удалить -->
         <div class="flex items-center gap-2 border-t border-slate-100 dark:border-slate-800/60 px-3 py-2">
           <button
             type="button"
@@ -91,7 +91,7 @@
             {{ editMatch === m.matchNumber ? 'Редактируется' : 'Редактировать' }}
           </button>
 
-          <!-- Номер матча: закреплён в строке действий, не уезжает вниз -->
+          <!-- Номер матча: закреплён справа -->
           <span
             class="ml-auto rounded-md bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest
                    tabular-nums text-slate-600 dark:bg-slate-800/70 dark:text-slate-400"
@@ -99,39 +99,46 @@
             М{{ m.matchNumber }}
           </span>
 
-          <!-- Удаление: двухшаговая защита — сначала иконка, потом "Удалить?" -->
-          <template v-if="!props.readonly && confirmDeleteMatch === m.matchNumber">
-            <button
-              type="button"
-              class="inline-flex h-9 items-center gap-1 rounded-xl bg-red-500/20 px-2.5 text-xs font-semibold
-                     text-red-400 transition-colors md:hover:bg-red-500/30 focus:outline-none"
-              @click="confirmDelete(m.matchNumber)"
-            >
-              <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
-              </svg>
-              Удалить?
-            </button>
-            <button
-              type="button"
-              class="inline-flex h-9 items-center rounded-xl px-2.5 text-xs text-slate-600 transition-colors md:hover:text-slate-800 dark:text-slate-400 dark:md:hover:text-slate-200 focus:outline-none"
-              @click="cancelDelete"
-            >
-              Нет
-            </button>
-          </template>
-            <button
-            v-else-if="!props.readonly"
+          <!-- Иконка удаления: всегда на месте, открывает подтверждение ниже -->
+          <button
+            v-if="!props.readonly"
             type="button"
-            class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 transition-colors
-                   md:hover:bg-slate-200 md:hover:text-red-600 dark:md:hover:bg-slate-800 dark:md:hover:text-red-400
+            class="inline-flex h-9 w-9 items-center justify-center rounded-xl transition-colors
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
+            :class="confirmDeleteMatch === m.matchNumber
+              ? 'bg-red-500/15 text-red-500 dark:text-red-400'
+              : 'text-slate-400 md:hover:bg-slate-200 md:hover:text-red-600 dark:md:hover:bg-slate-800 dark:md:hover:text-red-400'"
             title="Удалить матч"
             @click="requestDelete(m.matchNumber)"
           >
             <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
             </svg>
+          </button>
+        </div>
+
+        <!-- Подтверждение удаления — отдельная строка, не конкурирует с другими кнопками за ширину -->
+        <div
+          v-if="!props.readonly && confirmDeleteMatch === m.matchNumber"
+          :ref="(el) => { if (el) confirmRowEl = el as HTMLElement }"
+          class="flex items-center gap-2 border-t border-red-200/60 bg-red-50/60 px-3 py-2 dark:border-red-900/30 dark:bg-red-950/20"
+        >
+          <span class="text-xs text-red-600 dark:text-red-400">Удалить этот матч?</span>
+          <button
+            type="button"
+            class="ml-auto inline-flex h-8 items-center gap-1 rounded-lg bg-red-500 px-3 text-xs font-semibold
+                   text-white transition-colors hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
+            @click="confirmDelete(m.matchNumber)"
+          >
+            Удалить
+          </button>
+          <button
+            type="button"
+            class="inline-flex h-8 items-center rounded-lg px-3 text-xs font-medium text-slate-600 transition-colors
+                   hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 focus:outline-none"
+            @click="cancelDelete"
+          >
+            Отмена
           </button>
         </div>
 
@@ -184,6 +191,7 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import type { PlayerMatchStats } from '~/composables/tournament-standings/types'
+import { nextTick } from 'vue'
 import { useTeamColors } from '~/composables/useTeamColors'
 import OrganismsTournamentPlayedMatchesPlayedMatchDetails from '~/components/organisms/tournament/played-matches/PlayedMatchDetails.vue'
 import OrganismsTournamentPlayedMatchesPlayedMatchEditor from '~/components/organisms/tournament/played-matches/PlayedMatchEditor.vue'
@@ -250,12 +258,18 @@ const editMatch = ref<number | null>(null)
 
 // Матч, ожидающий подтверждения удаления (двухшаговая защита от случайного нажатия).
 const confirmDeleteMatch = ref<number | null>(null)
+// Ссылка на строку подтверждения — обновляется через :ref в v-for после рендера.
+const confirmRowEl = ref<HTMLElement | null>(null)
 
 function requestDelete(matchNumber: number) {
-  // В режиме просмотра удаление отключено.
   if (props.readonly) return
-  // Первый клик — запрашиваем подтверждение.
   confirmDeleteMatch.value = matchNumber
+  // Ждём, пока Vue отрисует строку подтверждения, затем скроллим к ней.
+  void nextTick(() => {
+    requestAnimationFrame(() => {
+      confirmRowEl.value?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    })
+  })
 }
 
 function confirmDelete(matchNumber: number) {

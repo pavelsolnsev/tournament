@@ -18,7 +18,7 @@
         </button>
       </div>
       <!-- Режим администратора -->
-      <template v-if="isAdmin">
+      <template v-if="isAdmin && !showViewerPreview">
         <!-- min-h-full растягивает до высоты #scroll-root (= весь экран). -->
         <div class="flex min-h-full flex-col">
           <!-- Шапка администратора — светлая/тёмная тема через dark: классы. -->
@@ -26,7 +26,7 @@
             <div class="mx-auto flex w-full min-w-0 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6 h-14">
               <span class="flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                 <span class="inline-block h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400" aria-hidden="true" />
-                {{ adminRole === 'limited' ? 'Режим судьи' : 'Администратор' }}
+                {{ adminRole === 'limited' ? 'Режим судьи' : 'Админ' }}
               </span>
               <!-- Кнопки в шапке: обновить + пожелания + тема + выход (как у зрителя). -->
               <div class="flex items-center gap-1">
@@ -183,6 +183,9 @@
                 @cancel-clear-tournament="cancelClearTournament"
                 @confirm-clear-tournament="confirmClearTournament"
                 :fetch-remote-standings-snapshot="fetchRemoteStandingsSnapshotForMerge"
+                :save-now="wizard.saveCurrentTournamentStateNow"
+                :is-match-finished="isMatchFinished"
+                :on-go-to-results="() => { showViewerPreview = true }"
               />
 
               <!-- Сброс турнира — показываем внизу только на шагах 0 и 1.
@@ -222,12 +225,13 @@
         </div>
       </template>
 
-    <!-- Режим зрителя -->
+    <!-- Режим зрителя (и превью итогов для администратора) -->
     <OrganismsViewerTournamentViewer
       v-else
       :state="viewerState"
       :players="allPlayers"
       :on-refresh="reloadWithScrollRestore"
+      :on-back-to-admin="showViewerPreview ? () => { showViewerPreview = false } : undefined"
     />
 
 </div>
@@ -235,7 +239,7 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useConfirmCountdown } from '~/composables/useConfirmCountdown'
 import { useTournamentWizard } from '~/composables/useTournamentWizard'
@@ -289,6 +293,8 @@ const rosterSyncRelevant = computed(
 )
 
 const viewerState = computed(() => tournamentState.serverState.value)
+const showViewerPreview = ref(false)
+const isMatchFinished = computed(() => viewerState.value?.matchStatus === 'finished')
 
 // Один refetch на возврате на вкладку: и зритель, и админ; для админа — ещё reapply (как в syncWizardFromServerAfterExternalChange).
 function onTabVisibilitySync() {

@@ -142,6 +142,11 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
   // Накопленные дельты рейтинга за все матчи турнира — восстанавливаем из снапшота.
   const playerRatingDeltas = ref<Record<number, number>>(snap?.playerRatingDeltas ?? {})
 
+  // Монотонный счётчик локальных правок отметок: растёт при каждом add/remove.
+  // Сохраняется в снапшот и сравнивается с remote при мёрже — если remote.seq <= local.seq,
+  // значит серверный снапшот устарел (ещё не получил наши изменения из-за дебаунса PUT) и мёрж пропускается.
+  const localStatsSeq = ref<number>(snap?.currentStatsSeq ?? 0)
+
   const homeGoals = computed(() => Object.values(homeStats.value).reduce((sum, s) => sum + s.goals, 0))
   const awayGoals = computed(() => Object.values(awayStats.value).reduce((sum, s) => sum + s.goals, 0))
 
@@ -195,16 +200,17 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
   }
 
   function addPlayerEvent(side: Side, playerId: number, key: StatKey) {
-    // Прямой вызов без Event-хаков — для кастомных кнопок событий.
+    localStatsSeq.value += 1
     incrementStat(side, playerId, key, homeStats, awayStats)
   }
 
   function removePlayerEvent(side: Side, playerId: number, key: StatKey) {
-    // Отменяет последнее добавленное событие — нельзя уйти ниже нуля.
+    localStatsSeq.value += 1
     decrementStat(side, playerId, key, homeStats, awayStats)
   }
 
   function resetMatchStats() {
+    localStatsSeq.value = 0
     resetMatchStatsFn(homeStats, awayStats, activeSelection, matchFinalized)
   }
 
@@ -295,8 +301,16 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
     const la = normalizeTeamName(awayTeam.value)
     if (!rh || !ra || !lh || !la) return
     if (rh !== lh || ra !== la) return
-    homeStats.value = mergePlayerStatsRecords(homeStats.value, remote.currentHomeStats ?? {})
-    awayStats.value = mergePlayerStatsRecords(awayStats.value, remote.currentAwayStats ?? {})
+    const remoteSeq = remote.currentStatsSeq ?? 0
+    // Локальный seq новее или равен — серверный снапшот устарел (PUT ещё в дебаунсе).
+    // Пропускаем мёрж, иначе Math.max восстановит отменённые локально отметки.
+    if (remoteSeq <= localStatsSeq.value) return
+    // Remote строго новее: берём remote-состояние напрямую (не Math.max).
+    // Math.max(local=1, remote=0)=1 не даёт удалению распространиться;
+    // прямое присваивание корректно передаёт и добавления, и отмены с другого устройства.
+    homeStats.value = { ...(remote.currentHomeStats ?? {}) }
+    awayStats.value = { ...(remote.currentAwayStats ?? {}) }
+    localStatsSeq.value = remoteSeq
   }
 
   function goToNextMatch() {
@@ -350,6 +364,7 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
         currentAwayTeam: awayTeam.value,
         currentHomeStats: homeStats.value,
         currentAwayStats: awayStats.value,
+        currentStatsSeq: localStatsSeq.value,
       })
     },
     { deep: true },

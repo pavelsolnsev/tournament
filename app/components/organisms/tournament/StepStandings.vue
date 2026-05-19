@@ -2,7 +2,7 @@
 <template>
   <div
     class="min-w-0 space-y-4"
-    :class="props.readonly !== true && !hideCountdownTimerBar && 'pb-24'"
+    :class="props.readonly !== true && !hideCountdownTimerBar && !isTimerCollapsed && 'pb-24'"
   >
     <!-- Блок 1: турнирная таблица -->
     <div
@@ -270,6 +270,8 @@
         :show-clear-tournament-confirm="props.showClearTournamentConfirm"
         :clear-tournament-seconds-left="props.clearTournamentSecondsLeft"
         :clear-tournament-busy="props.clearTournamentBusy"
+        :is-match-finished="props.isMatchFinished ?? false"
+        :on-go-to-results="props.onGoToResults ?? (() => {})"
         @update:home-team="handleUpdateHomeTeam"
         @update:away-team="handleUpdateAwayTeam"
         @clear-tournament="emit('clear-tournament')"
@@ -289,6 +291,8 @@ import type { Player, MatchStatus } from '~/types/tournament'
 import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { useStepStandingsPage, type StepStandingsPageEmit } from '~/composables/useStepStandingsPage'
 
+const isTimerCollapsed = useState<boolean>('match-timer-bar-collapsed', () => false)
+
 const props = defineProps<{
   tournamentName: string
   tournamentDate: string
@@ -304,6 +308,9 @@ const props = defineProps<{
   clearTournamentSecondsLeft: number
   clearTournamentBusy: boolean
   fetchRemoteStandingsSnapshot?: () => Promise<SavedStandingsSnapshot | null>
+  saveNow?: () => Promise<void>
+  isMatchFinished?: boolean
+  onGoToResults?: () => void
 }>()
 
 const emit = defineEmits<{
