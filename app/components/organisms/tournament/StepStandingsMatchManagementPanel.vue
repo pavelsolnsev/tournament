@@ -200,6 +200,16 @@
         </NuxtLink>
       </div>
 
+      <!-- Заглушка: ни один блок недоступен в текущей роли/состоянии. -->
+      <div
+        v-if="!((canFinishMatchShowResults || canFinishMatchSilent) && canFinishMatch) && !canFinishTournament"
+        class="flex flex-col items-center justify-center gap-1.5 px-4 py-6 text-center"
+      >
+        <span class="text-xl" aria-hidden="true">⏳</span>
+        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Нет доступных действий</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500">Выберите пару команд для начала матча</p>
+      </div>
+
       <!-- Таймер — кнопка показывается только когда таймер скрыт. -->
       <div
         v-if="canFinishTournament && isTimerCollapsed"

@@ -78,6 +78,23 @@
         </ol>
       </nav>
 
+      <!-- Табы: Красное Знамя / Профилакторий -->
+      <div v-if="status !== 'pending'" class="mb-5 flex border-b border-slate-200 dark:border-slate-700/60">
+        <button
+          v-for="tab in tabs"
+          :key="tab.id"
+          class="relative px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          :class="activeTab === tab.id
+            ? 'text-emerald-600 dark:text-emerald-400'
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
+          @click="activeTab = tab.id"
+        >
+          {{ tab.label }}
+          <span class="ml-1.5 rounded-full bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-xs font-medium tabular-nums">{{ tab.count }}</span>
+          <span v-if="activeTab === tab.id" class="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-emerald-500" />
+        </button>
+      </div>
+
       <!-- Состояние загрузки -->
       <div v-if="status === 'pending'" class="flex flex-col gap-3">
         <div
@@ -110,12 +127,21 @@
         </div>
       </div>
 
+      <!-- Пустой результат после фильтрации -->
+      <div
+        v-else-if="filteredTournaments.length === 0"
+        class="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/60 px-6 py-16 text-center"
+      >
+        <span class="text-5xl" aria-hidden="true">🏟️</span>
+        <p class="text-sm text-slate-500 dark:text-slate-500">Турниров на этой площадке пока нет</p>
+      </div>
+
       <!-- Список турниров -->
       <div v-else class="flex flex-col gap-3">
         <div
-          v-for="tournament in localTournaments"
+          v-for="tournament in filteredTournaments"
           :key="tournament.id"
-          class="group relative flex items-start gap-3 rounded-2xl border border-slate-200/90 bg-white/95 px-4 py-4 transition-colors hover:border-emerald-400/60 dark:border-slate-700/70 dark:bg-slate-800/70 dark:hover:border-emerald-500/40 sm:gap-4 sm:px-5 sm:py-5"
+          class="group relative flex items-start gap-3 rounded-2xl border border-slate-200/90 bg-white/95 px-4 py-3 transition-colors hover:border-emerald-400/60 dark:border-slate-700/70 dark:bg-slate-800/70 dark:hover:border-emerald-500/40 sm:px-5 sm:py-3.5"
         >
           <!-- Ссылка на весь блок (кроме кнопки удаления) -->
           <NuxtLink
@@ -127,10 +153,9 @@
           <div class="relative z-10 min-w-0 flex-1 pointer-events-none">
             <!-- Заголовок и дата: на широком экране в одну линию -->
             <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-              <h2 class="min-w-0 text-base font-semibold leading-snug text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-slate-50 dark:group-hover:text-emerald-400 sm:text-lg">
+              <h2 class="min-w-0 text-sm font-semibold leading-snug text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-slate-50 dark:group-hover:text-emerald-400 sm:text-base">
                 {{ archiveCardTitle(tournament) }}
               </h2>
-              <!-- Админ: вид как у зрителя; клик открывает нативный календарь (showPicker / click), ссылка карточки не перехватывает (z-10 контент над z-0 ссылкой). -->
               <div
                 v-if="isAdmin"
                 role="button"
@@ -148,15 +173,7 @@
                   <line x1="3" y1="10" x2="21" y2="10" />
                 </svg>
                 <span class="pointer-events-none whitespace-nowrap tabular-nums">{{ formatDate(tournament.tournament_date) || 'Указать дату' }}</span>
-                <input
-                  type="date"
-                  data-archive-date-input
-                  class="sr-only"
-                  :value="archiveDateInputValue(tournament.tournament_date)"
-                  :disabled="savingDateId === tournament.id"
-                  :aria-label="`Дата турнира в архиве: ${formatDate(tournament.tournament_date) || 'не задана'}`"
-                  @change="onArchiveDateInputChange(tournament, $event)"
-                />
+                <input type="date" data-archive-date-input class="sr-only" :value="archiveDateInputValue(tournament.tournament_date)" :disabled="savingDateId === tournament.id" :aria-label="`Дата турнира в архиве: ${formatDate(tournament.tournament_date) || 'не задана'}`" @change="onArchiveDateInputChange(tournament, $event)" />
               </div>
               <div
                 v-else-if="formatDate(tournament.tournament_date)"
@@ -175,69 +192,39 @@
             <!-- Чемпион и MVP: стек на узком экране, в ряд на sm+ -->
             <div
               v-if="championTeamLabel(tournament) || mvpPlayerLabel(tournament)"
-              class="mt-4 flex min-w-0 flex-col gap-3 sm:mt-5 sm:flex-row sm:items-stretch"
+              class="mt-2.5 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-stretch"
             >
               <div
                 v-if="championTeamLabel(tournament)"
-                class="flex min-w-0 flex-1 gap-3 rounded-xl border border-slate-200/90 border-l-4 border-l-amber-400 bg-slate-50/90 px-3 py-3 dark:border-slate-600/50 dark:border-l-amber-500 dark:bg-slate-900/40"
+                class="flex min-w-0 flex-1 gap-2.5 rounded-xl border border-slate-200/90 border-l-4 border-l-amber-400 bg-slate-50/90 px-3 py-2 dark:border-slate-600/50 dark:border-l-amber-500 dark:bg-slate-900/40"
               >
                 <div class="shrink-0 self-center">
-                  <AtomsTeamMarkerOrLogo
-                    :team-name="championTeamLabel(tournament)"
-                    :marker="championMarker(championTeamLabel(tournament))"
-                    size="lg"
-                  />
+                  <AtomsTeamMarkerOrLogo :team-name="championTeamLabel(tournament)" :marker="championMarker(championTeamLabel(tournament))" size="lg" />
                 </div>
                 <div class="min-w-0 flex-1">
-                  <p class="text-[10px] font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-200/90">
-                    Чемпион
-                  </p>
-                  <p class="mt-0.5 truncate text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">
-                    {{ championTeamLabel(tournament) }}
-                  </p>
+                  <p class="text-[10px] font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-200/90">Чемпион</p>
+                  <p class="mt-0.5 truncate text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">{{ championTeamLabel(tournament) }}</p>
                 </div>
-                <span
-                  class="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg bg-amber-400/20 text-lg text-amber-900 ring-1 ring-amber-400/35 dark:bg-amber-500/15 dark:text-amber-200 dark:ring-amber-500/30"
-                  aria-hidden="true"
-                >🏆</span>
+                <span class="flex h-7 w-7 shrink-0 items-center justify-center self-center rounded-lg bg-amber-400/20 text-lg text-amber-900 ring-1 ring-amber-400/35 dark:bg-amber-500/15 dark:text-amber-200 dark:ring-amber-500/30" aria-hidden="true">🏆</span>
               </div>
 
               <div
                 v-if="mvpPlayerLabel(tournament)"
-                class="flex min-w-0 flex-1 gap-3 rounded-xl border border-slate-200/90 border-l-4 border-l-violet-500 bg-slate-50/90 px-3 py-3 dark:border-slate-600/50 dark:border-l-violet-400 dark:bg-slate-900/40"
+                class="flex min-w-0 flex-1 gap-2.5 rounded-xl border border-slate-200/90 border-l-4 border-l-violet-500 bg-slate-50/90 px-3 py-2 dark:border-slate-600/50 dark:border-l-violet-400 dark:bg-slate-900/40"
               >
                 <div class="relative shrink-0 self-center h-8 w-8">
-                  <AtomsPlayerAvatar
-                    :photo="tournament.mvp_photo"
-                    :fallback-name="mvpPlayerLabel(tournament)"
-                    size="md"
-                  />
-                  <div
-                    v-if="mvpTeamLabel(tournament)"
-                    class="pointer-events-none absolute -bottom-px -right-px flex h-3.5 w-3.5 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-slate-300/90 dark:bg-slate-900 dark:ring-slate-600/80"
-                    aria-hidden="true"
-                  >
-                    <span class="inline-flex shrink-0 scale-[0.78]">
-                      <AtomsTeamMarkerOrLogo
-                        :team-name="mvpTeamLabel(tournament)"
-                        :marker="championMarker(mvpTeamLabel(tournament))"
-                        size="xs"
-                      />
+                  <AtomsPlayerAvatar :photo="tournament.mvp_photo" :fallback-name="mvpPlayerLabel(tournament)" size="md" />
+                  <div v-if="mvpTeamLabel(tournament)" class="pointer-events-none absolute -bottom-px -right-px flex h-3 w-3 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-slate-300/90 dark:bg-slate-900 dark:ring-slate-600/80" aria-hidden="true">
+                    <span class="inline-flex shrink-0 scale-75">
+                      <AtomsTeamMarkerOrLogo :team-name="mvpTeamLabel(tournament)" :marker="championMarker(mvpTeamLabel(tournament))" size="xs" />
                     </span>
                   </div>
                 </div>
                 <div class="min-w-0 flex-1">
-                  <p class="text-[10px] font-semibold uppercase tracking-wider text-violet-800 dark:text-violet-200/90">
-                    MVP
-                  </p>
-                  <p class="mt-0.5 truncate text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">
-                    {{ mvpPlayerLabel(tournament) }}
-                  </p>
+                  <p class="text-[10px] font-semibold uppercase tracking-wider text-violet-800 dark:text-violet-200/90">MVP</p>
+                  <p class="mt-0.5 truncate text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">{{ mvpPlayerLabel(tournament) }}</p>
                 </div>
-                <span
-                  class="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg bg-violet-500/15 text-lg leading-none text-violet-900 ring-1 ring-violet-400/40 dark:bg-violet-500/20 dark:text-violet-100 dark:ring-violet-400/35"
-                  aria-hidden="true"
-                >⭐</span>
+                <span class="flex h-7 w-7 shrink-0 items-center justify-center self-center rounded-lg bg-violet-500/15 text-lg leading-none text-violet-900 ring-1 ring-violet-400/40 dark:bg-violet-500/20 dark:text-violet-100 dark:ring-violet-400/35" aria-hidden="true">⭐</span>
               </div>
             </div>
           </div>
@@ -251,11 +238,9 @@
             :disabled="deletingId === tournament.id"
             @click.prevent="deleteTournament(tournament.id)"
           >
-            <!-- Спиннер во время удаления -->
             <svg v-if="deletingId === tournament.id" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path d="M21 12a9 9 0 1 1-6.219-8.56" />
             </svg>
-            <!-- Иконка корзины -->
             <svg v-else class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polyline points="3 6 5 6 21 6" />
               <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
@@ -330,6 +315,24 @@ const {
   deleteTournament,
   formatDate,
 } = useTournamentsArchiveList(tournaments)
+
+// Табы по площадке — фильтрация по venue_label без изменений в БД.
+const activeTab = ref('krasnoe')
+
+const TABS = [
+  { id: 'krasnoe', label: 'Красное Знамя', keyword: 'красное знамя' },
+  { id: 'prof',    label: 'Профилакторий', keyword: 'профилакторий'  },
+]
+
+const tabs = computed(() => TABS.map(t => ({
+  ...t,
+  count: localTournaments.value?.filter(x => (x.venue_label ?? '').toLowerCase().includes(t.keyword)).length ?? 0,
+})))
+
+const filteredTournaments = computed(() => {
+  const keyword = TABS.find(t => t.id === activeTab.value)?.keyword ?? ''
+  return (localTournaments.value ?? []).filter(x => (x.venue_label ?? '').toLowerCase().includes(keyword))
+})
 
 const showLoginModal = ref(false)
 const { isAdmin, restoreSession, logout } = useAdminAuth()

@@ -62,21 +62,22 @@
 
     <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
-    <template v-if="hasRosterData">
-      <OrganismsViewerTournamentSummaryRosterAccordionSection
-        :roster-teams="rosterTeams"
-        :roster-players-by-team="rosterPlayersByTeam"
-        :team-marker-for-row="teamMarkerForRow"
-        :aggregate-player-stats="props.aggregatePlayerStats"
-        :player-rating-deltas="props.playerRatingDeltas"
-        :hide-base-player-rating="hideBasePlayerRating"
-      />
-      <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
-    </template>
-
     <OrganismsViewerTournamentSummaryTeamMvpsSection
       v-if="props.summary.teamMvps.length > 0"
       :team-mvps="props.summary.teamMvps"
+    />
+
+    <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
+
+    <OrganismsViewerTournamentSummaryTopMatchSection
+      v-if="props.summary.stats.topScoringMatch"
+      :match="props.summary.stats.topScoringMatch"
+      :pill-class="topScoringMatchPillClass"
+      :totals="topScoringMatchTotals"
+      :home-team-marker="homeTeamMarker"
+      :away-team-marker="awayTeamMarker"
+      :team-marker-for-row="teamMarkerForRow"
+      :player-avatars-by-id="playerAvatarsById"
     />
 
     <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
@@ -92,18 +93,17 @@
 
     <div v-if="hasPlayedMatches" class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
-    <OrganismsViewerTournamentSummaryTopMatchSection
-      v-if="props.summary.stats.topScoringMatch"
-      :match="props.summary.stats.topScoringMatch"
-      :pill-class="topScoringMatchPillClass"
-      :totals="topScoringMatchTotals"
-      :home-team-marker="homeTeamMarker"
-      :away-team-marker="awayTeamMarker"
-      :team-marker-for-row="teamMarkerForRow"
-      :player-avatars-by-id="playerAvatarsById"
-    />
-
-    <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
+    <template v-if="hasRosterData">
+      <OrganismsViewerTournamentSummaryRosterAccordionSection
+        :roster-teams="rosterTeams"
+        :roster-players-by-team="rosterPlayersByTeam"
+        :team-marker-for-row="teamMarkerForRow"
+        :aggregate-player-stats="props.aggregatePlayerStats"
+        :player-rating-deltas="props.playerRatingDeltas"
+        :hide-base-player-rating="hideBasePlayerRating"
+      />
+      <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
+    </template>
 
     <OrganismsViewerTournamentSummaryUsefulLinksSection />
   </section>

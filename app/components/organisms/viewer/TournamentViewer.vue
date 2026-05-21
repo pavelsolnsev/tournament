@@ -26,35 +26,38 @@
     />
 
     <main
-      class="mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col px-4 transition-[padding] duration-300 print:max-w-none print:px-4 sm:px-6 print:!pt-6"
+      class="relative z-10 mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col overflow-hidden px-4 transition-[padding] duration-300 print:max-w-none print:px-4 sm:px-6 print:!pt-6"
       :class="mainTopPaddingClass"
     >
-      <div class="flex flex-1 flex-col py-5 sm:py-8">
+      <!-- Фоновое видео — только пока турнир не начался, не в live-режиме -->
+      <video
+        v-if="!hasViewerData"
+        class="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center opacity-50 dark:opacity-[0.25] sm:hidden"
+        autoplay
+        muted
+        loop
+        playsinline
+      >
+        <source src="/bg-video.mp4" type="video/mp4" />
+      </video>
+
+      <div class="relative z-10 flex flex-1 flex-col py-5 sm:py-8">
         <div
           v-if="!hasViewerData"
-          class="flex flex-col items-center justify-center"
+          class="flex flex-1 flex-col items-center justify-center"
         >
           <div
-            class="flex w-full max-w-sm flex-col items-center gap-5 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/60 px-6 py-10 text-center"
+            class="flex w-full max-w-sm flex-col items-center gap-5 rounded-2xl border border-dashed border-slate-700 dark:border-slate-400 bg-white/50 dark:bg-slate-900/30 backdrop-blur-sm px-6 py-10 text-center"
           >
             <span class="text-5xl" aria-hidden="true">⚽</span>
 
-            <div class="flex flex-col gap-2">
-              <p
-                class="text-base font-semibold text-slate-700 dark:text-slate-300"
-              >
-                Турнир ещё не начался
-              </p>
-              <p
-                class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed"
-              >
-                После старта обновите страницу — кнопка в шапке.
-              </p>
-            </div>
+            <p class="text-base font-semibold text-slate-700 dark:text-slate-300">
+              Турнир ещё не начался
+            </p>
 
             <NuxtLink
               to="/tournaments"
-              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/60 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 transition-all hover:border-emerald-400/60 dark:hover:border-emerald-500/40 hover:text-emerald-700 dark:hover:text-emerald-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+              class="inline-flex items-center gap-2.5 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-emerald-900/20 transition-all hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-900/25 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 dark:bg-emerald-700 dark:hover:bg-emerald-600"
             >
               <span aria-hidden="true">🏆</span>
               Прошлые турниры
@@ -129,16 +132,26 @@
             href="https://vk.com/rmsfootball"
             target="_blank"
             rel="noopener noreferrer"
-            class="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+            class="inline-flex items-center gap-1.5 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
             title="Группа РФОИ ВКонтакте"
-          >ВКонтакте</a>
+          >
+            <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M15.07 2H8.93C3.33 2 2 3.33 2 8.93v6.14C2 20.67 3.33 22 8.93 22h6.14C20.67 22 22 20.67 22 15.07V8.93C22 3.33 20.67 2 15.07 2zm3.08 13.27h-1.5c-.57 0-.74-.45-1.76-1.49-.88-.87-1.27-.99-1.49-.99-.3 0-.39.09-.39.51v1.36c0 .36-.11.57-1.06.57-1.56 0-3.29-.95-4.51-2.71C6 10.31 5.5 8.5 5.5 8.09c0-.22.09-.43.51-.43h1.5c.38 0 .52.17.67.57.74 2.07 1.97 3.88 2.48 3.88.19 0 .28-.09.28-.57V9.7c-.06-1.02-.6-1.11-.6-1.47 0-.18.15-.36.38-.36h2.36c.32 0 .43.17.43.54v2.9c0 .32.14.43.23.43.19 0 .36-.11.72-.47 1.11-1.25 1.9-3.17 1.9-3.17.1-.22.28-.43.66-.43h1.5c.45 0 .55.23.45.54-.19.88-2.01 3.44-2.01 3.44-.16.26-.22.38 0 .67.16.21.68.66 1.03 1.06.64.72 1.13 1.33 1.26 1.75.14.41-.09.62-.51.62z"/>
+            </svg>
+            ВКонтакте
+          </a>
           <a
             href="https://t.me/RmsFootball"
             target="_blank"
             rel="noopener noreferrer"
-            class="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+            class="inline-flex items-center gap-1.5 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
             title="РФОИ в Telegram"
-          >Telegram</a>
+          >
+            <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8l-1.69 7.97c-.12.57-.46.71-.93.44l-2.58-1.9-1.24 1.2c-.14.14-.26.26-.52.26l.18-2.62 4.74-4.28c.21-.18-.04-.28-.32-.1L7.46 14.9l-2.54-.8c-.55-.17-.56-.55.12-.82l9.95-3.84c.46-.17.86.11.65.76z"/>
+            </svg>
+            Telegram
+          </a>
         </nav>
       </div>
     </footer>
