@@ -5,7 +5,24 @@
       "Bash(yarn typecheck *)",
       "Bash(yarn test *)",
       "Bash(yarn lint *)",
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "Bash(ffprobe -v quiet -print_format json -show_streams -show_format /Users/pavelsolncev/Documents/skill/tournament/public/test.MOV)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); f=d['format']; print\\('Duration:', f['duration'], 's'\\); print\\('Size:', int\\(f['size']\\)//1024//1024, 'MB'\\)\")",
+      "Bash(ffprobe -v error -show_entries format=duration,size -of default /Users/pavelsolncev/Documents/skill/tournament/public/test.MOV)",
+      "Bash(ffprobe -v error -show_entries format=duration,size -of default /Users/pavelsolncev/Documents/skill/tournament/public/test2.MOV)",
+      "Bash(brew list *)",
+      "Bash(brew install *)",
+      "Bash(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of default /Users/pavelsolncev/Documents/skill/tournament/public/test.MOV)",
+      "Bash(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of default /Users/pavelsolncev/Documents/skill/tournament/public/test2.MOV)",
+      "Bash(ffmpeg -y -t 15.467 -i test.MOV -vf \"scale=720:1280\" -c:v libx264 -b:v 911k -pass 1 -passlogfile pass_test -an -f null /dev/null)",
+      "Bash(ffmpeg -y -t 15.467 -i test.MOV -vf \"scale=720:1280\" -c:v libx264 -b:v 911k -pass 2 -passlogfile pass_test -c:a aac -b:a 96k test_compressed.mp4)",
+      "Bash(ffmpeg -y -t 14.221 -i test2.MOV -vf \"scale=720:1280\" -c:v libx264 -b:v 999k -pass 1 -passlogfile pass_test2 -an -f null /dev/null)",
+      "Bash(ffmpeg -y -t 14.221 -i test2.MOV -vf \"scale=720:1280\" -c:v libx264 -b:v 999k -pass 2 -passlogfile pass_test2 -c:a aac -b:a 96k test2_compressed.mp4)",
+      "Bash(rm /Users/pavelsolncev/Documents/skill/tournament/public/pass_test.log /Users/pavelsolncev/Documents/skill/tournament/public/pass_test2.log 2>/dev/null; ls /Users/pavelsolncev/Documents/skill/tournament/public/pass_test* 2>/dev/null || echo \"temp files cleaned\")",
+      "Bash(rm /Users/pavelsolncev/Documents/skill/tournament/public/pass_test*.log /Users/pavelsolncev/Documents/skill/tournament/public/pass_test*.mbtree)"
+    ],
+    "additionalDirectories": [
+      "/Users/pavelsolncev/Documents/skill/tournament/public"
     ]
   }
 }
