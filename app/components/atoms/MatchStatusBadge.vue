@@ -61,7 +61,7 @@ const label = computed(() => {
   if (props.status === 'live') return 'Live'
   if (props.status === 'finished') return 'Завершён'
   // upcoming: английская подпись в одном стиле с Live.
-  return 'Pending'
+  return 'Скоро'
 })
 
 // Цветовые классы по статусу — Live красный, finished зелёный, upcoming серый.
