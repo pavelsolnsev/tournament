@@ -83,7 +83,7 @@
         <button
           v-for="tab in tabs"
           :key="tab.id"
-          class="relative px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          class="relative flex-1 px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
           :class="activeTab === tab.id
             ? 'text-emerald-600 dark:text-emerald-400'
             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
