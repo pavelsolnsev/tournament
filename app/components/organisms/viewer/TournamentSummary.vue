@@ -114,7 +114,8 @@ import type { Player } from '~/types/tournament'
 import type { TournamentSummary } from '~/composables/useTournamentSummary'
 import type { PlayedMatch, PlayerMatchStats } from '~/composables/tournament-standings/types'
 import { useTeamColors } from '~/composables/useTeamColors'
-import { normalizeTeamColorsMap, normalizeTeamName, resolveTeamColorIndex } from '~/utils/teamNames'
+import { normalizeTeamName, resolveTeamColorIndex } from '~/utils/teamNames'
+import { buildEffectiveTeamColors } from '~/composables/tournament-summary/awardHelpers'
 
 const props = defineProps<{
   summary: TournamentSummary
@@ -147,39 +148,20 @@ const headerDateLabel = computed(() => {
   })
 })
 
-const { teamMarkers, getMarkerByIndex, getMatchScorePillClass } = useTeamColors()
+const { getMarkerByIndex, getMatchScorePillClass } = useTeamColors()
 
 const playedMatchesForResults = computed(() => props.playedMatchesList ?? [])
 const hasPlayedMatches = computed(() => playedMatchesForResults.value.length > 0)
 
 const hideBasePlayerRating = computed(() => playedMatchesForResults.value.length > 0)
 
-const effectiveTeamColors = computed(() => {
-  const map = normalizeTeamColorsMap(props.teamColors)
-  const ordered: string[] = []
-  const seen = new Set<string>()
-  for (const r of props.summary.standingsRows) {
-    const nk = normalizeTeamName(r.teamName)
-    if (!nk || seen.has(nk)) continue
-    seen.add(nk)
-    ordered.push(nk)
-  }
-  for (const m of playedMatchesForResults.value) {
-    for (const raw of [m.homeTeam, m.awayTeam]) {
-      const nk = normalizeTeamName(raw)
-      if (!nk || seen.has(nk)) continue
-      seen.add(nk)
-      ordered.push(nk)
-    }
-  }
-  // Если в teamColors нет части команд (старые архивы/неполные сохранения),
-  // мы назначаем им цвета по порядку (0,1,2,...) — так же, как это делает fallback логика в турнире.
-  for (const [idx, nk] of ordered.entries()) {
-    if (map[nk] !== undefined) continue
-    map[nk] = idx % teamMarkers.length
-  }
-  return map
-})
+// Используем ту же функцию, что и awardHelpers — единый источник цветов для всех секций.
+// Ранее здесь был локальный вариант с idx (абсолютная позиция), который давал другие цвета
+// для команд без явной записи в teamColors. buildEffectiveTeamColors использует счётчик
+// только для незакрашенных команд (next), что совпадает с поведением getTeamColor в admin UI.
+const effectiveTeamColors = computed(() =>
+  buildEffectiveTeamColors(props.teamColors, props.summary.standingsRows, playedMatchesForResults.value),
+)
 
 const playerAvatarsById = computed(() => {
   const out: Record<number, { photo: string | null; name: string }> = {}
