@@ -51,9 +51,9 @@ export function nextMoscowOccurrenceIso(wantJsDay: number, hour: number, minute:
   }
 }
 
-/** Профилакторий: ближайший пн 20:30 МСК. */
+/** Профилакторий: ближайший пн 20:00 МСК. */
 export function defaultProfDateTime() {
-  return nextMoscowOccurrenceIso(1, 20, 30)
+  return nextMoscowOccurrenceIso(1, 20, 0)
 }
 
 /** Турнир: ближайшая пт 20:00 МСК. */
