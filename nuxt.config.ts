@@ -92,6 +92,13 @@ export default defineNuxtConfig({
       // и сразу ставит класс 'dark' на <html>, чтобы не было мигания при загрузке.
       // По умолчанию (если нет сохранения) — тёмная тема, как было раньше.
       script: [
+        // ВРЕМЕННО (диагностика белого экрана на iPhone): ловим любую JS-ошибку
+        // и показываем её красной плашкой поверх страницы. На мобильном нет консоли,
+        // поэтому это единственный способ увидеть текст ошибки. Убрать после фикса.
+        {
+          innerHTML: `(function(){function show(t){try{var d=document.getElementById('__err');if(!d){d=document.createElement('div');d.id='__err';d.style.cssText='position:fixed;left:0;top:0;right:0;z-index:2147483647;background:#b91c1c;color:#fff;font:12px/1.45 monospace;padding:10px;white-space:pre-wrap;word-break:break-word;max-height:70vh;overflow:auto';(document.body||document.documentElement).appendChild(d);}d.textContent+=t+'\\n\\n';}catch(e){}}window.addEventListener('error',function(e){var t=e&&e.target;if(t&&t!==window&&t.tagName&&(t.src||t.href)){show('LOAD FAIL: '+(t.src||t.href));return;}show('ERROR: '+((e&&e.message)||'?')+((e&&e.filename)?(' @ '+e.filename+':'+e.lineno+':'+e.colno):''));},true);window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;show('PROMISE: '+((r&&r.stack)||(r&&r.message)||String(r)));});})();`,
+          type: 'text/javascript',
+        },
         // Schema.org: спортивная организация для поисковиков.
         {
           type: 'application/ld+json',
