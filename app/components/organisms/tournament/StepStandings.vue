@@ -152,7 +152,9 @@
             :aggregate-player-stats="aggregatePlayerStats"
             :player-rating-deltas="playerRatingDeltas"
             :hide-base-player-rating="hideBasePlayerRating"
+            :readonly="props.readonly === true"
             :show-heading="false"
+            @remove-player="emit('remove-player', $event)"
           />
         </div>
       </Transition>
@@ -320,6 +322,7 @@ const emit = defineEmits<{
   'clear-tournament': []
   'cancel-clear-tournament': []
   'confirm-clear-tournament': []
+  'remove-player': [playerId: number]
 }>()
 
 const {

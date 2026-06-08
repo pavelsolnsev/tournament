@@ -178,6 +178,7 @@
                 :clear-tournament-busy="clearTournamentBusy"
                 @update:snapshot="wizard.saveStandingsSnapshot"
                 @update:match-status="wizard.updateMatchStatus"
+                @remove-player="wizard.removePlayer"
                 @tournament-finished="handleTournamentFinished"
                 @clear-tournament="canClearTournament && (showClearTournamentConfirm = true)"
                 @cancel-clear-tournament="cancelClearTournament"

@@ -130,7 +130,7 @@
           class="!h-8 !min-h-0 !px-2.5 !text-[11px] sm:!text-xs"
           :disabled="isRunning"
           title="Запустить или продолжить отсчёт"
-          @click="start"
+          @click="handleStart"
         >
           Старт
         </AtomsPrimaryButton>
@@ -141,7 +141,7 @@
           class="inline-flex h-8 items-center justify-center rounded-xl border border-red-600/90 bg-red-600 px-2.5 text-[11px] font-semibold text-white shadow-sm transition-colors hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60 disabled:cursor-not-allowed disabled:opacity-45 dark:border-red-500 dark:bg-red-600 dark:hover:bg-red-500 sm:px-3 sm:text-xs"
           :disabled="!isRunning"
           title="Приостановить отсчёт"
-          @click="stop"
+          @click="handleStop"
         >
           Стоп
         </button>
@@ -152,10 +152,34 @@
           size="sm"
           class="!h-8 !min-h-0 !px-2.5 !text-[11px] sm:!text-xs"
           title="Сбросить на выбранное число минут"
-          @click="reset"
+          @click="handleReset"
         >
           Сброс
         </AtomsPrimaryButton>
+
+        <!-- Звук сигнала вкл/выкл — бип и вибрация на «1 минута» и «время вышло». -->
+        <button
+          type="button"
+          class="flex h-7 w-7 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          :class="soundOn
+            ? 'text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40'
+            : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200'"
+          :title="soundOn ? 'Сигнал включён — нажмите, чтобы выключить' : 'Сигнал выключен — нажмите, чтобы включить'"
+          :aria-label="soundOn ? 'Выключить звук сигнала' : 'Включить звук сигнала'"
+          :aria-pressed="soundOn"
+          @click="toggleSound"
+        >
+          <svg v-if="soundOn" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M11 5 6 9H2v6h4l5 4V5z" />
+            <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+            <path d="M18.5 5.5a9 9 0 0 1 0 13" />
+          </svg>
+          <svg v-else class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M11 5 6 9H2v6h4l5 4V5z" />
+            <path d="m23 9-6 6" />
+            <path d="m17 9 6 6" />
+          </svg>
+        </button>
 
         <!-- Свернуть — прячет управление, оставляет только время. -->
         <button
@@ -177,9 +201,16 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useMatchCountdownTimer } from '~/composables/useMatchCountdownTimer'
+import { useMatchTimerAlert } from '~/composables/useMatchTimerAlert'
 
 // Состояние свёрнутости: useState сохраняет значение при навигации между шагами.
 const isCollapsed = useState<boolean>('match-timer-bar-collapsed', () => false)
+
+// Звук+вибрация сигналов вкл/выкл — useState сохраняет выбор между шагами.
+const soundOn = useState<boolean>('match-timer-sound-on', () => true)
+
+// Сигналы (бип + вибрация) для «осталась минута» и «время вышло».
+const timerAlert = useMatchTimerAlert()
 
 // Вся логика секунд и интервала вынесена в composable — здесь только разметка.
 const {
@@ -193,6 +224,35 @@ const {
   stop,
   reset,
 } = useMatchCountdownTimer()
+
+// Старт по кнопке: глушим прошлый сигнал, разблокируем звук (жест нужен для iOS), запускаем.
+function handleStart() {
+  timerAlert.stop()
+  timerAlert.unlock()
+  start()
+}
+
+// Стоп/Сброс — заодно глушим звуковой сигнал, если он сейчас звучит.
+function handleStop() {
+  timerAlert.stop()
+  stop()
+}
+
+function handleReset() {
+  timerAlert.stop()
+  reset()
+}
+
+// Переключатель звука: включаем — бип-подтверждение; выключаем — глушим текущий сигнал.
+function toggleSound() {
+  soundOn.value = !soundOn.value
+  if (soundOn.value) {
+    timerAlert.unlock()
+    timerAlert.signalOneMinute()
+  } else {
+    timerAlert.stop()
+  }
+}
 
 // Показываем тост при сигнале из composable (рост oneMinuteCue).
 const oneMinuteToastVisible = ref(false)
@@ -212,6 +272,8 @@ function dismissOneMinuteToast() {
 
 function dismissTimerEndedToast() {
   timerEndedToastVisible.value = false
+  // Закрытие тоста «время вышло» глушит и повторяющийся звук.
+  timerAlert.stop()
   if (timerEndedToastTimer !== null) {
     clearTimeout(timerEndedToastTimer)
     timerEndedToastTimer = null
@@ -221,6 +283,10 @@ function dismissTimerEndedToast() {
 watch(oneMinuteCue, () => {
   if (oneMinuteCue.value < 1) {
     return
+  }
+  // Бип + вибрация (если сигналы включены) — предупреждаем о последней минуте.
+  if (soundOn.value) {
+    timerAlert.signalOneMinute()
   }
   oneMinuteToastVisible.value = true
   if (oneMinuteToastTimer !== null) {
@@ -237,6 +303,10 @@ watch(timerEndedCue, () => {
   if (timerEndedCue.value < 1) {
     return
   }
+  // Финальный сигнал — бип + длинная вибрация (если включено).
+  if (soundOn.value) {
+    timerAlert.signalTimerEnded()
+  }
   dismissOneMinuteToast()
   timerEndedToastVisible.value = true
   if (timerEndedToastTimer !== null) {
@@ -249,6 +319,7 @@ watch(timerEndedCue, () => {
 })
 
 onBeforeUnmount(() => {
+  timerAlert.stop()
   if (oneMinuteToastTimer !== null) {
     clearTimeout(oneMinuteToastTimer)
   }

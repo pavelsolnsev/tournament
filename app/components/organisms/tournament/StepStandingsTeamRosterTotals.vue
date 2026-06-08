@@ -103,6 +103,43 @@
                 >
                   {{ ratingDelta(p.id) }}
                 </span>
+
+                <!-- Иконка удаления игрока из состава — только админу (в режиме зрителя скрыта). -->
+                <button
+                  v-if="!readonly && confirmingId !== p.id"
+                  type="button"
+                  class="ml-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400
+                         transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-500 dark:hover:bg-red-950/40 dark:hover:text-red-400
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50"
+                  :title="'Убрать из состава: ' + p.name"
+                  :aria-label="'Убрать из состава: ' + p.name"
+                  @click="confirmingId = p.id"
+                >
+                  <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8.75 1a1 1 0 00-.95.68L7.42 3H4a1 1 0 000 2h.1l.82 11.42A2 2 0 006.91 18h6.18a2 2 0 001.99-1.58L15.9 5H16a1 1 0 100-2h-3.42l-.38-1.32A1 1 0 0011.25 1h-2.5zM9 7a.75.75 0 011.5 0v6a.75.75 0 01-1.5 0V7zm-2.25-.75A.75.75 0 016 7l.25 6a.75.75 0 11-1.5.06L4.5 7a.75.75 0 01.75-.75H6.75zm6.75.75A.75.75 0 0014 7l-.25 6a.75.75 0 001.5.06L15.5 7a.75.75 0 00-.75-.75h-1z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Подтверждение удаления — заменяет правую часть строки, чтобы не промахнуться на телефоне. -->
+              <div v-if="!readonly && confirmingId === p.id" class="ml-auto flex shrink-0 items-center gap-1.5">
+                <button
+                  type="button"
+                  class="inline-flex items-center rounded-lg bg-red-600 px-2.5 py-1.5 text-xs font-semibold text-white
+                         transition-colors hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50"
+                  @click="confirmRemove(p.id)"
+                >
+                  Убрать
+                </button>
+                <button
+                  type="button"
+                  class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700
+                         transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+                  @click="confirmingId = null"
+                >
+                  Отмена
+                </button>
               </div>
             </li>
           </ul>
@@ -139,11 +176,27 @@ const props = withDefaults(
     showHeading?: boolean
     /** true — убрать «⭐️ N» в строке (после старта турнира); дельту рейтинга не трогаем. */
     hideBasePlayerRating?: boolean
+    /** true (режим зрителя) — не показываем кнопку удаления игрока из состава. */
+    readonly?: boolean
   }>(),
-  { hideBasePlayerRating: false },
+  { hideBasePlayerRating: false, readonly: false },
 )
 
+// Просим родителя убрать игрока из турнира (из состава, списка и назначений).
+const emit = defineEmits<{
+  (e: 'remove-player', playerId: number): void
+}>()
+
 const showHeading = computed(() => props.showHeading ?? true)
+
+// id игрока, для которого сейчас показываем подтверждение удаления (только один за раз).
+const confirmingId = ref<number | null>(null)
+
+// Подтверждение получено — сообщаем родителю и закрываем подтверждение.
+function confirmRemove(playerId: number) {
+  emit('remove-player', playerId)
+  confirmingId.value = null
+}
 
 function labelParts(p: Player) {
   return playerLabelRatingParts(p)

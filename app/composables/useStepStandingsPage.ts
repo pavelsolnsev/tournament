@@ -36,6 +36,7 @@ export type StepStandingsPageEmit = {
   (
     e: 'tournament-finished' | 'clear-tournament' | 'cancel-clear-tournament' | 'confirm-clear-tournament',
   ): void
+  (e: 'remove-player', playerId: number): void
 }
 
 export function useStepStandingsPage(props: StepStandingsPageProps, emit: StepStandingsPageEmit) {
@@ -73,11 +74,13 @@ export function useStepStandingsPage(props: StepStandingsPageProps, emit: StepSt
     aggregatePlayerStats,
     playerRatingDeltas,
   } = useTournamentStandings(
+    // Геттеры, а не снимок значений: иначе computed внутри standings не увидит изменений
+    // props (например, удаление игрока меняет assignment) и обновится только после перезагрузки.
     {
-      teams: props.teams,
-      teamColors: props.teamColors,
-      players: props.players,
-      assignmentByPlayerId: props.assignmentByPlayerId,
+      get teams() { return props.teams },
+      get teamColors() { return props.teamColors },
+      get players() { return props.players },
+      get assignmentByPlayerId() { return props.assignmentByPlayerId },
     },
     {
       initialSnapshot: props.initialSnapshot,
