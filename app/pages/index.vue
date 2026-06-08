@@ -498,8 +498,12 @@ async function confirmClearTournament() {
   }
 }
 
+// lazy: true — список всех игроков нужен только админ-мастеру для выбора состава.
+// Публичному зрителю он в SSR не нужен, поэтому не блокируем им отдачу HTML:
+// данные догружаются на клиенте, а до этого используется пустой массив по умолчанию.
 const { data: allPlayers, error: playersFetchError, refresh: refreshPlayers } = useFetch<Player[]>('/api/players', {
   default: () => [],
+  lazy: true,
 })
 
 // Переход на шаг «Турнирная таблица» с немедленным обновлением state у зрителя.

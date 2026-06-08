@@ -29,14 +29,18 @@
       class="relative z-10 mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col overflow-hidden px-4 transition-[padding] duration-300 print:max-w-none print:px-4 sm:px-6 print:!pt-6"
       :class="mainTopPaddingClass"
     >
-      <!-- Фоновое видео — только пока турнир не начался, не в live-режиме -->
+      <!-- Фоновое видео — только пока турнир не начался, не в live-режиме.
+           showBgVideo откладывает загрузку до idle, чтобы не мешать открытию на сотовой.
+           poster показывает лёгкую картинку сразу, видео догружается следом. -->
       <video
-        v-if="!hasViewerData"
+        v-if="!hasViewerData && showBgVideo"
         class="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center opacity-50 dark:opacity-[0.25] sm:hidden"
         autoplay
         muted
         loop
         playsinline
+        preload="none"
+        poster="/bg-video-poster.webp"
       >
         <source src="/bg-video.mp4" type="video/mp4" />
       </video>
@@ -213,6 +217,23 @@ const { restoreSession } = useAdminAuth();
 
 const headerActionsWrap = ref(false);
 const isRefreshing = ref(false);
+
+// Фоновое видео (только мобильные) монтируем не сразу, а когда браузер освободится.
+// На сотовой сети это критично: иначе видео конкурирует за канал с HTML/CSS/JS
+// и страница «висит». Откладываем до idle после первого рендера — тогда видео
+// догружается фоном и не мешает открытию сайта.
+const showBgVideo = ref(false);
+onMounted(() => {
+  const start = () => {
+    showBgVideo.value = true;
+  };
+  // requestIdleCallback есть не везде (Safari) — там просто короткий таймаут.
+  if (typeof window.requestIdleCallback === "function") {
+    window.requestIdleCallback(start, { timeout: 3000 });
+  } else {
+    setTimeout(start, 1500);
+  }
+});
 
 async function handleRefresh() {
   if (isRefreshing.value) return;
