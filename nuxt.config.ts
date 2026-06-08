@@ -146,20 +146,9 @@ export default defineNuxtConfig({
   routeRules: {
     // Главная страница — SSR, чтобы сервер мог читать cookie admin_session при каждом запросе.
     '/': { ssr: true },
-    // Хешированные ассеты Nuxt неизменяемы — кэшируем на год, чтобы повторные заходы были мгновенными.
-    '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
-    // Картинки и видео меняются редко — неделя кэша снимает повторную загрузку на мобильных.
-    '/player-photos/**': { headers: { 'cache-control': 'public, max-age=604800' } },
-    '/team-photos/**': { headers: { 'cache-control': 'public, max-age=604800' } },
-    '/splash/**': { headers: { 'cache-control': 'public, max-age=604800' } },
-    '/bg-video.mp4': { headers: { 'cache-control': 'public, max-age=604800' } },
-    '/bg-video-poster.webp': { headers: { 'cache-control': 'public, max-age=604800' } },
   },
   nitro: {
     preset: 'node-server',
-    // Предсжимаем статику в gzip и brotli на этапе сборки — Node-сервер отдаёт .br/.gz
-    // при поддержке клиентом. Так JS/CSS летят сжатыми даже без nginx перед приложением.
-    compressPublicAssets: { gzip: true, brotli: true },
     prerender: {
       // В проекте сейчас только главная страница index.vue.
       // Не пререндерим отсутствующие маршруты, чтобы build не падал с 404.
