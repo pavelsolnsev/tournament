@@ -43,6 +43,9 @@ export function useStepStandingsPage(props: StepStandingsPageProps, emit: StepSt
   const { adminRole } = useAdminAuth()
   const hideCountdownTimerBar = computed(() => adminRole.value === 'limited')
 
+  // Удалять игрока из состава можно только полному админу — не зрителю и не limited-админу.
+  const canRemovePlayer = computed(() => props.readonly !== true && adminRole.value === 'full')
+
   const emitRemote = emit as StepStandingsRemoteEmit
 
   const {
@@ -155,6 +158,7 @@ export function useStepStandingsPage(props: StepStandingsPageProps, emit: StepSt
 
   return {
     hideCountdownTimerBar,
+    canRemovePlayer,
     effectiveTeamColors,
     teamMarker,
     standingsRows,

@@ -106,7 +106,7 @@
 
                 <!-- Иконка удаления игрока из состава — только админу (в режиме зрителя скрыта). -->
                 <button
-                  v-if="!readonly && confirmingId !== p.id"
+                  v-if="canRemove && confirmingId !== p.id"
                   type="button"
                   class="ml-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400
                          transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-500 dark:hover:bg-red-950/40 dark:hover:text-red-400
@@ -122,7 +122,7 @@
               </div>
 
               <!-- Подтверждение удаления — заменяет правую часть строки, чтобы не промахнуться на телефоне. -->
-              <div v-if="!readonly && confirmingId === p.id" class="ml-auto flex shrink-0 items-center gap-1.5">
+              <div v-if="canRemove && confirmingId === p.id" class="ml-auto flex shrink-0 items-center gap-1.5">
                 <button
                   type="button"
                   class="inline-flex items-center rounded-lg bg-red-600 px-2.5 py-1.5 text-xs font-semibold text-white
@@ -176,10 +176,10 @@ const props = withDefaults(
     showHeading?: boolean
     /** true — убрать «⭐️ N» в строке (после старта турнира); дельту рейтинга не трогаем. */
     hideBasePlayerRating?: boolean
-    /** true (режим зрителя) — не показываем кнопку удаления игрока из состава. */
-    readonly?: boolean
+    /** true — показываем кнопку удаления игрока (только полный админ; зритель и limited — false). */
+    canRemove?: boolean
   }>(),
-  { hideBasePlayerRating: false, readonly: false },
+  { hideBasePlayerRating: false, canRemove: false },
 )
 
 // Просим родителя убрать игрока из турнира (из состава, списка и назначений).

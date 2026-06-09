@@ -152,7 +152,7 @@
             :aggregate-player-stats="aggregatePlayerStats"
             :player-rating-deltas="playerRatingDeltas"
             :hide-base-player-rating="hideBasePlayerRating"
-            :readonly="props.readonly === true"
+            :can-remove="canRemovePlayer"
             :show-heading="false"
             @remove-player="emit('remove-player', $event)"
           />
@@ -327,6 +327,7 @@ const emit = defineEmits<{
 
 const {
   hideCountdownTimerBar,
+  canRemovePlayer,
   effectiveTeamColors,
   teamMarker,
   standingsRows,
