@@ -4,6 +4,7 @@ import type { SavedStandingsSnapshot } from '../../app/composables/useTournament
 import type { Player } from '../../app/types/tournament'
 import { displayPlayerLabelWithoutRating } from '../../app/composables/usePlayerDisplay'
 import { selectMvp, type MvpCandidate, type MvpTeamStat } from '../../app/composables/tournament-standings/mvp'
+import { resolveTeamColorIndexFor } from '../../app/utils/teamNames'
 
 export type ArchiveMvpCard = {
   player_id: number
@@ -11,6 +12,8 @@ export type ArchiveMvpCard = {
   photo: string | null
   /** Команда MVP из assignment — для маленького значка на аватаре в списке архива. */
   team_name: string
+  /** Индекс цвета команды MVP (как в живом итоге) — чтобы цвет совпадал везде. */
+  team_color_index: number
 }
 
 // Разбираем снапшот и списки игроков — возвращаем null, если данных не хватает.
@@ -19,6 +22,8 @@ export function computeArchiveTournamentMvp(
   players: Player[],
   // После JSON.parse ключи id становятся строками — так и принимаем.
   assignmentByPlayerId: Record<string, string>,
+  // Карта цветов команд из архива (колонка team_colors) — для точного цвета MVP.
+  teamColors: Record<string, number> | null | undefined,
 ): ArchiveMvpCard | null {
   if (!players.length) return null
 
@@ -87,10 +92,17 @@ export function computeArchiveTournamentMvp(
   const teamRaw = assignmentByPlayerId[String(winnerPlayer.id)]
   const team_name = typeof teamRaw === 'string' ? teamRaw.trim() : ''
 
+  // Цвет команды MVP считаем той же логикой, что и живой итог: явная запись в
+  // teamColors имеет приоритет, иначе fallback по позиции в таблице.
+  const team_color_index = team_name
+    ? resolveTeamColorIndexFor(team_name, teamColors, standingsRows, playedMatchesList)
+    : 0
+
   return {
     player_id: winnerPlayer.id,
     name: displayPlayerLabelWithoutRating(winnerPlayer),
     photo: winnerPlayer.photo ? String(winnerPlayer.photo).trim() || null : null,
     team_name,
+    team_color_index,
   }
 }

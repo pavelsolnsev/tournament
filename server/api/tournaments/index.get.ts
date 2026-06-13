@@ -3,6 +3,7 @@ import type { Player } from '../../../app/types/tournament'
 import { queryWithRetry } from '../../utils/db'
 import { computeArchiveTournamentMvp } from '../../utils/computeArchiveTournamentMvp'
 import { applyPlayerPhotosMap, fetchPlayerPhotosByIds } from '../../utils/mergePlayerPhotosFromDb'
+import { resolveTeamColorIndexFor } from '../../../app/utils/teamNames'
 
 // Строка из БД до обогащения — подтягиваем JSON для расчёта MVP.
 type TournamentArchiveDbRow = {
@@ -16,6 +17,7 @@ type TournamentArchiveDbRow = {
   snapshot: string | Buffer | object
   players: string | Buffer | object
   teams: string | Buffer | object
+  team_colors: string | Buffer | object
 }
 
 // Что отдаём на страницу архива — карточка турнира.
@@ -27,10 +29,12 @@ type TournamentArchiveListItem = {
   format_label: string
   created_at: string
   champion_team_name: string | null
+  champion_team_color: number | null
   mvp_player_id: number | null
   mvp_player_name: string | null
   mvp_photo: string | null
   mvp_team_name: string | null
+  mvp_team_color: number | null
 }
 
 // Парсим JSON из MySQL — приходит строкой или уже объектом.
@@ -61,6 +65,7 @@ export default defineEventHandler(async () => {
          a.snapshot,
          a.players,
          a.teams,
+         a.team_colors,
          (
            SELECT jt.team_name
            FROM JSON_TABLE(
@@ -84,6 +89,7 @@ export default defineEventHandler(async () => {
       snapshot: parseJsonField<SavedStandingsSnapshot>(row.snapshot),
       players: parseJsonField<Player[]>(row.players),
       assignment: parseJsonField<Record<string, string>>(row.teams),
+      teamColors: parseJsonField<Record<string, number>>(row.team_colors),
     }))
 
     const allPlayerIds: number[] = []
@@ -96,22 +102,36 @@ export default defineEventHandler(async () => {
 
     const out: TournamentArchiveListItem[] = []
 
-    for (const { row, snapshot, players: playersRaw, assignment } of parsed) {
+    for (const { row, snapshot, players: playersRaw, assignment, teamColors } of parsed) {
       let mvp_player_id: number | null = null
       let mvp_player_name: string | null = null
       let mvp_photo: string | null = null
       let mvp_team_name: string | null = null
+      let mvp_team_color: number | null = null
+      let champion_team_color: number | null = null
 
       const players = playersRaw?.length ? applyPlayerPhotosMap(playersRaw, photoById) : (playersRaw ?? [])
 
       if (snapshot && players?.length && assignment && typeof assignment === 'object') {
-        const mvp = computeArchiveTournamentMvp(snapshot, players, assignment)
+        const mvp = computeArchiveTournamentMvp(snapshot, players, assignment, teamColors)
         if (mvp) {
           mvp_player_id = mvp.player_id
           mvp_player_name = mvp.name
           mvp_photo = mvp.photo
           mvp_team_name = mvp.team_name || null
+          mvp_team_color = mvp.team_color_index
         }
+      }
+
+      // Цвет команды-чемпиона — той же логикой, что и живой итог (а не по номеру в имени).
+      const championName = (row.champion_team_name ?? '').trim()
+      if (championName && snapshot) {
+        champion_team_color = resolveTeamColorIndexFor(
+          championName,
+          teamColors,
+          snapshot.standingsRows ?? [],
+          snapshot.playedMatchesList ?? [],
+        )
       }
 
       out.push({
@@ -122,10 +142,12 @@ export default defineEventHandler(async () => {
         format_label: row.format_label,
         created_at: row.created_at,
         champion_team_name: row.champion_team_name,
+        champion_team_color,
         mvp_player_id,
         mvp_player_name,
         mvp_photo,
         mvp_team_name,
+        mvp_team_color,
       })
     }
 

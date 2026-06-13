@@ -1,47 +1,13 @@
 import type { Player } from '~/types/tournament'
-import type { PlayedMatch, PlayerMatchStats } from '~/composables/tournament-standings/types'
+import type { PlayerMatchStats } from '~/composables/tournament-standings/types'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
-import { normalizeTeamColorsMap, normalizeTeamName, resolveTeamColorIndex } from '~/utils/teamNames'
+import { normalizeTeamName, resolveTeamColorIndex } from '~/utils/teamNames'
 import { selectMvp } from '~/composables/tournament-standings/mvp'
 import type { AwardWinner } from './types'
 
-const TEAM_MARKERS_COUNT = 6
-
-export function buildEffectiveTeamColors(
-  teamColors: Record<string, number> | undefined,
-  standingsRows: StandingsRow[],
-  playedMatchesList: PlayedMatch[],
-): Record<string, number> {
-  const map = normalizeTeamColorsMap(teamColors)
-  const ordered: string[] = []
-  const seen = new Set<string>()
-
-  for (const row of standingsRows) {
-    const nk = normalizeTeamName(row.teamName)
-    if (!nk || seen.has(nk)) continue
-    seen.add(nk)
-    ordered.push(nk)
-  }
-
-  for (const m of playedMatchesList) {
-    for (const raw of [m.homeTeam, m.awayTeam]) {
-      const nk = normalizeTeamName(raw)
-      if (!nk || seen.has(nk)) continue
-      seen.add(nk)
-      ordered.push(nk)
-    }
-  }
-
-  let next = 0
-  for (const nk of ordered) {
-    if (map[nk] !== undefined) continue
-    map[nk] = next % TEAM_MARKERS_COUNT
-    next += 1
-  }
-
-  return map
-}
+// Единый источник правды для цветов команд — в utils/teamNames (использует и сервер архива).
+export { buildEffectiveTeamColors } from '~/utils/teamNames'
 
 export function resolveTeamMarker(
   teamName: string,

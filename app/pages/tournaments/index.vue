@@ -199,7 +199,7 @@
                 class="flex min-w-0 flex-1 gap-2.5 rounded-xl border border-slate-200/90 border-l-4 border-l-amber-400 bg-slate-50/90 px-3 py-2 dark:border-slate-600/50 dark:border-l-amber-500 dark:bg-slate-900/40"
               >
                 <div class="shrink-0 self-center">
-                  <AtomsTeamMarkerOrLogo :team-name="championTeamLabel(tournament)" :marker="championMarker(championTeamLabel(tournament))" size="lg" />
+                  <AtomsTeamMarkerOrLogo :team-name="championTeamLabel(tournament)" :marker="championMarker(tournament)" size="lg" />
                 </div>
                 <div class="min-w-0 flex-1">
                   <p class="text-[10px] font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-200/90">Чемпион</p>
@@ -216,7 +216,7 @@
                   <AtomsPlayerAvatar :photo="tournament.mvp_photo" :fallback-name="mvpPlayerLabel(tournament)" size="md" />
                   <div v-if="mvpTeamLabel(tournament)" class="pointer-events-none absolute -bottom-px -right-px flex h-3 w-3 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-slate-300/90 dark:bg-slate-900 dark:ring-slate-600/80" aria-hidden="true">
                     <span class="inline-flex shrink-0 scale-75">
-                      <AtomsTeamMarkerOrLogo :team-name="mvpTeamLabel(tournament)" :marker="championMarker(mvpTeamLabel(tournament))" size="xs" />
+                      <AtomsTeamMarkerOrLogo :team-name="mvpTeamLabel(tournament)" :marker="mvpMarker(tournament)" size="xs" />
                     </span>
                   </div>
                 </div>
@@ -307,6 +307,7 @@ const {
   archiveCardAriaLabel,
   championTeamLabel,
   championMarker,
+  mvpMarker,
   mvpPlayerLabel,
   mvpTeamLabel,
   archiveDateInputValue,

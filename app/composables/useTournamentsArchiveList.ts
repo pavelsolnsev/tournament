@@ -42,13 +42,23 @@ export function useTournamentsArchiveList(tournaments: Ref<ArchiveListRow[] | nu
     return (t.champion_team_name ?? '').trim()
   }
 
-  function championMarker(teamName: string): string {
-    // В списке архива у нас нет teamColors, поэтому берём стабильный fallback из названия ("Команда 2" → индекс 1).
-    // Это нужно, чтобы маркер выглядел так же, как в живом турнире, где fallback зависит от порядка команды.
+  // Цвет берём из сохранённого индекса (его считает сервер по реальной карте teamColors —
+  // как в живом итоге). Для совсем старых записей без индекса — запасной разбор номера из имени.
+  function teamMarkerByIndex(colorIndex: number | null | undefined, teamName: string): string {
+    if (typeof colorIndex === 'number' && Number.isFinite(colorIndex)) {
+      return getMarkerByIndex(colorIndex)
+    }
     const match = teamName.match(/(\d+)\s*$/)
     const fallbackIndex = match ? Math.max(0, Number(match[1]) - 1) : 0
-    const idx = resolveTeamColorIndex(teamName, null, fallbackIndex)
-    return getMarkerByIndex(idx)
+    return getMarkerByIndex(resolveTeamColorIndex(teamName, null, fallbackIndex))
+  }
+
+  function championMarker(t: ArchiveListRow): string {
+    return teamMarkerByIndex(t.champion_team_color, championTeamLabel(t))
+  }
+
+  function mvpMarker(t: ArchiveListRow): string {
+    return teamMarkerByIndex(t.mvp_team_color, mvpTeamLabel(t))
   }
 
   function mvpPlayerLabel(t: ArchiveListRow): string {
@@ -138,6 +148,7 @@ export function useTournamentsArchiveList(tournaments: Ref<ArchiveListRow[] | nu
     archiveCardAriaLabel,
     championTeamLabel,
     championMarker,
+    mvpMarker,
     mvpPlayerLabel,
     mvpTeamLabel,
     archiveDateInputValue,

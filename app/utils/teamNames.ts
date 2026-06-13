@@ -60,6 +60,7 @@ export function normalizeTeamColorsMap(map: Record<string, number> | undefined |
 }
 
 const MAX_COLOR_INDEX = 5
+const TEAM_MARKERS_COUNT = 6
 
 /**
  * Индекс цвета команды: сначала карта (по каноническому имени), иначе fallback.
@@ -85,4 +86,67 @@ export function resolveTeamColorIndex(
     }
   }
   return Math.min(Math.max(0, fallbackIndex), MAX_COLOR_INDEX)
+}
+
+// Структурно-минимальные формы строк/матчей — чтобы не тянуть типы из компонентов.
+type TeamNamedRow = { teamName: string }
+type TeamPairMatch = { homeTeam?: string; awayTeam?: string }
+
+/**
+ * Достраивает карту цветов: командам без явной записи в teamColors раздаёт индексы
+ * по порядку появления (сначала таблица, потом матчи). Один источник правды для
+ * живого итога, детальной страницы и списка архива — чтобы цвета совпадали везде.
+ */
+export function buildEffectiveTeamColors(
+  teamColors: Record<string, number> | undefined | null,
+  standingsRows: ReadonlyArray<TeamNamedRow>,
+  playedMatchesList: ReadonlyArray<TeamPairMatch>,
+): Record<string, number> {
+  const map = normalizeTeamColorsMap(teamColors)
+  const ordered: string[] = []
+  const seen = new Set<string>()
+
+  for (const row of standingsRows) {
+    const nk = normalizeTeamName(row.teamName)
+    if (!nk || seen.has(nk)) continue
+    seen.add(nk)
+    ordered.push(nk)
+  }
+
+  for (const m of playedMatchesList) {
+    for (const raw of [m.homeTeam ?? '', m.awayTeam ?? '']) {
+      const nk = normalizeTeamName(raw)
+      if (!nk || seen.has(nk)) continue
+      seen.add(nk)
+      ordered.push(nk)
+    }
+  }
+
+  let next = 0
+  for (const nk of ordered) {
+    if (map[nk] !== undefined) continue
+    map[nk] = next % TEAM_MARKERS_COUNT
+    next += 1
+  }
+
+  return map
+}
+
+/**
+ * Итоговый индекс цвета команды как в живом итоге: явная запись в teamColors
+ * имеет приоритет, иначе fallback = позиция команды в таблице (как resolveTeamMarker).
+ */
+export function resolveTeamColorIndexFor(
+  teamName: string,
+  teamColors: Record<string, number> | undefined | null,
+  standingsRows: ReadonlyArray<TeamNamedRow>,
+  playedMatchesList: ReadonlyArray<TeamPairMatch>,
+): number {
+  if (!normalizeTeamName(teamName)) return 0
+  const effective = buildEffectiveTeamColors(teamColors, standingsRows, playedMatchesList)
+  const rowIdx = standingsRows.findIndex(
+    (r) => normalizeTeamName(r.teamName) === normalizeTeamName(teamName),
+  )
+  const fallback = rowIdx >= 0 ? rowIdx : 0
+  return resolveTeamColorIndex(teamName, effective, fallback)
 }
