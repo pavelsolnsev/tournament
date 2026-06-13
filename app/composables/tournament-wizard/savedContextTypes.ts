@@ -36,6 +36,8 @@ export type SavedTournamentContext = {
   vkTeamLabelByPlayerId?: Record<string, string>
   /** Слоты с кнопок бота (s tr A B) — заданы при link-event. */
   vkTeamSlots?: string[]
+  /** Лимиты команд для турнирного списка ВК; ключ — нормализованное имя команды (нижний регистр). */
+  vkTeamLimits?: Record<string, number>
   /** true только для списка турнира в боте (s tr) — на шаге «Игроки» показываются команды ВК. */
   vkListTournament?: boolean
   assignmentByPlayerId: Record<number, string>

@@ -62,6 +62,7 @@ export default defineEventHandler(async (event) => {
       if (!vkList) {
         next.vkTeamSlots = []
         next.vkTeamLabelByPlayerId = {}
+        next.vkTeamLimits = {}
       }
     }
 

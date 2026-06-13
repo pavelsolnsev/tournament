@@ -34,11 +34,13 @@
         :vk-tr-tournament="vkTrTournament"
         :vk-team-label-by-player-id="vkTeamLabelByPlayerId"
         :vk-team-slots="vkTeamSlots"
+        :vk-team-limits="vkTeamLimits"
         :tournament-sync-busy="tournamentSyncBusy"
         @remove-player="emit('removePlayer', $event)"
         @set-player-vk-team="(id, t) => emit('setPlayerVkTeam', id, t)"
         @add-vk-team-slot="emit('addVkTeamSlot', $event)"
         @remove-vk-team-slot="(v, l) => emit('removeVkTeamSlot', v, l)"
+        @set-vk-team-limit="(name, limit) => emit('setVkTeamLimit', name, limit)"
         @go-to-teams="emit('goToTeams')"
         @toggle-player-paid="(id, paid) => emit('togglePlayerPaid', id, paid)"
         @sync-tournament-from-server="emit('syncTournamentFromServer')"
@@ -64,6 +66,8 @@ const props = defineProps<{
   /** Подписи команд из чата ВК (кнопки), по id игрока. */
   vkTeamLabelByPlayerId: Record<number, string>
   vkTeamSlots: string[]
+  /** Лимиты команд (ключ — нормализованное имя в нижнем регистре). */
+  vkTeamLimits: Record<string, number>
   /** Список в ВК в режиме «есть слепок ВК» (s tr / s prof + эвристики). */
   vkListTournament: boolean
   /** Режим s tr — блок редактирования кнопок «Команды в списке ВК». */
@@ -84,6 +88,7 @@ const emit = defineEmits<{
   setPlayerVkTeam: [playerId: number, team: string | null]
   addVkTeamSlot: [name: string]
   removeVkTeamSlot: [value: string, label: string]
+  setVkTeamLimit: [name: string, limit: number | null]
   syncTournamentFromServer: []
 }>()
 

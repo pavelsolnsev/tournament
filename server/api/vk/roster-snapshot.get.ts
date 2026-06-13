@@ -3,7 +3,7 @@ import { ensureTablesExist } from '../../utils/initDb'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
 import { readVkListClosePending } from '../../utils/vkListCloseRequest'
 import { readVkStartListPending } from '../../utils/vkStartListRequest'
-import { parseVkTeamLabelMap, parseVkTeamSlots } from '../../utils/tournamentPaidPlayers'
+import { parseVkTeamLabelMap, parseVkTeamSlots, parseVkTeamLimits } from '../../utils/tournamentPaidPlayers'
 
 const LINK_KEY = 'tournament_vk_link'
 const TOURNAMENT_KEY = 'tournament'
@@ -15,6 +15,7 @@ interface TournamentJson {
   paidPlayerIds?: unknown
   vkTeamLabelByPlayerId?: unknown
   vkTeamSlots?: unknown
+  vkTeamLimits?: unknown
   matchStatus?: unknown
   liveHomeTeam?: unknown
   liveAwayTeam?: unknown
@@ -32,6 +33,7 @@ interface ParsedTournament {
   paidPlayerIds: number[]
   vkTeamLabelByPlayerId: Record<string, string>
   vkTeamSlots: string[]
+  vkTeamLimits: Record<string, number>
   matchStatus: MatchStatus
   liveHomeTeam: string
   liveAwayTeam: string
@@ -44,6 +46,7 @@ function parseTournamentValue(value: string | undefined): ParsedTournament {
     paidPlayerIds: [],
     vkTeamLabelByPlayerId: {},
     vkTeamSlots: [],
+    vkTeamLimits: {},
     matchStatus: 'upcoming',
     liveHomeTeam: '',
     liveAwayTeam: '',
@@ -69,6 +72,7 @@ function parseTournamentValue(value: string | undefined): ParsedTournament {
       paidPlayerIds,
       vkTeamLabelByPlayerId: parseVkTeamLabelMap(st.vkTeamLabelByPlayerId),
       vkTeamSlots: parseVkTeamSlots(st.vkTeamSlots),
+      vkTeamLimits: parseVkTeamLimits(st.vkTeamLimits),
       matchStatus,
       liveHomeTeam: typeof st.liveHomeTeam === 'string' ? st.liveHomeTeam : '',
       liveAwayTeam: typeof st.liveAwayTeam === 'string' ? st.liveAwayTeam : '',
@@ -86,6 +90,8 @@ type RosterBlock = {
   rosterTeamLabelByVkUserId: Record<string, string>
   /** Слоты команд из link-event. */
   vkTeamSlots: string[]
+  /** Лимиты команд (ключ — нормализованное имя в нижнем регистре). */
+  vkTeamLimits: Record<string, number>
   matchStatus: MatchStatus
   liveHomeTeam: string
   liveAwayTeam: string
@@ -97,6 +103,7 @@ async function computeRosterBlock(parsed: ParsedTournament): Promise<RosterBlock
   const paidSet = new Set(paidPlayerIds)
   const labelByPlayerId = parsed.vkTeamLabelByPlayerId
   const teamSlots = parsed.vkTeamSlots
+  const teamLimits = parsed.vkTeamLimits
 
   if (selectedIds.length === 0) {
     return {
@@ -104,6 +111,7 @@ async function computeRosterBlock(parsed: ParsedTournament): Promise<RosterBlock
       paidVkUserIds: [],
       rosterTeamLabelByVkUserId: {},
       vkTeamSlots: teamSlots,
+      vkTeamLimits: teamLimits,
       matchStatus,
       liveHomeTeam,
       liveAwayTeam,
@@ -150,6 +158,7 @@ async function computeRosterBlock(parsed: ParsedTournament): Promise<RosterBlock
     paidVkUserIds,
     rosterTeamLabelByVkUserId,
     vkTeamSlots: teamSlots,
+    vkTeamLimits: teamLimits,
     matchStatus,
     liveHomeTeam,
     liveAwayTeam,

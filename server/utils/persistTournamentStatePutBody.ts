@@ -8,6 +8,7 @@ import {
   parseVkTeamLabelMap,
   parseVkTeamLabelMapForPutBody,
   parseVkTeamSlots,
+  parseVkTeamLimits,
   readTournamentStateRow,
 } from './tournamentPaidPlayers'
 import { mergeLiveCurrentMatchStatsIntoNextState } from './mergeLiveCurrentMatchStatsForPersist'
@@ -90,6 +91,7 @@ export async function persistTournamentStatePutBody(state: Record<string, unknow
   if (!vkListTournament) {
     ;(state as { vkTeamLabelByPlayerId: Record<string, string> }).vkTeamLabelByPlayerId = {}
     ;(state as { vkTeamSlots: string[] }).vkTeamSlots = []
+    ;(state as { vkTeamLimits: Record<string, number> }).vkTeamLimits = {}
   } else {
     const prevVk = parseVkTeamLabelMap(prev?.json.vkTeamLabelByPlayerId)
     const clientVk = parseVkTeamLabelMapForPutBody(
@@ -108,6 +110,14 @@ export async function persistTournamentStatePutBody(state: Record<string, unknow
       ;(state as { vkTeamSlots: string[] }).vkTeamSlots = []
     } else {
       ;(state as { vkTeamSlots: string[] }).vkTeamSlots = prevSlots
+    }
+    // Лимиты команд: клиент задаёт значения по ключу, но не теряем заданные в чате (tl) — мерджим prev←client.
+    if (isFullTournamentReset) {
+      ;(state as { vkTeamLimits: Record<string, number> }).vkTeamLimits = {}
+    } else {
+      const prevLimits = parseVkTeamLimits(prev?.json.vkTeamLimits)
+      const clientLimits = parseVkTeamLimits((state as { vkTeamLimits?: unknown }).vkTeamLimits)
+      ;(state as { vkTeamLimits: Record<string, number> }).vkTeamLimits = { ...prevLimits, ...clientLimits }
     }
   }
 

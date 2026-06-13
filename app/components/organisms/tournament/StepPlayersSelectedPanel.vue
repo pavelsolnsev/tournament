@@ -63,24 +63,62 @@
             Команды в списке ВК
           </p>
         </div>
+        <p v-if="vkTeamSlots.length" class="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+          Лимит игроков в команде — стрелками − / +. Сверх лимита игроки идут в очередь этой команды.
+        </p>
         <ul
           v-if="vkTeamSlots.length"
-          class="flex flex-wrap gap-1.5"
+          class="flex flex-col gap-1.5"
         >
           <li
             v-for="name in vkTeamSlots"
             :key="name"
-            class="inline-flex max-w-full min-w-0 items-center gap-0.5 rounded-lg border border-slate-200 bg-white pl-2 pr-0.5 py-0.5 text-xs font-medium text-slate-800 dark:border-slate-600 dark:bg-slate-900/80 dark:text-slate-100"
+            class="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 dark:border-slate-600 dark:bg-slate-900/70"
           >
-            <span class="min-w-0 truncate">{{ name }}</span>
+            <span class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{{ name }}</span>
+
+            <!-- Кастомный степпер лимита: минус / значение / плюс -->
+            <div
+              class="inline-flex shrink-0 items-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-600 dark:bg-slate-800/80"
+              role="group"
+              :aria-label="`Лимит игроков в команде ${name}`"
+            >
+              <button
+                type="button"
+                class="flex h-7 w-7 items-center justify-center text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                :disabled="effectiveLimit(name) <= 1"
+                :title="`Уменьшить лимит «${name}»`"
+                :aria-label="`Уменьшить лимит команды ${name}`"
+                @click="stepLimit(name, -1)"
+              >
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
+              </button>
+              <span
+                class="min-w-[2rem] select-none px-1 text-center text-sm font-bold tabular-nums"
+                :class="isExplicitLimit(name) ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500'"
+                :title="isExplicitLimit(name) ? '' : 'Значение по умолчанию'"
+                aria-live="polite"
+              >{{ effectiveLimit(name) }}</span>
+              <button
+                type="button"
+                class="flex h-7 w-7 items-center justify-center text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                :disabled="effectiveLimit(name) >= 99"
+                :title="`Увеличить лимит «${name}»`"
+                :aria-label="`Увеличить лимит команды ${name}`"
+                @click="stepLimit(name, 1)"
+              >
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+              </button>
+            </div>
+
             <button
               type="button"
-              class="shrink-0 rounded p-0.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/40 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/40 dark:hover:bg-red-950/40 dark:hover:text-red-300"
               :title="`Удалить «${name}»`"
               :aria-label="`Удалить команду ${name}`"
               @click="emit('removeVkTeamSlot', name, name)"
             >
-              <span class="text-base leading-none" aria-hidden="true">×</span>
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
             </button>
           </li>
         </ul>
@@ -208,6 +246,8 @@ const props = defineProps<{
   vkTeamLabelByPlayerId: Record<number, string>
   /** Имена команд с кнопок бота (s tr …). */
   vkTeamSlots: string[]
+  /** Лимиты команд (ключ — нормализованное имя в нижнем регистре). */
+  vkTeamLimits: Record<string, number>
   vkListTournament: boolean
   /** Режим s tr — показ блока «Команды в списке ВК» и привязка к кнопкам в чате. */
   vkTrTournament: boolean
@@ -296,7 +336,34 @@ const emit = defineEmits<{
   setPlayerVkTeam: [playerId: number, team: string | null]
   addVkTeamSlot: [name: string]
   removeVkTeamSlot: [value: string, label: string]
+  setVkTeamLimit: [name: string, limit: number | null]
 }>()
+
+/** Дефолтный лимит команды — совпадает с DEFAULT_TEAM_LIMIT в боте. */
+const DEFAULT_TEAM_LIMIT = 8
+
+/** Ключ команды для карты лимитов: один пробел, без краёв, нижний регистр. */
+function teamLimitKey(name: string): string {
+  return String(name ?? '').replace(/\s+/g, ' ').trim().toLowerCase()
+}
+
+/** Задан ли явный лимит команды (иначе действует значение по умолчанию). */
+function isExplicitLimit(name: string): boolean {
+  const v = props.vkTeamLimits?.[teamLimitKey(name)]
+  return typeof v === 'number' && Number.isFinite(v) && v >= 1
+}
+
+/** Действующий лимит для показа в степпере: явный либо дефолт. */
+function effectiveLimit(name: string): number {
+  const v = props.vkTeamLimits?.[teamLimitKey(name)]
+  return typeof v === 'number' && Number.isFinite(v) && v >= 1 ? v : DEFAULT_TEAM_LIMIT
+}
+
+/** Шаг лимита кнопками − / +: clamp 1..99, всегда фиксирует явное значение. */
+function stepLimit(name: string, delta: number) {
+  const next = Math.min(99, Math.max(1, effectiveLimit(name) + delta))
+  emit('setVkTeamLimit', name, next)
+}
 
 const { displayPlayerLabel, playerLabelRatingParts } = usePlayerDisplay()
 

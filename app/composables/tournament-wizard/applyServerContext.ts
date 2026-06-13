@@ -25,6 +25,8 @@ export type WizardServerContextDeps = {
   vkTeamLabelByPlayerId: Ref<Record<number, string>>
   /** Список кнопок команд из бота. */
   vkTeamSlots: Ref<string[]>
+  /** Лимиты команд (ключ — нормализованное имя в нижнем регистре). */
+  vkTeamLimits: Ref<Record<string, number>>
   /** Режим списка турнира в ВК (s tr) — иначе команды ВК на сайте скрыты. */
   vkListTournament: Ref<boolean>
   paidPlayerIds: Ref<Set<number>>
@@ -83,6 +85,20 @@ export function vkTeamSlotsFromSavedContext(ctx: SavedTournamentContext | null):
     .slice(0, 9)
 }
 
+export function vkTeamLimitsFromSavedContext(ctx: SavedTournamentContext | null): Record<string, number> {
+  const raw = ctx?.vkTeamLimits
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const out: Record<string, number> = {}
+  for (const [k, v] of Object.entries(raw)) {
+    const key = String(k ?? '').replace(/\s+/g, ' ').trim().toLowerCase()
+    if (!key) continue
+    const n = Math.floor(Number(v))
+    if (!Number.isFinite(n) || n < 1) continue
+    out[key] = Math.min(n, 99)
+  }
+  return out
+}
+
 export function vkTeamLabelMapFromSavedContext(ctx: SavedTournamentContext | null): Record<number, string> {
   const raw = ctx?.vkTeamLabelByPlayerId
   if (!raw || typeof raw !== 'object') return {}
@@ -115,6 +131,7 @@ export function applyEmptyTournamentContextLocal(deps: WizardServerContextDeps):
   deps.selectedIds.value = new Set()
   deps.vkTeamLabelByPlayerId.value = {}
   deps.vkTeamSlots.value = []
+  deps.vkTeamLimits.value = {}
   deps.vkListTournament.value = false
   deps.paidPlayerIds.value = new Set()
   deps.playerSearch.value = ''
@@ -167,9 +184,11 @@ export function applyLoadedContext(
   if (!vkListOn) {
     deps.vkTeamLabelByPlayerId.value = {}
     deps.vkTeamSlots.value = []
+    deps.vkTeamLimits.value = {}
   } else {
     deps.vkTeamLabelByPlayerId.value = vkTeamLabelMapFromSavedContext(ctx)
     deps.vkTeamSlots.value = vkTeamSlotsFromSavedContext(ctx)
+    deps.vkTeamLimits.value = vkTeamLimitsFromSavedContext(ctx)
   }
 
   deps.paidPlayerIds.value = new Set(

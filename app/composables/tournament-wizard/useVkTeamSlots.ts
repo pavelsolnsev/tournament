@@ -20,10 +20,16 @@ export function findMatchingSlot(raw: string, slots: string[]) {
   return null
 }
 
+/** Ключ команды для карты лимитов: один пробел, без краёв, нижний регистр (как на сервере/в боте). */
+function teamLimitKey(name: string): string {
+  return String(name ?? '').replace(/\s+/g, ' ').trim().toLowerCase()
+}
+
 export function useVkTeamSlots(deps: {
   selectedIds: Ref<Set<number>>
   vkTeamLabelByPlayerId: Ref<Record<number, string>>
   vkTeamSlots: Ref<string[]>
+  vkTeamLimits: Ref<Record<string, number>>
   stateRestored: Ref<boolean>
   cancelPendingSave: () => void
   saveTournamentStateNow: (ctx: SavedTournamentContext) => Promise<void> | void
@@ -33,6 +39,7 @@ export function useVkTeamSlots(deps: {
     selectedIds,
     vkTeamLabelByPlayerId,
     vkTeamSlots,
+    vkTeamLimits,
     stateRestored,
     cancelPendingSave,
     saveTournamentStateNow,
@@ -91,6 +98,28 @@ export function useVkTeamSlots(deps: {
     }
     vkTeamSlots.value = next
     vkTeamLabelByPlayerId.value = v
+    // Заодно убираем лимит удалённой команды (без delete по динамическому ключу — правило ESLint).
+    const key = teamLimitKey(m)
+    if (key in vkTeamLimits.value) {
+      vkTeamLimits.value = Object.fromEntries(
+        Object.entries(vkTeamLimits.value).filter(([k]) => k !== key),
+      ) as Record<string, number>
+    }
+    flushSaveSoon()
+  }
+
+  /** Лимит команды: число ≥ 1 (clamp 1..99) задаёт явный лимит; пусто/невалидно — снимает (дефолт в боте). */
+  function setVkTeamLimit(rawName: string, rawLimit: number | string | null | undefined) {
+    const key = teamLimitKey(rawName)
+    if (!key) return
+    const n = Math.floor(Number(rawLimit))
+    if (rawLimit == null || rawLimit === '' || !Number.isFinite(n) || n < 1) {
+      vkTeamLimits.value = Object.fromEntries(
+        Object.entries(vkTeamLimits.value).filter(([k]) => k !== key),
+      ) as Record<string, number>
+    } else {
+      vkTeamLimits.value = { ...vkTeamLimits.value, [key]: Math.min(n, 99) }
+    }
     flushSaveSoon()
   }
 
@@ -116,6 +145,7 @@ export function useVkTeamSlots(deps: {
     serializeVkTeamLabelsForSave,
     addVkTeamSlot,
     removeVkTeamSlot,
+    setVkTeamLimit,
     setPlayerVkTeam,
   }
 }

@@ -99,6 +99,25 @@ export function parseVkTeamSlots(raw: unknown): string[] {
   return out
 }
 
+const VK_TEAM_LIMIT_MAX = 99
+
+/**
+ * Лимиты команд для турнирного списка ВК: ключ — нормализованное имя команды
+ * (один пробел, без краёв, нижний регистр — как в боте), значение — целое 1..99.
+ */
+export function parseVkTeamLimits(raw: unknown): Record<string, number> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const out: Record<string, number> = {}
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const key = String(k ?? '').replace(/\s+/g, ' ').trim().toLowerCase()
+    if (!key) continue
+    const n = Math.floor(Number(v))
+    if (!Number.isFinite(n) || n < 1) continue
+    out[key] = Math.min(n, VK_TEAM_LIMIT_MAX)
+  }
+  return out
+}
+
 /** Читает JSON турнира из app_state и возвращает распарсенный объект или null. */
 export async function readTournamentStateRow(): Promise<{ json: TournamentJson, raw: string } | null> {
   const rows = await queryWithRetry<Array<{ value: string }>>(

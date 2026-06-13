@@ -38,6 +38,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   const selectedIds = ref<Set<number>>(new Set())
   const vkTeamLabelByPlayerId = ref<Record<number, string>>({})
   const vkTeamSlots = ref<string[]>([])
+  const vkTeamLimits = ref<Record<string, number>>({})
   const vkListTournament = ref(false)
 
   const selectedPlayers = computed(() => {
@@ -150,6 +151,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     paidPlayerIds: [],
     vkTeamLabelByPlayerId: {},
     vkTeamSlots: [],
+    vkTeamLimits: {},
     vkListTournament: false,
     assignmentByPlayerId: {},
     confirmedTeamNames: [],
@@ -171,6 +173,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     selectedIds,
     vkTeamLabelByPlayerId,
     vkTeamSlots,
+    vkTeamLimits,
     vkListTournament,
     paidPlayerIds,
     playerSearch,
@@ -214,11 +217,13 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     serializeVkTeamLabelsForSave,
     addVkTeamSlot,
     removeVkTeamSlot,
+    setVkTeamLimit,
     setPlayerVkTeam,
   } = useVkTeamSlots({
     selectedIds,
     vkTeamLabelByPlayerId,
     vkTeamSlots,
+    vkTeamLimits,
     stateRestored,
     cancelPendingSave,
     saveTournamentStateNow,
@@ -255,6 +260,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     selectedIds: Array.from(selectedIds.value),
     vkTeamLabelByPlayerId: serializeVkTeamLabelsForSave(),
     vkTeamSlots: [...vkTeamSlots.value],
+    vkTeamLimits: { ...vkTeamLimits.value },
     vkListTournament: vkListTournament.value,
     assignmentByPlayerId: assignment.assignment.value,
     confirmedTeamNames: Array.from(assignment.confirmedTeamNames.value),
@@ -350,11 +356,13 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     removePlayer,
     vkTeamLabelByPlayerId,
     vkTeamSlots,
+    vkTeamLimits,
     vkListTournament,
     vkTrTournament,
     setPlayerVkTeam,
     addVkTeamSlot,
     removeVkTeamSlot,
+    setVkTeamLimit,
     paidPlayerIds,
     setPlayerPaid,
     onAddNewTeam,
