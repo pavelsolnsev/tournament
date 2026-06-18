@@ -12,7 +12,7 @@
     <p v-if="subtitle" class="mt-0.5 text-[11px] text-red-600/80 dark:text-red-200/80">
       {{ subtitle }}
     </p>
-    <p v-else class="mt-0.5 text-[11px] text-red-600/80 dark:text-red-200/80">
+    <p v-else-if="secondsLeft > 0" class="mt-0.5 text-[11px] text-red-600/80 dark:text-red-200/80">
       Подтвердить можно через {{ secondsLeft }}с.
     </p>
 
