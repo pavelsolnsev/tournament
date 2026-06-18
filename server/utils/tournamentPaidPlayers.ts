@@ -118,6 +118,15 @@ export function parseVkTeamLimits(raw: unknown): Record<string, number> {
   return out
 }
 
+const VK_LIST_LIMIT_MAX = 200
+
+/** Общий лимит ВК-списка (без команд): целое 1..200, иначе undefined (без лимита). */
+export function parseVkListLimit(raw: unknown): number | undefined {
+  const n = Math.floor(Number(raw))
+  if (!Number.isFinite(n) || n < 1) return undefined
+  return Math.min(n, VK_LIST_LIMIT_MAX)
+}
+
 /** Читает JSON турнира из app_state и возвращает распарсенный объект или null. */
 export async function readTournamentStateRow(): Promise<{ json: TournamentJson, raw: string } | null> {
   const rows = await queryWithRetry<Array<{ value: string }>>(

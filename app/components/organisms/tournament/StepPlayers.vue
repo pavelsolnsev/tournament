@@ -35,12 +35,15 @@
         :vk-team-label-by-player-id="vkTeamLabelByPlayerId"
         :vk-team-slots="vkTeamSlots"
         :vk-team-limits="vkTeamLimits"
+        :vk-list-limit="vkListLimit"
+        :queued-players="queuedPlayers"
         :tournament-sync-busy="tournamentSyncBusy"
         @remove-player="emit('removePlayer', $event)"
         @set-player-vk-team="(id, t) => emit('setPlayerVkTeam', id, t)"
         @add-vk-team-slot="emit('addVkTeamSlot', $event)"
         @remove-vk-team-slot="(v, l) => emit('removeVkTeamSlot', v, l)"
         @set-vk-team-limit="(name, limit) => emit('setVkTeamLimit', name, limit)"
+        @set-vk-list-limit="(limit) => emit('setVkListLimit', limit)"
         @go-to-teams="emit('goToTeams')"
         @toggle-player-paid="(id, paid) => emit('togglePlayerPaid', id, paid)"
         @sync-tournament-from-server="emit('syncTournamentFromServer')"
@@ -68,6 +71,10 @@ const props = defineProps<{
   vkTeamSlots: string[]
   /** Лимиты команд (ключ — нормализованное имя в нижнем регистре). */
   vkTeamLimits: Record<string, number>
+  /** Общий лимит списка (без команд); undefined = без лимита. */
+  vkListLimit?: number
+  /** Игроки в очереди (скрыты с сайта): с командой — командная очередь, без — общая. */
+  queuedPlayers: { player: Player, team: string }[]
   /** Список в ВК в режиме «есть слепок ВК» (s tr / s prof + эвристики). */
   vkListTournament: boolean
   /** Режим s tr — блок редактирования кнопок «Команды в списке ВК». */
@@ -89,6 +96,7 @@ const emit = defineEmits<{
   addVkTeamSlot: [name: string]
   removeVkTeamSlot: [value: string, label: string]
   setVkTeamLimit: [name: string, limit: number | null]
+  setVkListLimit: [limit: number | null]
   syncTournamentFromServer: []
 }>()
 

@@ -156,10 +156,13 @@
                   :vk-team-label-by-player-id="wizard.vkTeamLabelByPlayerId.value"
                   :vk-team-slots="wizard.vkTeamSlots.value"
                   :vk-team-limits="wizard.vkTeamLimits.value"
+                  :vk-list-limit="wizard.vkListLimit.value"
+                  :queued-players="wizard.queuedPlayers.value"
                   @set-player-vk-team="(id, t) => wizard.setPlayerVkTeam(id, t)"
                   @add-vk-team-slot="(n) => wizard.addVkTeamSlot(n)"
                   @remove-vk-team-slot="(v, l) => wizard.removeVkTeamSlot(l)"
                   @set-vk-team-limit="(name, limit) => wizard.setVkTeamLimit(name, limit)"
+                  @set-vk-list-limit="(limit) => wizard.setVkListLimit(limit)"
                   @toggle-player-paid="onTogglePlayerPaid"
                 />
               </template>

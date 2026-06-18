@@ -27,6 +27,8 @@ export type WizardServerContextDeps = {
   vkTeamSlots: Ref<string[]>
   /** Лимиты команд (ключ — нормализованное имя в нижнем регистре). */
   vkTeamLimits: Ref<Record<string, number>>
+  /** Общий лимит списка ВК (без команд). */
+  vkListLimit: Ref<number | undefined>
   /** Режим списка турнира в ВК (s tr) — иначе команды ВК на сайте скрыты. */
   vkListTournament: Ref<boolean>
   paidPlayerIds: Ref<Set<number>>
@@ -99,6 +101,12 @@ export function vkTeamLimitsFromSavedContext(ctx: SavedTournamentContext | null)
   return out
 }
 
+export function vkListLimitFromSavedContext(ctx: SavedTournamentContext | null): number | undefined {
+  const n = Math.floor(Number(ctx?.vkListLimit))
+  if (!Number.isFinite(n) || n < 1) return undefined
+  return Math.min(n, 200)
+}
+
 export function vkTeamLabelMapFromSavedContext(ctx: SavedTournamentContext | null): Record<number, string> {
   const raw = ctx?.vkTeamLabelByPlayerId
   if (!raw || typeof raw !== 'object') return {}
@@ -132,6 +140,7 @@ export function applyEmptyTournamentContextLocal(deps: WizardServerContextDeps):
   deps.vkTeamLabelByPlayerId.value = {}
   deps.vkTeamSlots.value = []
   deps.vkTeamLimits.value = {}
+  deps.vkListLimit.value = undefined
   deps.vkListTournament.value = false
   deps.paidPlayerIds.value = new Set()
   deps.playerSearch.value = ''
@@ -190,6 +199,9 @@ export function applyLoadedContext(
     deps.vkTeamSlots.value = vkTeamSlotsFromSavedContext(ctx)
     deps.vkTeamLimits.value = vkTeamLimitsFromSavedContext(ctx)
   }
+
+  // Общий лимит списка — независимо от режима команд (нужен и для не-командного списка).
+  deps.vkListLimit.value = vkListLimitFromSavedContext(ctx)
 
   deps.paidPlayerIds.value = new Set(
     (ctx.paidPlayerIds ?? []).filter((id) => Number.isFinite(id) && id > 0),

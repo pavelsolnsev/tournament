@@ -144,6 +144,26 @@
         </div>
       </div>
 
+      <!-- Общий лимит списка (когда команд нет): сверх лимита игроки уходят в очередь и скрываются с сайта. -->
+      <MoleculesVkListLimitControl
+        v-if="!vkTrTournament"
+        :limit="vkListLimit"
+        @set="(l) => emit('setVkListLimit', l)"
+      />
+
+      <!-- Скрытая очередь: показываем кто именно ждёт (с командой — командная очередь, без — общая). -->
+      <div
+        v-if="queuedPlayers.length"
+        class="rounded-lg bg-amber-50 px-3 py-2 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100"
+      >
+        <p class="text-xs font-semibold">⏳ В очереди · {{ queuedPlayers.length }} (скрыты)</p>
+        <ul class="mt-1 space-y-0.5">
+          <li v-for="q in queuedPlayers" :key="q.player.id" class="truncate text-xs">
+            <span v-if="q.team" class="font-medium">{{ q.team }}</span><span v-if="q.team" class="opacity-60"> — </span>{{ displayPlayerLabelWithoutRating(q.player) }}
+          </li>
+        </ul>
+      </div>
+
       <div
         v-if="selectedPlayers.length > 0"
         class="flex flex-wrap gap-2"
@@ -221,7 +241,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { Player } from '~/types/tournament'
-import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
+import { usePlayerDisplay, displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 
 const sortByTeam = ref(false)
 const sortPaidFirst = ref(false)
@@ -248,6 +268,10 @@ const props = defineProps<{
   vkTeamSlots: string[]
   /** Лимиты команд (ключ — нормализованное имя в нижнем регистре). */
   vkTeamLimits: Record<string, number>
+  /** Общий лимит списка (без команд); undefined = без лимита. */
+  vkListLimit?: number
+  /** Игроки в очереди (скрыты с сайта): с командой — командная очередь, без — общая. */
+  queuedPlayers: { player: Player, team: string }[]
   vkListTournament: boolean
   /** Режим s tr — показ блока «Команды в списке ВК» и привязка к кнопкам в чате. */
   vkTrTournament: boolean
@@ -337,6 +361,7 @@ const emit = defineEmits<{
   addVkTeamSlot: [name: string]
   removeVkTeamSlot: [value: string, label: string]
   setVkTeamLimit: [name: string, limit: number | null]
+  setVkListLimit: [limit: number | null]
 }>()
 
 /** Дефолтный лимит команды — совпадает с DEFAULT_TEAM_LIMIT в боте. */

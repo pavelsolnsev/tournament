@@ -30,6 +30,7 @@ export function useVkTeamSlots(deps: {
   vkTeamLabelByPlayerId: Ref<Record<number, string>>
   vkTeamSlots: Ref<string[]>
   vkTeamLimits: Ref<Record<string, number>>
+  vkListLimit: Ref<number | undefined>
   stateRestored: Ref<boolean>
   cancelPendingSave: () => void
   saveTournamentStateNow: (ctx: SavedTournamentContext) => Promise<void> | void
@@ -40,6 +41,7 @@ export function useVkTeamSlots(deps: {
     vkTeamLabelByPlayerId,
     vkTeamSlots,
     vkTeamLimits,
+    vkListLimit,
     stateRestored,
     cancelPendingSave,
     saveTournamentStateNow,
@@ -141,11 +143,23 @@ export function useVkTeamSlots(deps: {
     flushSaveSoon()
   }
 
+  /** Общий лимит списка (без команд): число ≥1 (clamp 1..200), пусто/невалидно — снять. */
+  function setVkListLimit(rawLimit: number | string | null | undefined) {
+    const n = Math.floor(Number(rawLimit))
+    if (rawLimit == null || rawLimit === '' || !Number.isFinite(n) || n < 1) {
+      vkListLimit.value = undefined
+    } else {
+      vkListLimit.value = Math.min(n, 200)
+    }
+    flushSaveSoon()
+  }
+
   return {
     serializeVkTeamLabelsForSave,
     addVkTeamSlot,
     removeVkTeamSlot,
     setVkTeamLimit,
+    setVkListLimit,
     setPlayerVkTeam,
   }
 }

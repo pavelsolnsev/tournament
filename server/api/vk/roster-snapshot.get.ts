@@ -3,7 +3,7 @@ import { ensureTablesExist } from '../../utils/initDb'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
 import { readVkListClosePending } from '../../utils/vkListCloseRequest'
 import { readVkStartListPending } from '../../utils/vkStartListRequest'
-import { parseVkTeamLabelMap, parseVkTeamSlots, parseVkTeamLimits } from '../../utils/tournamentPaidPlayers'
+import { parseVkTeamLabelMap, parseVkTeamSlots, parseVkTeamLimits, parseVkListLimit } from '../../utils/tournamentPaidPlayers'
 
 const LINK_KEY = 'tournament_vk_link'
 const TOURNAMENT_KEY = 'tournament'
@@ -16,6 +16,7 @@ interface TournamentJson {
   vkTeamLabelByPlayerId?: unknown
   vkTeamSlots?: unknown
   vkTeamLimits?: unknown
+  vkListLimit?: unknown
   matchStatus?: unknown
   liveHomeTeam?: unknown
   liveAwayTeam?: unknown
@@ -34,6 +35,7 @@ interface ParsedTournament {
   vkTeamLabelByPlayerId: Record<string, string>
   vkTeamSlots: string[]
   vkTeamLimits: Record<string, number>
+  vkListLimit: number | undefined
   matchStatus: MatchStatus
   liveHomeTeam: string
   liveAwayTeam: string
@@ -47,6 +49,7 @@ function parseTournamentValue(value: string | undefined): ParsedTournament {
     vkTeamLabelByPlayerId: {},
     vkTeamSlots: [],
     vkTeamLimits: {},
+    vkListLimit: undefined,
     matchStatus: 'upcoming',
     liveHomeTeam: '',
     liveAwayTeam: '',
@@ -73,6 +76,7 @@ function parseTournamentValue(value: string | undefined): ParsedTournament {
       vkTeamLabelByPlayerId: parseVkTeamLabelMap(st.vkTeamLabelByPlayerId),
       vkTeamSlots: parseVkTeamSlots(st.vkTeamSlots),
       vkTeamLimits: parseVkTeamLimits(st.vkTeamLimits),
+      vkListLimit: parseVkListLimit(st.vkListLimit),
       matchStatus,
       liveHomeTeam: typeof st.liveHomeTeam === 'string' ? st.liveHomeTeam : '',
       liveAwayTeam: typeof st.liveAwayTeam === 'string' ? st.liveAwayTeam : '',
@@ -92,6 +96,8 @@ type RosterBlock = {
   vkTeamSlots: string[]
   /** Лимиты команд (ключ — нормализованное имя в нижнем регистре). */
   vkTeamLimits: Record<string, number>
+  /** Общий лимит списка (без команд). */
+  vkListLimit: number | undefined
   matchStatus: MatchStatus
   liveHomeTeam: string
   liveAwayTeam: string
@@ -104,6 +110,7 @@ async function computeRosterBlock(parsed: ParsedTournament): Promise<RosterBlock
   const labelByPlayerId = parsed.vkTeamLabelByPlayerId
   const teamSlots = parsed.vkTeamSlots
   const teamLimits = parsed.vkTeamLimits
+  const listLimit = parsed.vkListLimit
 
   if (selectedIds.length === 0) {
     return {
@@ -112,6 +119,7 @@ async function computeRosterBlock(parsed: ParsedTournament): Promise<RosterBlock
       rosterTeamLabelByVkUserId: {},
       vkTeamSlots: teamSlots,
       vkTeamLimits: teamLimits,
+      vkListLimit: listLimit,
       matchStatus,
       liveHomeTeam,
       liveAwayTeam,
@@ -159,6 +167,7 @@ async function computeRosterBlock(parsed: ParsedTournament): Promise<RosterBlock
     rosterTeamLabelByVkUserId,
     vkTeamSlots: teamSlots,
     vkTeamLimits: teamLimits,
+    vkListLimit: listLimit,
     matchStatus,
     liveHomeTeam,
     liveAwayTeam,

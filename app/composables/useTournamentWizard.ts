@@ -9,6 +9,7 @@ import { dedupeTeamNamesPreservingOrder, normalizeTeamColorsMap, normalizeTeamNa
 import type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
 import { applyEmptyTournamentContextLocal, applyLoadedContext } from '~/composables/tournament-wizard/applyServerContext'
 import { findMatchingSlot, useVkTeamSlots } from '~/composables/tournament-wizard/useVkTeamSlots'
+import { computeQueuedPlayerIds } from '~/utils/tournamentQueue'
 
 export type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
 
@@ -39,11 +40,38 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   const vkTeamLabelByPlayerId = ref<Record<number, string>>({})
   const vkTeamSlots = ref<string[]>([])
   const vkTeamLimits = ref<Record<string, number>>({})
+  const vkListLimit = ref<number | undefined>(undefined)
   const vkListTournament = ref(false)
+
+  // Игроки в очереди (по пер-командным лимитам или общему лимиту) — на сайте их прячем.
+  const queuedPlayerIds = computed(() => computeQueuedPlayerIds({
+    orderedIds: [...selectedIds.value],
+    teamLabelByPlayerId: vkTeamLabelByPlayerId.value,
+    teamSlots: vkTeamSlots.value,
+    teamLimits: vkTeamLimits.value,
+    listLimit: vkListLimit.value ?? null,
+  }))
+  // Кто именно в очереди (для показа на сайте): с командой — покажем команду + игрока, без команды — только игрока.
+  const queuedPlayers = computed<{ player: Player, team: string }[]>(() => {
+    const ids = queuedPlayerIds.value
+    if (ids.size === 0) return []
+    const byId = new Map((players.value ?? []).map((p) => [p.id, p]))
+    const hasTeams = vkTeamSlots.value.length > 0
+    const out: { player: Player, team: string }[] = []
+    for (const id of selectedIds.value) {
+      if (!ids.has(id)) continue
+      const p = byId.get(id)
+      if (!p) continue
+      const team = hasTeams ? (vkTeamLabelByPlayerId.value[id] || '').replace(/\s+/g, ' ').trim() : ''
+      out.push({ player: p, team })
+    }
+    return out
+  })
 
   const selectedPlayers = computed(() => {
     const list = players.value ?? []
-    return list.filter((p) => selectedIds.value.has(p.id))
+    // Очередных не показываем: они остаются в selectedIds (синхрон с ботом), но скрыты на сайте.
+    return list.filter((p) => selectedIds.value.has(p.id) && !queuedPlayerIds.value.has(p.id))
   })
 
   const availablePlayers = computed(() => {
@@ -152,6 +180,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     vkTeamLabelByPlayerId: {},
     vkTeamSlots: [],
     vkTeamLimits: {},
+    vkListLimit: undefined,
     vkListTournament: false,
     assignmentByPlayerId: {},
     confirmedTeamNames: [],
@@ -174,6 +203,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     vkTeamLabelByPlayerId,
     vkTeamSlots,
     vkTeamLimits,
+    vkListLimit,
     vkListTournament,
     paidPlayerIds,
     playerSearch,
@@ -218,12 +248,14 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     addVkTeamSlot,
     removeVkTeamSlot,
     setVkTeamLimit,
+    setVkListLimit,
     setPlayerVkTeam,
   } = useVkTeamSlots({
     selectedIds,
     vkTeamLabelByPlayerId,
     vkTeamSlots,
     vkTeamLimits,
+    vkListLimit,
     stateRestored,
     cancelPendingSave,
     saveTournamentStateNow,
@@ -261,6 +293,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     vkTeamLabelByPlayerId: serializeVkTeamLabelsForSave(),
     vkTeamSlots: [...vkTeamSlots.value],
     vkTeamLimits: { ...vkTeamLimits.value },
+    vkListLimit: vkListLimit.value,
     vkListTournament: vkListTournament.value,
     assignmentByPlayerId: assignment.assignment.value,
     confirmedTeamNames: Array.from(assignment.confirmedTeamNames.value),
@@ -357,12 +390,15 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     vkTeamLabelByPlayerId,
     vkTeamSlots,
     vkTeamLimits,
+    vkListLimit,
+    queuedPlayers,
     vkListTournament,
     vkTrTournament,
     setPlayerVkTeam,
     addVkTeamSlot,
     removeVkTeamSlot,
     setVkTeamLimit,
+    setVkListLimit,
     paidPlayerIds,
     setPlayerPaid,
     onAddNewTeam,

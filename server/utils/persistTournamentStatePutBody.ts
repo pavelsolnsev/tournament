@@ -9,6 +9,7 @@ import {
   parseVkTeamLabelMapForPutBody,
   parseVkTeamSlots,
   parseVkTeamLimits,
+  parseVkListLimit,
   readTournamentStateRow,
 } from './tournamentPaidPlayers'
 import { mergeLiveCurrentMatchStatsIntoNextState } from './mergeLiveCurrentMatchStatsForPersist'
@@ -120,6 +121,11 @@ export async function persistTournamentStatePutBody(state: Record<string, unknow
       ;(state as { vkTeamLimits: Record<string, number> }).vkTeamLimits = { ...prevLimits, ...clientLimits }
     }
   }
+
+  // Общий лимит списка — авторитетно с сайта (число задаёт лимит, пусто снимает); не зависит от режима команд.
+  ;(state as { vkListLimit?: number }).vkListLimit = isFullTournamentReset
+    ? undefined
+    : parseVkListLimit((state as { vkListLimit?: unknown }).vkListLimit)
 
   // Два устройства в live: не теряем отметки по текущему матчу при конкурирующих PUT.
   mergeLiveCurrentMatchStatsIntoNextState(prevJson, state)

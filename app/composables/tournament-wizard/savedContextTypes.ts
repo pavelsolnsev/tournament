@@ -38,6 +38,8 @@ export type SavedTournamentContext = {
   vkTeamSlots?: string[]
   /** Лимиты команд для турнирного списка ВК; ключ — нормализованное имя команды (нижний регистр). */
   vkTeamLimits?: Record<string, number>
+  /** Общий лимит списка ВК (без команд). Если задан — игроки сверх него уходят в очередь. */
+  vkListLimit?: number
   /** true только для списка турнира в боте (s tr) — на шаге «Игроки» показываются команды ВК. */
   vkListTournament?: boolean
   assignmentByPlayerId: Record<number, string>
