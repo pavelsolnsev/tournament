@@ -63,26 +63,28 @@ export async function persistTournamentStatePutBody(state: Record<string, unknow
 
   const isFullTournamentReset = newSelected.length === 0 && snapshotEmpty && stepIsInitial
 
+  // Режим списка ВК (турнир с командами vs обычный с общим лимитом) — серверный, его задают
+  // отдельные потоки: link-event (бот: s tr → true, s prof → false), clear-tournament / vk-unlink
+  // и полный сброс. Рядовой PUT состояния НЕ должен менять уже установленный режим: иначе
+  // устаревшая вкладка (создали турнир, не обновили список, добавили игрока) пришлёт свой
+  // флаг и «разжалует» турнир в обычный список (или наоборот). Клиентский флаг — лишь зеркало
+  // сервера, поэтому prevFlag авторитетнее; клиент/эвристика нужны только когда режим ещё не задан.
   const clientVkListFlag = (state as { vkListTournament?: unknown }).vkListTournament
+  const prevFlag = prevJson.vkListTournament
   let vkListTournament: boolean
-  if (typeof clientVkListFlag === 'boolean') {
-    vkListTournament = clientVkListFlag
-  } else if (isFullTournamentReset) {
+  if (isFullTournamentReset) {
     vkListTournament = false
+  } else if (typeof prevFlag === 'boolean') {
+    vkListTournament = prevFlag
+  } else if (typeof clientVkListFlag === 'boolean') {
+    vkListTournament = clientVkListFlag
   } else {
-    const prevFlag = prevJson.vkListTournament
-    if (prevFlag === false) {
-      vkListTournament = false
-    } else if (prevFlag === true) {
+    const prevSlotsHint = parseVkTeamSlots(prevJson.vkTeamSlots)
+    if (prevSlotsHint.length > 0) {
       vkListTournament = true
     } else {
-      const prevSlotsHint = parseVkTeamSlots(prevJson.vkTeamSlots)
-      if (prevSlotsHint.length > 0) {
-        vkListTournament = true
-      } else {
-        const prevLab = parseVkTeamLabelMap(prevJson.vkTeamLabelByPlayerId)
-        vkListTournament = Object.keys(prevLab).length > 0
-      }
+      const prevLab = parseVkTeamLabelMap(prevJson.vkTeamLabelByPlayerId)
+      vkListTournament = Object.keys(prevLab).length > 0
     }
   }
   ;(state as { vkListTournament: boolean }).vkListTournament = vkListTournament
