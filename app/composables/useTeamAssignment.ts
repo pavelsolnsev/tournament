@@ -65,6 +65,10 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
     const next = new Set(confirmedTeamNames.value)
     next.delete(key)
     confirmedTeamNames.value = next
+    // Команда ушла в «Не участвуют» — освобождаем её игроков обратно в «Свободные».
+    assignment.value = Object.fromEntries(
+      Object.entries(assignment.value).filter(([, team]) => normalizeTeamName(team) !== key),
+    ) as Record<number, string>
   }
 
   function isTeamConfirmed(teamName: string) {
