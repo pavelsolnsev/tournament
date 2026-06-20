@@ -32,6 +32,7 @@ const TEAM_LOGO_PATH_BY_NORMALIZED_KEY: Record<string, string> = {
   artemida: '/team-photos/artemida.webp',
   mixteam: '/team-photos/mixteam.webp',
   микстим: '/team-photos/mixteam.webp',
+  'uzb.фк.1956.пахтакор': '/team-photos/paxtakor.webp',
   'фк.1956.пахтакор': '/team-photos/paxtakor.webp',
   пахтакор: '/team-photos/paxtakor.webp',
   paxtakor: '/team-photos/paxtakor.webp',
