@@ -32,11 +32,14 @@ const TEAM_LOGO_PATH_BY_NORMALIZED_KEY: Record<string, string> = {
   artemida: '/team-photos/artemida.webp',
   mixteam: '/team-photos/mixteam.webp',
   микстим: '/team-photos/mixteam.webp',
-  'uzb.фк.1956.пахтакор': '/team-photos/paxtakor.webp',
-  'фк.1956.пахтакор': '/team-photos/paxtakor.webp',
-  пахтакор: '/team-photos/paxtakor.webp',
-  paxtakor: '/team-photos/paxtakor.webp',
-  pakhtakor: '/team-photos/paxtakor.webp',
+  бронницы: '/team-photos/bronnitsy.webp',
+  bronnitsy: '/team-photos/bronnitsy.webp',
+  // Старые ключи — чтобы логотип показывался в архивных турнирах до переименования.
+  'uzb.фк.1956.пахтакор': '/team-photos/bronnitsy.webp',
+  'фк.1956.пахтакор': '/team-photos/bronnitsy.webp',
+  пахтакор: '/team-photos/bronnitsy.webp',
+  paxtakor: '/team-photos/bronnitsy.webp',
+  pakhtakor: '/team-photos/bronnitsy.webp',
 }
 
 function logoLookupKey(teamName: string): string {

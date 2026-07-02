@@ -1,11 +1,11 @@
 <template>
-  <!-- Есть логотип в team-photos — круг как у цветного эмодзи; иначе маркер в той же клетке по размеру. -->
+  <!-- Есть логотип в team-photos — круг без обводки; иначе маркер в той же клетке по размеру. -->
   <img
     v-if="logoSrc"
     :src="logoSrc"
     :alt="teamName"
     :class="boxClass"
-    class="shrink-0 overflow-hidden rounded-full object-cover ring-1 ring-slate-300/90 dark:ring-slate-600/80 bg-white/90 dark:bg-slate-900/60"
+    class="shrink-0 overflow-hidden rounded-full object-cover"
     loading="lazy"
     decoding="async"
   />
