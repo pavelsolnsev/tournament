@@ -68,14 +68,14 @@ export default defineNuxtConfig({
         { property: 'og:type', content: 'website' },
         { property: 'og:locale', content: 'ru_RU' },
         { property: 'og:site_name', content: 'РФОИ — Раменское Футбол Открытые Игры' },
-        // Прозрачный пиксель нужен, чтобы соцсети не брали иконку или фото со страницы сами.
-        { property: 'og:image', content: 'https://tournament.pavelsolntsev.ru/seo-transparent-preview.png' },
-        { property: 'og:image:secure_url', content: 'https://tournament.pavelsolntsev.ru/seo-transparent-preview.png' },
+        // Большая картинка нужна, чтобы превью ссылки в соцсетях выглядело чётко и одинаково.
+        { property: 'og:image', content: 'https://tournament.pavelsolntsev.ru/seo-preview.png' },
+        { property: 'og:image:secure_url', content: 'https://tournament.pavelsolntsev.ru/seo-preview.png' },
         { property: 'og:image:type', content: 'image/png' },
-        { property: 'og:image:width', content: '1' },
-        { property: 'og:image:height', content: '1' },
-        { name: 'twitter:card', content: 'summary' },
-        { name: 'twitter:image', content: 'https://tournament.pavelsolntsev.ru/seo-transparent-preview.png' },
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:image', content: 'https://tournament.pavelsolntsev.ru/seo-preview.png' },
         // Задаём поддержку обеих цветовых схем — браузер выберет нужный theme-color.
         { name: 'theme-color', content: '#0f172a', media: '(prefers-color-scheme: dark)' },
         { name: 'theme-color', content: '#f8fafc', media: '(prefers-color-scheme: light)' },

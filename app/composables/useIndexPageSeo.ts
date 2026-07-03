@@ -1,4 +1,4 @@
-/** Мета главной: SEO + canonical (без og:image). */
+/** Мета главной: SEO + canonical; общая картинка превью задана в nuxt.config. */
 export function useIndexPageSeo() {
   const requestURL = useRequestURL()
   const canonicalHref = requestURL.href.split('#')[0]
@@ -14,7 +14,7 @@ export function useIndexPageSeo() {
     ogType: 'website',
     ogUrl: canonicalHref,
     ogLocale: 'ru_RU',
-    twitterCard: 'summary',
+    twitterCard: 'summary_large_image',
     twitterTitle: 'РФОИ — турниры, команды и таблица',
     twitterDescription:
       'Составы команд, матчи и турнирная таблица — для организатора и зрителей.',

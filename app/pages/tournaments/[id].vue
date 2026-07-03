@@ -277,7 +277,7 @@ useSeoMeta({
   ogType: 'article',
   ogUrl: pageCanonical,
   ogLocale: 'ru_RU',
-  twitterCard: 'summary',
+  twitterCard: 'summary_large_image',
   twitterTitle: tournamentPageTitle,
   twitterDescription: tournamentSeoDescription,
   robots: 'index, follow',
