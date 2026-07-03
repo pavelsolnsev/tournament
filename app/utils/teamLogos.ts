@@ -40,6 +40,8 @@ const TEAM_LOGO_PATH_BY_NORMALIZED_KEY: Record<string, string> = {
   пахтакор: '/team-photos/bronnitsy.webp',
   paxtakor: '/team-photos/bronnitsy.webp',
   pakhtakor: '/team-photos/bronnitsy.webp',
+  lamoda: '/team-photos/lamoda.webp',
+  ламода: '/team-photos/lamoda.webp',
 }
 
 function logoLookupKey(teamName: string): string {
