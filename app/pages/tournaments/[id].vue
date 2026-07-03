@@ -208,10 +208,9 @@ const id = route.params.id as string
 // Загружаем данные турнира по id из URL.
 const { data: tournament, error } = await useFetch<TournamentArchiveApiResponse>(`/api/tournaments/${id}`)
 
-// Абсолютный URL страницы — для canonical и Open Graph (превью в соцсетях).
+// Абсолютный URL страницы — для canonical и текстового превью в соцсетях.
 const requestURL = useRequestURL()
 const pageCanonical = computed(() => `${requestURL.origin}/tournaments/${id}`)
-const ogImageAbsolute = computed(() => `${requestURL.origin}/icon-192.png`)
 
 // Нормализуем цвета команд — как в TournamentViewer.
 const teamColors = computed(() =>
@@ -278,8 +277,7 @@ useSeoMeta({
   ogType: 'article',
   ogUrl: pageCanonical,
   ogLocale: 'ru_RU',
-  ogImage: ogImageAbsolute,
-  twitterCard: 'summary_large_image',
+  twitterCard: 'summary',
   twitterTitle: tournamentPageTitle,
   twitterDescription: tournamentSeoDescription,
   robots: 'index, follow',
