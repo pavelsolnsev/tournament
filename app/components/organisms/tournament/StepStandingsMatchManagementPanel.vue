@@ -230,6 +230,62 @@
         </button>
       </div>
 
+      <!-- Техническое поражение — в самом низу управления; доступно только при выбранной паре. -->
+      <div
+        v-if="canFinishMatchShowResults && canFinishMatch"
+        class="space-y-1.5 p-2"
+        aria-label="Техническое поражение"
+      >
+        <button
+          type="button"
+          class="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-amber-400/70 bg-amber-500/10 px-3 text-sm font-semibold text-amber-700 dark:text-amber-300
+                 transition-colors hover:bg-amber-500/20 active:bg-amber-500/30
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
+          @click="openActionConfirm('technical')"
+        >
+          <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+          Техническое 3:0
+        </button>
+
+        <!-- Выбор команды, которой засчитать техническое поражение 3:0 -->
+        <div v-if="isActionConfirmOpen && pendingAction === 'technical'" class="space-y-1.5">
+          <p class="text-[11px] font-medium leading-snug text-slate-600 dark:text-slate-400">
+            Кому засчитать техническое поражение 3:0?
+          </p>
+          <div class="flex flex-col gap-1.5">
+            <button
+              type="button"
+              class="inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg border border-red-400/70 bg-red-500/10 px-3 text-sm font-semibold text-red-700 dark:text-red-300
+                     transition-colors hover:bg-red-500/20 active:bg-red-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
+              @click="confirmTechnicalDefeat(homeTeam)"
+            >
+              <AtomsTeamMarkerOrLogo :team-name="homeTeam" :marker="teamMarker(homeTeam)" size="sm" class="shrink-0" />
+              <span class="min-w-0 truncate">{{ homeTeam }} — 0:3</span>
+            </button>
+            <button
+              type="button"
+              class="inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg border border-red-400/70 bg-red-500/10 px-3 text-sm font-semibold text-red-700 dark:text-red-300
+                     transition-colors hover:bg-red-500/20 active:bg-red-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
+              @click="confirmTechnicalDefeat(awayTeam)"
+            >
+              <AtomsTeamMarkerOrLogo :team-name="awayTeam" :marker="teamMarker(awayTeam)" size="sm" class="shrink-0" />
+              <span class="min-w-0 truncate">{{ awayTeam }} — 0:3</span>
+            </button>
+            <button
+              type="button"
+              class="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700
+                     transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50"
+              @click="closeActionConfirm"
+            >
+              Отмена
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -239,7 +295,7 @@ import type { StepStandingsMatchManagementProps } from '~/composables/useStepSta
 
 const isTimerCollapsed = useState<boolean>('match-timer-bar-collapsed', () => false)
 
-type Pending = 'next' | 'finish' | 'finishSilent' | null
+type Pending = 'next' | 'finish' | 'finishSilent' | 'technical' | null
 
 defineProps<{
   mgmtPanelId: string
@@ -257,7 +313,7 @@ defineProps<{
   finishMatchSecondsLeft: number
   showFinishTournamentConfirm: boolean
   finishTournamentConfirmSecondsLeft: number
-  openActionConfirm: (a: 'next' | 'finish' | 'finishSilent') => void
+  openActionConfirm: (a: 'next' | 'finish' | 'finishSilent' | 'technical') => void
   closeActionConfirm: () => void
   confirmPendingAction: () => void
   openFinishTournamentConfirm: () => void
@@ -265,5 +321,10 @@ defineProps<{
   confirmFinishTournament: () => void
   isMatchFinished: boolean
   onGoToResults: () => void
+  // Техническое поражение: текущая пара и обработчик выбора команды-нарушителя.
+  homeTeam: string
+  awayTeam: string
+  teamMarker: StepStandingsMatchManagementProps['teamMarker']
+  confirmTechnicalDefeat: (losingTeam: string) => void
 }>()
 </script>

@@ -37,6 +37,7 @@ export type StepStandingsMatchManagementProps = {
   addPlayerEvent: (side: MatchMgmtSide, playerId: number, key: StatKey) => void
   removePlayerEvent: (side: MatchMgmtSide, playerId: number, key: StatKey) => void
   goToNextMatch: () => void
+  applyTechnicalDefeat: (losingTeam: string) => void
   resetMatchStats: () => void
   finishMatch: () => void
   finishMatchSilent: () => void | Promise<void>
@@ -93,7 +94,7 @@ export function useStepStandingsMatchManagement(props: StepStandingsMatchManagem
   const mgmtPanelId = `match-mgmt-panel-${uid}`
   const isMgmtOpen = ref(false)
 
-  const pendingAction = ref<'next' | 'finish' | 'finishSilent' | null>(null)
+  const pendingAction = ref<'next' | 'finish' | 'finishSilent' | 'technical' | null>(null)
   const isActionConfirmOpen = computed(() => pendingAction.value !== null)
 
   const { secondsLeft: finishMatchSecondsLeft, start: startFinishMatchCountdown, stop: stopFinishMatchCountdown } = useConfirmCountdown()
@@ -167,8 +168,9 @@ export function useStepStandingsMatchManagement(props: StepStandingsMatchManagem
     pendingAction.value = null
   }
 
-  function openActionConfirm(action: 'next' | 'finish' | 'finishSilent') {
+  function openActionConfirm(action: 'next' | 'finish' | 'finishSilent' | 'technical') {
     pendingAction.value = action
+    // «Следующий матч» подтверждается под кнопкой в карточке — скроллим к якорю рядом.
     if (action === 'next') {
       void nextTick(() => {
         requestAnimationFrame(() => {
@@ -177,7 +179,17 @@ export function useStepStandingsMatchManagement(props: StepStandingsMatchManagem
       })
       return
     }
+    // finish / finishSilent / technical — блоки внизу панели «Управление», скроллим к низу.
     scrollToConfirm()
+  }
+
+  // Выбрана команда, которой засчитываем техническое поражение 3:0 — записываем и переходим к следующей паре.
+  async function confirmTechnicalDefeat(losingTeam: string) {
+    closeActionConfirm()
+    props.applyTechnicalDefeat(losingTeam)
+    await nextTick()
+    await nextTick()
+    scrollMatchCardIntoView()
   }
 
   async function confirmPendingAction() {
@@ -250,5 +262,6 @@ export function useStepStandingsMatchManagement(props: StepStandingsMatchManagem
     closeActionConfirm,
     openActionConfirm,
     confirmPendingAction,
+    confirmTechnicalDefeat,
   }
 }

@@ -16,6 +16,7 @@ export function useStepStandingsRemoteHandlers(args: {
   awayTeam: Ref<string>
   finishMatch: () => void
   goToNextMatch: () => void
+  applyTechnicalDefeat: (losingTeam: string) => void
   mergeCurrentMatchFromRemoteSnapshot: (remote: SavedStandingsSnapshot | null | undefined) => void
   resetTournamentMarks: () => void
   fetchRemoteStandingsSnapshot?: () => Promise<SavedStandingsSnapshot | null>
@@ -30,6 +31,7 @@ export function useStepStandingsRemoteHandlers(args: {
     awayTeam,
     finishMatch,
     goToNextMatch,
+    applyTechnicalDefeat,
     mergeCurrentMatchFromRemoteSnapshot,
     resetTournamentMarks,
     fetchRemoteStandingsSnapshot,
@@ -112,6 +114,20 @@ export function useStepStandingsRemoteHandlers(args: {
     await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
   }
 
+  async function handleTechnicalDefeat(losingTeam: string) {
+    // Техническое поражение выбранной команде — по событиям игроков не зависит, поэтому remote-отметки не тянем.
+    applyTechnicalDefeat(losingTeam)
+    if (homeTeam.value && awayTeam.value) {
+      emit('update:matchStatus', 'live', homeTeam.value, awayTeam.value)
+    } else {
+      emit('update:matchStatus', 'upcoming', '', '')
+    }
+    // Немедленно сохраняем — чтобы новый список матчей попал в БД раньше отложенного PUT с другого устройства.
+    await nextTick()
+    try { await saveNow?.() } catch { /* сеть */ }
+    await refreshNuxtData(TOURNAMENT_STATE_NUXT_KEY)
+  }
+
   async function handleFinishTournament() {
     await finishTournament()
     if (finishStatus.value === 'success') {
@@ -127,6 +143,7 @@ export function useStepStandingsRemoteHandlers(args: {
     handleFinishMatchSilent,
     handleResetTournamentMarks,
     handleGoToNextMatch,
+    handleTechnicalDefeat,
     handleFinishTournament,
   }
 }

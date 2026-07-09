@@ -196,6 +196,10 @@
           :confirm-finish-tournament="confirmFinishTournament"
           :is-match-finished="props.isMatchFinished"
           :on-go-to-results="props.onGoToResults"
+          :home-team="homeTeam"
+          :away-team="awayTeam"
+          :team-marker="teamMarker"
+          :confirm-technical-defeat="confirmTechnicalDefeat"
         />
       </Transition>
     </div>
@@ -248,6 +252,7 @@ const {
   closeActionConfirm,
   openActionConfirm,
   confirmPendingAction,
+  confirmTechnicalDefeat,
 } = useStepStandingsMatchManagement(props)
 
 </script>

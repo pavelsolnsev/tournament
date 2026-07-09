@@ -32,6 +32,7 @@ import {
   selectPlayerForMark as selectPlayerForMarkFn,
 } from './tournament-standings/matchStats'
 import { finishMatchAndRecord } from './tournament-standings/finishMatch'
+import { recordTechnicalDefeat } from './tournament-standings/recordTechnicalDefeat'
 import { resetTournamentMarksState } from './tournament-standings/resetMarks'
 import { deletePlayedMatchFromList, updatePlayedMatchInList } from './tournament-standings/playedMatchEdit'
 
@@ -313,9 +314,8 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
     localStatsSeq.value = remoteSeq
   }
 
-  function goToNextMatch() {
-    // Если текущий матч не финализировали, можно сделать это автоматически.
-    if (homeTeam.value && awayTeam.value && !matchFinalized.value) finishMatch()
+  // Подбор следующей пары после записи матча — общий шаг для «Следующий матч» и «Техническое».
+  function advanceToNextPair() {
     if (!hasNextMatch.value) return
 
     // Пересинхронизируем все счётчики по реальным данным матчей перед подбором пары.
@@ -338,6 +338,29 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
     homeTeam.value = next.home
     awayTeam.value = next.away
     resetMatchStats()
+  }
+
+  function goToNextMatch() {
+    // Если текущий матч не финализировали, можно сделать это автоматически.
+    if (homeTeam.value && awayTeam.value && !matchFinalized.value) finishMatch()
+    advanceToNextPair()
+  }
+
+  // Техническое поражение 3:0 выбранной команде из текущей пары; результат идёт в таблицу,
+  // игрокам ничего не начисляется. После записи — переход к следующей паре, как в goToNextMatch.
+  function applyTechnicalDefeat(losingTeam: string) {
+    if (!homeTeam.value || !awayTeam.value) return
+    recordTechnicalDefeat({
+      homeTeam,
+      awayTeam,
+      losingTeam,
+      standingsRows,
+      playedMatchesList,
+      pairingState,
+      teams: params.teams,
+      resetMatchStats,
+    })
+    advanceToNextPair()
   }
 
   // Когда список матчей или таблица меняются — вызываем callback для сохранения в куку.
@@ -398,6 +421,7 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
     resetTournamentMarks,
     finishMatch,
     goToNextMatch,
+    applyTechnicalDefeat,
     mergeCurrentMatchFromRemoteSnapshot,
     // Полная подпись с рейтингом — для ростеров и выбора игроков во время матча.
     displayPlayerLabel,

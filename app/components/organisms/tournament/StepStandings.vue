@@ -262,6 +262,7 @@
         :add-player-event="addPlayerEvent"
         :remove-player-event="removePlayerEvent"
         :go-to-next-match="handleGoToNextMatch"
+        :apply-technical-defeat="handleTechnicalDefeat"
         :reset-match-stats="resetMatchStats"
         :reset-tournament-marks="handleResetTournamentMarks"
         :finish-match="handleFinishMatchShowResults"
@@ -371,6 +372,7 @@ const {
   handleFinishMatchSilent,
   handleResetTournamentMarks,
   handleGoToNextMatch,
+  handleTechnicalDefeat,
   handleFinishTournament,
   scrollExpandedPanelIntoView,
 } = useStepStandingsPage(props, emit as StepStandingsPageEmit)
