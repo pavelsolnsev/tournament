@@ -16,7 +16,6 @@
         :avg-team-rating="avgTeamRating"
         @player-clicked="onPlayerClick($event, '')"
         @move-here="onMoveHere('')"
-        @drag-add="onDragAdd($event, '')"
       />
 
       <!-- Подтверждённые команды: адаптивная сетка без горизонтального скролла -->
@@ -34,7 +33,6 @@
             :avg-team-rating="avgTeamRating"
             @player-clicked="onPlayerClick($event, team)"
             @move-here="onMoveHere(team)"
-            @drag-add="onDragAdd($event, team)"
             @confirm-team="emit('confirmTeam', team)"
             @unconfirm-team="emit('unconfirmTeam', team)"
             @set-color="(ci) => emit('setTeamColor', team, ci)"
@@ -299,11 +297,6 @@ function onMoveHere(targetTeam: string) {
   if (fromTeam === targetTeam) { selectedPlayer.value = null; return }
   if (targetTeam === '') emit('removeFromTeam', id); else emit('setTeam', id, targetTeam)
   selectedPlayer.value = null
-}
-
-function onDragAdd(playerId: number, targetTeam: string) {
-  if (targetTeam === '') emit('removeFromTeam', playerId)
-  else emit('setTeam', playerId, targetTeam)
 }
 
 // ─── Удаление команды ───

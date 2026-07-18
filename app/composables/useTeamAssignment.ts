@@ -71,6 +71,27 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
     ) as Record<number, string>
   }
 
+  // Подтверждаем все команды, у которых уже есть игроки в составе — чтобы готовые составы
+  // сразу были в колонке участвующих, а не в «Не участвуют».
+  function autoConfirmTeamsWithPlayers() {
+    const next = new Set(confirmedTeamNames.value)
+    for (const team of Object.values(assignment.value)) {
+      const key = normalizeTeamName(team)
+      if (key) next.add(key)
+    }
+    // Обновляем ref только если реально что-то добавилось — иначе лишний триггер реактивности.
+    if (next.size !== confirmedTeamNames.value.size) {
+      confirmedTeamNames.value = next
+    }
+  }
+
+  // Реактивное правило: как только у команды появляются игроки (авто-распределение по рейтингу,
+  // перенос, восстановление составов) — она сразу становится участвующей, без перехода по шагам.
+  watch(
+    () => Object.values(assignment.value).map((t) => normalizeTeamName(t)).filter(Boolean).sort().join('|'),
+    () => autoConfirmTeamsWithPlayers(),
+  )
+
   function isTeamConfirmed(teamName: string) {
     return confirmedTeamNames.value.has(normalizeTeamName(teamName))
   }
@@ -231,6 +252,7 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
     removeTeam,
     confirmTeam,
     unconfirmTeam,
+    autoConfirmTeamsWithPlayers,
     isTeamConfirmed,
     setTeamColor,
     getTeamColor,

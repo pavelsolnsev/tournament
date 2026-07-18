@@ -342,6 +342,8 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     if (!tournamentDate.value) {
       tournamentDate.value = new Date().toISOString().slice(0, 10)
     }
+    // Готовые составы (игроки уже назначены в команды) сразу считаем участвующими.
+    assignment.autoConfirmTeamsWithPlayers()
     step.value = 1
   }
 

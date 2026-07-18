@@ -109,47 +109,40 @@
       <span aria-hidden="true">→</span> Переместить сюда
     </button>
 
-    <!-- Список игроков с drag-and-drop; в колонке «Свободные» ограничиваем высоту со скроллом -->
+    <!-- Список игроков — только tap-select (клик), без перетаскивания; «Свободные» со скроллом по высоте -->
     <div
       v-show="isExpanded"
       class="mt-1.5 min-h-[3rem]"
       :class="isFreeColumn ? 'max-h-[min(60vh,28rem)] overflow-y-auto overscroll-contain rounded-xl' : ''"
       @click="onBodyClick"
     >
-      <VueDraggable
-        v-model="localPlayers"
-        group="kanban-players"
-        :animation="150"
-        ghost-class="opacity-30"
-        drag-class="shadow-lg"
+      <div
         class="gap-1 rounded-xl p-1"
         :class="isFreeColumn ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5' : 'flex flex-col'"
-        @add="onDragAdd"
       >
         <AtomsKanbanPlayerCard
-          v-for="p in localPlayers"
+          v-for="p in players"
           :key="p.id"
           :player="p"
           :is-selected="selectedPlayer?.id === p.id"
           :is-swap-target="isSwapTarget(p.id)"
           @click="emit('playerClicked', p.id)"
         />
-      </VueDraggable>
+      </div>
 
       <!-- Подсказка когда колонка пуста -->
       <p
-        v-if="localPlayers.length === 0 && !showMoveTarget"
+        v-if="players.length === 0 && !showMoveTarget"
         class="py-3 text-center text-xs text-slate-400 dark:text-slate-600"
       >
-        {{ isFreeColumn ? 'Все распределены' : 'Перетащите или\nвыберите игрока' }}
+        {{ isFreeColumn ? 'Все распределены' : 'Выберите игрока' }}
       </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { VueDraggable } from 'vue-draggable-plus'
+import { ref, computed } from 'vue'
 import type { Player } from '~/types/tournament'
 import { useTeamColors } from '~/composables/useTeamColors'
 
@@ -173,8 +166,6 @@ const emit = defineEmits<{
   confirmTeam: []
   unconfirmTeam: []
   setColor: [colorIndex: number]
-  /** Игрок перетащен в эту колонку drag-and-drop. */
-  dragAdd: [playerId: number]
 }>()
 
 const { teamMarkers } = useTeamColors()
@@ -185,22 +176,14 @@ const isFreeColumn = computed(() => props.teamName === '')
 // Аккордеон: по умолчанию раскрыт; на десктопе всегда раскрыт (кнопка hidden md:).
 const isExpanded = ref(true)
 
-// Локальная копия для vue-draggable-plus; синхронизируется при изменении canonical-state.
-const localPlayers = ref<Player[]>([...props.players])
-
-watch(
-  () => props.players.map((p) => p.id).join(','),
-  () => { localPlayers.value = [...props.players] },
-)
-
 // Суммарный рейтинг команды — показываем для оценки баланса.
 const teamTotalRating = computed(() =>
-  localPlayers.value.reduce((s, p) => s + (Number(p.rating) || 0), 0),
+  props.players.reduce((s, p) => s + (Number(p.rating) || 0), 0),
 )
 
 // Цвет суммарного рейтинга: зелёный — близко к среднему, оранжевый/синий — перекос.
 const deltaClass = computed(() => {
-  if (props.avgTeamRating <= 0 || localPlayers.value.length === 0)
+  if (props.avgTeamRating <= 0 || props.players.length === 0)
     return 'text-slate-500 dark:text-slate-400'
   const delta = teamTotalRating.value - props.avgTeamRating
   if (Math.abs(delta) < 0.5) return 'text-emerald-600 dark:text-emerald-400'
@@ -241,12 +224,5 @@ function onBodyClick(e: MouseEvent) {
 // Клик по заголовку — переместить если player выбран.
 function onHeaderClick() {
   if (showMoveTarget.value) emit('moveHere')
-}
-
-// Drag-and-drop: кто-то перетащил игрока в эту колонку.
-function onDragAdd(event: { item: HTMLElement }) {
-  const playerId = Number(event.item.dataset.playerId)
-  if (!Number.isFinite(playerId)) return
-  emit('dragAdd', playerId)
 }
 </script>

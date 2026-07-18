@@ -4,6 +4,7 @@ import { useTeamColors } from '~/composables/useTeamColors'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 import type { SummaryParams, TournamentSummary, YellowCardPlayer } from '~/composables/tournament-summary/types'
 import type { PlayedMatch } from '~/composables/tournament-standings/types'
+import { normalizeTeamName } from '~/utils/teamNames'
 import {
   buildEffectiveTeamColors,
   findTeamMvp,
@@ -68,7 +69,13 @@ export function useTournamentSummary(params: SummaryParams): TournamentSummary {
     getMarkerByIndex,
   )
 
+  // Только команды, реально участвовавшие (есть в итоговой таблице). Иначе команда,
+  // убранная до старта, всё ещё числится в assignmentByPlayerId и ошибочно попадает в MVP команд.
+  const participatingTeamKeys = new Set(
+    params.standingsRows.map((r) => normalizeTeamName(r.teamName)),
+  )
   const uniqueTeams = [...new Set(Object.values(params.assignmentByPlayerId))]
+    .filter((teamName) => participatingTeamKeys.has(normalizeTeamName(teamName)))
   const teamMvps = uniqueTeams.map((teamName) => {
     const teamPlayers = params.players.filter(
       (p) => params.assignmentByPlayerId[p.id] === teamName,

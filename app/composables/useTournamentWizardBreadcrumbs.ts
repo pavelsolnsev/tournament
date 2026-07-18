@@ -44,6 +44,8 @@ export function useTournamentWizardBreadcrumbs(
     if (step === wizard.step.value) return
     if (!isBreadcrumbStepEnabled(step)) return
     if (step === 2) void goToStandings()
+    // «Команды» — тем же путём, что кнопка «Перейти к командам» (дата по умолчанию + авто-подтверждение готовых составов).
+    else if (step === 1) wizard.goToTeams()
     else wizard.step.value = step
   }
 
