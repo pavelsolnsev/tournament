@@ -184,6 +184,23 @@
           :player-rating-deltas="tournament.snapshot.playerRatingDeltas"
           :played-matches-list="tournament.snapshot.playedMatchesList"
         />
+
+        <!-- Только для админа: все итоги обычным текстом, чтобы скопировать и вставить куда угодно. -->
+        <OrganismsViewerTournamentTextExport
+          v-if="isAdmin"
+          :tournament-name="tournament.tournamentName"
+          :tournament-date="tournament.tournamentDate"
+          :venue-label="tournament.venueLabel"
+          :format-label="tournament.formatLabel"
+          :page-url="pageCanonical"
+          :summary="tournamentSummary"
+          :players="players"
+          :assignment-by-player-id="assignmentByPlayerId"
+          :aggregate-player-stats="tournament.snapshot.aggregatePlayerStats"
+          :player-rating-deltas="tournament.snapshot.playerRatingDeltas"
+          :played-matches-list="tournament.snapshot.playedMatchesList"
+          :team-colors="teamColors"
+        />
       </div>
 
     </main>

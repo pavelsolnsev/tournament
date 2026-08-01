@@ -92,6 +92,22 @@
               :player-rating-deltas="initialSnapshot?.playerRatingDeltas ?? {}"
               :played-matches-list="finishedPlayedMatches"
             />
+
+            <!-- Только для админа: те же итоги обычным текстом — можно скопировать и вставить куда угодно. -->
+            <OrganismsViewerTournamentTextExport
+              v-if="isAdmin"
+              :tournament-name="tournamentName"
+              :tournament-date="tournamentDate"
+              :venue-label="venueLabel"
+              :format-label="formatLabel"
+              :summary="tournamentSummary"
+              :players="players"
+              :assignment-by-player-id="assignmentByPlayerId"
+              :aggregate-player-stats="initialSnapshot?.aggregatePlayerStats ?? {}"
+              :player-rating-deltas="initialSnapshot?.playerRatingDeltas ?? {}"
+              :played-matches-list="finishedPlayedMatches"
+              :team-colors="teamColors"
+            />
           </div>
         </div>
 
@@ -213,7 +229,7 @@ const props = defineProps<{
 }>();
 
 const showLoginModal = ref(false);
-const { restoreSession } = useAdminAuth();
+const { restoreSession, isAdmin } = useAdminAuth();
 
 const headerActionsWrap = ref(false);
 const isRefreshing = ref(false);
