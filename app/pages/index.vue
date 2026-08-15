@@ -123,7 +123,7 @@
                   @remove-from-team="wizard.assignment.removeFromTeam"
                   @confirm-team="wizard.assignment.confirmTeam"
                   @unconfirm-team="wizard.assignment.unconfirmTeam"
-                  @remove-team="wizard.assignment.removeTeam"
+                  @remove-team="wizard.removeTeamEverywhere"
                   @back-to-players="wizard.step.value = 0"
                   @go-to-standings="goToStandings"
                   @auto-distribute="(count) => wizard.assignment.autoDistribute(wizard.selectedPlayers.value, count)"

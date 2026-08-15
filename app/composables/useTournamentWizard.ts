@@ -10,6 +10,7 @@ import type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composabl
 import { applyEmptyTournamentContextLocal, applyLoadedContext } from '~/composables/tournament-wizard/applyServerContext'
 import { findMatchingSlot, useVkTeamSlots } from '~/composables/tournament-wizard/useVkTeamSlots'
 import { computeQueuedPlayerIds } from '~/utils/tournamentQueue'
+import { pruneTeamFromStandingsSnapshot } from '~/composables/tournament-standings/pruneTeamFromStandingsSnapshot'
 
 export type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
 
@@ -332,6 +333,37 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     standingsSnapshot.value = snapshot
   }
 
+  const playersById = computed<Record<number, Player>>(() => {
+    const map: Record<number, Player> = {}
+    for (const p of players.value ?? []) map[p.id] = p
+    return map
+  })
+
+  /**
+   * Удаление команды. Чистим и состав, и снапшот таблицы —
+   * иначе строка команды и её матчи остаются в сохранённом снапшоте и снова видны в таблице.
+   */
+  function removeTeamEverywhere(teamName: string) {
+    assignment.removeTeam(teamName)
+
+    standingsSnapshot.value = pruneTeamFromStandingsSnapshot({
+      snapshot: standingsSnapshot.value,
+      teamName,
+      playersById: playersById.value,
+    })
+
+    // Если команда играла текущий матч — этого матча больше нет.
+    const normalized = normalizeTeamName(teamName)
+    if (
+      normalizeTeamName(liveHomeTeam.value) === normalized
+      || normalizeTeamName(liveAwayTeam.value) === normalized
+    ) {
+      matchStatus.value = 'upcoming'
+      liveHomeTeam.value = ''
+      liveAwayTeam.value = ''
+    }
+  }
+
   function updateMatchStatus(status: MatchStatus, home: string, away: string) {
     matchStatus.value = status
     liveHomeTeam.value = home
@@ -404,6 +436,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     paidPlayerIds,
     setPlayerPaid,
     onAddNewTeam,
+    removeTeamEverywhere,
     standingsSnapshot,
     saveStandingsSnapshot,
     matchStatus,

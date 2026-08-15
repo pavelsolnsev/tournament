@@ -166,7 +166,7 @@
         :busy="false"
         tone="danger"
         :title="`Удалить «${removeConfirmTeamName}»?`"
-        subtitle="Все назначения игроков сбросятся."
+        subtitle="Все назначения игроков сбросятся. Сыгранные матчи команды и её очки в таблице тоже удалятся."
         cancel-text="Отмена"
         confirm-text="Удалить"
         @cancel="removeConfirmTeamName = null"
