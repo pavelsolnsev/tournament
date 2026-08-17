@@ -14,7 +14,6 @@ import type {
   TournamentStandingsParams,
 } from './tournament-standings/types'
 
-import { mergePlayerStatsRecords } from './tournament-standings/playerStatsMerge'
 import type { ActiveSelection } from './tournament-standings/matchStats'
 import type { PairingState } from './tournament-standings/pairing'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'

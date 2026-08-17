@@ -1,13 +1,24 @@
+// Счётчик Метрики: сама функция вызова плюс служебные поля, которые дописывает тег —
+// `a` это очередь вызовов до загрузки скрипта, `l` отметка времени старта.
+type YandexMetrikaFn = {
+  (...args: unknown[]): void
+  a?: unknown[][]
+  l?: number
+}
+
+type WindowWithYm = Window & { ym?: YandexMetrikaFn }
+
 export default defineNuxtPlugin(() => {
-  const w = window as any
+  const w = window as WindowWithYm
 
   // Инициализируем очередь команд до загрузки скрипта — чтобы ym() работал сразу.
-  w.ym =
-    w.ym ||
-    function (...args: unknown[]) {
-      ;(w.ym.a = w.ym.a || []).push(args)
-    }
-  w.ym.l = Date.now()
+  const ym: YandexMetrikaFn
+    = w.ym
+      ?? function (...args: unknown[]) {
+        ;(ym.a = ym.a ?? []).push(args)
+      }
+  ym.l = Date.now()
+  w.ym = ym
 
   // Загружаем тег Метрики асинхронно — не блокируем рендер.
   const s = document.createElement('script')
@@ -16,7 +27,7 @@ export default defineNuxtPlugin(() => {
   document.head.appendChild(s)
 
   // Инициализируем счётчик с нужными опциями.
-  w.ym(109049482, 'init', {
+  ym(109049482, 'init', {
     webvisor: true,
     clickmap: true,
     ecommerce: 'dataLayer',
