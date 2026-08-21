@@ -294,7 +294,7 @@ import type { Player, MatchStatus } from '~/types/tournament'
 import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { useStepStandingsPage, type StepStandingsPageEmit } from '~/composables/useStepStandingsPage'
 
-const isTimerCollapsed = useState<boolean>('match-timer-bar-collapsed', () => false)
+const { isCollapsed: isTimerCollapsed } = useMatchTimerVisibility()
 
 const props = defineProps<{
   tournamentName: string

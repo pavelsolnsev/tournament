@@ -187,7 +187,7 @@
           class="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           title="Свернуть таймер"
           aria-label="Свернуть таймер"
-          @click="isCollapsed = true"
+          @click="hideTimer()"
         >
           <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M19 9l-7 7-7-7" />
@@ -203,8 +203,8 @@ import { onBeforeUnmount, ref, watch } from 'vue'
 import { useMatchCountdownTimer } from '~/composables/useMatchCountdownTimer'
 import { useMatchTimerAlert } from '~/composables/useMatchTimerAlert'
 
-// Состояние свёрнутости: useState сохраняет значение при навигации между шагами.
-const isCollapsed = useState<boolean>('match-timer-bar-collapsed', () => false)
+// Показ таймера: изначально скрыт, выбор запоминается между сессиями.
+const { isCollapsed, hideTimer } = useMatchTimerVisibility()
 
 // Звук+вибрация сигналов вкл/выкл — useState сохраняет выбор между шагами.
 const soundOn = useState<boolean>('match-timer-sound-on', () => true)

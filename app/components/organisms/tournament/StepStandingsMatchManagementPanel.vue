@@ -220,7 +220,7 @@
           class="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-slate-300/80 bg-white/90 px-3 text-sm font-semibold text-slate-700 transition-colors
                  hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
-          @click="isTimerCollapsed = false"
+          @click="showTimer()"
         >
           <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="9" />
@@ -293,7 +293,7 @@
 <script setup lang="ts">
 import type { StepStandingsMatchManagementProps } from '~/composables/useStepStandingsMatchManagement'
 
-const isTimerCollapsed = useState<boolean>('match-timer-bar-collapsed', () => false)
+const { isCollapsed: isTimerCollapsed, showTimer } = useMatchTimerVisibility()
 
 type Pending = 'next' | 'finish' | 'finishSilent' | 'technical' | null
 
