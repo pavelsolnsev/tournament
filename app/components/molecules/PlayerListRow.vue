@@ -41,13 +41,7 @@
           {{ caption }}
         </span>
       </div>
-      <span
-        v-if="rating"
-        class="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-slate-500 dark:text-slate-400"
-        aria-label="Рейтинг"
-      >
-        {{ rating }}
-      </span>
+      <AtomsPlayerRatingBadge :rating="rating" />
       <!-- Кнопка оплаты: иконка ₽ / галочка — компактно, без текста. -->
       <button
         type="button"
@@ -97,10 +91,10 @@
         >{{ label }}</span>
         <span
           v-else
-          class="flex min-w-0 items-center gap-1 overflow-hidden"
+          class="flex min-w-0 items-center gap-2 overflow-hidden"
         >
-          <span class="min-w-0 truncate text-sm font-medium text-slate-800 dark:text-slate-100">{{ label }}</span>
-          <span class="shrink-0 whitespace-nowrap text-sm font-medium leading-tight text-slate-800 dark:text-slate-100 tabular-nums">{{ rating }}</span>
+          <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-800 dark:text-slate-100">{{ label }}</span>
+          <AtomsPlayerRatingBadge :rating="rating" />
         </span>
         <span class="mt-0.5 block truncate text-xs font-medium text-slate-500 dark:text-slate-400">{{ caption }}</span>
       </div>
@@ -110,10 +104,10 @@
       >{{ label }}</span>
       <span
         v-else
-        class="flex min-w-0 flex-1 items-center gap-1 overflow-hidden"
+        class="flex min-w-0 flex-1 items-center gap-2 overflow-hidden"
       >
-        <span class="min-w-0 truncate text-sm font-medium text-slate-800 dark:text-slate-100">{{ label }}</span>
-        <span class="shrink-0 whitespace-nowrap text-sm font-medium leading-tight text-slate-800 dark:text-slate-100 tabular-nums">{{ rating }}</span>
+        <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-800 dark:text-slate-100">{{ label }}</span>
+        <AtomsPlayerRatingBadge :rating="rating" />
       </span>
     </template>
 

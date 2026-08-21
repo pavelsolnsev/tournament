@@ -42,14 +42,14 @@
             size="md"
           />
           <!-- Имя сжимается; суффикс рейтинга — только если showPlayerRating (в управлении матчем выкл.). -->
-          <span class="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
-            <span class="min-w-0 truncate text-sm font-medium leading-tight text-slate-800 dark:text-slate-100">
+          <span class="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+            <span class="min-w-0 flex-1 truncate text-sm font-medium leading-tight text-slate-800 dark:text-slate-100">
               {{ labelParts(p).name }}
             </span>
-            <span
-              v-if="rosterColumnProps.showPlayerRating && labelParts(p).rating"
-              class="shrink-0 whitespace-nowrap text-sm font-medium leading-tight text-slate-800 dark:text-slate-100 tabular-nums"
-            >{{ labelParts(p).rating }}</span>
+            <AtomsPlayerRatingBadge
+              v-if="rosterColumnProps.showPlayerRating"
+              :rating="labelParts(p).rating"
+            />
           </span>
 
           <!-- Бейджи событий — только показ счётчика, без кнопки «−» на карточке -->

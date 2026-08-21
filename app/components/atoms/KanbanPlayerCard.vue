@@ -34,9 +34,7 @@
     >{{ nameParts.name }}</span>
 
     <!-- Рейтинг — всегда справа, не усекается -->
-    <span v-if="nameParts.rating" class="shrink-0 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
-      {{ nameParts.rating }}
-    </span>
+    <AtomsPlayerRatingBadge :rating="nameParts.rating" />
 
     <!-- Иконка обмена — видна когда этот игрок — цель для свапа -->
     <span
