@@ -7,11 +7,8 @@ import { useSyncVkFromTournamentAssignment } from '~/composables/useSyncVkFromTo
 import { useTournamentServerRosterPullWatch } from '~/composables/useTournamentServerRosterPullWatch'
 import { dedupeTeamNamesPreservingOrder, normalizeTeamColorsMap, normalizeTeamName } from '~/utils/teamNames'
 import type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
-import {
-  applyEmptyTournamentContextLocal,
-  applyLoadedContext,
-  rosterSyncFingerprint,
-} from '~/composables/tournament-wizard/applyServerContext'
+import { applyEmptyTournamentContextLocal, applyLoadedContext } from '~/composables/tournament-wizard/applyServerContext'
+import { useRosterRevForSave } from '~/composables/tournament-wizard/useRosterRevForSave'
 import { findMatchingSlot, useVkTeamSlots } from '~/composables/tournament-wizard/useVkTeamSlots'
 import { computeQueuedPlayerIds } from '~/utils/tournamentQueue'
 import { pruneTeamFromStandingsSnapshot } from '~/composables/tournament-standings/pruneTeamFromStandingsSnapshot'
@@ -291,31 +288,16 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     lastAppliedRosterKey,
   })
 
-  // Отпечаток ростера этой вкладки и версия состава с сервера — из них собирается rosterRev в теле PUT.
-  const localRosterKey = computed(() =>
-    rosterSyncFingerprint({
-      selectedIds: selectedIds.value,
-      vkTeamLabelByPlayerId: vkTeamLabelByPlayerId.value,
-      vkTeamSlots: vkTeamSlots.value,
-      vkListTournament: vkListTournament.value,
-      assignmentByPlayerId: assignment.assignment.value,
-      confirmedTeamNames: assignment.confirmedTeamNames.value,
-      teamColors: assignment.teamColors.value,
-    }),
-  )
-  const serverRosterRev = computed(() => {
-    const n = Math.floor(Number(serverState.value?.rosterRev))
-    return Number.isFinite(n) && n > 0 ? n : 0
+  // Версия состава для тела PUT — считается по отпечатку ростера этой вкладки.
+  const rosterRevForSave = useRosterRevForSave({
+    serverState,
+    selectedIds,
+    vkTeamLabelByPlayerId,
+    vkTeamSlots,
+    vkListTournament,
+    assignment,
+    lastAppliedRosterKey,
   })
-  /**
-   * Состав правили на этой вкладке — заявляем следующую версию, и сервер её примет.
-   * Если не правили, шлём серверную версию: тогда наш (возможно устаревший) состав в БД не попадёт.
-   */
-  const rosterRevForSave = computed(() =>
-    localRosterKey.value === lastAppliedRosterKey.value
-      ? serverRosterRev.value
-      : serverRosterRev.value + 1,
-  )
 
   const savedContext = computed<SavedTournamentContext>(() => ({
     step: step.value,
