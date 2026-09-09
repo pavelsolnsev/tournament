@@ -2,6 +2,7 @@ import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
 import { getRequestIdempotencyKey, runIdempotent } from '../../utils/idempotency'
+import { bumpRosterRev } from '../../utils/tournamentRosterRev'
 
 // API: POST /api/vk/leave — вызывается VK-ботом при «Выйти», «-», команде rN и т.п.
 // Только убирает из selectedIds (состояние турнира). Таблицу players не трогает.
@@ -113,6 +114,7 @@ export default defineEventHandler(async (event) => {
       }
 
       state.selectedIds = newIds
+      bumpRosterRev(state)
       if (state.vkTeamLabelByPlayerId && typeof state.vkTeamLabelByPlayerId === 'object') {
         const vk = { ...state.vkTeamLabelByPlayerId }
         const k = String(playerId)

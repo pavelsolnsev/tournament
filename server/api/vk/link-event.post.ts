@@ -4,6 +4,7 @@ import { requireVkBotToken } from '../../utils/vkBotAuth'
 import { clearVkListCloseRequest } from '../../utils/vkListCloseRequest'
 import { clearSelectedIdsOnVkLinkIfAfterUnlink } from '../../utils/vkUnlinkRelinkPolicy'
 import { parseVkTeamSlots, readTournamentStateRow } from '../../utils/tournamentPaidPlayers'
+import { bumpRosterRev } from '../../utils/tournamentRosterRev'
 
 const LINK_KEY = 'tournament_vk_link'
 const TOURNAMENT_KEY = 'tournament'
@@ -82,6 +83,7 @@ export default defineEventHandler(async (event) => {
       next.vkListTournament = true
     }
 
+    bumpRosterRev(next)
     await queryWithRetry(
       `INSERT INTO app_state (key_name, value) VALUES (?, ?)
        ON DUPLICATE KEY UPDATE value = VALUES(value)`,

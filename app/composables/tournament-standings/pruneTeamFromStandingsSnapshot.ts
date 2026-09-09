@@ -116,8 +116,15 @@ export function pruneTeamFromStandingsSnapshot(args: {
     next.currentAwayTeam = ''
     next.currentHomeStats = {}
     next.currentAwayStats = {}
-    next.currentStatsSeq = (next.currentStatsSeq ?? 0) + 1
+    next.currentHomeStatsAdded = {}
+    next.currentHomeStatsRemoved = {}
+    next.currentAwayStatsAdded = {}
+    next.currentAwayStatsRemoved = {}
   }
+
+  // Сыгранное изменилось — двигаем версию истории, иначе другое устройство
+  // со старым снапшотом вернёт удалённые матчи и очки обратно.
+  next.historyRev = Math.max((next.historyRev ?? 0) + 1, next.playedMatchesList.length)
 
   return next
 }

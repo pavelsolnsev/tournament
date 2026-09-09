@@ -65,16 +65,80 @@ function vkTeamSlotsFingerprint(slots: string[] | undefined | null): string {
     .join('\x1e')
 }
 
-export function rosterSyncFingerprint(
-  selectedIds: Set<number> | Iterable<number> | undefined | null,
-  vkTeamLabelByPlayerId: Record<number, string> | undefined | null,
-  vkTeamSlots?: string[] | null,
-  vkListTournament?: boolean,
+/** Стабильная строка расстановки игрок→команда (имена нормализованы). */
+function assignmentFingerprint(m: Record<number, string> | undefined | null): string {
+  if (!m || typeof m !== 'object') return ''
+  return Object.entries(m)
+    .map(([k, v]) => [Number(k), normalizeTeamName(String(v ?? ''))] as const)
+    .filter(([id, v]) => Number.isFinite(id) && id > 0 && v.length > 0)
+    .sort((a, b) => a[0] - b[0])
+    .map(([id, v]) => `${id}:${v}`)
+    .join(',')
+}
+
+/** Команды турнира и их цвета — тоже часть ростера: их правит только полный админ. */
+function teamsFingerprint(
+  confirmedTeamNames: Iterable<string> | undefined | null,
+  teamColors: Record<string, number> | undefined | null,
 ): string {
-  const vkOn = vkListTournament === true
-  const labelsPart = vkOn ? vkTeamLabelsFingerprint(vkTeamLabelByPlayerId) : ''
-  const slotsPart = vkOn ? vkTeamSlotsFingerprint(vkTeamSlots) : ''
-  return `${selectedIdsFingerprint(selectedIds)}|${labelsPart}|${slotsPart}|vk:${vkOn ? 1 : 0}`
+  const names = [...(confirmedTeamNames ?? [])]
+    .map((n) => normalizeTeamName(String(n ?? '')))
+    .filter(Boolean)
+    .sort()
+    .join(',')
+  const colors = Object.entries(normalizeTeamColorsMap(teamColors ?? {}))
+    .map(([k, v]) => `${k}:${v}`)
+    .sort()
+    .join(',')
+  return `${names}|${colors}`
+}
+
+/**
+ * Отпечаток всего ростера: состав, расстановка по командам, команды с цветами и данные ВК.
+ * Устройство сравнивает свой отпечаток с последним применённым с сервера и так понимает,
+ * правило ли оно состав само — тогда серверное состояние не затирает локальные правки.
+ */
+export function rosterSyncFingerprint(input: {
+  selectedIds: Set<number> | Iterable<number> | undefined | null
+  vkTeamLabelByPlayerId?: Record<number, string> | null
+  vkTeamSlots?: string[] | null
+  vkListTournament?: boolean
+  assignmentByPlayerId?: Record<number, string> | null
+  confirmedTeamNames?: Iterable<string> | null
+  teamColors?: Record<string, number> | null
+}): string {
+  const vkOn = input.vkListTournament === true
+  const labelsPart = vkOn ? vkTeamLabelsFingerprint(input.vkTeamLabelByPlayerId) : ''
+  const slotsPart = vkOn ? vkTeamSlotsFingerprint(input.vkTeamSlots) : ''
+  return [
+    selectedIdsFingerprint(input.selectedIds),
+    labelsPart,
+    slotsPart,
+    `vk:${vkOn ? 1 : 0}`,
+    assignmentFingerprint(input.assignmentByPlayerId),
+    teamsFingerprint(input.confirmedTeamNames, input.teamColors),
+  ].join('|')
+}
+
+/** Расстановка игрок→команда из сохранённого контекста (имена нормализованы, пустые отброшены). */
+export function assignmentFromSavedContext(ctx: SavedTournamentContext | null): Record<number, string> {
+  const raw = ctx?.assignmentByPlayerId ?? {}
+  const out: Record<number, string> = {}
+  for (const [idStr, team] of Object.entries(raw)) {
+    const n = normalizeTeamName(String(team))
+    if (n) out[Number(idStr)] = n
+  }
+  return out
+}
+
+/** Подтверждённые команды турнира из сохранённого контекста. */
+export function confirmedTeamNamesFromSavedContext(ctx: SavedTournamentContext | null): string[] {
+  return dedupeTeamNamesPreservingOrder(ctx?.confirmedTeamNames ?? [])
+}
+
+/** Цвета команд из сохранённого контекста. */
+export function teamColorsFromSavedContext(ctx: SavedTournamentContext | null): Record<string, number> {
+  return normalizeTeamColorsMap(ctx?.teamColors ?? {})
 }
 
 export function vkTeamSlotsFromSavedContext(ctx: SavedTournamentContext | null): string[] {
@@ -207,17 +271,9 @@ export function applyLoadedContext(
     (ctx.paidPlayerIds ?? []).filter((id) => Number.isFinite(id) && id > 0),
   )
 
-  const rawAssign = ctx.assignmentByPlayerId ?? {}
-  const normalizedAssign: Record<number, string> = {}
-  for (const [idStr, team] of Object.entries(rawAssign)) {
-    const n = normalizeTeamName(String(team))
-    if (n) normalizedAssign[Number(idStr)] = n
-  }
-  deps.assignment.assignment.value = normalizedAssign
-  deps.assignment.confirmedTeamNames.value = new Set(
-    dedupeTeamNamesPreservingOrder(ctx.confirmedTeamNames ?? []),
-  )
-  deps.assignment.teamColors.value = normalizeTeamColorsMap(ctx.teamColors ?? {})
+  deps.assignment.assignment.value = assignmentFromSavedContext(ctx)
+  deps.assignment.confirmedTeamNames.value = new Set(confirmedTeamNamesFromSavedContext(ctx))
+  deps.assignment.teamColors.value = teamColorsFromSavedContext(ctx)
 
   deps.standingsSnapshot.value = ctx.standingsSnapshot ?? null
 
@@ -240,10 +296,13 @@ export function applyLoadedContext(
     (name) => !existingKeys.has(normalizeTeamName(name)),
   )
 
-  deps.lastAppliedRosterKey.value = rosterSyncFingerprint(
-    deps.selectedIds.value,
-    deps.vkTeamLabelByPlayerId.value,
-    deps.vkTeamSlots.value,
-    deps.vkListTournament.value,
-  )
+  deps.lastAppliedRosterKey.value = rosterSyncFingerprint({
+    selectedIds: deps.selectedIds.value,
+    vkTeamLabelByPlayerId: deps.vkTeamLabelByPlayerId.value,
+    vkTeamSlots: deps.vkTeamSlots.value,
+    vkListTournament: deps.vkListTournament.value,
+    assignmentByPlayerId: deps.assignment.assignment.value,
+    confirmedTeamNames: deps.assignment.confirmedTeamNames.value,
+    teamColors: deps.assignment.teamColors.value,
+  })
 }

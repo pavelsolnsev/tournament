@@ -2,6 +2,7 @@ import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
 import { getRequestIdempotencyKey, runIdempotent } from '../../utils/idempotency'
+import { bumpRosterRev } from '../../utils/tournamentRosterRev'
 
 // POST /api/vk/set-team — бот: смена команды (mvteam / аналог), синхронизирует vkTeamLabelByPlayerId на сайте.
 
@@ -112,6 +113,7 @@ export default defineEventHandler(async (event) => {
       }
 
       setVkLabelOnState(state, playerId, teamToSet)
+      bumpRosterRev(state)
       const next = JSON.stringify(state)
       const ok = await persistTournamentStateCas(prev, next)
       if (ok) {

@@ -1,5 +1,6 @@
 import { queryWithRetry } from './db'
 import { filterPaidToSelected, parsePaidIds } from './tournamentPaidPlayers'
+import { bumpRosterRev } from './tournamentRosterRev'
 
 const TOURNAMENT_KEY = 'tournament'
 
@@ -49,6 +50,7 @@ export async function clearSelectedIdsOnVkLinkIfAfterUnlink() {
   }
   // Simple10: состав и оплаты только по текущему списку — как в state.put при пустом selected.
   state.selectedIds = []
+  bumpRosterRev(state)
   delete state.vkTeamLabelByPlayerId
   delete state.vkTeamSlots
   const paid = parsePaidIds(state.paidPlayerIds)

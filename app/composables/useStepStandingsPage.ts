@@ -1,7 +1,7 @@
 import type { Ref } from 'vue'
 import type { Player, MatchStatus } from '~/types/tournament'
 import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
-import { computed, ref, toRef } from 'vue'
+import { computed, ref, toRef, watch } from 'vue'
 import { useTournamentStandings } from '~/composables/useTournamentStandings'
 import { useFinishTournament } from '~/composables/useFinishTournament'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
@@ -10,6 +10,7 @@ import {
   useStepStandingsRemoteHandlers,
   type StepStandingsRemoteEmit,
 } from '~/composables/useStepStandingsRemoteHandlers'
+import { matchStatusAfterAdopt } from '~/composables/tournament-standings/remoteSync'
 import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
 
 export type StepStandingsPageProps = {
@@ -22,6 +23,12 @@ export type StepStandingsPageProps = {
   players: Player[]
   assignmentByPlayerId: Record<number, string>
   initialSnapshot?: SavedStandingsSnapshot | null
+  /** Снапшот из БД (поллинг во время матча) — живая синхронизация судьи и админа. */
+  remoteSnapshot?: SavedStandingsSnapshot | null
+  /** Статус матча из БД — нужен, чтобы не переоткрыть матч, завершённый на другом устройстве. */
+  remoteMatchStatus?: MatchStatus | null
+  remoteLiveHomeTeam?: string | null
+  remoteLiveAwayTeam?: string | null
   readonly?: boolean
   showClearTournamentConfirm: boolean
   clearTournamentSecondsLeft: number
@@ -74,6 +81,7 @@ export function useStepStandingsPage(props: StepStandingsPageProps, emit: StepSt
     goToNextMatch,
     applyTechnicalDefeat,
     mergeCurrentMatchFromRemoteSnapshot,
+    applyRemoteLiveSnapshot,
     displayPlayerLabel,
     aggregatePlayerStats,
     playerRatingDeltas,
@@ -89,6 +97,28 @@ export function useStepStandingsPage(props: StepStandingsPageProps, emit: StepSt
     {
       initialSnapshot: props.initialSnapshot,
       onSnapshot: (snapshot) => emit('update:snapshot', snapshot),
+    },
+  )
+
+  // Живая синхронизация с другим устройством: тянем состояние из БД, пока идёт матч.
+  // По 'adopt' там завершили матч, сменили пару или поправили сыгранный — сообщаем статус наверх,
+  // иначе мастер оставит в БД старую пару. Статус берём серверный: если судья нажал «показать итоги»,
+  // матч должен остаться завершённым, а не «переоткрыться» на выбор следующей пары.
+  watch(
+    () => props.remoteSnapshot,
+    (remote) => {
+      if (props.readonly === true) return
+      if (applyRemoteLiveSnapshot(remote) !== 'adopt') return
+      const [status, home, away] = matchStatusAfterAdopt(
+        {
+          matchStatus: props.remoteMatchStatus,
+          liveHomeTeam: props.remoteLiveHomeTeam,
+          liveAwayTeam: props.remoteLiveAwayTeam,
+        },
+        homeTeam.value,
+        awayTeam.value,
+      )
+      emitRemote('update:matchStatus', status, home, away)
     },
   )
 

@@ -14,6 +14,13 @@ import type {
   TournamentStandingsParams,
 } from './tournament-standings/types'
 
+import { mergePlayerStatsRecords } from './tournament-standings/playerStatsMerge'
+import { effectivePlayerStats, effectiveStatsRecord } from './tournament-standings/liveMatchStats'
+import {
+  buildStandingsSnapshot,
+  createRemoteLiveSync,
+  type StandingsSyncRefs,
+} from './tournament-standings/remoteSync'
 import type { ActiveSelection } from './tournament-standings/matchStats'
 import type { PairingState } from './tournament-standings/pairing'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
@@ -24,7 +31,6 @@ import { pickNextMatchPair, recalibratePairingState, resetMatchHistoryIfBalanced
 import {
   isActivePlayer as isActivePlayerFn,
   incrementStat,
-  decrementStat,
   onSelectAction as onSelectActionFn,
   playerStat as playerStatFn,
   resetMatchStats as resetMatchStatsFn,
@@ -133,8 +139,19 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
   const homeTeam = ref(snap?.currentHomeTeam ?? '')
   const awayTeam = ref(snap?.currentAwayTeam ?? '')
   const matchFinalized = ref(false)
-  const homeStats = ref<Record<number, PlayerMatchStats>>(snap?.currentHomeStats ?? {})
-  const awayStats = ref<Record<number, PlayerMatchStats>>(snap?.currentAwayStats ?? {})
+  // Отметки текущего матча держим двумя картами: «добавили» и «сняли». Обе только растут,
+  // поэтому объединяются между устройствами без потерь, а на экран и в протокол идёт разница.
+  const homeAdded = ref<Record<number, PlayerMatchStats>>(
+    snap?.currentHomeStatsAdded ?? snap?.currentHomeStats ?? {},
+  )
+  const awayAdded = ref<Record<number, PlayerMatchStats>>(
+    snap?.currentAwayStatsAdded ?? snap?.currentAwayStats ?? {},
+  )
+  const homeRemoved = ref<Record<number, PlayerMatchStats>>(snap?.currentHomeStatsRemoved ?? {})
+  const awayRemoved = ref<Record<number, PlayerMatchStats>>(snap?.currentAwayStatsRemoved ?? {})
+
+  const homeStats = computed(() => effectiveStatsRecord(homeAdded.value, homeRemoved.value))
+  const awayStats = computed(() => effectiveStatsRecord(awayAdded.value, awayRemoved.value))
   // Суммарные события по каждому игроку за все завершённые матчи — восстанавливаем из снапшота.
   // snap уже клонирован выше, поэтому объекты здесь изменяемые.
   const aggregatePlayerStats = ref<Record<number, PlayerMatchStats>>(snap?.aggregatePlayerStats ?? {})
@@ -142,10 +159,18 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
   // Накопленные дельты рейтинга за все матчи турнира — восстанавливаем из снапшота.
   const playerRatingDeltas = ref<Record<number, number>>(snap?.playerRatingDeltas ?? {})
 
-  // Монотонный счётчик локальных правок отметок: растёт при каждом add/remove.
-  // Сохраняется в снапшот и сравнивается с remote при мёрже — если remote.seq <= local.seq,
-  // значит серверный снапшот устарел (ещё не получил наши изменения из-за дебаунса PUT) и мёрж пропускается.
-  const localStatsSeq = ref<number>(snap?.currentStatsSeq ?? 0)
+  // Версия истории матчей: растёт, когда матч завершили, удалили или поправили.
+  // По ней устройства понимают, чья история новее, и не откатывают чужой сыгранный матч.
+  // Запас для старых состояний без historyRev: число сыгранных матчей тоже растёт монотонно.
+  const historyRev = ref<number>(
+    Math.max(Number(snap?.historyRev) || 0, snap?.playedMatchesList?.length ?? 0),
+  )
+  function bumpHistoryRev() {
+    historyRev.value = Math.max(historyRev.value + 1, playedMatchesList.value.length)
+  }
+
+  // Пока принимаем снапшот с другого устройства — не сбрасываем отметки при смене пары.
+  const applyingRemoteSnapshot = ref(false)
 
   const homeGoals = computed(() => Object.values(homeStats.value).reduce((sum, s) => sum + s.goals, 0))
   const awayGoals = computed(() => Object.values(awayStats.value).reduce((sum, s) => sum + s.goals, 0))
@@ -178,7 +203,12 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
       isFirstWatchRun.value = false
       return
     }
-    if (next[0] !== prev[0] || next[1] !== prev[1]) resetMatchStats()
+    // Пару сменила синхронизация с другим устройством — отметки пришли вместе с ней, не сбрасываем.
+    if (applyingRemoteSnapshot.value) return
+    if (next[0] === prev[0] && next[1] === prev[1]) return
+    resetMatchStats()
+    // Пару выбрали здесь — это ход турнира, второе устройство должно его увидеть.
+    bumpHistoryRev()
   })
 
   function selectPlayerForMark(side: Side, playerId: number) {
@@ -191,27 +221,34 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
   }
 
   function playerStat(side: Side, playerId: number) {
-    return playerStatFn(side, playerId, homeStats, awayStats)
+    // Заводим игрока в карте «добавили»: её ключи — состав матча, по нему считаются дельты рейтинга.
+    playerStatFn(side, playerId, homeAdded, awayAdded)
+    const added = side === 'home' ? homeAdded.value : awayAdded.value
+    const removed = side === 'home' ? homeRemoved.value : awayRemoved.value
+    return effectivePlayerStats(added, removed, playerId)
   }
 
   function onSelectAction(side: Side, playerId: number, evt: Event) {
     // Добавляет событие игроку и очищает select.
-    onSelectActionFn(side, playerId, evt, homeStats, awayStats)
+    onSelectActionFn(side, playerId, evt, homeAdded, awayAdded)
   }
 
   function addPlayerEvent(side: Side, playerId: number, key: StatKey) {
-    localStatsSeq.value += 1
-    incrementStat(side, playerId, key, homeStats, awayStats)
+    incrementStat(side, playerId, key, homeAdded, awayAdded)
   }
 
   function removePlayerEvent(side: Side, playerId: number, key: StatKey) {
-    localStatsSeq.value += 1
-    decrementStat(side, playerId, key, homeStats, awayStats)
+    // Снять можно только то, что реально отмечено. Пишем в карту «сняли»:
+    // уменьшать «добавили» нельзя — правку затрёт слияние с другим устройством.
+    const current = side === 'home' ? homeStats.value : awayStats.value
+    if ((current[playerId]?.[key] ?? 0) <= 0) return
+    incrementStat(side, playerId, key, homeRemoved, awayRemoved)
   }
 
   function resetMatchStats() {
-    localStatsSeq.value = 0
-    resetMatchStatsFn(homeStats, awayStats, activeSelection, matchFinalized)
+    resetMatchStatsFn(homeAdded, awayAdded, activeSelection, matchFinalized)
+    homeRemoved.value = {}
+    awayRemoved.value = {}
   }
 
   function resetTournamentMarks() {
@@ -231,6 +268,7 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
       homeTeam,
       awayTeam,
     )
+    bumpHistoryRev()
   }
 
   function finishMatch() {
@@ -252,6 +290,7 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
       buildMarkedPlayers,
       resetMatchStats,
     })
+    bumpHistoryRev()
   }
 
   function updatePlayedMatch(
@@ -274,6 +313,7 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
       playersById,
       displayPlayerLabelWithoutRating,
     })
+    bumpHistoryRev()
   }
 
   function deletePlayedMatch(matchNumber: number) {
@@ -287,6 +327,7 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
       teams: params.teams,
       playersById,
     })
+    bumpHistoryRev()
   }
 
   /**
@@ -301,17 +342,37 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
     const la = normalizeTeamName(awayTeam.value)
     if (!rh || !ra || !lh || !la) return
     if (rh !== lh || ra !== la) return
-    const remoteSeq = remote.currentStatsSeq ?? 0
-    // Локальный seq новее или равен — серверный снапшот устарел (PUT ещё в дебаунсе).
-    // Пропускаем мёрж, иначе Math.max восстановит отменённые локально отметки.
-    if (remoteSeq <= localStatsSeq.value) return
-    // Remote строго новее: берём remote-состояние напрямую (не Math.max).
-    // Math.max(local=1, remote=0)=1 не даёт удалению распространиться;
-    // прямое присваивание корректно передаёт и добавления, и отмены с другого устройства.
-    homeStats.value = { ...(remote.currentHomeStats ?? {}) }
-    awayStats.value = { ...(remote.currentAwayStats ?? {}) }
-    localStatsSeq.value = remoteSeq
+    // Своё и чужое по максимуму — отдельно добавленное и снятое, чтобы не потерять ни отметку, ни правку.
+    homeAdded.value = mergePlayerStatsRecords(homeAdded.value, remote.currentHomeStatsAdded ?? remote.currentHomeStats ?? {})
+    awayAdded.value = mergePlayerStatsRecords(awayAdded.value, remote.currentAwayStatsAdded ?? remote.currentAwayStats ?? {})
+    homeRemoved.value = mergePlayerStatsRecords(homeRemoved.value, remote.currentHomeStatsRemoved ?? {})
+    awayRemoved.value = mergePlayerStatsRecords(awayRemoved.value, remote.currentAwayStatsRemoved ?? {})
   }
+
+  // Refs, которые может обновить снапшот с другого устройства (поллинг во время матча).
+  const syncRefs: StandingsSyncRefs = {
+    standingsRows,
+    playedMatchesList,
+    aggregatePlayerStats,
+    playerRatingDeltas,
+    matchCount,
+    teamGamesCount,
+    consecutiveGames,
+    matchHistory,
+    lastMatchIndex,
+    playedSingleMatch,
+    homeTeam,
+    awayTeam,
+    homeAdded,
+    awayAdded,
+    homeRemoved,
+    awayRemoved,
+    matchFinalized,
+    historyRev,
+  }
+
+  /** Живая синхронизация с БД: судья и админ видят один и тот же матч и одну и ту же таблицу. */
+  const applyRemoteLiveSnapshot = createRemoteLiveSync(syncRefs, applyingRemoteSnapshot)
 
   // Подбор следующей пары после записи матча — общий шаг для «Следующий матч» и «Техническое».
   function advanceToNextPair() {
@@ -359,6 +420,7 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
       teams: params.teams,
       resetMatchStats,
     })
+    bumpHistoryRev()
     advanceToNextPair()
   }
 
@@ -366,28 +428,22 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
   // Это позволяет восстановить состояние после перезагрузки страницы.
   watch(
     // Сохраняем и незавершённый матч тоже — команды и их текущую статистику.
-    [playedMatchesList, standingsRows, aggregatePlayerStats, playerRatingDeltas, homeTeam, awayTeam, homeStats, awayStats],
+    [
+      playedMatchesList,
+      standingsRows,
+      aggregatePlayerStats,
+      playerRatingDeltas,
+      homeTeam,
+      awayTeam,
+      homeAdded,
+      awayAdded,
+      homeRemoved,
+      awayRemoved,
+    ],
     () => {
       if (!options.onSnapshot) return
-      options.onSnapshot({
-        standingsRows: standingsRows.value,
-        playedMatchesList: playedMatchesList.value,
-        aggregatePlayerStats: aggregatePlayerStats.value,
-        matchCount: matchCount.value,
-        teamGamesCount: teamGamesCount.value,
-        consecutiveGames: consecutiveGames.value,
-        matchHistory: matchHistory.value,
-        lastMatchIndex: lastMatchIndex.value,
-        playedSingleMatch: playedSingleMatch.value,
-        // Сохраняем дельты рейтинга — чтобы UI не сбрасывался после перезагрузки.
-        playerRatingDeltas: playerRatingDeltas.value,
-        // Сохраняем текущий матч — чтобы вернуться в тот же матч после выхода из админки.
-        currentHomeTeam: homeTeam.value,
-        currentAwayTeam: awayTeam.value,
-        currentHomeStats: homeStats.value,
-        currentAwayStats: awayStats.value,
-        currentStatsSeq: localStatsSeq.value,
-      })
+      // Дельты рейтинга и текущий матч тоже в снапшоте — чтобы вернуться в него после перезагрузки.
+      options.onSnapshot(buildStandingsSnapshot(syncRefs))
     },
     { deep: true },
   )
@@ -422,6 +478,7 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
     goToNextMatch,
     applyTechnicalDefeat,
     mergeCurrentMatchFromRemoteSnapshot,
+    applyRemoteLiveSnapshot,
     // Полная подпись с рейтингом — для ростеров и выбора игроков во время матча.
     displayPlayerLabel,
     aggregatePlayerStats,

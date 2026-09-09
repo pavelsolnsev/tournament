@@ -16,10 +16,19 @@ export type SavedStandingsSnapshot = {
   playerRatingDeltas: Record<number, number>
   currentHomeTeam: string
   currentAwayTeam: string
+  /** Итоговые отметки текущего матча (добавленное минус снятое) — их читают зритель и протокол. */
   currentHomeStats: Record<number, PlayerMatchStats>
   currentAwayStats: Record<number, PlayerMatchStats>
-  /** Монотонный счётчик локальных изменений отметок текущего матча. Используется для защиты от стale-мёржа с сервером. */
-  currentStatsSeq?: number
+  /** Сырые счётчики текущего матча: только растут, поэтому сливаются между устройствами по максимуму. */
+  currentHomeStatsAdded?: Record<number, PlayerMatchStats>
+  currentHomeStatsRemoved?: Record<number, PlayerMatchStats>
+  currentAwayStatsAdded?: Record<number, PlayerMatchStats>
+  currentAwayStatsRemoved?: Record<number, PlayerMatchStats>
+  /**
+   * Версия истории матчей: растёт при завершении, удалении и правке сыгранного матча.
+   * Устройства сравнивают её, чтобы отставшая вкладка не откатила чужой сыгранный матч.
+   */
+  historyRev?: number
 }
 
 /** Полный контекст мастера — сериализуется в БД. */
@@ -42,6 +51,12 @@ export type SavedTournamentContext = {
   vkListLimit?: number
   /** true только для списка турнира в боте (s tr) — на шаге «Игроки» показываются команды ВК. */
   vkListTournament?: boolean
+  /**
+   * Монотонная версия состава (игроки, расстановка по командам, команды с цветами).
+   * Менять состав может только PUT с версией больше сохранённой — так отметки судьи
+   * и отставшие вкладки не откатывают правку админа или запись игрока из ВК.
+   */
+  rosterRev?: number
   assignmentByPlayerId: Record<number, string>
   confirmedTeamNames: string[]
   teamColors: Record<string, number>
@@ -54,4 +69,10 @@ export type SavedTournamentContext = {
    * На сервере удаляется и в БД не попадает.
    */
   __fullReset?: true
+  /**
+   * Только в теле PUT /api/tournament/state: слоты команд в этом теле заданы админом осознанно,
+   * поэтому пустой массив означает «команд больше нет», а не «вкладка их не знает».
+   * На сервере удаляется и в БД не попадает.
+   */
+  __vkTeamSlotsAuthoritative?: true
 }

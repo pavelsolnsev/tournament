@@ -1,7 +1,8 @@
 /**
- * При одновременных PUT с двух устройств (судья + админ) last-write-wins затирал
- * currentHomeStats/currentAwayStats. Подмешиваем к телу запроса накопленное в БД по тому же матчу:
- * по каждому игроку и полю берём максимум — как mergePlayerStatsRecords на клиенте.
+ * При одновременных PUT с двух устройств (судья + админ) last-write-wins затирал отметки матча.
+ * Подмешиваем накопленное в БД по тому же матчу: отдельно «добавили» и «сняли», по каждому
+ * игроку и полю берём максимум (обе карты только растут), а итог считаем как их разницу.
+ * Так не теряется ни чужая отметка, ни чужая правка — и минус больше не «воскресает».
  */
 
 function normalizeTeamName(name: unknown): string {
@@ -59,6 +60,36 @@ function mergeStatsRecordsMax(
   return out
 }
 
+/** Итог по игроку: добавленное минус снятое, не ниже нуля. */
+function effectiveStatsRecord(
+  added: Record<number, PlayerMatchStatsLoose>,
+  removed: Record<number, PlayerMatchStatsLoose>,
+): Record<number, PlayerMatchStatsLoose> {
+  const out: Record<number, PlayerMatchStatsLoose> = {}
+  const ids = new Set<number>([...Object.keys(added).map(Number), ...Object.keys(removed).map(Number)])
+  for (const id of ids) {
+    if (!Number.isFinite(id)) continue
+    const a = added[id] ?? emptyStats()
+    const r = removed[id] ?? emptyStats()
+    out[id] = {
+      goals: Math.max(0, a.goals - r.goals),
+      assists: Math.max(0, a.assists - r.assists),
+      saves: Math.max(0, a.saves - r.saves),
+      yellows: Math.max(0, a.yellows - r.yellows),
+    }
+  }
+  return out
+}
+
+/** Сырые счётчики стороны: у старых состояний их нет — там итог и есть «добавили». */
+function sideCounters(snapshot: Record<string, unknown>, side: 'Home' | 'Away') {
+  const added = snapshot[`current${side}StatsAdded`] ?? snapshot[`current${side}Stats`]
+  return {
+    added: parsePlayerStatsMap(added),
+    removed: parsePlayerStatsMap(snapshot[`current${side}StatsRemoved`]),
+  }
+}
+
 /**
  * Мутирует nextCtx.standingsSnapshot (если нужно), подмешивая счётчики из prevCtx для того же currentHome/currentAway.
  */
@@ -82,6 +113,13 @@ export function mergeLiveCurrentMatchStatsIntoNextState(
   if (!ph || !pa || !nh || !na) return
   if (ph !== nh || pa !== na) return
 
-  n.currentHomeStats = mergeStatsRecordsMax(parsePlayerStatsMap(p.currentHomeStats), parsePlayerStatsMap(n.currentHomeStats))
-  n.currentAwayStats = mergeStatsRecordsMax(parsePlayerStatsMap(p.currentAwayStats), parsePlayerStatsMap(n.currentAwayStats))
+  for (const side of ['Home', 'Away'] as const) {
+    const prevSide = sideCounters(p, side)
+    const nextSide = sideCounters(n, side)
+    const added = mergeStatsRecordsMax(prevSide.added, nextSide.added)
+    const removed = mergeStatsRecordsMax(prevSide.removed, nextSide.removed)
+    n[`current${side}StatsAdded`] = added
+    n[`current${side}StatsRemoved`] = removed
+    n[`current${side}Stats`] = effectiveStatsRecord(added, removed)
+  }
 }

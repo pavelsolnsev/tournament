@@ -3,6 +3,7 @@ import { ensureTablesExist } from '../../utils/initDb'
 import { normalizePlayerUsername } from '../../utils/normalizePlayerUsername'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
 import { getRequestIdempotencyKey, runIdempotent } from '../../utils/idempotency'
+import { bumpRosterRev } from '../../utils/tournamentRosterRev'
 
 // API: POST /api/vk/join — вызывается VK-ботом когда пользователь жмёт «Играть» или «+».
 // Создаёт игрока при необходимости и добавляет в selectedIds. Не удаляет строки из players.
@@ -223,6 +224,7 @@ export default defineEventHandler(async (event) => {
       if (selected.includes(playerId)) {
         if (teamLabel) {
           setVkLabelOnState(state, playerId, teamLabel)
+          bumpRosterRev(state)
           const next = JSON.stringify(state)
           const ok = await persistTournamentStateCas(prev, next)
           if (ok) {
@@ -235,6 +237,7 @@ export default defineEventHandler(async (event) => {
         break
       }
       state.selectedIds = [...selected, playerId]
+      bumpRosterRev(state)
       if (teamLabel) {
         setVkLabelOnState(state, playerId, teamLabel)
       }

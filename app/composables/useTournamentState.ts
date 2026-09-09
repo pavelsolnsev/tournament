@@ -9,6 +9,11 @@ const SAVE_DEBOUNCE_MS = 800
 // До нажатия кнопки «Переход к турниру» поллинга нет — зритель сам обновил страницу и увидел данные.
 const STATE_REFETCH_ACTIVE_MS = 15_000
 
+// Судья и админ ведут один матч с разных устройств — им нужен более частый обмен,
+// а между матчами хватает медленного фона, чтобы поймать «матч завершён» с другого устройства.
+const ADMIN_LIVE_REFETCH_MS = 5_000
+const ADMIN_IDLE_REFETCH_MS = 15_000
+
 /** Ключ Nuxt useFetch / refreshNuxtData — один и тот же, чтобы принудительное обновление попадало в тот же кэш. */
 export const TOURNAMENT_STATE_NUXT_KEY = 'tournament-state'
 
@@ -61,14 +66,42 @@ export function useTournamentState(): TournamentStateSyncApi {
     }
   }
 
+  /** Вкладка на экране? В фоне не поллим: при возврате всё равно делаем refetch по visibilitychange. */
+  function isTabVisible(): boolean {
+    if (!import.meta.client) return false
+    return document.visibilityState === 'visible'
+  }
+
+  /**
+   * Турнир реально в работе: набирают состав, разводят по командам или ведут таблицу.
+   * Пустой мастер и уже сброшенный турнир не поллим — незачем стучаться в базу сутками.
+   */
+  function tournamentIsActive(): boolean {
+    const s = serverState.value
+    if (!s) return false
+    if (s.matchStatus === 'live') return true
+    if (s.standingsSnapshot != null) return true
+    if (Number(s.step) > 0) return true
+    return Array.isArray(s.selectedIds) && s.selectedIds.length > 0
+  }
+
   function syncPoll() {
-    // Поллинг только когда идёт live-матч — зритель видит изменения счёта и статистики в реальном времени.
-    // upcoming / finished / null — поллинга нет, данные не меняются часто или страница только что открыта.
-    if (serverState.value?.matchStatus === 'live') {
-      startPoll(STATE_REFETCH_ACTIVE_MS)
-    } else {
+    // Вкладка свёрнута или экран погас — таймер не крутим (батарея и мобильный трафик).
+    if (!isTabVisible()) {
       stopPoll()
+      return
     }
+    // Идёт матч: зритель видит счёт в реальном времени, админ и судья — ещё и отметки друг друга.
+    if (serverState.value?.matchStatus === 'live') {
+      startPoll(isAdmin() ? ADMIN_LIVE_REFETCH_MS : STATE_REFETCH_ACTIVE_MS)
+      return
+    }
+    // Матч не идёт: у админа и судьи держим редкий фон, но только пока турнир в работе.
+    if (isAdmin() && tournamentIsActive()) {
+      startPoll(ADMIN_IDLE_REFETCH_MS)
+      return
+    }
+    stopPoll()
   }
 
   async function resyncAfterTabBecameVisible() {
@@ -80,16 +113,21 @@ export function useTournamentState(): TournamentStateSyncApi {
     onMounted(() => {
       // immediate: true — запускаем поллинг сразу при монтировании с нужным интервалом.
       watch(
-        () => serverState.value?.matchStatus ?? null,
+        () => [serverState.value?.matchStatus ?? null, tournamentIsActive()] as const,
         () => syncPoll(),
         { immediate: true },
       )
+      // Ушли со вкладки — гасим таймер, вернулись — поднимаем обратно.
+      document.addEventListener('visibilitychange', syncPoll)
     })
   }
 
   onUnmounted(() => {
     stopPoll()
     cancelPendingSave()
+    if (import.meta.client) {
+      document.removeEventListener('visibilitychange', syncPoll)
+    }
   })
 
   // Проверяем куку admin_session на клиенте — не делаем PUT если пользователь не администратор.

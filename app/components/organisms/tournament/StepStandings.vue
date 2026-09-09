@@ -306,6 +306,11 @@ const props = defineProps<{
   players: Player[]
   assignmentByPlayerId: Record<number, string>
   initialSnapshot?: SavedStandingsSnapshot | null
+  /** Состояние из БД для живой синхронизации с другим устройством во время матча. */
+  remoteSnapshot?: SavedStandingsSnapshot | null
+  remoteMatchStatus?: MatchStatus | null
+  remoteLiveHomeTeam?: string | null
+  remoteLiveAwayTeam?: string | null
   readonly?: boolean
   showClearTournamentConfirm: boolean
   clearTournamentSecondsLeft: number

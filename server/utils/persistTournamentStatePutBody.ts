@@ -13,6 +13,8 @@ import {
   readTournamentStateRow,
 } from './tournamentPaidPlayers'
 import { mergeLiveCurrentMatchStatsIntoNextState } from './mergeLiveCurrentMatchStatsForPersist'
+import { mergeStandingsHistoryIntoNextState } from './mergeStandingsHistoryForPersist'
+import { mergeRosterIntoNextState } from './tournamentRosterRev'
 
 const TOURNAMENT_KEY = 'tournament'
 
@@ -29,23 +31,36 @@ function tournamentMetaPresent(s: Record<string, unknown>): boolean {
  * Сохраняет состояние турнира по тем же правилам, что PUT /api/tournament/state (тело body.state).
  * Используется мастером в браузере и, при полном сбросе, ботом (e! / clear-tournament).
  */
-export async function persistTournamentStatePutBody(state: Record<string, unknown>) {
+export async function persistTournamentStatePutBody(
+  state: Record<string, unknown>,
+  options: { vkMuted?: boolean } = {},
+) {
   // __fullReset: только в теле PUT — явное разрешение полного сброса (сайт: emptyResetState; бот: clear-tournament).
   const withFlag = state as { __fullReset?: boolean }
   const fullResetAuthorized = withFlag.__fullReset === true
   delete withFlag.__fullReset
 
-  state.vkMuted = false
+  // __vkTeamSlotsAuthoritative: сайт явно правил слоты команд в этом PUT (в т.ч. удалил последнюю).
+  // Без флага пустой массив слотов считаем «клиент просто не знает слотов» и берём прошлые из БД.
+  const slotsFlag = state as { __vkTeamSlotsAuthoritative?: boolean }
+  const vkTeamSlotsAuthoritative = slotsFlag.__vkTeamSlotsAuthoritative === true
+  delete slotsFlag.__vkTeamSlotsAuthoritative
+
+  // vkMuted: состояние сохранил ограниченный админ (судья) — бот не шлёт уведомление о старте игры.
+  state.vkMuted = options.vkMuted === true
   const prev = await readTournamentStateRow()
   const prevJson = (prev?.json && typeof prev.json === 'object' ? prev.json : {}) as Record<string, unknown>
+
   const preservedPaid = parsePaidIds(prevJson.paidPlayerIds)
-  const newSelected = parseSelectedIds(state.selectedIds)
 
   const stepRaw = (state as { step?: unknown }).step
   const stepIsInitial = stepRaw === undefined || stepRaw === null || Number(stepRaw) === 0
   const snapshotEmpty = (state as { standingsSnapshot?: unknown }).standingsSnapshot == null
   const looksLikeFullWipe =
-    newSelected.length === 0 && snapshotEmpty && stepIsInitial && !tournamentMetaPresent(state)
+    parseSelectedIds(state.selectedIds).length === 0
+    && snapshotEmpty
+    && stepIsInitial
+    && !tournamentMetaPresent(state)
 
   const prevStepNum = Number(prevJson.step)
   const prevHadStructuredTournament =
@@ -61,7 +76,19 @@ export async function persistTournamentStatePutBody(state: Record<string, unknow
     })
   }
 
-  const isFullTournamentReset = newSelected.length === 0 && snapshotEmpty && stepIsInitial
+  // Состав меняет только тот, кто заявил новую версию ростера. Иначе (судья отмечает статистику,
+  // вкладка отстала) берём состав из БД — дальше всё считается уже от актуального состава.
+  if (!fullResetAuthorized) {
+    mergeRosterIntoNextState(prevJson, state)
+  }
+  const newSelected = parseSelectedIds(state.selectedIds)
+
+  // Сброс настроек списка ВК (режим, слоты команд, лимиты) — только по явному __fullReset.
+  // Раньше здесь была эвристика «нет игроков + step 0 + нет снимка». Она ложно срабатывала сразу
+  // после создания списка в ВК, пока в него ещё никто не записался: обычный PUT (например, смена
+  // лимита команды на сайте) стирал слоты и режим, и список в чате терял кнопки команд, становясь
+  // обычным с одной кнопкой «Играть».
+  const resetVkListConfig = fullResetAuthorized
 
   // Режим списка ВК (турнир с командами vs обычный с общим лимитом) — серверный, его задают
   // отдельные потоки: link-event (бот: s tr → true, s prof → false), clear-tournament / vk-unlink
@@ -72,7 +99,7 @@ export async function persistTournamentStatePutBody(state: Record<string, unknow
   const clientVkListFlag = (state as { vkListTournament?: unknown }).vkListTournament
   const prevFlag = prevJson.vkListTournament
   let vkListTournament: boolean
-  if (isFullTournamentReset) {
+  if (resetVkListConfig) {
     vkListTournament = false
   } else if (typeof prevFlag === 'boolean') {
     vkListTournament = prevFlag
@@ -109,13 +136,13 @@ export async function persistTournamentStatePutBody(state: Record<string, unknow
     const prevSlots = parseVkTeamSlots(prev?.json.vkTeamSlots)
     if (clientSlots.length > 0) {
       ;(state as { vkTeamSlots: string[] }).vkTeamSlots = clientSlots
-    } else if (isFullTournamentReset) {
+    } else if (resetVkListConfig || vkTeamSlotsAuthoritative) {
       ;(state as { vkTeamSlots: string[] }).vkTeamSlots = []
     } else {
       ;(state as { vkTeamSlots: string[] }).vkTeamSlots = prevSlots
     }
     // Лимиты команд: клиент задаёт значения по ключу, но не теряем заданные в чате (tl) — мерджим prev←client.
-    if (isFullTournamentReset) {
+    if (resetVkListConfig) {
       ;(state as { vkTeamLimits: Record<string, number> }).vkTeamLimits = {}
     } else {
       const prevLimits = parseVkTeamLimits(prev?.json.vkTeamLimits)
@@ -125,11 +152,12 @@ export async function persistTournamentStatePutBody(state: Record<string, unknow
   }
 
   // Общий лимит списка — авторитетно с сайта (число задаёт лимит, пусто снимает); не зависит от режима команд.
-  ;(state as { vkListLimit?: number }).vkListLimit = isFullTournamentReset
+  ;(state as { vkListLimit?: number }).vkListLimit = resetVkListConfig
     ? undefined
     : parseVkListLimit((state as { vkListLimit?: unknown }).vkListLimit)
 
-  // Два устройства в live: не теряем отметки по текущему матчу при конкурирующих PUT.
+  // Два устройства в live: отставшее не откатывает историю матчей и не теряет отметки.
+  mergeStandingsHistoryIntoNextState(prevJson, state)
   mergeLiveCurrentMatchStatsIntoNextState(prevJson, state)
 
   const json = JSON.stringify(state)

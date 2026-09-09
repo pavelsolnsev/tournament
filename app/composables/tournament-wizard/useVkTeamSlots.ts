@@ -60,12 +60,14 @@ export function useVkTeamSlots(deps: {
   }
 
   // Сразу пишем в БД, чтобы бот в roster-snapshot увидел смену без debounce 800ms.
-  function flushSaveSoon() {
+  // extra — служебные флаги тела PUT (например, «слоты команд правил админ»), в БД они не попадают.
+  function flushSaveSoon(extra?: Partial<SavedTournamentContext>) {
     if (!stateRestored.value) return
     void nextTick(async () => {
       cancelPendingSave()
       try {
-        await saveTournamentStateNow(getSavedContext())
+        const ctx = getSavedContext()
+        await saveTournamentStateNow(extra ? { ...ctx, ...extra } : ctx)
       } catch {
         /* 403 / сеть — debounced put попробует снова при следующем изменении */
       }
@@ -83,7 +85,7 @@ export function useVkTeamSlots(deps: {
     if (next.length >= VK_TEAM_SLOT_MAX) return
     next.push(t)
     vkTeamSlots.value = next
-    flushSaveSoon()
+    flushSaveSoon({ __vkTeamSlotsAuthoritative: true })
   }
 
   function removeVkTeamSlot(rawName: string) {
@@ -107,7 +109,9 @@ export function useVkTeamSlots(deps: {
         Object.entries(vkTeamLimits.value).filter(([k]) => k !== key),
       ) as Record<string, number>
     }
-    flushSaveSoon()
+    // Флаг «слоты заданы админом»: если убрали последнюю команду, сервер сохранит пустой список,
+    // а не подставит прошлые слоты из БД (та защита нужна против устаревшей вкладки).
+    flushSaveSoon({ __vkTeamSlotsAuthoritative: true })
   }
 
   /** Лимит команды: число ≥ 1 (clamp 1..99) задаёт явный лимит; пусто/невалидно — снимает (дефолт в боте). */
