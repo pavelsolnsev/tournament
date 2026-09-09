@@ -8,7 +8,7 @@
         <AtomsTeamMarkerOrLogo :team-name="teamName" :marker="teamMarker(teamName)" size="sm" />
       </span>
       <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-        {{ teamName }}
+        {{ teamDisplayNameByMarker(teamName, teamMarker(teamName)) }}
       </span>
     </div>
 
@@ -150,6 +150,7 @@ import type { Player } from '~/types/tournament'
 import type { StatKey } from '~/composables/tournament-standings/types'
 import { playerLabelRatingParts } from '~/composables/usePlayerDisplay'
 import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 type Side = 'home' | 'away'
 // Сторона матча: домашняя или гостевая.

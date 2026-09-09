@@ -27,7 +27,7 @@
           :class="props.embedded ? 'sm:hidden' : ''"
         >
           <AtomsTeamMarkerOrLogo :team-name="match.homeTeam" :marker="teamMarker(match.homeTeam)" size="md" />
-          <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400">{{ match.homeTeam }}</span>
+          <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400">{{ teamDisplayNameByMarker(match.homeTeam, teamMarker(match.homeTeam)) }}</span>
         </div>
         <!-- Список игроков домашней команды -->
         <ul class="space-y-1.5" role="list">
@@ -70,7 +70,7 @@
           :class="props.embedded ? 'sm:hidden' : ''"
         >
           <AtomsTeamMarkerOrLogo :team-name="match.awayTeam" :marker="teamMarker(match.awayTeam)" size="md" />
-          <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400">{{ match.awayTeam }}</span>
+          <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400">{{ teamDisplayNameByMarker(match.awayTeam, teamMarker(match.awayTeam)) }}</span>
         </div>
         <!-- Список игроков гостевой команды -->
         <ul class="space-y-1.5" role="list">
@@ -113,6 +113,7 @@
 <script setup lang="ts">
 import type { PlayedMatch } from '~/composables/tournament-standings/types'
 import { stripRatingFromDisplayLabel } from '~/composables/usePlayerDisplay'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 const props = withDefaults(
   defineProps<{

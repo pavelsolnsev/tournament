@@ -4,7 +4,7 @@
     <!-- Авто-счёт: голы считаются из статистики игроков -->
     <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-3">
       <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-500">
-        {{ match.homeTeam }}
+        {{ teamDisplayNameByMarker(match.homeTeam, teamMarker(match.homeTeam)) }}
       </span>
       <div class="flex shrink-0 flex-col items-center gap-0.5">
         <span class="text-[10px] uppercase tracking-widest text-slate-600 dark:text-slate-600">Счёт</span>
@@ -16,7 +16,7 @@
         </span>
       </div>
       <span class="min-w-0 truncate text-right text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-500">
-        {{ match.awayTeam }}
+        {{ teamDisplayNameByMarker(match.awayTeam, teamMarker(match.awayTeam)) }}
       </span>
     </div>
 
@@ -27,7 +27,7 @@
         <!-- Заголовок команды: маркер + название — единый стиль с остальными колонками -->
         <div class="mb-2 flex min-w-0 items-center gap-1.5 px-0.5">
           <AtomsTeamMarkerOrLogo :team-name="match.homeTeam" :marker="teamMarker(match.homeTeam)" size="md" />
-          <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">{{ match.homeTeam }}</span>
+          <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">{{ teamDisplayNameByMarker(match.homeTeam, teamMarker(match.homeTeam)) }}</span>
         </div>
         <div class="space-y-1.5">
           <div v-for="p in homePlayers" :key="p.id" class="min-w-0">
@@ -103,7 +103,7 @@
         <!-- Заголовок команды: маркер + название — единый стиль с остальными колонками -->
         <div class="mb-2 flex min-w-0 items-center gap-1.5 px-0.5">
           <AtomsTeamMarkerOrLogo :team-name="match.awayTeam" :marker="teamMarker(match.awayTeam)" size="md" />
-          <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">{{ match.awayTeam }}</span>
+          <span class="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">{{ teamDisplayNameByMarker(match.awayTeam, teamMarker(match.awayTeam)) }}</span>
         </div>
         <div class="space-y-1.5">
           <div v-for="p in awayPlayers" :key="p.id" class="min-w-0">
@@ -205,6 +205,7 @@ import type { Player } from '~/types/tournament'
 import type { PlayerMatchStats, StatKey } from '~/composables/tournament-standings/types'
 import { useTeamColors } from '~/composables/useTeamColors'
 import { resolveTeamColorIndex } from '~/utils/teamNames'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 import { computed, ref } from 'vue'
 
 type DraftState = {

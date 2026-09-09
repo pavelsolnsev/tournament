@@ -27,7 +27,7 @@
             size="md"
             class="inline-flex align-middle"
           />
-          {{ selectedTeamName }}
+          {{ teamDisplayNameByMarker(selectedTeamName, teamMarker(selectedTeamName)) }}
         </h2>
         <span class="shrink-0 rounded-full bg-slate-200 dark:bg-slate-700/60 px-2.5 py-0.5 text-xs tabular-nums text-slate-600 dark:text-slate-400">
           {{ playersInTeam.length }}&thinsp;/&thinsp;{{ players.length }}
@@ -110,6 +110,7 @@
 import type { Player } from '~/types/tournament'
 import { computed, ref } from 'vue'
 import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 const props = defineProps<{
   selectedTeamName: string

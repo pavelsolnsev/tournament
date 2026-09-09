@@ -84,7 +84,7 @@
             class="shrink-0"
           />
           <span class="max-w-[8rem] truncate text-sm font-medium text-slate-800 dark:text-slate-100" :title="team">
-            {{ team }}
+            {{ teamDisplayNameByMarker(team, teamMarker(team)) }}
           </span>
           <span class="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-xs tabular-nums text-slate-500 dark:bg-slate-700/60 dark:text-slate-400">
             {{ (teamPlayersMap[team] ?? []).length }}
@@ -184,6 +184,7 @@ import type { Player } from '~/types/tournament'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useTeamColors } from '~/composables/useTeamColors'
 import { dedupeTeamNamesPreservingOrder, normalizeTeamName } from '~/utils/teamNames'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 const props = defineProps<{
   players: Player[]

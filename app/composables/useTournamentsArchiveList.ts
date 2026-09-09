@@ -1,5 +1,6 @@
 import type { Ref } from 'vue'
 import { resolveTeamColorIndex } from '~/utils/teamNames'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 import { useTeamColors } from '~/composables/useTeamColors'
 import type { ArchiveListRow } from '~/composables/tournamentsArchiveTypes'
 
@@ -39,7 +40,7 @@ export function useTournamentsArchiveList(tournaments: Ref<ArchiveListRow[] | nu
   }
 
   function championTeamLabel(t: ArchiveListRow): string {
-    return (t.champion_team_name ?? '').trim()
+    return teamDisplayNameByMarker((t.champion_team_name ?? '').trim(), championMarker(t))
   }
 
   // Цвет берём из сохранённого индекса (его считает сервер по реальной карте teamColors —
@@ -54,11 +55,11 @@ export function useTournamentsArchiveList(tournaments: Ref<ArchiveListRow[] | nu
   }
 
   function championMarker(t: ArchiveListRow): string {
-    return teamMarkerByIndex(t.champion_team_color, championTeamLabel(t))
+    return teamMarkerByIndex(t.champion_team_color, (t.champion_team_name ?? '').trim())
   }
 
   function mvpMarker(t: ArchiveListRow): string {
-    return teamMarkerByIndex(t.mvp_team_color, mvpTeamLabel(t))
+    return teamMarkerByIndex(t.mvp_team_color, (t.mvp_team_name ?? '').trim())
   }
 
   function mvpPlayerLabel(t: ArchiveListRow): string {
@@ -66,7 +67,7 @@ export function useTournamentsArchiveList(tournaments: Ref<ArchiveListRow[] | nu
   }
 
   function mvpTeamLabel(t: ArchiveListRow): string {
-    return (t.mvp_team_name ?? '').trim()
+    return teamDisplayNameByMarker((t.mvp_team_name ?? '').trim(), mvpMarker(t))
   }
 
   function archiveDateInputValue(raw: string | undefined): string {

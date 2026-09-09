@@ -39,7 +39,7 @@
             size="lg"
           />
           <p class="text-lg font-bold leading-tight text-slate-900 dark:text-slate-50 sm:text-xl">
-            {{ champion.teamName }}
+            {{ teamDisplayNameByMarker(champion.teamName, championMarker) }}
           </p>
         </div>
         <p class="max-w-md text-xs leading-relaxed text-slate-600 dark:text-slate-400">
@@ -66,6 +66,7 @@
 <script setup lang="ts">
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 import type { TournamentSummaryStats } from '~/composables/useTournamentSummary'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 const props = defineProps<{
   stats: TournamentSummaryStats

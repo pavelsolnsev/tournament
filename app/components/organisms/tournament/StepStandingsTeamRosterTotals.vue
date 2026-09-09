@@ -25,7 +25,7 @@
             <AtomsTeamMarkerOrLogo :team-name="teamName" :marker="teamMarker(teamName)" size="sm" />
           </span>
           <span class="min-w-0 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
-            {{ teamName }}
+            {{ teamDisplayNameByMarker(teamName, teamMarker(teamName)) }}
           </span>
         </div>
 
@@ -155,6 +155,7 @@
 import type { Player } from '~/types/tournament'
 import { playerLabelRatingParts } from '~/composables/usePlayerDisplay'
 import { round1 } from '~/composables/tournament-standings/ratingCalc'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 type PlayerMatchStats = {
   goals: number

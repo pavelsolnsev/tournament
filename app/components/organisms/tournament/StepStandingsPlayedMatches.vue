@@ -43,7 +43,7 @@
         <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-3">
           <div class="flex min-w-0 items-center gap-2">
             <AtomsTeamMarkerOrLogo :team-name="m.homeTeam" :marker="teamMarker(m.homeTeam)" size="md" />
-            <span class="min-w-0 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{{ m.homeTeam }}</span>
+            <span class="min-w-0 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{{ teamDisplayNameByMarker(m.homeTeam, teamMarker(m.homeTeam)) }}</span>
           </div>
           <div class="flex shrink-0 flex-col items-center gap-0.5">
             <span
@@ -54,7 +54,7 @@
             </span>
           </div>
           <div class="flex min-w-0 items-center justify-end gap-2">
-            <span class="min-w-0 truncate text-right text-sm font-semibold text-slate-700 dark:text-slate-200">{{ m.awayTeam }}</span>
+            <span class="min-w-0 truncate text-right text-sm font-semibold text-slate-700 dark:text-slate-200">{{ teamDisplayNameByMarker(m.awayTeam, teamMarker(m.awayTeam)) }}</span>
             <AtomsTeamMarkerOrLogo :team-name="m.awayTeam" :marker="teamMarker(m.awayTeam)" size="md" />
           </div>
         </div>
@@ -197,6 +197,7 @@ import OrganismsTournamentPlayedMatchesPlayedMatchDetails from '~/components/org
 import OrganismsTournamentPlayedMatchesPlayedMatchEditor from '~/components/organisms/tournament/played-matches/PlayedMatchEditor.vue'
 import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
 import { resolveTeamColorIndex } from '~/utils/teamNames'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 type MarkedPlayer = {
   playerId: number

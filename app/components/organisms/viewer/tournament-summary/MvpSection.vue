@@ -56,7 +56,7 @@
               :marker="player.teamMarker"
               size="xs"
             />
-            <span class="truncate">{{ player.teamName }}</span>
+            <span class="truncate">{{ teamDisplayNameByMarker(player.teamName, player.teamMarker) }}</span>
           </p>
         </div>
 
@@ -71,6 +71,7 @@
 <script setup lang="ts">
 import type { AwardWinner } from '~/composables/useTournamentSummary'
 import { mvpMarksTotal } from '~/utils/tournamentSummaryPlurals'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 defineProps<{
   mvp: AwardWinner[]

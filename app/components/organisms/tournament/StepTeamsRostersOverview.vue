@@ -89,7 +89,7 @@
                 />
               </span>
               <span class="min-w-0 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
-                {{ teamName }}
+                {{ teamDisplayNameByMarker(teamName, teamMarker(teamName)) }}
               </span>
             </div>
 
@@ -144,6 +144,7 @@ import { useTeamColors } from '~/composables/useTeamColors'
 import { playerLabelRatingParts } from '~/composables/usePlayerDisplay'
 import { dedupeTeamNamesPreservingOrder, normalizeTeamName } from '~/utils/teamNames'
 import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 const props = defineProps<{
   players: Player[]

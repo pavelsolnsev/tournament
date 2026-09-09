@@ -1,5 +1,6 @@
 // Этот файл: собирает все итоги турнира в один простой текст без HTML.
 // Нужен, чтобы админ мог скопировать полную сводку и вставить её в чат, заметки или письмо.
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 import type { Player } from '~/types/tournament'
 import type { PlayedMatch, PlayerMatchStats } from '~/composables/tournament-standings/types'
 import type { AwardWinner, TournamentSummary } from '~/composables/tournament-summary/types'
@@ -90,7 +91,7 @@ function awardLine(
   marker: (t: string) => string,
   nameById: Record<number, string>,
 ): string {
-  const team = w.teamName ? ` (${marker(w.teamName)} ${w.teamName})` : ''
+  const team = w.teamName ? ` (${marker(w.teamName)} ${teamDisplayNameByMarker(w.teamName, marker(w.teamName))})` : ''
   return `${nameById[w.playerId] ?? w.name}${team} — ${withPlural(w.value, ...units)}`
 }
 
@@ -113,7 +114,8 @@ function buildStatsBlock(p: TournamentTextExportParams): string[] {
   const participants = p.players.filter(pl => Boolean(p.assignmentByPlayerId[pl.id])).length
   const lines = ['', 'ОБЩАЯ СТАТИСТИКА', '-'.repeat(40)]
   if (champion) {
-    lines.push(`Чемпион: ${p.teamMarker(champion.teamName)} ${champion.teamName} (${withPlural(champion.points, 'очко', 'очка', 'очков')})`)
+    const championLabel = teamDisplayNameByMarker(champion.teamName, p.teamMarker(champion.teamName))
+    lines.push(`Чемпион: ${p.teamMarker(champion.teamName)} ${championLabel} (${withPlural(champion.points, 'очко', 'очка', 'очков')})`)
   }
   lines.push(`Матчей сыграно: ${s.totalMatches}`)
   lines.push(`Голов: ${s.totalGoals} (в среднем ${formatNumber(s.avgGoalsPerMatch)} за матч)`)
@@ -130,7 +132,8 @@ function buildStandingsBlock(p: TournamentTextExportParams): string[] {
   const lines = ['', 'ИТОГОВАЯ ТАБЛИЦА', '-'.repeat(40)]
   for (const r of [...p.summary.standingsRows].sort((a, b) => a.place - b.place)) {
     const diff = r.goalDiff > 0 ? `+${r.goalDiff}` : String(r.goalDiff)
-    lines.push(`${r.place}. ${p.teamMarker(r.teamName)} ${r.teamName} — ${withPlural(r.points, 'очко', 'очка', 'очков')}`)
+    const rowLabel = teamDisplayNameByMarker(r.teamName, p.teamMarker(r.teamName))
+    lines.push(`${r.place}. ${p.teamMarker(r.teamName)} ${rowLabel} — ${withPlural(r.points, 'очко', 'очка', 'очков')}`)
     lines.push(`   И ${r.played} · В ${r.wins} · Н ${r.draws} · П ${r.losses} · мячи ${r.goalsFor}-${r.goalsAgainst} (${diff})`)
   }
   return lines
@@ -145,7 +148,7 @@ function buildAwardsBlock(p: TournamentTextExportParams): string[] {
   if (p.summary.mvp.length > 0) {
     lines.push('', 'MVP ТУРНИРА', '-'.repeat(40))
     for (const w of p.summary.mvp) {
-      const team = w.teamName ? ` (${marker(w.teamName)} ${w.teamName})` : ''
+      const team = w.teamName ? ` (${marker(w.teamName)} ${teamDisplayNameByMarker(w.teamName, marker(w.teamName))})` : ''
       const st = formatPlayerStats(w.tournamentStats ?? EMPTY_STATS)
       lines.push(`${nameById[w.playerId] ?? w.name}${team}${st ? ` — ${st}` : ''}`)
     }
@@ -165,7 +168,7 @@ function buildAwardsBlock(p: TournamentTextExportParams): string[] {
   if (p.summary.yellowCards.length > 0) {
     lines.push('', 'ЖЁЛТЫЕ КАРТОЧКИ', '-'.repeat(40))
     for (const y of p.summary.yellowCards) {
-      const team = y.teamName ? ` (${marker(y.teamName)} ${y.teamName})` : ''
+      const team = y.teamName ? ` (${marker(y.teamName)} ${teamDisplayNameByMarker(y.teamName, marker(y.teamName))})` : ''
       lines.push(`${nameById[y.playerId] ?? y.name}${team} — ${withPlural(y.count, 'карточка', 'карточки', 'карточек')}`)
     }
   }
@@ -222,8 +225,8 @@ function buildMatchesBlock(p: TournamentTextExportParams): string[] {
   }
 
   for (const m of p.playedMatchesList) {
-    const home = `${p.teamMarker(m.homeTeam)} ${m.homeTeam}`
-    const away = `${p.teamMarker(m.awayTeam)} ${m.awayTeam}`
+    const home = `${p.teamMarker(m.homeTeam)} ${teamDisplayNameByMarker(m.homeTeam, p.teamMarker(m.homeTeam))}`
+    const away = `${p.teamMarker(m.awayTeam)} ${teamDisplayNameByMarker(m.awayTeam, p.teamMarker(m.awayTeam))}`
     lines.push(`Матч ${m.matchNumber}. ${home} ${m.homeGoals} : ${m.awayGoals} ${away}`)
     const homeLine = eventsLine(m.homeTeam, m.homePlayers)
     const awayLine = eventsLine(m.awayTeam, m.awayPlayers)
@@ -237,8 +240,8 @@ function buildMatchesBlock(p: TournamentTextExportParams): string[] {
 function buildTopMatchBlock(p: TournamentTextExportParams): string[] {
   const m = p.summary.stats.topScoringMatch
   if (!m) return []
-  const home = `${p.teamMarker(m.homeTeam)} ${m.homeTeam}`
-  const away = `${p.teamMarker(m.awayTeam)} ${m.awayTeam}`
+  const home = `${p.teamMarker(m.homeTeam)} ${teamDisplayNameByMarker(m.homeTeam, p.teamMarker(m.homeTeam))}`
+  const away = `${p.teamMarker(m.awayTeam)} ${teamDisplayNameByMarker(m.awayTeam, p.teamMarker(m.awayTeam))}`
   return [
     '',
     'САМЫЙ РЕЗУЛЬТАТИВНЫЙ МАТЧ',

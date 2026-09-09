@@ -14,7 +14,7 @@
       <span
         class="min-w-0 flex-1 truncate text-sm font-medium leading-snug text-slate-800 dark:text-slate-100"
         :title="name"
-      >{{ name }}</span>
+      >{{ teamDisplayNameByMarker(name, teamMarker(name)) }}</span>
     </div>
 
     <span
@@ -98,6 +98,7 @@
 import { computed, nextTick, watch } from 'vue'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import MoleculesConfirmInline from '~/components/molecules/ConfirmInline.vue'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 const props = defineProps<{
   name: string

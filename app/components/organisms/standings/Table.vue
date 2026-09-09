@@ -55,7 +55,7 @@
                 size="sm"
               />
               <span class="min-w-0 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
-                {{ row.teamName }}
+                {{ labelForTeam(row.teamName, i) }}
               </span>
             </div>
           </td>
@@ -117,6 +117,7 @@
 <script setup lang="ts">
 import { useTeamColors } from '~/composables/useTeamColors'
 import { resolveTeamColorIndex } from '~/utils/teamNames'
+import { teamDisplayName } from '~/utils/teamDisplayName'
 
 export interface StandingsRow {
   place: number
@@ -160,8 +161,16 @@ const computedRows = computed<StandingsRow[]>(() => {
 
 // Маркер команды — один резолвер с остальным приложением (карта → иначе номер строки).
 function markerForTeam(teamName: string, rowIndex: number): string {
-  const index = resolveTeamColorIndex(teamName, props.teamColors, rowIndex % teamMarkers.length)
-  return getMarkerByIndex(index)
+  return getMarkerByIndex(colorIndexForTeam(teamName, rowIndex))
+}
+
+function colorIndexForTeam(teamName: string, rowIndex: number): number {
+  return resolveTeamColorIndex(teamName, props.teamColors, rowIndex % teamMarkers.length)
+}
+
+// Команду без логотипа зовём по её цвету: 🔵 Синие вместо 🔵 Команда 2.
+function labelForTeam(teamName: string, rowIndex: number): string {
+  return teamDisplayName(teamName, colorIndexForTeam(teamName, rowIndex))
 }
 
 // Цвет ячейки разницы мячей по знаку числа.

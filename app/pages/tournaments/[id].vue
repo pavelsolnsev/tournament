@@ -216,7 +216,8 @@
 <script setup lang="ts">
 import { useTournamentSummary } from '~/composables/useTournamentSummary'
 import type { TournamentArchiveApiResponse } from '~/types/tournamentArchive'
-import { normalizeTeamColorsMap, normalizeTeamName } from '~/utils/teamNames'
+import { normalizeTeamColorsMap, normalizeTeamName, resolveTeamColorIndexFor } from '~/utils/teamNames'
+import { teamDisplayName } from '~/utils/teamDisplayName'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 
 const route = useRoute()
@@ -272,7 +273,13 @@ const tournamentSeoDescription = computed(() => {
     return `«${t.tournamentName}» — карточка турнира в архиве РФОИ.`
   }
   const sorted = [...sum.standingsRows].sort((a, b) => a.place - b.place)
-  const champ = sorted[0]?.teamName
+  const champRaw = sorted[0]?.teamName ?? ''
+  const champ = champRaw
+    ? teamDisplayName(
+        champRaw,
+        resolveTeamColorIndexFor(champRaw, teamColors.value, sum.standingsRows, t.snapshot.playedMatchesList),
+      )
+    : ''
   const { totalMatches, totalGoals, avgGoalsPerMatch } = sum.stats
   const avg = Number.isInteger(avgGoalsPerMatch) ? String(avgGoalsPerMatch) : avgGoalsPerMatch.toFixed(1)
   const bits = [

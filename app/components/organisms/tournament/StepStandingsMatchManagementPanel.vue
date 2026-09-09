@@ -262,7 +262,7 @@
               @click="confirmTechnicalDefeat(homeTeam)"
             >
               <AtomsTeamMarkerOrLogo :team-name="homeTeam" :marker="teamMarker(homeTeam)" size="sm" class="shrink-0" />
-              <span class="min-w-0 truncate">{{ homeTeam }} — 0:3</span>
+              <span class="min-w-0 truncate">{{ teamDisplayNameByMarker(homeTeam, teamMarker(homeTeam)) }} — 0:3</span>
             </button>
             <button
               type="button"
@@ -271,7 +271,7 @@
               @click="confirmTechnicalDefeat(awayTeam)"
             >
               <AtomsTeamMarkerOrLogo :team-name="awayTeam" :marker="teamMarker(awayTeam)" size="sm" class="shrink-0" />
-              <span class="min-w-0 truncate">{{ awayTeam }} — 0:3</span>
+              <span class="min-w-0 truncate">{{ teamDisplayNameByMarker(awayTeam, teamMarker(awayTeam)) }} — 0:3</span>
             </button>
             <button
               type="button"
@@ -292,6 +292,7 @@
 
 <script setup lang="ts">
 import type { StepStandingsMatchManagementProps } from '~/composables/useStepStandingsMatchManagement'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 const { isCollapsed: isTimerCollapsed, showTimer } = useMatchTimerVisibility()
 

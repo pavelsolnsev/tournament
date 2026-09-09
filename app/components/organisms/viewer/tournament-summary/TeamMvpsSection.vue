@@ -28,7 +28,7 @@
         </div>
 
         <div class="min-w-0 flex-1">
-          <p class="text-[10px] font-semibold uppercase tracking-widest text-slate-600 leading-none dark:text-slate-400">{{ teamMvp.teamName }}</p>
+          <p class="text-[10px] font-semibold uppercase tracking-widest text-slate-600 leading-none dark:text-slate-400">{{ teamDisplayNameByMarker(teamMvp.teamName, teamMvp.teamMarker) }}</p>
           <p v-if="teamMvp.players.length > 0" class="mt-1 truncate text-[13px] font-semibold text-slate-800 leading-tight dark:text-slate-100">
             {{ teamMvp.players[0]!.name }}
           </p>
@@ -56,6 +56,7 @@
 
 <script setup lang="ts">
 import type { TeamMvp } from '~/composables/useTournamentSummary'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 defineProps<{
   teamMvps: TeamMvp[]

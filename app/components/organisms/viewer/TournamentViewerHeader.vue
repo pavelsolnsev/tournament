@@ -102,7 +102,7 @@
               :marker="liveHomeMarker"
               size="md"
             />
-            <span class="truncate">{{ liveHomeTeam }}</span>
+            <span class="truncate">{{ teamDisplayNameByMarker(liveHomeTeam, liveHomeMarker) }}</span>
           </span>
           <span
             class="shrink-0 inline-flex min-w-[3.5rem] items-center justify-center rounded-lg px-2 py-0.5 text-center text-base font-extrabold tabular-nums tracking-tight ring-1"
@@ -113,7 +113,7 @@
           <span
             class="min-w-0 flex items-center justify-start gap-1.5 text-left text-sm font-semibold text-slate-800 dark:text-slate-100 flex-1"
           >
-            <span class="truncate">{{ liveAwayTeam }}</span>
+            <span class="truncate">{{ teamDisplayNameByMarker(liveAwayTeam, liveAwayMarker) }}</span>
             <AtomsTeamMarkerOrLogo
               :team-name="liveAwayTeam"
               :marker="liveAwayMarker"
@@ -230,6 +230,7 @@ import { nextTick, onMounted, onUnmounted, watch } from 'vue'
 import type { LiveViewerPlayerRow } from '~/composables/useTournamentViewerLivePlayerRows'
 import type { MatchStatus } from '~/types/tournament'
 import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 const props = defineProps<{
   tournamentName: string

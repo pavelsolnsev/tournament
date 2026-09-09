@@ -24,7 +24,7 @@
           class="min-w-0 flex-1 truncate"
           :class="homeTeam ? 'text-slate-800 dark:text-slate-100' : 'text-slate-600 dark:text-slate-500'"
         >
-          {{ homeTeam || 'Выберите команду' }}
+          {{ homeTeam ? teamDisplayNameByMarker(homeTeam, teamMarker(homeTeam)) : 'Выберите команду' }}
         </span>
         <svg
           class="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-150"
@@ -83,7 +83,7 @@
                 @click="name !== awayTeam && selectHome(name)"
               >
                 <AtomsTeamMarkerOrLogo :team-name="name" :marker="teamMarker(name)" size="md" />
-                <span class="min-w-0 truncate">{{ name }}</span>
+                <span class="min-w-0 truncate">{{ teamDisplayNameByMarker(name, teamMarker(name)) }}</span>
                 <AtomsTeamColorDot
                   v-if="getTeamColorIndex"
                   :team-name="name"
@@ -118,7 +118,7 @@
           class="min-w-0 flex-1 truncate"
           :class="awayTeam ? 'text-slate-800 dark:text-slate-100' : 'text-slate-600 dark:text-slate-500'"
         >
-          {{ awayTeam || 'Выберите команду' }}
+          {{ awayTeam ? teamDisplayNameByMarker(awayTeam, teamMarker(awayTeam)) : 'Выберите команду' }}
         </span>
         <svg
           class="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-150"
@@ -177,7 +177,7 @@
                 @click="name !== homeTeam && selectAway(name)"
               >
                 <AtomsTeamMarkerOrLogo :team-name="name" :marker="teamMarker(name)" size="md" />
-                <span class="min-w-0 truncate">{{ name }}</span>
+                <span class="min-w-0 truncate">{{ teamDisplayNameByMarker(name, teamMarker(name)) }}</span>
                 <AtomsTeamColorDot
                   v-if="getTeamColorIndex"
                   :team-name="name"
@@ -194,6 +194,7 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 // Этот блок только выбирает хозяев и гостей, без логики счёта.
 defineProps<{

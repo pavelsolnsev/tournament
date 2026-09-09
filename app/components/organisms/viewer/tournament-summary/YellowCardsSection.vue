@@ -25,7 +25,7 @@
               :marker="player.teamMarker"
               size="xs"
             />
-            <span class="truncate">{{ player.teamName }}</span>
+            <span class="truncate">{{ teamDisplayNameByMarker(player.teamName, player.teamMarker) }}</span>
           </p>
         </div>
 
@@ -45,6 +45,7 @@
 
 <script setup lang="ts">
 import type { YellowCardPlayer } from '~/composables/useTournamentSummary'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 defineProps<{
   yellowCards: YellowCardPlayer[]

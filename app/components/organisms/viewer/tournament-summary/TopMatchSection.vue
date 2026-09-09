@@ -37,7 +37,7 @@
               :marker="homeTeamMarker"
               size="md"
             />
-            <span class="min-w-0 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{{ match.homeTeam }}</span>
+            <span class="min-w-0 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{{ teamDisplayNameByMarker(match.homeTeam, homeTeamMarker) }}</span>
           </div>
           <div class="flex shrink-0 flex-col items-center gap-0.5">
             <span
@@ -48,7 +48,7 @@
             </span>
           </div>
           <div class="flex min-w-0 items-center justify-end gap-2">
-            <span class="min-w-0 truncate text-right text-sm font-semibold text-slate-700 dark:text-slate-200">{{ match.awayTeam }}</span>
+            <span class="min-w-0 truncate text-right text-sm font-semibold text-slate-700 dark:text-slate-200">{{ teamDisplayNameByMarker(match.awayTeam, awayTeamMarker) }}</span>
             <AtomsTeamMarkerOrLogo
               :team-name="match.awayTeam"
               :marker="awayTeamMarker"
@@ -102,6 +102,7 @@
 
 <script setup lang="ts">
 import type { PlayedMatch } from '~/composables/tournament-standings/types'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 const props = defineProps<{
   match: PlayedMatch

@@ -32,7 +32,7 @@
       >
         <p class="flex min-w-0 items-center gap-1.5 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
           <AtomsTeamMarkerOrLogo :team-name="homeTeam" :marker="teamMarker(homeTeam)" size="md" />
-          <span class="min-w-0 truncate">{{ homeTeam }}</span>
+          <span class="min-w-0 truncate">{{ teamDisplayNameByMarker(homeTeam, teamMarker(homeTeam)) }}</span>
           <AtomsTeamColorDot :team-name="homeTeam" :color-index="homeTeamColorIndex" />
         </p>
 
@@ -47,7 +47,7 @@
 
         <p class="flex min-w-0 items-center justify-end gap-1.5 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
           <AtomsTeamColorDot :team-name="awayTeam" :color-index="awayTeamColorIndex" />
-          <span class="min-w-0 truncate">{{ awayTeam }}</span>
+          <span class="min-w-0 truncate">{{ teamDisplayNameByMarker(awayTeam, teamMarker(awayTeam)) }}</span>
           <AtomsTeamMarkerOrLogo :team-name="awayTeam" :marker="teamMarker(awayTeam)" size="md" />
         </p>
       </div>
@@ -209,6 +209,7 @@
 
 <script setup lang="ts">
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 import {
   useStepStandingsMatchManagement,
   type StepStandingsMatchManagementProps,

@@ -28,8 +28,8 @@
         <!-- Название -->
         <span
           class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800 dark:text-slate-100"
-          :title="isFreeColumn ? 'Свободные игроки' : teamName"
-        >{{ isFreeColumn ? 'Свободные' : teamName }}</span>
+          :title="isFreeColumn ? 'Свободные игроки' : teamDisplayNameByMarker(teamName, marker)"
+        >{{ isFreeColumn ? 'Свободные' : teamDisplayNameByMarker(teamName, marker) }}</span>
 
         <!-- Счётчик игроков -->
         <span class="shrink-0 rounded-full bg-slate-200 px-2 py-0.5 text-xs tabular-nums text-slate-600 dark:bg-slate-700/60 dark:text-slate-400">
@@ -145,6 +145,7 @@
 import { ref, computed } from 'vue'
 import type { Player } from '~/types/tournament'
 import { useTeamColors } from '~/composables/useTeamColors'
+import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 
 const props = defineProps<{
   /** Имя команды; пустая строка '' означает колонку «Свободные». */
