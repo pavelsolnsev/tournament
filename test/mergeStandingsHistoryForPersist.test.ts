@@ -144,3 +144,108 @@ describe('mergeStandingsHistoryIntoNextState', () => {
     expect((next.standingsSnapshot as Snap).matchCount).toBe(9)
   })
 })
+
+describe('mergeStandingsHistoryIntoNextState — отметки не переезжают между матчами', () => {
+  /** В БД: 3 матча сыграно, идёт четвёртый «РФОИ — Ясность», отметок пока нет. */
+  function prevStateMatch4() {
+    return {
+      matchStatus: 'live',
+      liveHomeTeam: 'РФОИ',
+      liveAwayTeam: 'Ясность',
+      standingsSnapshot: {
+        standingsRows: [],
+        playedMatchesList: [playedMatch(1, 'A', 'B'), playedMatch(2, 'B', 'C'), playedMatch(3, 'Ясность', 'A')],
+        aggregatePlayerStats: {},
+        playerRatingDeltas: {},
+        matchCount: 3,
+        teamGamesCount: {},
+        consecutiveGames: {},
+        matchHistory: {},
+        lastMatchIndex: {},
+        playedSingleMatch: false,
+        currentHomeTeam: 'РФОИ',
+        currentAwayTeam: 'Ясность',
+        currentHomeStats: {},
+        currentAwayStats: {},
+        currentHomeStatsAdded: {},
+        currentHomeStatsRemoved: {},
+        currentAwayStatsAdded: {},
+        currentAwayStatsRemoved: {},
+        historyRev: 3,
+      },
+    } as Record<string, unknown>
+  }
+
+  /** Тело PUT с устройства, которое ещё живёт в третьем матче со своими отметками. */
+  function staleClientOnMatch3() {
+    return {
+      matchStatus: 'live',
+      liveHomeTeam: 'Ясность',
+      liveAwayTeam: 'A',
+      standingsSnapshot: {
+        standingsRows: [],
+        playedMatchesList: [playedMatch(1, 'A', 'B'), playedMatch(2, 'B', 'C')],
+        aggregatePlayerStats: {},
+        playerRatingDeltas: {},
+        matchCount: 2,
+        teamGamesCount: {},
+        consecutiveGames: {},
+        matchHistory: {},
+        lastMatchIndex: {},
+        playedSingleMatch: false,
+        currentHomeTeam: 'Ясность',
+        currentAwayTeam: 'A',
+        currentHomeStats: { 77: { goals: 1, assists: 0, saves: 0, yellows: 0 } },
+        currentAwayStats: { 88: { goals: 1, assists: 0, saves: 0, yellows: 0 } },
+        currentHomeStatsAdded: { 77: { goals: 1, assists: 0, saves: 0, yellows: 0 } },
+        currentHomeStatsRemoved: {},
+        currentAwayStatsAdded: { 88: { goals: 1, assists: 0, saves: 0, yellows: 0 } },
+        currentAwayStatsRemoved: {},
+        historyRev: 2,
+      },
+    } as Record<string, unknown>
+  }
+
+  it('сырые счётчики отставшего устройства не приклеиваются к новому матчу', () => {
+    const next = staleClientOnMatch3()
+
+    mergeStandingsHistoryIntoNextState(prevStateMatch4(), next)
+
+    const snap = next.standingsSnapshot as Snap
+    expect(snap.currentHomeTeam).toBe('РФОИ')
+    expect(snap.currentAwayTeam).toBe('Ясность')
+    // Ровно этот случай ломал турнир: пара уезжала из БД, а счётчики оставались клиентские.
+    expect(snap.currentHomeStatsAdded).toEqual({})
+    expect(snap.currentAwayStatsAdded).toEqual({})
+    expect(snap.currentHomeStats).toEqual({})
+    expect(snap.currentAwayStats).toEqual({})
+  })
+
+  it('в БД старый формат без сырых счётчиков — клиентские не остаются', () => {
+    const prev = prevStateMatch4()
+    const prevSnap = prev.standingsSnapshot as Snap
+    Reflect.deleteProperty(prevSnap, 'currentHomeStatsAdded')
+    Reflect.deleteProperty(prevSnap, 'currentAwayStatsAdded')
+    Reflect.deleteProperty(prevSnap, 'currentHomeStatsRemoved')
+    Reflect.deleteProperty(prevSnap, 'currentAwayStatsRemoved')
+
+    const next = staleClientOnMatch3()
+    mergeStandingsHistoryIntoNextState(prev, next)
+
+    const snap = next.standingsSnapshot as Snap
+    expect(snap.currentHomeStatsAdded).toBeUndefined()
+    expect(snap.currentAwayStatsAdded).toBeUndefined()
+  })
+
+  it('пара та же — счётчики остаются клиентскими, их сольёт max-мёрж', () => {
+    const prev = prevStateMatch4()
+    const next = staleClientOnMatch3()
+    const nextSnap = next.standingsSnapshot as Snap
+    nextSnap.currentHomeTeam = 'РФОИ'
+    nextSnap.currentAwayTeam = 'Ясность'
+
+    mergeStandingsHistoryIntoNextState(prev, next)
+
+    expect(nextSnap.currentHomeStatsAdded).toEqual({ 77: { goals: 1, assists: 0, saves: 0, yellows: 0 } })
+  })
+})

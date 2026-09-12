@@ -129,3 +129,42 @@ describe('mergeLiveCurrentMatchStatsIntoNextState', () => {
     expect(home[7].goals).toBe(1)
   })
 })
+
+describe('mergeLiveCurrentMatchStatsIntoNextState — чужие игроки в отметках', () => {
+  it('игрок из другой команды не попадает в итоговые отметки матча', () => {
+    const prev = {
+      assignmentByPlayerId: { 5: 'РФОИ', 7: 'Ясность' },
+      standingsSnapshot: {
+        currentHomeTeam: 'РФОИ',
+        currentAwayTeam: 'Бронницы',
+        currentHomeStatsAdded: { 5: { goals: 1, assists: 0, saves: 0, yellows: 0 } },
+        currentHomeStatsRemoved: {},
+        currentHomeStats: { 5: { goals: 1, assists: 0, saves: 0, yellows: 0 } },
+        currentAwayStats: {},
+      },
+    } as Record<string, unknown>
+
+    // В теле PUT к отметкам домашней команды затесался игрок Ясности.
+    const next = {
+      assignmentByPlayerId: { 5: 'РФОИ', 7: 'Ясность' },
+      standingsSnapshot: {
+        currentHomeTeam: 'РФОИ',
+        currentAwayTeam: 'Бронницы',
+        currentHomeStatsAdded: {
+          5: { goals: 1, assists: 0, saves: 0, yellows: 0 },
+          7: { goals: 1, assists: 0, saves: 0, yellows: 0 },
+        },
+        currentHomeStatsRemoved: {},
+        currentHomeStats: {},
+        currentAwayStats: {},
+      },
+    } as Record<string, unknown>
+
+    mergeLiveCurrentMatchStatsIntoNextState(prev, next)
+
+    const snap = next.standingsSnapshot as Record<string, unknown>
+    const home = snap.currentHomeStats as Record<string, { goals: number }>
+    expect(home[5].goals).toBe(1)
+    expect(home[7]).toBeUndefined()
+  })
+})

@@ -9,7 +9,6 @@ import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 import { normalizeTeamName } from '~/utils/teamNames'
 import type { PlayedMatch, PlayerMatchStats } from './types'
 import { mergePlayerStatsRecords } from './playerStatsMerge'
-import { effectiveStatsRecord } from './liveMatchStats'
 
 /** none — ничего не меняли; stats — подмешали отметки; adopt — приняли чужой снапшот целиком. */
 export type RemoteSyncAction = 'none' | 'stats' | 'adopt'
@@ -33,6 +32,9 @@ export type StandingsSyncRefs = {
   awayAdded: Ref<Record<number, PlayerMatchStats>>
   homeRemoved: Ref<Record<number, PlayerMatchStats>>
   awayRemoved: Ref<Record<number, PlayerMatchStats>>
+  /** Итоговые отметки для показа и протокола: разница карт минус игроки чужих команд. */
+  homeStatsEffective: Ref<Record<number, PlayerMatchStats>>
+  awayStatsEffective: Ref<Record<number, PlayerMatchStats>>
   matchFinalized: Ref<boolean>
   historyRev: Ref<number>
 }
@@ -175,8 +177,8 @@ export function buildStandingsSnapshot(refs: StandingsSyncRefs): SavedStandingsS
     playerRatingDeltas: refs.playerRatingDeltas.value,
     currentHomeTeam: refs.homeTeam.value,
     currentAwayTeam: refs.awayTeam.value,
-    currentHomeStats: effectiveStatsRecord(refs.homeAdded.value, refs.homeRemoved.value),
-    currentAwayStats: effectiveStatsRecord(refs.awayAdded.value, refs.awayRemoved.value),
+    currentHomeStats: refs.homeStatsEffective.value,
+    currentAwayStats: refs.awayStatsEffective.value,
     currentHomeStatsAdded: refs.homeAdded.value,
     currentHomeStatsRemoved: refs.homeRemoved.value,
     currentAwayStatsAdded: refs.awayAdded.value,

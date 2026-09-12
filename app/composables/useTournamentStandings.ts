@@ -15,7 +15,7 @@ import type {
 } from './tournament-standings/types'
 
 import { mergePlayerStatsRecords } from './tournament-standings/playerStatsMerge'
-import { effectivePlayerStats, effectiveStatsRecord } from './tournament-standings/liveMatchStats'
+import { effectivePlayerStats, matchSideStats } from './tournament-standings/liveMatchStats'
 import {
   buildStandingsSnapshot,
   createRemoteLiveSync,
@@ -150,8 +150,13 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
   const homeRemoved = ref<Record<number, PlayerMatchStats>>(snap?.currentHomeStatsRemoved ?? {})
   const awayRemoved = ref<Record<number, PlayerMatchStats>>(snap?.currentAwayStatsRemoved ?? {})
 
-  const homeStats = computed(() => effectiveStatsRecord(homeAdded.value, homeRemoved.value))
-  const awayStats = computed(() => effectiveStatsRecord(awayAdded.value, awayRemoved.value))
+  /** Команда игрока по составу турнира — по ней отсекаем отметки чужих. */
+  const teamOfPlayer = (playerId: number) => params.assignmentByPlayerId[playerId] ?? ''
+
+  // Страховка: даже если в счётчики попало что-то из другого матча, в счёт, протокол
+  // и статистику это не уйдёт — игроки чужих команд отсекаются здесь, в одном месте.
+  const homeStats = computed(() => matchSideStats(homeAdded.value, homeRemoved.value, homeTeam.value, teamOfPlayer))
+  const awayStats = computed(() => matchSideStats(awayAdded.value, awayRemoved.value, awayTeam.value, teamOfPlayer))
   // Суммарные события по каждому игроку за все завершённые матчи — восстанавливаем из снапшота.
   // snap уже клонирован выше, поэтому объекты здесь изменяемые.
   const aggregatePlayerStats = ref<Record<number, PlayerMatchStats>>(snap?.aggregatePlayerStats ?? {})
@@ -196,13 +201,9 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
   // Активный игрок (кликнули в списке — ниже показываем select событий).
   const activeSelection = ref<ActiveSelection>(null)
 
-  // Если пользователь вручную поменял команды — считаем матч "не финализирован" и очищаем статистику.
-  const isFirstWatchRun = ref(true)
+  // Пара сменилась — матч другой, отметки прошлого к нему не относятся. Правило без исключений:
+  // раньше первый после монтирования выбор пары пропускался, и отметки переезжали в новый матч.
   watch([homeTeam, awayTeam], (next, prev) => {
-    if (isFirstWatchRun.value) {
-      isFirstWatchRun.value = false
-      return
-    }
     // Пару сменила синхронизация с другим устройством — отметки пришли вместе с ней, не сбрасываем.
     if (applyingRemoteSnapshot.value) return
     if (next[0] === prev[0] && next[1] === prev[1]) return
@@ -367,6 +368,8 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
     awayAdded,
     homeRemoved,
     awayRemoved,
+    homeStatsEffective: homeStats,
+    awayStatsEffective: awayStats,
     matchFinalized,
     historyRev,
   }

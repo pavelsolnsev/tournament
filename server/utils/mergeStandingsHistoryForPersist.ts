@@ -18,12 +18,21 @@ const HISTORY_KEYS = [
   'playedSingleMatch',
 ] as const
 
-/** Поля текущего (незавершённого) матча. */
+/**
+ * Поля текущего (незавершённого) матча. Переносятся только вместе: и пара команд,
+ * и итоговые отметки, и сырые счётчики «добавили/сняли» — именно они авторитетны
+ * для клиента и для слияния. Оставить чужие счётчики рядом с чужой парой нельзя:
+ * отметки прошлого матча приклеятся к следующему.
+ */
 const CURRENT_MATCH_KEYS = [
   'currentHomeTeam',
   'currentAwayTeam',
   'currentHomeStats',
   'currentAwayStats',
+  'currentHomeStatsAdded',
+  'currentHomeStatsRemoved',
+  'currentAwayStatsAdded',
+  'currentAwayStatsRemoved',
 ] as const
 
 function asObject(raw: unknown): Record<string, unknown> | null {
@@ -81,6 +90,12 @@ export function mergeStandingsHistoryIntoNextState(
   if (isSameCurrentPair(prevSnap, nextSnap)) return
 
   for (const key of CURRENT_MATCH_KEYS) {
+    // Поля нет в БД (старое состояние) — убираем и у клиента, иначе его счётчики
+    // от прошлого матча останутся в сохранённом состоянии.
+    if (prevSnap[key] === undefined) {
+      Reflect.deleteProperty(nextSnap, key)
+      continue
+    }
     nextSnap[key] = prevSnap[key]
   }
   nextCtx.matchStatus = prevCtx.matchStatus
