@@ -16,10 +16,11 @@ export type PlayerMatchStatsLoose = {
   assists: number
   saves: number
   yellows: number
+  reds: number
 }
 
 function emptyStats(): PlayerMatchStatsLoose {
-  return { goals: 0, assists: 0, saves: 0, yellows: 0 }
+  return { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
 }
 
 function parsePlayerStatsMap(raw: unknown): Record<number, PlayerMatchStatsLoose> {
@@ -35,6 +36,7 @@ function parsePlayerStatsMap(raw: unknown): Record<number, PlayerMatchStatsLoose
       assists: Math.max(0, Number(o.assists) || 0),
       saves: Math.max(0, Number(o.saves) || 0),
       yellows: Math.max(0, Number(o.yellows) || 0),
+      reds: Math.max(0, Number(o.reds) || 0),
     }
   }
   return out
@@ -55,6 +57,7 @@ function mergeStatsRecordsMax(
       assists: Math.max(x.assists, y.assists),
       saves: Math.max(x.saves, y.saves),
       yellows: Math.max(x.yellows, y.yellows),
+      reds: Math.max(x.reds, y.reds),
     }
   }
   return out
@@ -76,6 +79,7 @@ function effectiveStatsRecord(
       assists: Math.max(0, a.assists - r.assists),
       saves: Math.max(0, a.saves - r.saves),
       yellows: Math.max(0, a.yellows - r.yellows),
+      reds: Math.max(0, a.reds - r.reds),
     }
   }
   return out

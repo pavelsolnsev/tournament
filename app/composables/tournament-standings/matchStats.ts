@@ -40,7 +40,7 @@ function ensureStats(
 ): PlayerMatchStats {
   const target = side === 'home' ? homeStats.value : awayStats.value
   if (!target[playerId]) {
-    target[playerId] = { goals: 0, assists: 0, saves: 0, yellows: 0 }
+    target[playerId] = { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
   }
   return target[playerId]
 }

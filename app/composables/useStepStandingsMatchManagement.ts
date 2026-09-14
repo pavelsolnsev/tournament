@@ -15,6 +15,7 @@ export type MatchPlayerStat = {
   assists: number
   saves: number
   yellows: number
+  reds: number
 }
 
 export type StepStandingsMatchManagementProps = {

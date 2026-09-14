@@ -90,6 +90,13 @@
                   >
                     🟨{{ statsFor(p.id).yellows }}
                   </span>
+                  <span
+                    v-if="statsFor(p.id).reds > 0"
+                    class="inline-flex items-center gap-0.5 rounded-md bg-red-500/15 px-1.5 py-0.5
+                           text-[11px] font-semibold tabular-nums text-red-900 dark:text-red-300"
+                  >
+                    🟥{{ statsFor(p.id).reds }}
+                  </span>
                 </template>
                 <!-- Ничего нет — тихий прочерк -->
                 <span v-else class="text-xs text-slate-400 dark:text-slate-700">—</span>
@@ -162,6 +169,7 @@ type PlayerMatchStats = {
   assists: number
   saves: number
   yellows: number
+  reds: number
 }
 
 const props = withDefaults(
@@ -205,13 +213,13 @@ function labelParts(p: Player) {
 
 // Статистика игрока или нули если матчей ещё не было.
 function statsFor(playerId: number): PlayerMatchStats {
-  return props.aggregatePlayerStats[playerId] ?? { goals: 0, assists: 0, saves: 0, yellows: 0 }
+  return props.aggregatePlayerStats[playerId] ?? { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
 }
 
 // Сумма всех событий игрока — нужно чтобы скрыть пустой блок бейджей.
 function totalEvents(playerId: number): number {
   const s = statsFor(playerId)
-  return s.goals + s.assists + s.saves + s.yellows
+  return s.goals + s.assists + s.saves + s.yellows + (s.reds ?? 0)
 }
 
 // Возвращает дельту с одним знаком после запятой (+1.5 / -0.8) или null если после округления ноль.

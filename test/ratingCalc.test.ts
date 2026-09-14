@@ -38,7 +38,7 @@ describe('growthModifier', () => {
 })
 
 describe('calculateMatchRatingDelta', () => {
-  const emptyStats = { goals: 0, assists: 0, saves: 0, yellows: 0 }
+  const emptyStats = { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
 
   it('победа без событий даёт положительную дельту', () => {
     const delta = calculateMatchRatingDelta(emptyStats, 0, true, false, false, 3, 1)
@@ -87,10 +87,95 @@ describe('calculateMatchRatingDelta', () => {
   })
 
   it('результат всегда округлён до 1 знака', () => {
-    const delta = calculateMatchRatingDelta({ goals: 1, assists: 1, saves: 2, yellows: 1 }, 50, true, false, false, 2, 1)
+    const delta = calculateMatchRatingDelta({ goals: 1, assists: 1, saves: 2, yellows: 1, reds: 0 }, 50, true, false, false, 2, 1)
     const asString = String(delta)
     // Проверяем что после точки не более 1 знака.
     const decimals = asString.includes('.') ? asString.split('.')[1]?.length ?? 0 : 0
     expect(decimals).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('новые правила начисления', () => {
+  const empty = { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
+
+  it('сухой лист получают все игроки состава, а не только вратарь', () => {
+    // Победа 1:0 без единой отметки: 1.8 за победу + 0.2 за сухой матч.
+    expect(calculateMatchRatingDelta(empty, 0, true, false, false, 1, 0)).toBe(2)
+    // Тот же бонус при нулевой ничьей 0:0.
+    expect(calculateMatchRatingDelta(empty, 0, false, true, false, 0, 0)).toBe(0.7)
+  })
+
+  it('крупная победа даёт по 0.1 за каждый гол разницы свыше первого', () => {
+    const win21 = calculateMatchRatingDelta(empty, 0, true, false, false, 2, 1)
+    const win31 = calculateMatchRatingDelta(empty, 0, true, false, false, 3, 1)
+    const win41 = calculateMatchRatingDelta(empty, 0, true, false, false, 4, 1)
+    expect(win21).toBe(1.8)
+    expect(round1(win31 - win21)).toBe(0.1)
+    expect(round1(win41 - win21)).toBe(0.2)
+  })
+
+  it('бонус за разницу не растёт бесконечно — потолок 0.5', () => {
+    const win70 = calculateMatchRatingDelta(empty, 0, true, false, false, 7, 0)
+    const win90 = calculateMatchRatingDelta(empty, 0, true, false, false, 9, 0)
+    expect(win70).toBe(win90)
+  })
+
+  it('бонус за разницу добавляется к бонусу за сухую победу', () => {
+    // 3:0 — победа 1.8, сухой матч 0.2, сухая победа 0.5, разница 0.2.
+    expect(calculateMatchRatingDelta(empty, 0, true, false, false, 3, 0)).toBe(2.7)
+  })
+
+  it('проигравшему бонус за разницу не начисляется', () => {
+    const lose = calculateMatchRatingDelta(empty, 0, false, false, true, 1, 4)
+    expect(lose).toBe(-1.3)
+  })
+
+  it('красная карточка забирает 2 и не зависит от рейтинга', () => {
+    const red = { ...empty, reds: 1 }
+    const winNoCard = calculateMatchRatingDelta(empty, 0, true, false, false, 1, 1)
+    const winWithCard = calculateMatchRatingDelta(red, 0, true, false, false, 1, 1)
+    expect(round1(winWithCard - winNoCard)).toBe(-2)
+
+    // У сильного игрока штраф тот же самый.
+    const strongNoCard = calculateMatchRatingDelta(empty, 200, true, false, false, 1, 1)
+    const strongWithCard = calculateMatchRatingDelta(red, 200, true, false, false, 1, 1)
+    expect(round1(strongWithCard - strongNoCard)).toBe(-2)
+  })
+
+  it('две красные забирают вдвое больше', () => {
+    const one = calculateMatchRatingDelta({ ...empty, reds: 1 }, 0, false, true, false, 1, 1)
+    const two = calculateMatchRatingDelta({ ...empty, reds: 2 }, 0, false, true, false, 1, 1)
+    expect(round1(one - two)).toBe(2)
+  })
+
+  it('старое состояние без поля reds не ломает расчёт', () => {
+    const legacy = { goals: 1, assists: 0, saves: 0, yellows: 0 } as unknown as typeof empty
+    expect(calculateMatchRatingDelta(legacy, 0, true, false, false, 2, 1)).toBe(2.1)
+  })
+})
+
+describe('цена карточек', () => {
+  const empty = { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
+
+  it('жёлтая забирает 1 и не зависит от рейтинга', () => {
+    for (const base of [0, 100, 200]) {
+      const clean = calculateMatchRatingDelta(empty, base, true, false, false, 2, 1)
+      const yellow = calculateMatchRatingDelta({ ...empty, yellows: 1 }, base, true, false, false, 2, 1)
+      expect(round1(yellow - clean)).toBe(-1)
+    }
+  })
+
+  it('две жёлтые забирают вдвое больше', () => {
+    const one = calculateMatchRatingDelta({ ...empty, yellows: 1 }, 0, false, true, false, 1, 1)
+    const two = calculateMatchRatingDelta({ ...empty, yellows: 2 }, 0, false, true, false, 1, 1)
+    expect(round1(one - two)).toBe(1)
+  })
+
+  it('красная дороже жёлтой ровно вдвое', () => {
+    const yellow = calculateMatchRatingDelta({ ...empty, yellows: 1 }, 0, false, true, false, 1, 1)
+    const red = calculateMatchRatingDelta({ ...empty, reds: 1 }, 0, false, true, false, 1, 1)
+    const clean = calculateMatchRatingDelta(empty, 0, false, true, false, 1, 1)
+    expect(round1(clean - yellow)).toBe(1)
+    expect(round1(clean - red)).toBe(2)
   })
 })

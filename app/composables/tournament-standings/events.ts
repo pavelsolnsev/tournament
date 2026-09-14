@@ -11,6 +11,7 @@ export function buildEventsLabel(stats: PlayerMatchStats): string {
   if (stats.assists > 0) parts.push(`🎯 ${stats.assists}`)
   if (stats.saves > 0) parts.push(`🧤 ${stats.saves}`)
   if (stats.yellows > 0) parts.push(`🟨 ${stats.yellows}`)
+  if ((stats.reds ?? 0) > 0) parts.push(`🟥 ${stats.reds}`)
   return parts.join(' ')
 }
 
@@ -25,7 +26,7 @@ export function extractMarkedPlayers(args: {
 
   for (const [playerIdStr, stats] of Object.entries(statsRecord)) {
     const playerId = Number(playerIdStr)
-    const total = stats.goals + stats.assists + stats.saves + stats.yellows
+    const total = stats.goals + stats.assists + stats.saves + stats.yellows + (stats.reds ?? 0)
     // Если у игрока нет событий — не показываем его в списке.
     if (!total) continue
 

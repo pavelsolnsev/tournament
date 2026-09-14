@@ -2,6 +2,7 @@ import type { Player } from '~/types/tournament'
 import type { PlayerMatchStats } from '~/composables/tournament-standings/types'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
+import { topPlayerIdsByStat } from '~/composables/tournament-standings/tournamentRatingBonus'
 import { normalizeTeamName, resolveTeamColorIndex } from '~/utils/teamNames'
 import { selectMvp } from '~/composables/tournament-standings/mvp'
 import type { AwardWinner } from './types'
@@ -40,13 +41,11 @@ export function findTopPlayers(
       teamMarker: resolveTeamMarker(teamName, standingsRows, effectiveTeamColors, getMarkerByIndex),
       value: aggregateStats[p.id]?.[field] ?? 0,
     }
-  }).filter((p) => p.value > 0)
+  })
 
-  if (withValue.length === 0) return []
-
-  const maxValue = Math.max(...withValue.map((p) => p.value))
-
-  return withValue.filter((p) => p.value === maxValue)
+  // Один источник правды с бонусом к рейтингу: кто в награде, тот и получает прибавку.
+  const winners = topPlayerIdsByStat(aggregateStats, field as 'goals' | 'assists' | 'saves')
+  return withValue.filter((p) => winners.has(p.playerId))
 }
 
 export function findTeamMvp(
@@ -58,8 +57,8 @@ export function findTeamMvp(
 
   return teamPlayers.reduce<Player | null>((best, p) => {
     if (!best) return p
-    const pStats = aggregateStats[p.id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0 }
-    const bStats = aggregateStats[best.id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0 }
+    const pStats = aggregateStats[p.id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
+    const bStats = aggregateStats[best.id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
 
     const pMark = pStats.goals + pStats.assists + pStats.saves * 0.5
     const bMark = bStats.goals + bStats.assists + bStats.saves * 0.5
@@ -99,7 +98,7 @@ export function findTournamentMvp(
   }))
 
   const candidates = players.map((p) => {
-    const s = aggregateStats[p.id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0 }
+    const s = aggregateStats[p.id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
     return {
       id: p.id,
       goals: s.goals,
@@ -119,7 +118,7 @@ export function findTournamentMvp(
   if (!winnerPlayer) return []
 
   const teamName = assignmentByPlayerId[winner.id] ?? ''
-  const s = aggregateStats[winner.id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0 }
+  const s = aggregateStats[winner.id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
 
   return [{
     playerId: winner.id,
@@ -128,6 +127,6 @@ export function findTournamentMvp(
     teamName,
     teamMarker: resolveTeamMarker(teamName, standingsRows, effectiveTeamColors, getMarkerByIndex),
     value: winner.goals,
-    tournamentStats: { goals: s.goals, assists: s.assists, saves: s.saves, yellows: s.yellows },
+    tournamentStats: { goals: s.goals, assists: s.assists, saves: s.saves, yellows: s.yellows, reds: s.reds ?? 0 },
   }]
 }

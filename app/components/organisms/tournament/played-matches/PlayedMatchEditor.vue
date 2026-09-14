@@ -260,6 +260,7 @@ const STAT_BADGES = [
   { key: 'assists' as StatKey, icon: '🎯', bgClass: 'bg-sky-500/15',     textClass: 'text-sky-900 dark:text-sky-300' },
   { key: 'saves'   as StatKey, icon: '🧤', bgClass: 'bg-violet-500/15',  textClass: 'text-violet-900 dark:text-violet-300' },
   { key: 'yellows' as StatKey, icon: '🟨', bgClass: 'bg-amber-500/15',  textClass: 'text-amber-950 dark:text-yellow-300' },
+  { key: 'reds' as StatKey,    icon: '🟥', bgClass: 'bg-red-500/15',    textClass: 'text-red-900 dark:text-red-300' },
 ] as const
 
 // Конфигурация полей статистики.
@@ -299,6 +300,15 @@ const STAT_DEFS = [
     textClass: 'text-amber-800 dark:text-yellow-300',
     removeClass: 'text-amber-800 dark:text-yellow-400 md:hover:bg-amber-100 dark:md:hover:bg-yellow-500/20 md:hover:text-amber-900 dark:md:hover:text-yellow-300',
     addingClass: 'text-amber-700 dark:text-yellow-300 md:hover:bg-amber-100 dark:md:hover:bg-yellow-500/20',
+  },
+  {
+    key: 'reds' as StatKey,
+    icon: '🟥',
+    label: 'Красная',
+    bgClass: 'bg-red-50 border-red-200/90 dark:bg-red-500/15 dark:border-red-500/20',
+    textClass: 'text-red-700 dark:text-red-300',
+    removeClass: 'text-red-700 dark:text-red-400 md:hover:bg-red-100 dark:md:hover:bg-red-500/20 md:hover:text-red-800 dark:md:hover:text-red-300',
+    addingClass: 'text-red-600 dark:text-red-300 md:hover:bg-red-100 dark:md:hover:bg-red-500/20',
   },
 ] as const
 
@@ -361,17 +371,15 @@ function getEditStat(statsRecord: Record<number, PlayerMatchStats>, playerId: nu
 // Это безопасно читает счётчик (если нет записи — 0).
 
 function changeStat(statsRecord: Record<number, PlayerMatchStats>, playerId: number, key: StatKey, delta: number) {
-  if (!statsRecord[playerId]) {
-    statsRecord[playerId] = { goals: 0, assists: 0, saves: 0, yellows: 0 }
-  }
-  statsRecord[playerId][key] = Math.max(0, statsRecord[playerId][key] + delta)
+  const current = statsRecord[playerId] ?? { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
+  statsRecord[playerId] = { ...current, [key]: Math.max(0, (current[key] ?? 0) + delta) }
 }
 // Это меняет счётчик и не даёт уйти ниже 0.
 
 function hasAnyStat(statsRecord: Record<number, PlayerMatchStats>, playerId: number): boolean {
   const s = statsRecord[playerId]
   if (!s) return false
-  return s.goals > 0 || s.assists > 0 || s.saves > 0 || s.yellows > 0
+  return s.goals > 0 || s.assists > 0 || s.saves > 0 || s.yellows > 0 || (s.reds ?? 0) > 0
 }
 // Это проверяет: у игрока есть хоть одно событие.
 

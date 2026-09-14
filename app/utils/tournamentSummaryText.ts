@@ -21,7 +21,7 @@ export type TournamentTextExportParams = {
   teamMarker: (teamName: string) => string
 }
 
-const EMPTY_STATS: PlayerMatchStats = { goals: 0, assists: 0, saves: 0, yellows: 0 }
+const EMPTY_STATS: PlayerMatchStats = { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
 
 // Дата в человеческом виде: «2026-07-30» → «30 июля 2026».
 function formatDateRu(raw?: string): string {
@@ -178,7 +178,7 @@ function buildAwardsBlock(p: TournamentTextExportParams): string[] {
     for (const t of p.summary.teamMvps) {
       const best = t.players[0]
       const who = best ? (nameById[best.playerId] ?? best.name) : '—'
-      const st = formatPlayerStats({ goals: t.goals, assists: t.assists, saves: t.saves, yellows: 0 })
+      const st = formatPlayerStats({ goals: t.goals, assists: t.assists, saves: t.saves, yellows: 0, reds: 0 })
       lines.push(`${marker(t.teamName)} ${t.teamName}: ${who}${st ? ` — ${st}` : ''}`)
     }
   }

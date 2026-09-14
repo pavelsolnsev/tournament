@@ -5,7 +5,13 @@ import { normalizeTeamName } from '~/utils/teamNames'
 import type { PlayerMatchStats } from './types'
 
 export function emptyPlayerMatchStats(): PlayerMatchStats {
-  return { goals: 0, assists: 0, saves: 0, yellows: 0 }
+  return { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
+}
+
+/** Значение счётчика из сохранённого состояния: старые снимки без поля дают 0, а не NaN. */
+function num(value: unknown): number {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : 0
 }
 
 function statOf(record: Record<number, PlayerMatchStats> | undefined, playerId: number): PlayerMatchStats {
@@ -21,10 +27,11 @@ export function effectivePlayerStats(
   const a = statOf(added, playerId)
   const r = statOf(removed, playerId)
   return {
-    goals: Math.max(0, a.goals - r.goals),
-    assists: Math.max(0, a.assists - r.assists),
-    saves: Math.max(0, a.saves - r.saves),
-    yellows: Math.max(0, a.yellows - r.yellows),
+    goals: Math.max(0, num(a.goals) - num(r.goals)),
+    assists: Math.max(0, num(a.assists) - num(r.assists)),
+    saves: Math.max(0, num(a.saves) - num(r.saves)),
+    yellows: Math.max(0, num(a.yellows) - num(r.yellows)),
+    reds: Math.max(0, num(a.reds) - num(r.reds)),
   }
 }
 

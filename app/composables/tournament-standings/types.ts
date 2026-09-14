@@ -7,6 +7,7 @@ export type PlayerMatchStats = {
   assists: number
   saves: number
   yellows: number
+  reds: number
 }
 
 export type Side = 'home' | 'away'

@@ -30,12 +30,15 @@ export function calculateMatchRatingDelta(
   const saves = stats.saves
   // В типе PlayerMatchStats поле называется yellows — в боте yellowCards.
   const yellowCards = stats.yellows
+  const redCards = Number(stats.reds) || 0
 
   // Базовые дельты за события.
   const goalDelta = goals * 0.3 * mod
   const assistDelta = assists * 0.3 * mod
   const saveDelta = saves * 0.2 * mod
-  const yellowCardDelta = yellowCards * -0.3
+  // Карточки не зависят от модификатора: нарушение стоит одинаково новичку и лидеру.
+  const yellowCardDelta = yellowCards * -1
+  const redCardDelta = redCards * -2
 
   // Голевые бонусы: покер (4+) > хет-трик (3) > дубль (2) — берём максимальный.
   const goalBonus =
@@ -51,8 +54,8 @@ export function calculateMatchRatingDelta(
     : assists >= 2 ? 0.3 * mod
     : 0
 
-  // Вратарские бонусы: сухой лист + бонус за серию сейвов.
-  const cleanSheetBonus = saves > 0 && opponentGoals === 0 ? 0.2 * mod : 0
+  // Сухой лист — заслуга всей команды, поэтому получают все игроки состава, а не только вратарь.
+  const cleanSheetBonus = opponentGoals === 0 ? 0.2 * mod : 0
   const saveBonus =
     saves >= 4 ? 0.5 * mod
     : saves >= 3 ? 0.3 * mod
@@ -63,6 +66,12 @@ export function calculateMatchRatingDelta(
   const isShutoutWin = isWin && teamGoals >= 3 && opponentGoals === 0
   const winDelta = isWin ? 1.8 * mod : 0
   const shutoutWinBonus = isShutoutWin ? 0.5 * mod : 0
+
+  // Крупная победа: +0.1 за каждый гол разницы свыше первого, но не больше +0.5.
+  // 2:1 — ничего, 3:1 — 0.1, 5:0 — 0.4, 7:0 и крупнее — потолок 0.5.
+  const goalDiffBonus = isWin
+    ? Math.min(0.5, Math.max(0, (teamGoals - opponentGoals - 1) * 0.1)) * mod
+    : 0
 
   // Ничья.
   const drawDelta = isDraw ? 0.5 * mod : 0
@@ -85,9 +94,9 @@ export function calculateMatchRatingDelta(
     goalDelta + assistDelta + saveDelta
     + goalBonus + assistBonus
     + cleanSheetBonus + saveBonus
-    + winDelta + shutoutWinBonus
+    + winDelta + shutoutWinBonus + goalDiffBonus
     + drawDelta + loseDelta
-    + yellowCardDelta
+    + yellowCardDelta + redCardDelta
 
   return round1(delta)
 }

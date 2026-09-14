@@ -160,6 +160,7 @@ type PlayerMatchStats = {
   assists: number
   saves: number
   yellows: number
+  reds: number
 }
 // Счётчики событий игрока в текущем матче.
 
@@ -205,6 +206,15 @@ const EVENT_ACTIONS = [
     addBtnClass: 'text-amber-700 dark:text-yellow-300 md:hover:bg-amber-100 dark:md:hover:bg-yellow-500/20',
     removeBtnClass: 'text-amber-800 dark:text-yellow-400 md:hover:bg-amber-100 dark:md:hover:bg-yellow-500/20 md:hover:text-amber-900 dark:md:hover:text-yellow-300',
   },
+  {
+    value: 'reds' as StatKey,
+    icon: '🟥',
+    label: 'Красная',
+    colorClass: 'bg-red-50 border-red-200/90 dark:bg-red-500/10 dark:border-red-500/25',
+    countClass: 'text-red-700 dark:text-red-300',
+    addBtnClass: 'text-red-600 dark:text-red-300 md:hover:bg-red-100 dark:md:hover:bg-red-500/20',
+    removeBtnClass: 'text-red-700 dark:text-red-400 md:hover:bg-red-100 dark:md:hover:bg-red-500/20 md:hover:text-red-800 dark:md:hover:text-red-300',
+  },
 ] as const
 
 // Конфигурация бейджей на карточке игрока — только фон и цвет текста (без кнопки «−»).
@@ -213,6 +223,7 @@ const STAT_BADGES = [
   { key: 'assists' as StatKey, icon: '🎯', bgClass: 'bg-sky-500/15',     textClass: 'text-sky-900 dark:text-sky-300' },
   { key: 'saves' as StatKey,   icon: '🧤', bgClass: 'bg-violet-500/15',  textClass: 'text-violet-900 dark:text-violet-300' },
   { key: 'yellows' as StatKey, icon: '🟨', bgClass: 'bg-amber-500/15',  textClass: 'text-amber-950 dark:text-yellow-300' },
+  { key: 'reds' as StatKey,    icon: '🟥', bgClass: 'bg-red-500/15',    textClass: 'text-red-900 dark:text-red-300' },
 ] as const
 
 function labelParts(p: Player) {

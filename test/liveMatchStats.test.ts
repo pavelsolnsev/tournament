@@ -5,8 +5,8 @@ import {
   onlyPlayersOfTeam,
 } from '../app/composables/tournament-standings/liveMatchStats'
 
-function s(goals: number, assists = 0, saves = 0, yellows = 0) {
-  return { goals, assists, saves, yellows }
+function s(goals: number, assists = 0, saves = 0, yellows = 0, reds = 0) {
+  return { goals, assists, saves, yellows, reds }
 }
 
 describe('effectivePlayerStats', () => {

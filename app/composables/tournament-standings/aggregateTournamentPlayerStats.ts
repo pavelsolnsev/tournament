@@ -12,12 +12,13 @@ export function mergeFinishedMatchIntoAggregate(
   const addSide = (side: Record<number, PlayerMatchStats>) => {
     for (const [idStr, st] of Object.entries(side)) {
       const id = Number(idStr)
-      const prev = next[id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0 }
+      const prev = next[id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
       next[id] = {
         goals: prev.goals + st.goals,
         assists: prev.assists + st.assists,
         saves: prev.saves + st.saves,
         yellows: prev.yellows + st.yellows,
+        reds: (prev.reds ?? 0) + (st.reds ?? 0),
       }
     }
   }
@@ -38,12 +39,13 @@ export function subtractMatchFromAggregate(
   const subtractSide = (side: Record<number, PlayerMatchStats>) => {
     for (const [idStr, st] of Object.entries(side)) {
       const id = Number(idStr)
-      const prev = next[id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0 }
+      const prev = next[id] ?? { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
       next[id] = {
         goals: Math.max(0, prev.goals - st.goals),
         assists: Math.max(0, prev.assists - st.assists),
         saves: Math.max(0, prev.saves - st.saves),
         yellows: Math.max(0, prev.yellows - st.yellows),
+        reds: Math.max(0, (prev.reds ?? 0) - (st.reds ?? 0)),
       }
     }
   }

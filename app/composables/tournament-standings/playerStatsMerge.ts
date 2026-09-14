@@ -1,15 +1,22 @@
 import type { PlayerMatchStats } from './types'
 
 function emptyPlayerMatchStats(): PlayerMatchStats {
-  return { goals: 0, assists: 0, saves: 0, yellows: 0 }
+  return { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
+}
+
+/** Старые снимки без поля дают 0, а не NaN. */
+function num(value: unknown): number {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : 0
 }
 
 function mergePlayerMatchStatsMax(a: PlayerMatchStats, b: PlayerMatchStats): PlayerMatchStats {
   return {
-    goals: Math.max(a.goals, b.goals),
-    assists: Math.max(a.assists, b.assists),
-    saves: Math.max(a.saves, b.saves),
-    yellows: Math.max(a.yellows, b.yellows),
+    goals: Math.max(num(a.goals), num(b.goals)),
+    assists: Math.max(num(a.assists), num(b.assists)),
+    saves: Math.max(num(a.saves), num(b.saves)),
+    yellows: Math.max(num(a.yellows), num(b.yellows)),
+    reds: Math.max(num(a.reds), num(b.reds)),
   }
 }
 

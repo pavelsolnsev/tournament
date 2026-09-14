@@ -6,6 +6,7 @@ import type { PlayerMatchStats, PlayedMatch } from '~/composables/tournament-sta
 import type { SavedStandingsSnapshot } from '~/composables/useTournamentWizard'
 import { selectMvp, type MvpCandidate, type MvpTeamStat } from '~/composables/tournament-standings/mvp'
 import { round1 } from '~/composables/tournament-standings/ratingCalc'
+import { topPlayerIds, tournamentRatingBonus } from '~/composables/tournament-standings/tournamentRatingBonus'
 
 // Сегодня по локальному календарю браузера — запасной вариант, если в мастере дата не задана.
 function localCalendarDateString(): string {
@@ -93,7 +94,7 @@ export function useFinishTournament(params: FinishTournamentParams) {
     // Собираем базовый payload без MVP-бонусов — один объект на игрока.
     const base = params.players.map((p) => {
       const stats = params.aggregatePlayerStats.value[p.id] ?? {
-        goals: 0, assists: 0, saves: 0, yellows: 0,
+        goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0,
       }
       const wdl = playerWDL[p.id] ?? { wins: 0, draws: 0, losses: 0, games: 0 }
       const ratingDelta = params.playerRatingDeltas.value[p.id] ?? 0
@@ -160,18 +161,25 @@ export function useFinishTournament(params: FinishTournamentParams) {
       }
     }
 
-    // Применяем MVP-бонусы к ratingDelta и mvp-полю.
-    // +1.0 рейтинга за MVP турнира (mvp = 1 в базе).
-    // +0.5 рейтинга за MVP команды (если не MVP турнира; mvp остаётся 0).
+    // Лучшие бомбардиры, ассистенты и вратари турнира — те же, что на карточках наград.
+    const topIds = topPlayerIds(params.aggregatePlayerStats.value)
+
+    // Разовые прибавки за турнир: явка плюс одно звание (MVP турнира > MVP команды > лучший).
     return base.map(({ baseRating: _baseRating, ...bp }) => {
       const isTournamentMvp = bp.id === tournamentMvpId
       const isTeamMvp = !isTournamentMvp && teamMvpIds.has(bp.id)
-      const mvpBonus = isTournamentMvp ? 1.0 : isTeamMvp ? 0.5 : 0
+      const bonus = tournamentRatingBonus({
+        // Явка — по составу турнира: игроки из библиотеки, которых не разводили по командам, не в счёт.
+        isParticipant: Boolean(params.assignmentByPlayerId[bp.id]),
+        isTournamentMvp,
+        isTeamMvp,
+        isTopPlayer: topIds.has(bp.id),
+      })
 
       return {
         ...bp,
         mvp: isTournamentMvp ? 1 : 0,
-        ratingDelta: round1(bp.ratingDelta + mvpBonus),
+        ratingDelta: round1(bp.ratingDelta + bonus),
       }
     })
   }

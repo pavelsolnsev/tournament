@@ -143,5 +143,6 @@ const STAT_BADGES = [
   { key: 'assists' as const, icon: '🎯', bgClass: 'bg-sky-500/15',     textClass: 'text-sky-900 dark:text-sky-300' },
   { key: 'saves'   as const, icon: '🧤', bgClass: 'bg-violet-500/15',  textClass: 'text-violet-900 dark:text-violet-300' },
   { key: 'yellows' as const, icon: '🟨', bgClass: 'bg-amber-500/15',  textClass: 'text-amber-950 dark:text-yellow-300' },
+  { key: 'reds' as const,    icon: '🟥', bgClass: 'bg-red-500/15',    textClass: 'text-red-900 dark:text-red-300' },
 ] as const
 </script>

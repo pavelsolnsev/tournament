@@ -28,7 +28,7 @@ function played(matchNumber: number, homeTeam: string, awayTeam: string): Played
 }
 
 function stats(goals: number): PlayerMatchStats {
-  return { goals, assists: 0, saves: 0, yellows: 0 }
+  return { goals, assists: 0, saves: 0, yellows: 0, reds: 0 }
 }
 
 /** Локальный экран таблицы: идёт «Красные — Жёлтые», один сыгранный матч позади. */
