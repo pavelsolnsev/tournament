@@ -71,6 +71,8 @@
             :player-rating-deltas="playerRatingDeltas ?? {}"
             :hide-base-player-rating="hideBasePlayerRating"
             :show-heading="false"
+            :can-remove="canRemovePlayer"
+            @remove-player="emit('remove-player', $event)"
           />
         </div>
       </Transition>
@@ -91,6 +93,12 @@ defineProps<{
   aggregatePlayerStats?: Record<number, PlayerMatchStats>
   playerRatingDeltas?: Record<number, number>
   hideBasePlayerRating: boolean
+  /** true — показываем кнопку удаления игрока из состава (только архив, только полный админ). */
+  canRemovePlayer?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'remove-player', playerId: number): void
 }>()
 
 const rosterSectionUid = useId?.() ?? Math.random().toString(36).slice(2)

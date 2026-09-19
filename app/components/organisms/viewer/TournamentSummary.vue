@@ -101,6 +101,8 @@
         :aggregate-player-stats="props.aggregatePlayerStats"
         :player-rating-deltas="props.playerRatingDeltas"
         :hide-base-player-rating="hideBasePlayerRating"
+        :can-remove-player="canRemovePlayer"
+        @remove-player="emit('remove-player', $event)"
       />
       <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
     </template>
@@ -128,6 +130,12 @@ const props = defineProps<{
   aggregatePlayerStats?: Record<number, PlayerMatchStats>
   playerRatingDeltas?: Record<number, number>
   playedMatchesList?: PlayedMatch[]
+  /** true — показываем кнопку удаления игрока из состава (только архив, только полный админ). */
+  canRemovePlayer?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'remove-player', playerId: number): void
 }>()
 
 const tournamentDateIso = computed(() => {

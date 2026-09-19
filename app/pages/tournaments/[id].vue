@@ -183,6 +183,8 @@
           :aggregate-player-stats="tournament.snapshot.aggregatePlayerStats"
           :player-rating-deltas="tournament.snapshot.playerRatingDeltas"
           :played-matches-list="tournament.snapshot.playedMatchesList"
+          :can-remove-player="canRemovePlayerFromArchive"
+          @remove-player="handleRemovePlayerFromArchive"
         />
 
         <!-- Только для админа: все итоги обычным текстом, чтобы скопировать и вставить куда угодно. -->
@@ -216,6 +218,7 @@
 <script setup lang="ts">
 import { useTournamentSummary } from '~/composables/useTournamentSummary'
 import type { TournamentArchiveApiResponse } from '~/types/tournamentArchive'
+import type { Player } from '~/types/tournament'
 import { normalizeTeamColorsMap, normalizeTeamName, resolveTeamColorIndexFor } from '~/utils/teamNames'
 import { teamDisplayName } from '~/utils/teamDisplayName'
 import { useAdminAuth } from '~/composables/useAdminAuth'
@@ -373,11 +376,33 @@ async function copyLink() {
 
 // Логика входа/выхода администратора.
 const showLoginModal = ref(false)
-const { isAdmin, restoreSession, logout } = useAdminAuth()
+const { isAdmin, adminRole, restoreSession, logout } = useAdminAuth()
 
 function onAdminEnter() {
   if (restoreSession()) return
   showLoginModal.value = true
+}
+
+// Удаление игрока из состава архивного турнира — только показ, матчи и рейтинг не трогает.
+// Как и удаление игрока в живом турнире — доступно только полному админу.
+const canRemovePlayerFromArchive = computed(() => adminRole.value === 'full')
+
+async function handleRemovePlayerFromArchive(playerId: number) {
+  if (!tournament.value) return
+  try {
+    const res = await $fetch<{ players: Player[]; assignmentByPlayerId: Record<string, string> }>(
+      `/api/tournaments/${id}/remove-player`,
+      { method: 'POST', body: { playerId } },
+    )
+    // Обновляем локально — без перезагрузки страницы игрок сразу пропадает из состава.
+    tournament.value = {
+      ...tournament.value,
+      players: res.players,
+      assignmentByPlayerId: res.assignmentByPlayerId,
+    }
+  } catch {
+    alert('Не удалось убрать игрока из состава. Попробуйте ещё раз.')
+  }
 }
 
 // Удаление турнира — с подтверждением, затем редирект на архив.
