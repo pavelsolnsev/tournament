@@ -17,7 +17,7 @@ const props = defineProps<{
   colorIndex: number
 }>()
 
-// Порядок как у маркеров / плашки счёта в useTeamColors (индекс 0–5).
+// Порядок как у маркеров / плашки счёта в useTeamColors (индекс 0–6).
 const TEAM_DOT_BG = [
   'bg-red-500',
   'bg-sky-500',
@@ -25,6 +25,7 @@ const TEAM_DOT_BG = [
   'bg-amber-500',
   'bg-slate-400',
   'bg-zinc-500',
+  'bg-orange-500',
 ] as const
 
 const showDot = computed(() => {

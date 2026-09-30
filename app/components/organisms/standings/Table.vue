@@ -134,7 +134,7 @@ export interface StandingsRow {
 
 const props = defineProps<{
   teams: string[]
-  /** Цвет команды: индекс 0–5 (🔴 🟢 🔵 🟡 ⚪ ⚫) */
+  /** Цвет команды: индекс 0–6 (🔴 🔵 🟢 🟡 ⚪ ⚫ 🟠) */
   teamColors?: Record<string, number>
   /** Готовые строки. Если нет — строим нули. */
   rows?: StandingsRow[]

@@ -45,6 +45,7 @@ describe('teamDisplayNameByMarker', () => {
   it('берёт цвет из эмодзи-маркера, который уже показан рядом', () => {
     expect(teamDisplayNameByMarker('Команда 2', '🔵')).toBe('Синие')
     expect(teamDisplayNameByMarker('Команда 1', '⚫')).toBe('Чёрные')
+    expect(teamDisplayNameByMarker('Команда 7', '🟠')).toBe('Оранжевые')
   })
 
   it('настоящую команду с логотипом не переименовывает', () => {

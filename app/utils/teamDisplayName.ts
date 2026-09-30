@@ -6,8 +6,8 @@ import { normalizeTeamName } from '~/utils/teamNames'
 /** Авто-имя из распределения по рейтингу. */
 const AUTO_TEAM_NAME_RE = /^команда\s*\d+$/i
 
-/** Порядок совпадает с teamMarkers в useTeamColors: 🔴 🔵 🟢 🟡 ⚪ ⚫. */
-export const TEAM_COLOR_NAMES = ['Красные', 'Синие', 'Зелёные', 'Жёлтые', 'Белые', 'Чёрные'] as const
+/** Порядок совпадает с teamMarkers в useTeamColors: 🔴 🔵 🟢 🟡 ⚪ ⚫ 🟠. */
+export const TEAM_COLOR_NAMES = ['Красные', 'Синие', 'Зелёные', 'Жёлтые', 'Белые', 'Чёрные', 'Оранжевые'] as const
 
 /** Эмодзи-маркер → цвет, когда под рукой только он (маркер уже посчитан для картинки). */
 const COLOR_NAME_BY_MARKER: Record<string, string> = {
@@ -17,6 +17,7 @@ const COLOR_NAME_BY_MARKER: Record<string, string> = {
   '🟡': 'Жёлтые',
   '⚪': 'Белые',
   '⚫': 'Чёрные',
+  '🟠': 'Оранжевые',
 }
 
 /** Команда названа автоматически при распределении по рейтингу. */

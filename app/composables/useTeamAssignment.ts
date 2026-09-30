@@ -40,7 +40,7 @@ export function useTeamAssignment(existingTeamNames: Ref<string[]> | ComputedRef
   }
 
   function setTeamColor(teamName: string, colorIndex: number) {
-    if (colorIndex < 0 || colorIndex > 5) return
+    if (colorIndex < 0 || colorIndex > 6) return
     const key = normalizeTeamName(teamName)
     if (!key) return
     teamColors.value = { ...teamColors.value, [key]: colorIndex }

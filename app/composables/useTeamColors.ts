@@ -5,7 +5,7 @@ import { getTeamLogoSrc as getTeamLogoSrcFromMap } from '~/utils/teamLogos'
 export function useTeamColors() {
   // Порядок маркеров: индекс совпадает с номером команды минус 1.
   // Команда 1 → 🔴 (0), Команда 2 → 🔵 (1), Команда 3 → 🟢 (2), Команда 4 → 🟡 (3).
-  const teamMarkers = ['🔴', '🔵', '🟢', '🟡', '⚪', '⚫'] as const
+  const teamMarkers = ['🔴', '🔵', '🟢', '🟡', '⚪', '⚫', '🟠'] as const
 
   // Фон + цвет текста для плашки счёта — тот же порядок, что и у маркеров.
   // В светлой теме — тёмный текст на лёгком тинте; в тёмной — светлый текст как раньше.
@@ -16,6 +16,7 @@ export function useTeamColors() {
     'bg-amber-500/10 text-amber-900 ring-amber-300/70 dark:bg-amber-500/15 dark:text-amber-200 dark:ring-amber-500/25',
     'bg-slate-200/80 text-slate-800 ring-slate-300/80 dark:bg-slate-500/15 dark:text-slate-200 dark:ring-slate-500/25',
     'bg-zinc-200/80 text-zinc-800 ring-zinc-300/80 dark:bg-zinc-500/20 dark:text-zinc-200 dark:ring-zinc-500/30',
+    'bg-orange-500/10 text-orange-800 ring-orange-300/70 dark:bg-orange-500/15 dark:text-orange-200 dark:ring-orange-500/25',
   ] as const
 
   function getMarkerByIndex(index: number): string {

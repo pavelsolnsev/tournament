@@ -59,8 +59,8 @@ export function normalizeTeamColorsMap(map: Record<string, number> | undefined |
   return out
 }
 
-const MAX_COLOR_INDEX = 5
-const TEAM_MARKERS_COUNT = 6
+const MAX_COLOR_INDEX = 6
+const TEAM_MARKERS_COUNT = 7
 
 /**
  * Индекс цвета команды: сначала карта (по каноническому имени), иначе fallback.
