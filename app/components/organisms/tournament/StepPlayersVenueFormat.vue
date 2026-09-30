@@ -135,7 +135,7 @@
 const VENUE_OPTIONS = ['Красное Знамя', 'Профилакторий'] as const
 
 // Готовые варианты форматов — можно выбрать или ввести своё.
-const FORMAT_OPTIONS = ['Рейтинговая игра 5x5', 'Турнир 8x8'] as const
+const FORMAT_OPTIONS = ['Рейтинговая игра 5x5', 'Турнир 8x8', 'Турнир 5x5'] as const
 
 const props = defineProps<{
   venueLabel: string
