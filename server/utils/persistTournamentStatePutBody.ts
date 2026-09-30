@@ -33,7 +33,6 @@ function tournamentMetaPresent(s: Record<string, unknown>): boolean {
  */
 export async function persistTournamentStatePutBody(
   state: Record<string, unknown>,
-  options: { vkMuted?: boolean } = {},
 ) {
   // __fullReset: только в теле PUT — явное разрешение полного сброса (сайт: emptyResetState; бот: clear-tournament).
   const withFlag = state as { __fullReset?: boolean }
@@ -46,8 +45,8 @@ export async function persistTournamentStatePutBody(
   const vkTeamSlotsAuthoritative = slotsFlag.__vkTeamSlotsAuthoritative === true
   delete slotsFlag.__vkTeamSlotsAuthoritative
 
-  // vkMuted: состояние сохранил ограниченный админ (судья) — бот не шлёт уведомление о старте игры.
-  state.vkMuted = options.vkMuted === true
+  // vkMuted всегда false: и админ, и судья запускают матч — бот шлёт в ВК «Игра началась».
+  state.vkMuted = false
   const prev = await readTournamentStateRow()
   const prevJson = (prev?.json && typeof prev.json === 'object' ? prev.json : {}) as Record<string, unknown>
 

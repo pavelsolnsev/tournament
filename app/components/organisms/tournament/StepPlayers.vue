@@ -1,8 +1,8 @@
 <!-- Компонент StepPlayers: мастер-обёртка шага выбора игроков (библиотека + выбранные + место/формат). -->
 <template>
-  <div class="grid min-w-0 gap-4 lg:grid-cols-5 lg:items-start">
+  <div class="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-5 lg:items-start">
     <!-- Левая колонка: липкая на десктопе — прокручивается независимо от правой. -->
-    <div class="lg:sticky lg:top-20 lg:col-span-2 lg:h-[calc(100dvh-6rem)]">
+    <div class="min-w-0 lg:sticky lg:top-20 lg:col-span-2 lg:h-[calc(100dvh-6rem)]">
       <OrganismsTournamentStepPlayersLibraryPanel
         :players="players"
         :available-players="availablePlayers"

@@ -55,7 +55,7 @@
               <span>Загрузка…</span>
             </div>
 
-            <section v-else class="flex w-full flex-col gap-6 py-5 sm:py-8">
+            <section v-else class="flex w-full min-w-0 flex-col gap-6 py-5 sm:py-8">
               <!-- Все три крошки всегда: можно вернуться на «Игроки» с «Таблицы» и сразу увидеть «Таблица» на шаге «Команды». -->
               <nav v-if="!isLimitedAdmin" aria-label="Шаги мастера">
                 <ol class="flex min-w-0 flex-wrap items-center gap-1">

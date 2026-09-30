@@ -20,8 +20,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const state = body.state as Record<string, unknown>
-  // Simple10: Ограниченный админ (судья) сохраняет состояние «тихо» — бот не пишет в ВК о начале игры.
-  await persistTournamentStatePutBody(state, { vkMuted: session === 'limited' })
+  await persistTournamentStatePutBody(state)
 
   return { ok: true }
 })
