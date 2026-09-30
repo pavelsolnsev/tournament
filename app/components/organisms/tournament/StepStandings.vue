@@ -251,6 +251,7 @@
         :has-next-match="hasNextMatch"
         :can-finish-match="canFinishMatch"
         :has-played-matches="playedMatchesList.length > 0"
+        :played-matches-count="playedMatchesList.length"
         :players-by-team="playersByTeam"
         :team-marker="teamMarker"
         :effective-team-colors="effectiveTeamColors"

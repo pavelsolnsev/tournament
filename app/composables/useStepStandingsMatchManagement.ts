@@ -27,6 +27,7 @@ export type StepStandingsMatchManagementProps = {
   hasNextMatch: boolean
   canFinishMatch: boolean
   hasPlayedMatches: boolean
+  playedMatchesCount: number
   playersByTeam: (teamName: string) => Player[]
   teamMarker: (teamName: string) => string
   effectiveTeamColors: Record<string, number>

@@ -7,6 +7,12 @@
       Управление матчем
     </h3>
 
+    <!-- Подсказка судье: номер матча; в последнем матче — напоминание нажать «Показать итоги». -->
+    <MoleculesTournamentMatchProgressHint
+      :team-count="teams.length"
+      :played-count="playedMatchesCount"
+    />
+
     <OrganismsTournamentStepStandingsMatchTeamPickersAccordion
       ref="teamPickersAccordionRef"
       :teams="teams"
@@ -86,17 +92,32 @@
       </div>
 
       <!-- Кнопка "Следующий матч" — только когда выбраны команды; на телефоне на всю ширину карточки. -->
-      <div class="border-t border-slate-200 dark:border-slate-700/60 px-3 py-2.5">
+      <div class="flex gap-2 border-t border-slate-200 dark:border-slate-700/60 px-3 py-2.5">
         <button
           type="button"
-          class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-sky-500 px-5 text-sm font-semibold text-white dark:text-slate-900
-                 transition-colors sm:w-auto md:hover:bg-sky-400 active:bg-sky-600
+          class="inline-flex h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-xl bg-sky-500 px-3 text-sm font-semibold text-white dark:text-slate-900
+                 transition-colors sm:flex-none sm:px-5 md:hover:bg-sky-400 active:bg-sky-600
                  disabled:cursor-not-allowed disabled:opacity-40
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50"
           :disabled="!hasNextMatch"
           @click="openActionConfirm('next')"
         >
-          Следующий матч →
+          <span class="leading-tight">Следующий матч →</span>
+          <!-- Какой матч идёт сейчас и сколько их по плану. -->
+          <span v-if="matchProgress && matchProgress.phase !== 'done'" class="text-[10px] font-medium leading-tight opacity-80">
+            Матч {{ matchProgress.current }} из {{ matchProgress.total }}
+          </span>
+        </button>
+        <!-- Показать итоги: только в последнем матче, со своим подтверждением прямо в карточке. -->
+        <button
+          v-if="canFinishMatchShowResults && canFinishMatch && isLastMatch"
+          type="button"
+          class="inline-flex h-11 min-w-0 flex-1 items-center justify-center rounded-xl bg-emerald-500 px-3 text-sm font-semibold text-white dark:text-slate-900
+                 transition-colors sm:flex-none sm:px-5 md:hover:bg-emerald-400 active:bg-emerald-600
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          @click="openFinishFromCard"
+        >
+          Показать итоги
         </button>
       </div>
 
@@ -112,6 +133,22 @@
           :subtitle="nextMatchConfirmSubtitle"
           cancel-text="Отмена"
           confirm-text="Да, следующий"
+          @cancel="closeActionConfirm"
+          @confirm="confirmPendingAction"
+        />
+      </div>
+
+      <!-- Подтверждение «Показать итоги» из карточки — то же действие, что и в «Управлении». -->
+      <div v-if="cardFinishOpen" class="border-t border-slate-200 dark:border-slate-700/60 px-3 py-2.5">
+        <MoleculesDangerConfirmInline
+          :open="true"
+          :seconds-left="finishMatchSecondsLeft"
+          :busy="false"
+          tone="success"
+          aria-label="Подтверждение показа итогов матча зрителю"
+          title="Показать итоги зрителям? Матч будет записан в историю, на сайте откроется экран итогов."
+          cancel-text="Отмена"
+          confirm-text="Да, показать"
           @cancel="closeActionConfirm"
           @confirm="confirmPendingAction"
         />
@@ -183,12 +220,12 @@
           :has-played-matches="hasPlayedMatches"
           :finish-tournament-status="finishTournamentStatus"
           :finish-tournament-error="finishTournamentError"
-          :is-action-confirm-open="isActionConfirmOpen"
+          :is-action-confirm-open="isActionConfirmOpen && !cardFinishOpen"
           :pending-action="pendingAction"
           :finish-match-seconds-left="finishMatchSecondsLeft"
           :show-finish-tournament-confirm="showFinishTournamentConfirm"
           :finish-tournament-confirm-seconds-left="finishTournamentConfirmSecondsLeft"
-          :open-action-confirm="openActionConfirm"
+          :open-action-confirm="openActionConfirmFromPanel"
           :close-action-confirm="closeActionConfirm"
           :confirm-pending-action="confirmPendingAction"
           :open-finish-tournament-confirm="openFinishTournamentConfirm"
@@ -208,6 +245,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed, ref } from 'vue'
+import { getMatchProgress } from '~/composables/tournament-standings/plannedMatches'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
 import {
@@ -255,5 +294,26 @@ const {
   confirmPendingAction,
   confirmTechnicalDefeat,
 } = useStepStandingsMatchManagement(props)
+
+// Подтверждение «Показать итоги» можно открыть из карточки матча или из «Управления».
+// cardFinishOpen — открыто именно из карточки: тогда показываем его там, а в панели прячем (без дубля).
+const finishFromCard = ref(false)
+const cardFinishOpen = computed(() => finishFromCard.value && isActionConfirmOpen.value && pendingAction.value === 'finish')
+
+// Кнопка в карточке — только в последнем матче по плану (4 команды — 18, 3 команды — 12).
+// Если решили играть дальше и нажали «Следующий матч», кнопка сама пропадёт.
+const matchProgress = computed(() => getMatchProgress(props.teams.length, props.playedMatchesCount))
+const isLastMatch = computed(() => matchProgress.value?.phase === 'last')
+
+function openFinishFromCard() {
+  finishFromCard.value = true
+  pendingAction.value = 'finish'
+}
+
+// Из «Управления» подтверждение открывается внутри панели — сбрасываем признак «из карточки».
+function openActionConfirmFromPanel(action: 'next' | 'finish' | 'finishSilent' | 'technical') {
+  finishFromCard.value = false
+  openActionConfirm(action)
+}
 
 </script>
