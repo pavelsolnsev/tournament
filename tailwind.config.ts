@@ -6,7 +6,9 @@ export default {
     hoverOnlyWhenSupported: true,
   },
   // Тема управляется классом 'dark' на <html> — так мы можем переключать вручную.
-  darkMode: 'class',
+  // Вариант '.dark &' даёт обычный селектор «.dark .dark:x» вместо «:is(.dark *)»:
+  // старый Safari (iOS 12–13) не знает :is() и выкидывал всю тёмную тему — экран становился серым.
+  darkMode: ['variant', '.dark &'],
   content: [
     './app/**/*.{vue,js,ts}',
     './components/**/*.{vue,js,ts}',

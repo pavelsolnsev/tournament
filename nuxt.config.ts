@@ -125,6 +125,11 @@ export default defineNuxtConfig({
           }),
         },
         {
+          // Старый Safari (iOS 12.0) не знает globalThis, а скрипты Nuxt к нему обращаются — подставляем window.
+          innerHTML: `if(typeof globalThis==='undefined'){window.globalThis=window;}`,
+          type: 'text/javascript',
+        },
+        {
           innerHTML: `(function(){try{var s=localStorage.getItem('theme');var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;if(s==='dark'||(s===null&&prefersDark)||s===null){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){document.documentElement.classList.add('dark');}})();`,
           type: 'text/javascript',
         },
@@ -145,6 +150,13 @@ export default defineNuxtConfig({
     optimizeDeps: {
       // Подхватываем vue-query при старте Vite — меньше лишних перезагрузок страницы в dev.
       include: ['@tanstack/vue-query'],
+    },
+    build: {
+      // Старые iPad (Safari 12–13) не понимают ?. и ?? — без понижения синтаксиса скрипты
+      // не запускаются и на зрительском экране не нажимаются селекты. es2019 переписывает их в старый вид.
+      target: 'es2019',
+      // CSS тоже под старый Safari: минификатор не собирает top/right/bottom/left в inset (его нет до Safari 14.1).
+      cssTarget: 'safari12',
     },
   },
   typescript: {

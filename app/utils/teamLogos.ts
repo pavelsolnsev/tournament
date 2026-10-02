@@ -50,6 +50,15 @@ function logoLookupKey(teamName: string): string {
   return normalizeTeamName(teamName).toLowerCase()
 }
 
+/**
+ * Запасной PNG для логотипа в WebP: старый Safari (до iOS 14) WebP не показывает.
+ * PNG-копии лежат рядом в public/team-photos; для jpg/png запасной не нужен — вернём null.
+ */
+export function getTeamLogoFallbackSrc(src: string | null): string | null {
+  if (!src || !src.endsWith('.webp')) return null
+  return src.replace(/.webp$/, '.png')
+}
+
 /** URL логотипа или null — тогда UI показывает эмодзи-маркер цвета. */
 export function getTeamLogoSrc(teamName: string): string | null {
   const key = logoLookupKey(teamName)

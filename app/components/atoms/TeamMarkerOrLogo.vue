@@ -1,7 +1,18 @@
 <template>
   <!-- Есть логотип в team-photos — круг без обводки; иначе маркер в той же клетке по размеру. -->
+  <!-- WebP + запасной PNG: старый Safari (до iOS 14) берёт PNG из img, остальные — WebP из source. -->
+  <picture v-if="logoSrc && logoFallbackSrc" class="inline-flex shrink-0" :class="boxClass">
+    <source :srcset="logoSrc" type="image/webp" />
+    <img
+      :src="logoFallbackSrc"
+      :alt="teamName"
+      class="h-full w-full overflow-hidden rounded-full object-cover"
+      loading="lazy"
+      decoding="async"
+    />
+  </picture>
   <img
-    v-if="logoSrc"
+    v-else-if="logoSrc"
     :src="logoSrc"
     :alt="teamName"
     :class="boxClass"
@@ -18,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { getTeamLogoSrc } from '~/utils/teamLogos'
+import { getTeamLogoFallbackSrc, getTeamLogoSrc } from '~/utils/teamLogos'
 
 const props = withDefaults(
   defineProps<{
@@ -31,6 +42,7 @@ const props = withDefaults(
 )
 
 const logoSrc = computed(() => getTeamLogoSrc(props.teamName))
+const logoFallbackSrc = computed(() => getTeamLogoFallbackSrc(logoSrc.value))
 
 // Одна сетка размеров для картинки и для эмодзи — так круг логотипа совпадает с «кружком» маркера.
 const boxClass = computed(() => {

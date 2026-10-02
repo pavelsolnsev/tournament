@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Старый Safari (iOS 12–13) не знает :where() и выкидывает сброс кнопок Tailwind целиком —
+   кнопки становились серыми системными. Дублируем сброс простым селектором. */
+@layer base {
+  button,
+  [type='button'],
+  [type='reset'],
+  [type='submit'] {
+    -webkit-appearance: button;
+    background-color: transparent;
+    background-image: none;
+  }
+}
+
+
 /* Мобильные браузеры (особенно Safari): без двойного тапа для зума и без pinch на странице. */
 @layer base {
   *,

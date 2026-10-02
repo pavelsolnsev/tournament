@@ -40,7 +40,7 @@
         loop
         playsinline
         preload="none"
-        poster="/bg-video-poster.webp"
+        poster="/bg-video-poster.jpg"
       >
         <source src="/bg-video.mp4" type="video/mp4" />
       </video>

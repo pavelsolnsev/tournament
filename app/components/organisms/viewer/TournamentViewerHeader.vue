@@ -14,7 +14,7 @@
     >
       <div ref="headerLeftRef" class="flex min-h-0 min-w-0 flex-1 items-center gap-1 sm:gap-1.5">
         <img
-          src="/logorfoi.webp"
+          src="/logorfoi.png"
           alt=""
           width="36"
           height="36"
@@ -280,8 +280,17 @@ function syncHeaderWrap() {
 
 let headerResizeObserver: ResizeObserver | null = null
 
+// Старый Safari (до iOS 13.4) не знает ResizeObserver — там следим за поворотом/размером окна.
+function onWindowResize() {
+  syncHeaderWrap()
+}
+
 onMounted(() => {
   syncHeaderWrap()
+  if (typeof ResizeObserver === 'undefined') {
+    window.addEventListener('resize', onWindowResize)
+    return
+  }
   headerResizeObserver = new ResizeObserver(() => syncHeaderWrap())
   if (headerRootRef.value) headerResizeObserver.observe(headerRootRef.value)
 })
@@ -289,6 +298,7 @@ onMounted(() => {
 onUnmounted(() => {
   headerResizeObserver?.disconnect()
   headerResizeObserver = null
+  window.removeEventListener('resize', onWindowResize)
 })
 
 watch(
