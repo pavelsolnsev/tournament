@@ -9,6 +9,16 @@ export default {
   // Вариант '.dark &' даёт обычный селектор «.dark .dark:x» вместо «:is(.dark *)»:
   // старый Safari (iOS 12–13) не знает :is() и выкидывал всю тёмную тему — экран становился серым.
   darkMode: ['variant', '.dark &'],
+  // Без переменных прозрачности Tailwind пишет цвета обычным #hex вместо «rgb(1 2 3 / var(...))».
+  // Safari 10 (iPad 4, iOS 10.3) такую запись не понимает и терял все цвета. Классы bg-opacity-* в проекте не используются.
+  corePlugins: {
+    backgroundOpacity: false,
+    textOpacity: false,
+    borderOpacity: false,
+    divideOpacity: false,
+    placeholderOpacity: false,
+    ringOpacity: false,
+  },
   content: [
     './app/**/*.{vue,js,ts}',
     './components/**/*.{vue,js,ts}',

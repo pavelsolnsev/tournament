@@ -30,7 +30,7 @@
     v-else
     id="scroll-root"
     class="scroll-smooth touch-pan-y bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100 h-full transition-colors duration-200"
-    style="position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:none;scrollbar-gutter:stable;touch-action:pan-y;-webkit-overflow-scrolling:touch;"
+    style="position:fixed;top:0;right:0;bottom:0;left:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:none;scrollbar-gutter:stable;touch-action:pan-y;-webkit-overflow-scrolling:touch;"
   >
     <NuxtLayout>
       <NuxtPage />

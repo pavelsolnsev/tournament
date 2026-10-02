@@ -23,11 +23,13 @@
       @refresh="handleRefresh"
       @admin-enter="onAdminEnter"
       @header-wrap="headerActionsWrap = $event"
+      @header-height="headerHeightPx = $event"
     />
 
     <main
-      class="relative z-10 mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col overflow-hidden px-4 transition-[padding] duration-300 print:max-w-none print:px-4 sm:px-6 print:!pt-6"
+      class="viewer-main relative z-10 mx-auto flex w-full min-w-0 max-w-4xl flex-1 flex-col overflow-hidden px-4 transition-[padding] duration-300 print:max-w-none print:px-4 sm:px-6 print:!pt-6"
       :class="mainTopPaddingClass"
+      :style="mainTopPaddingStyle"
     >
       <!-- Фоновое видео — только пока турнир не начался, не в live-режиме.
            showBgVideo откладывает загрузку до idle, чтобы не мешать открытию на сотовой.
@@ -232,6 +234,12 @@ const showLoginModal = ref(false);
 const { restoreSession, isAdmin } = useAdminAuth();
 
 const headerActionsWrap = ref(false);
+// Высота шапки, измеренная в браузере. Пока скрипт не померил (0), работают классы с отступом «на глаз».
+const headerHeightPx = ref(0);
+// Отступ сверху ровно по шапке: на планшете она может стать двухстрочной и раньше наезжала на таблицу.
+const mainTopPaddingStyle = computed(() =>
+  headerHeightPx.value > 0 ? { paddingTop: headerHeightPx.value + "px" } : undefined,
+);
 const isRefreshing = ref(false);
 
 // Фоновое видео (только мобильные) монтируем не сразу, а когда браузер освободится.

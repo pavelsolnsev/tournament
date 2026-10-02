@@ -125,8 +125,11 @@ export default defineNuxtConfig({
           }),
         },
         {
-          // Старый Safari (iOS 12.0) не знает globalThis, а скрипты Nuxt к нему обращаются — подставляем window.
-          innerHTML: `if(typeof globalThis==='undefined'){window.globalThis=window;}`,
+          // Полифилы для старого Safari (iOS 12–15.3): код Nuxt вызывает globalThis, Array.prototype.at,
+          // Object.hasOwn и findLast. Без них скрипт падает при старте — кнопки и списки не нажимаются.
+          // Простые заменители ставим до загрузки остальных скриптов; в новых браузерах они ничего не меняют.
+          // Там же проверка gap у flex: если не работает — класс no-flexgap на <html> (запасные отступы в tailwind.css).
+          innerHTML: `if(typeof globalThis==='undefined'){window.globalThis=window;}(function(){try{var d=document.createElement('div');d.style.display='flex';d.style.flexDirection='column';d.style.rowGap='1px';d.appendChild(document.createElement('div'));d.appendChild(document.createElement('div'));document.documentElement.appendChild(d);var ok=d.scrollHeight===1;d.parentNode.removeChild(d);if(!ok){document.documentElement.className+=' no-flexgap';}}catch(e){}})();(function(){function def(o,k,v){if(!o[k]){Object.defineProperty(o,k,{value:v,writable:true,configurable:true});}}function at(i){var n=this.length;i=Math.trunc(i)||0;if(i<0){i+=n;}return i<0||i>=n?undefined:this[i];}def(Array.prototype,'at',at);def(String.prototype,'at',at);def(Object,'hasOwn',function(o,k){return Object.prototype.hasOwnProperty.call(o,k);});def(Array.prototype,'findLast',function(f,t){for(var i=this.length-1;i>=0;i--){if(f.call(t,this[i],i,this)){return this[i];}}return undefined;});def(Array.prototype,'findLastIndex',function(f,t){for(var i=this.length-1;i>=0;i--){if(f.call(t,this[i],i,this)){return i;}}return -1;});def(Object,'fromEntries',function(it){var o={};Array.from(it).forEach(function(e){o[e[0]]=e[1];});return o;});def(String.prototype,'replaceAll',function(a,b){return typeof a==='string'?this.split(a).join(b):this.replace(a,b);});})();`,
           type: 'text/javascript',
         },
         {
@@ -155,8 +158,8 @@ export default defineNuxtConfig({
       // Старые iPad (Safari 12–13) не понимают ?. и ?? — без понижения синтаксиса скрипты
       // не запускаются и на зрительском экране не нажимаются селекты. es2019 переписывает их в старый вид.
       target: 'es2019',
-      // CSS тоже под старый Safari: минификатор не собирает top/right/bottom/left в inset (его нет до Safari 14.1).
-      cssTarget: 'safari12',
+      // CSS тоже под старый Safari (вплоть до 10 на iPad 4): без inset и с цветами вида rgba(1,2,3,.5).
+      cssTarget: 'safari10',
     },
   },
   typescript: {

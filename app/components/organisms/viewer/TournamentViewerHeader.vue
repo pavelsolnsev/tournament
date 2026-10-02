@@ -1,6 +1,7 @@
 <template>
   <!-- Simple10: Шапка зрителя — лого, статус, кнопки и при live — счёт и бейджи игроков. -->
   <header
+    ref="headerElRef"
     class="absolute inset-x-0 top-0 z-20 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pt-[env(safe-area-inset-top)] print:hidden"
   >
     <div
@@ -255,8 +256,11 @@ const emit = defineEmits<{
   refresh: []
   'admin-enter': []
   'header-wrap': [wrapped: boolean]
+  /** Реальная высота шапки в px — по ней зритель делает отступ сверху, чтобы шапка не наезжала на таблицу. */
+  'header-height': [px: number]
 }>()
 
+const headerElRef = useTemplateRef<HTMLElement>('headerElRef')
 const headerRootRef = useTemplateRef<HTMLElement>('headerRootRef')
 const headerLeftRef = useTemplateRef<HTMLElement>('headerLeftRef')
 const headerActionsRef = useTemplateRef<HTMLElement>('headerActionsRef')
@@ -274,8 +278,16 @@ function syncHeaderWrap() {
       const ar = actions.getBoundingClientRect()
       headerActionsWrap.value = lr.right > ar.left - 2
       emit('header-wrap', headerActionsWrap.value)
+      // После перестройки (одна строка / две) меряем шапку целиком, вместе со счётом в live.
+      nextTick(() => requestAnimationFrame(emitHeaderHeight))
     })
   })
+}
+
+function emitHeaderHeight() {
+  const el = headerElRef.value
+  if (!el) return
+  emit('header-height', Math.ceil(el.getBoundingClientRect().height))
 }
 
 let headerResizeObserver: ResizeObserver | null = null
@@ -293,6 +305,8 @@ onMounted(() => {
   }
   headerResizeObserver = new ResizeObserver(() => syncHeaderWrap())
   if (headerRootRef.value) headerResizeObserver.observe(headerRootRef.value)
+  // Шапка растёт и без смены ширины (появился счёт или бейджи игроков) — следим и за ней.
+  if (headerElRef.value) headerResizeObserver.observe(headerElRef.value)
 })
 
 onUnmounted(() => {
