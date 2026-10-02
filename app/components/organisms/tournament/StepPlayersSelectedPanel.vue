@@ -247,6 +247,17 @@
       >
         Перейти к командам →
       </AtomsPrimaryButton>
+
+      <!-- Сразу к таблице (как крошка «Таблица»): например, вернуться к идущему турниру, не трогая команды. -->
+      <button
+        type="button"
+        class="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors
+               hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:bg-slate-800
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+        @click="emit('goToStandings')"
+      >
+        Перейти к таблице →
+      </button>
     </AtomsTournamentPanel>
   </section>
 </template>
@@ -377,6 +388,7 @@ const vkTeamOptionsForPicker = computed(() => {
 const emit = defineEmits<{
   removePlayer: [id: number]
   goToTeams: []
+  goToStandings: []
   syncTournamentFromServer: []
   togglePlayerPaid: [playerId: number, paid: boolean]
   setPlayerVkTeam: [playerId: number, team: string | null]

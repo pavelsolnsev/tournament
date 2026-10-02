@@ -148,6 +148,7 @@
                   @update:tournament-date="(v) => { wizard.tournamentDate.value = v }"
                   @refresh-players="wizard.refreshPlayers()"
                   @go-to-teams="wizard.goToTeams()"
+                  @go-to-standings="navigateBreadcrumb(2)"
                   :tournament-sync-busy="tournamentSyncBusy"
                   @sync-tournament-from-server="onTournamentSyncFromRosterPanel"
                   :paid-player-ids="paidPlayerIdsView"

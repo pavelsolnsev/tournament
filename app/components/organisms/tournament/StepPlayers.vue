@@ -45,6 +45,7 @@
         @set-vk-team-limit="(name, limit) => emit('setVkTeamLimit', name, limit)"
         @set-vk-list-limit="(limit) => emit('setVkListLimit', limit)"
         @go-to-teams="emit('goToTeams')"
+        @go-to-standings="emit('goToStandings')"
         @toggle-player-paid="(id, paid) => emit('togglePlayerPaid', id, paid)"
         @sync-tournament-from-server="emit('syncTournamentFromServer')"
       />
@@ -91,6 +92,7 @@ const emit = defineEmits<{
   'update:tournamentDate': [value: string]
   refreshPlayers: []
   goToTeams: []
+  goToStandings: []
   togglePlayerPaid: [playerId: number, paid: boolean]
   setPlayerVkTeam: [playerId: number, team: string | null]
   addVkTeamSlot: [name: string]
