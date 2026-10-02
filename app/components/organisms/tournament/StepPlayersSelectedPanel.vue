@@ -197,8 +197,21 @@
         </button>
       </div>
 
+      <!-- Поиск по игрокам, уже выбранным в турнир (по имени и нику). -->
+      <AtomsTournamentTextInput
+        v-if="selectedPlayers.length > 0"
+        v-model="selectedSearch"
+        variant="search"
+        size="xs"
+        placeholder="Поиск по игрокам…"
+        caret-at-end
+      />
+
       <AtomsEmptyStateBox v-if="selectedPlayers.length === 0">
         Выберите игроков в списке доступных.
+      </AtomsEmptyStateBox>
+      <AtomsEmptyStateBox v-else-if="displayedSelectedPlayers.length === 0">
+        Никого не нашли.
       </AtomsEmptyStateBox>
 
       <AtomsPlayerListUl v-else>
@@ -245,6 +258,8 @@ import { usePlayerDisplay, displayPlayerLabelWithoutRating } from '~/composables
 
 const sortByTeam = ref(false)
 const sortPaidFirst = ref(false)
+// Строка поиска по выбранным игрокам; пустая — показываем всех.
+const selectedSearch = ref('')
 
 const newVkSlotDraft = ref('')
 
@@ -296,7 +311,14 @@ function vkTeamSortKey(playerId: number): string {
 }
 
 const displayedSelectedPlayers = computed(() => {
-  const list = [...props.selectedPlayers]
+  // Сначала отфильтровываем по поиску (имя или @ник), потом сортируем как раньше.
+  const term = selectedSearch.value.trim().toLowerCase()
+  const normalized = term.replace(/^@/, '')
+  const list = props.selectedPlayers.filter((p) => {
+    if (!term) return true
+    const username = (p.username || '').replace(/^@/, '').toLowerCase()
+    return p.name.toLowerCase().includes(term) || (!!username && username.includes(normalized))
+  })
   if (list.length <= 1) {
     return list
   }
