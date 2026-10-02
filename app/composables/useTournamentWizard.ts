@@ -262,6 +262,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     cancelPendingSave,
     saveTournamentStateNow,
     getSavedContext: () => savedContext.value,
+    lastAppliedRosterKey,
   })
 
   useSyncAssignmentFromVkTeamLabels({

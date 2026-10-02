@@ -28,6 +28,12 @@ export function useSyncVkFromTournamentAssignment(opts: {
   saveTournamentStateNow: (state: SavedTournamentContext) => Promise<void>
   findMatchingSlot: (raw: string, slots: string[]) => string | null
 }) {
+  // Игроки, у которых в прошлый раз была команда на шаге «Команды».
+  // Стираем подпись ВК только им — значит, админ сам убрал игрока из команды.
+  // Тех, кого ещё не расставили (например, список команд из БД не успел загрузиться),
+  // не трогаем: иначе у всех, кто записался за команду в ВК, команда пропадала.
+  let idsWithTeam = new Set<number>()
+
   function syncVkFromTournamentAssignment() {
     if (!opts.stateRestored.value) return
     if (opts.step.value === 0) return
@@ -51,11 +57,13 @@ export function useSyncVkFromTournamentAssignment(opts: {
     }
 
     let labelsMutated = false
+    const nextIdsWithTeam = new Set<number>()
     for (const id of opts.selectedIds.value) {
       const team = normalizeTeamName(opts.assignment.getTeam(id))
+      if (team) nextIdsWithTeam.add(id)
       if (!team) {
         const prev = nextLabels[id] != null ? String(nextLabels[id]).trim() : ''
-        if (prev) {
+        if (prev && idsWithTeam.has(id)) {
           nextLabels[id] = ''
           labelsMutated = true
         }
@@ -68,6 +76,8 @@ export function useSyncVkFromTournamentAssignment(opts: {
         labelsMutated = true
       }
     }
+
+    idsWithTeam = nextIdsWithTeam
 
     if (slotsMutated) {
       opts.vkTeamSlots.value = slots
