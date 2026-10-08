@@ -1,7 +1,7 @@
 import { createError } from 'h3'
 import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
-import { setVkStartListRequested } from '../../utils/vkStartListRequest'
+import { parseVkStartSum, setVkStartListRequested } from '../../utils/vkStartListRequest'
 
 const LINK_KEY = 'tournament_vk_link'
 
@@ -18,6 +18,8 @@ type Body = {
   date?: unknown
   time?: unknown
   place?: unknown
+  /** Сумма участия в рублях (обязательна для prof / tr с сайта). */
+  sum?: unknown
 }
 
 function normalizeTeamSlotsForTr(raw: unknown): string[] {
@@ -143,6 +145,13 @@ export default defineEventHandler(async (event) => {
   const body = await readBody<Body>(event)
   const commandText = buildCommand(body)
 
+  // Сумму участия админ вводит в форме «Создать матч» — без неё матч (prof / tr) не создаём.
+  const sum = parseVkStartSum(body.sum)
+  const presetKey = String(body.preset ?? '').trim().toLowerCase()
+  if (sum == null && (presetKey === 'prof' || presetKey === 'tr')) {
+    throw createError({ statusCode: 400, statusMessage: 'Укажите сумму участия (в рублях)' })
+  }
+
   let peerId: number | null = null
   const rawPeer = body.peer_id
   if (typeof rawPeer === 'number' && Number.isFinite(rawPeer) && rawPeer !== 0) {
@@ -164,7 +173,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  await setVkStartListRequested({ commandText, peerId })
+  await setVkStartListRequested({ commandText, peerId, sum })
 
-  return { ok: true, commandText, peerId }
+  return { ok: true, commandText, peerId, sum }
 })

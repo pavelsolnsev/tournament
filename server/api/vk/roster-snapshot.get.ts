@@ -186,7 +186,7 @@ export default defineEventHandler(async (event) => {
     readVkStartListPending(),
   ])
   const startVkRequested = startRow
-    ? { commandText: startRow.commandText, peerId: startRow.peerId }
+    ? { commandText: startRow.commandText, peerId: startRow.peerId, sum: startRow.sum ?? null }
     : null
 
   const stateRows = await queryWithRetry<Array<{ value: string }>>(

@@ -8,11 +8,21 @@ export type VkStartListRequestStored = {
   commandText: string
   peerId: number
   requestedAt: string
+  /** Сумма участия в рублях, введённая на сайте; нет — бот возьмёт сумму локации. */
+  sum?: number
+}
+
+/** Сумма участия: целое число рублей 1…100000, иначе null. */
+export function parseVkStartSum(raw: unknown): number | null {
+  const n = Math.round(Number(raw))
+  if (raw == null || raw === '' || !Number.isFinite(n) || n < 1 || n > 100000) return null
+  return n
 }
 
 export async function setVkStartListRequested(payload: {
   commandText: string
   peerId: number
+  sum?: number | null
 }): Promise<void> {
   const trimmed = String(payload.commandText || '').trim()
   const peerId = Math.trunc(Number(payload.peerId))
@@ -25,6 +35,8 @@ export async function setVkStartListRequested(payload: {
     peerId,
     requestedAt: new Date().toISOString(),
   }
+  const sum = parseVkStartSum(payload.sum)
+  if (sum != null) body.sum = sum
   await queryWithRetry(
     `INSERT INTO app_state (key_name, value) VALUES (?, ?)
      ON DUPLICATE KEY UPDATE value = VALUES(value)`,
@@ -50,6 +62,7 @@ export async function readVkStartListPending(): Promise<VkStartListRequestStored
       commandText,
       peerId,
       requestedAt: typeof v.requestedAt === 'string' ? v.requestedAt : '',
+      ...(parseVkStartSum(v.sum) != null ? { sum: parseVkStartSum(v.sum) as number } : {}),
     }
   } catch {
     return null

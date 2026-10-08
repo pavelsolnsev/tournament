@@ -98,6 +98,52 @@
       </div>
     </div>
 
+    <!-- Сумма участия: своё число или готовая плашка. Без суммы матч не создаётся. -->
+    <div
+      v-if="selectedPreset === 'prof' || selectedPreset === 'tr'"
+      class="mt-3 flex min-w-0 flex-col gap-1.5"
+    >
+      <label
+        :for="vkEventSumId"
+        class="text-xs font-medium text-slate-600 dark:text-slate-400"
+      >
+        Сумма участия
+      </label>
+      <div class="flex min-w-0 flex-wrap gap-2">
+        <button
+          v-for="amount in sumPresets"
+          :key="amount"
+          type="button"
+          class="inline-flex items-center rounded-xl border px-3.5 py-2 text-xs font-semibold tabular-nums transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          :class="eventSum === String(amount)
+            ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+            : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400 dark:border-slate-700/60 dark:bg-slate-800/40 dark:text-slate-400 dark:hover:border-slate-600'"
+          :aria-pressed="eventSum === String(amount)"
+          @click="eventSum = String(amount)"
+        >
+          {{ amount }} ₽
+        </button>
+      </div>
+      <div
+        class="relative min-w-0 w-full max-w-full overflow-hidden rounded-lg border border-slate-300 bg-white transition-colors hover:border-slate-400 focus-within:border-emerald-500/60 focus-within:ring-2 focus-within:ring-emerald-500/20 dark:border-slate-700/60 dark:bg-slate-800/40 dark:hover:border-slate-600 dark:focus-within:border-emerald-500/50 dark:focus-within:ring-emerald-500/25 sm:w-44"
+      >
+        <!-- Только цифры: лишние символы сразу убираем, чтобы в боте не оказалось «500р» или «5 00». -->
+        <input
+          :id="vkEventSumId"
+          :value="eventSum"
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          maxlength="6"
+          placeholder="Своя сумма"
+          autocomplete="off"
+          class="box-border block min-h-[2.75rem] w-full min-w-0 border-0 bg-transparent py-2 pl-3 pr-9 text-sm font-medium tabular-nums text-slate-800 placeholder-slate-400 shadow-none outline-none ring-0 focus:outline-none focus:ring-0 dark:text-slate-100 dark:placeholder-slate-600"
+          @input="(e) => { const el = e.target as HTMLInputElement; const digits = el.value.replace(/\D+/g, ''); el.value = digits; eventSum = digits }"
+        >
+        <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-500 dark:text-slate-400" aria-hidden="true">₽</span>
+      </div>
+    </div>
+
     <!-- Только режим турнира (s tr) — слоты команд для кнопок в чате -->
     <div
       v-if="selectedPreset === 'tr'"
@@ -174,8 +220,11 @@ defineProps<{
   trSlotsId: string
   vkEventDateId: string
   vkEventTimeId: string
+  vkEventSumId: string
+  sumPresets: readonly number[]
 }>()
 
 const eventDate = defineModel<string>('eventDate', { required: true })
 const eventTime = defineModel<string>('eventTime', { required: true })
+const eventSum = defineModel<string>('eventSum', { required: true })
 </script>

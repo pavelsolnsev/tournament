@@ -184,6 +184,9 @@
         v-else-if="!vkStatus?.linked && !vkStatus?.pendingVkStart"
         v-model:event-date="vkEventDate"
         v-model:event-time="vkEventTime"
+        v-model:event-sum="vkEventSum"
+        :sum-presets="vkEventSumPresets"
+        :vk-event-sum-id="vkEventSumId"
         :selected-preset="selectedPreset"
         :preset-buttons="presetButtons"
         :preset-chip-class="presetChipClass"
@@ -267,6 +270,9 @@ const {
   trSlotsId,
   vkEventDateId,
   vkEventTimeId,
+  vkEventSum,
+  vkEventSumPresets,
+  vkEventSumId,
   presetButtons,
   canSubmitCreateMatch,
   presetChipClass,

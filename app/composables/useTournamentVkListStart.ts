@@ -146,6 +146,16 @@ export function useTournamentVkListStart() {
   const selectedPreset = ref<VkListPreset | null>(null)
   const vkEventDate = ref('')
   const vkEventTime = ref('')
+  // Сумма участия в рублях — вводит админ (или выбирает плашку) перед созданием матча.
+  const vkEventSum = ref('')
+  const vkEventSumPresets = [400, 500, 650, 700] as const
+  // Целое число рублей 1…100000; пусто или мусор — null (кнопка «Создать матч» неактивна).
+  const vkEventSumValue = computed<number | null>(() => {
+    const raw = vkEventSum.value.trim()
+    if (!/^\d+$/.test(raw)) return null
+    const n = Number(raw)
+    return n >= 1 && n <= 100000 ? n : null
+  })
   const trTeamSlotsInput = ref('')
   const vkBusy = ref(false)
   const vkStartError = ref<string | null>(null)
@@ -154,6 +164,7 @@ export function useTournamentVkListStart() {
   const trSlotsId = `vk-tr-slots-${uid}`
   const vkEventDateId = `vk-event-date-${uid}`
   const vkEventTimeId = `vk-event-time-${uid}`
+  const vkEventSumId = `vk-event-sum-${uid}`
 
   const presetButtons = [
     { preset: 'prof' as const, label: 'Профилакторий' },
@@ -182,6 +193,7 @@ export function useTournamentVkListStart() {
   const canSubmitCreateMatch = computed(() => {
     if (!selectedPreset.value || vkBusy.value) return false
     if (vkEventDate.value.trim() === '' || vkEventTime.value.trim() === '') return false
+    if (vkEventSumValue.value == null) return false
     if (selectedPreset.value === 'tr' && trTeamSlotsFormatInvalid.value) {
       return false
     }
@@ -230,6 +242,7 @@ export function useTournamentVkListStart() {
     } else {
       vkEventDate.value = ''
       vkEventTime.value = ''
+      vkEventSum.value = ''
       trTeamSlotsInput.value = ''
     }
   }
@@ -262,6 +275,7 @@ export function useTournamentVkListStart() {
       preset,
       date: vkEventDate.value.trim(),
       time: vkEventTime.value.trim(),
+      sum: vkEventSumValue.value,
     }
     if (!linked) {
       body.peer_id = resolvedPeerForRequest()
@@ -328,6 +342,9 @@ export function useTournamentVkListStart() {
     trSlotsId,
     vkEventDateId,
     vkEventTimeId,
+    vkEventSum,
+    vkEventSumPresets,
+    vkEventSumId,
     presetButtons,
     canSubmitCreateMatch,
     presetChipClass,
