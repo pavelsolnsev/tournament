@@ -4,7 +4,7 @@ import { useTeamAssignment } from '~/composables/useTeamAssignment'
 import type { TournamentStateSyncApi } from '~/composables/useTournamentState'
 import { useSyncAssignmentFromVkTeamLabels } from '~/composables/useSyncAssignmentFromVkTeamLabels'
 import { useSyncVkFromTournamentAssignment } from '~/composables/useSyncVkFromTournamentAssignment'
-import { useTournamentServerRosterPullWatch } from '~/composables/useTournamentServerRosterPullWatch'
+import { useTournamentServerRosterPullWatch, withRosterSentMark } from '~/composables/useTournamentServerRosterPullWatch'
 import { dedupeTeamNamesPreservingOrder, normalizeTeamColorsMap, normalizeTeamName } from '~/utils/teamNames'
 import type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
 import { applyEmptyTournamentContextLocal, applyLoadedContext } from '~/composables/tournament-wizard/applyServerContext'
@@ -146,7 +146,10 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   /** Пока перезаливаем мастер из `serverState` — не пишем тот же снимок обратно в БД (PUT + лишний GET). */
   const suppressContextPersistFromReapply = ref(false)
 
-  const { serverState, isLoading, saveTournamentState, saveTournamentStateNow, cancelPendingSave, refresh } = stateSync
+  const { serverState, isLoading, cancelPendingSave, refresh } = stateSync
+  // Сохранения с отметкой «какой состав отправили» — см. useTournamentServerRosterPullWatch.
+  const rosterSaves = withRosterSentMark(stateSync)
+  const { saveTournamentState, saveTournamentStateNow } = rosterSaves
 
   const paidPlayerIds = ref<Set<number>>(new Set())
 
@@ -275,11 +278,8 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     assignment,
   })
 
-  useTournamentServerRosterPullWatch({
-    stateRestored,
-    isLoading,
-    serverState,
-    selectedIds,
+  rosterSaves.setMark(useTournamentServerRosterPullWatch({
+    stateRestored, isLoading, serverState, selectedIds,
     vkTeamLabelByPlayerId,
     vkTeamSlots,
     vkListTournament,
@@ -287,7 +287,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     confirmedTeamNames: assignment.confirmedTeamNames,
     teamColors: assignment.teamColors,
     lastAppliedRosterKey,
-  })
+  }).markRosterSent)
 
   // Версия состава для тела PUT — считается по отпечатку ростера этой вкладки.
   const rosterRevForSave = useRosterRevForSave({
