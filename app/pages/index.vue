@@ -104,6 +104,7 @@
                   v-if="wizard.step.value === 0"
                   :clear-tournament-busy="clearTournamentBusy"
                   @cancel-tournament="handleVkCancelTournament"
+                  @match-created="(m) => { wizard.tournamentDate.value = m.dateIso; wizard.venueLabel.value = m.venueLabel; wizard.formatLabel.value = m.formatLabel }"
                 />
 
                 <OrganismsTournamentStepTeams

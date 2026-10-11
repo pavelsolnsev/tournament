@@ -1,8 +1,11 @@
 // Логика OrganismsTournamentStepVkListStartPanel — вынесена для лимита max-lines в .vue.
 import { useAdminAuth } from '~/composables/useAdminAuth'
-import { defaultProfDateTime, defaultTrDateTime } from '~/utils/vkMoscowPresetDefaults'
+import { defaultKzDateTime, defaultProfDateTime, defaultTrDateTime } from '~/utils/vkMoscowPresetDefaults'
 
-export type VkListPreset = 'prof' | 'tr'
+export type VkListPreset = 'prof' | 'kz' | 'tr'
+
+/** Где проходит турнир: Красное Знамя или Профилакторий. */
+export type VkTournamentVenue = 'kz' | 'prof'
 
 /** `;` `|` → `,`, схлопываем подряд запятые, убираем недопустимые символы. */
 export function sanitizeTrTeamSlotsInput(s: string): string {
@@ -22,7 +25,12 @@ export type VkStatusResponse = {
   pendingVkStart: { commandText: string; peerId: number; requestedAt: string } | null
 }
 
-export function useTournamentVkListStart() {
+/** Дата, место и формат турнира — уходят в мастер сразу после создания матча. */
+export type CreatedMatchMeta = { dateIso: string; venueLabel: string; formatLabel: string }
+
+const VENUE_LABEL: Record<'prof' | 'kz', string> = { prof: 'Профилакторий', kz: 'Красное Знамя' }
+
+export function useTournamentVkListStart(opts: { onCreated?: (meta: CreatedMatchMeta) => void } = {}) {
   const { adminRole } = useAdminAuth()
   const showPanel = computed(() => adminRole.value === 'full')
 
@@ -157,6 +165,15 @@ export function useTournamentVkListStart() {
     return n >= 1 && n <= 100000 ? n : null
   })
   const trTeamSlotsInput = ref('')
+  // Формат турнира (8x8 / 5x5) — выбирает админ; у сборов prof / kz формат всегда «Рейтинговая игра 5x5».
+  const trFormat = ref<string | null>(null)
+  const trFormatOptions = ['Турнир 8x8', 'Турнир 5x5'] as const
+  // Место турнира — выбирает админ; без выбора турнир не создаётся.
+  const trVenue = ref<VkTournamentVenue | null>(null)
+  const trVenueOptions = [
+    { venue: 'kz' as const, label: 'Красное Знамя' },
+    { venue: 'prof' as const, label: 'Профилакторий' },
+  ]
   const vkBusy = ref(false)
   const vkStartError = ref<string | null>(null)
 
@@ -168,6 +185,7 @@ export function useTournamentVkListStart() {
 
   const presetButtons = [
     { preset: 'prof' as const, label: 'Профилакторий' },
+    { preset: 'kz' as const, label: 'Красное Знамя' },
     { preset: 'tr' as const, label: 'Турнир (пт)' },
   ]
 
@@ -194,6 +212,7 @@ export function useTournamentVkListStart() {
     if (!selectedPreset.value || vkBusy.value) return false
     if (vkEventDate.value.trim() === '' || vkEventTime.value.trim() === '') return false
     if (vkEventSumValue.value == null) return false
+    if (selectedPreset.value === 'tr' && (trVenue.value == null || trFormat.value == null)) return false
     if (selectedPreset.value === 'tr' && trTeamSlotsFormatInvalid.value) {
       return false
     }
@@ -235,6 +254,10 @@ export function useTournamentVkListStart() {
       const d = defaultProfDateTime()
       vkEventDate.value = d.dateIso
       vkEventTime.value = d.time
+    } else if (next === 'kz') {
+      const d = defaultKzDateTime()
+      vkEventDate.value = d.dateIso
+      vkEventTime.value = d.time
     } else if (next === 'tr') {
       const d = defaultTrDateTime()
       vkEventDate.value = d.dateIso
@@ -244,6 +267,8 @@ export function useTournamentVkListStart() {
       vkEventTime.value = ''
       vkEventSum.value = ''
       trTeamSlotsInput.value = ''
+      trVenue.value = null
+      trFormat.value = null
     }
   }
 
@@ -287,6 +312,7 @@ export function useTournamentVkListStart() {
         .map((s) => s.trim())
         .filter(Boolean)
       if (slots.length) body.team_slots = slots
+      body.venue = trVenue.value
     }
 
     vkBusy.value = true
@@ -311,12 +337,21 @@ export function useTournamentVkListStart() {
   async function submitCreateMatch() {
     const preset = selectedPreset.value
     if (!preset || !canSubmitCreateMatch.value) return
+    // Запоминаем дату, место и формат до сброса формы — их сразу получит мастер турнира.
+    const meta: CreatedMatchMeta = {
+      dateIso: vkEventDate.value.trim(),
+      venueLabel: preset === 'tr' ? VENUE_LABEL[trVenue.value ?? 'kz'] : VENUE_LABEL[preset],
+      formatLabel: preset === 'tr' ? (trFormat.value ?? 'Турнир 8x8') : 'Рейтинговая игра 5x5',
+    }
     await requestVkStart(preset)
     if (!vkStartError.value) {
+      opts.onCreated?.(meta)
+      trFormat.value = null
       selectedPreset.value = null
       vkEventDate.value = ''
       vkEventTime.value = ''
       trTeamSlotsInput.value = ''
+      trVenue.value = null
     }
   }
 
@@ -335,6 +370,10 @@ export function useTournamentVkListStart() {
     vkEventDate,
     vkEventTime,
     trTeamSlotsInput,
+    trVenue,
+    trVenueOptions,
+    trFormat,
+    trFormatOptions,
     trTeamSlotsFormatInvalid,
     onTrTeamSlotsInput,
     vkBusy,

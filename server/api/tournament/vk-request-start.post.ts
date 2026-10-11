@@ -1,7 +1,7 @@
 import { createError } from 'h3'
 import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
-import { parseVkStartSum, setVkStartListRequested } from '../../utils/vkStartListRequest'
+import { parseVkStartSum, parseVkStartVenue, setVkStartListRequested } from '../../utils/vkStartListRequest'
 
 const LINK_KEY = 'tournament_vk_link'
 
@@ -18,8 +18,10 @@ type Body = {
   date?: unknown
   time?: unknown
   place?: unknown
-  /** Сумма участия в рублях (обязательна для prof / tr с сайта). */
+  /** Сумма участия в рублях (обязательна для prof / kz / tr с сайта). */
   sum?: unknown
+  /** Площадка турнира: kz (Красное Знамя) или prof (Профилакторий) — обязательна для tr. */
+  venue?: unknown
 }
 
 function normalizeTeamSlotsForTr(raw: unknown): string[] {
@@ -78,7 +80,7 @@ async function readLinkedPeerId(): Promise<number | null> {
 }
 
 /** Явная дата/время + prof/tr — парсит бот через parseDatedProfTrCommand. */
-function tryBuildDatedProfTr(preset: 'prof' | 'tr', body: Body): string | null {
+function tryBuildDatedProfTr(preset: 'prof' | 'kz' | 'tr', body: Body): string | null {
   const dateIso = typeof body.date === 'string' ? body.date.trim() : ''
   const timeRaw = typeof body.time === 'string' ? body.time.trim() : ''
   if (!dateIso || !timeRaw) return null
@@ -87,6 +89,10 @@ function tryBuildDatedProfTr(preset: 'prof' | 'tr', body: Body): string | null {
   if (!ddmmyyyy || !time) return null
   if (preset === 'prof') {
     return `s ${ddmmyyyy} ${time} prof`
+  }
+  // Обычный сбор на Красном Знамени.
+  if (preset === 'kz') {
+    return `s ${ddmmyyyy} ${time} kz`
   }
   const slots = normalizeTeamSlotsForTr(body.team_slots)
   if (slots.length > 0) {
@@ -101,6 +107,11 @@ function buildCommand(body: Body): string {
     const dated = tryBuildDatedProfTr('prof', body)
     if (dated) return dated
     return 's prof'
+  }
+  if (preset === 'kz') {
+    const dated = tryBuildDatedProfTr('kz', body)
+    if (dated) return dated
+    throw createError({ statusCode: 400, statusMessage: 'Для сбора на Красном Знамени укажите дату и время' })
   }
   if (preset === 'test') return 's test'
   if (preset === 'tr') {
@@ -129,7 +140,7 @@ function buildCommand(body: Body): string {
   }
   throw createError({
     statusCode: 400,
-    statusMessage: 'Неизвестный preset: prof, tr, test или custom',
+    statusMessage: 'Неизвестный preset: prof, kz, tr, test или custom',
   })
 }
 
@@ -148,8 +159,14 @@ export default defineEventHandler(async (event) => {
   // Сумму участия админ вводит в форме «Создать матч» — без неё матч (prof / tr) не создаём.
   const sum = parseVkStartSum(body.sum)
   const presetKey = String(body.preset ?? '').trim().toLowerCase()
-  if (sum == null && (presetKey === 'prof' || presetKey === 'tr')) {
+  if (sum == null && (presetKey === 'prof' || presetKey === 'kz' || presetKey === 'tr')) {
     throw createError({ statusCode: 400, statusMessage: 'Укажите сумму участия (в рублях)' })
+  }
+
+  // Турнир проходит на Красном Знамени или в Профилактории — место выбирает админ.
+  const venue = parseVkStartVenue(body.venue)
+  if (presetKey === 'tr' && venue == null) {
+    throw createError({ statusCode: 400, statusMessage: 'Выберите место турнира' })
   }
 
   let peerId: number | null = null
@@ -173,7 +190,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  await setVkStartListRequested({ commandText, peerId, sum })
+  await setVkStartListRequested({ commandText, peerId, sum, venue: presetKey === 'tr' ? venue : null })
 
   return { ok: true, commandText, peerId, sum }
 })

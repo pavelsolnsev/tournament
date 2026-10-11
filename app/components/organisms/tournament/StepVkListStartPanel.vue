@@ -195,6 +195,10 @@
         :can-submit-create-match="canSubmitCreateMatch"
         :vk-busy="vkBusy"
         :awaiting-vk-status-followup="awaitingVkStatusFollowup"
+        v-model:tr-venue="trVenue"
+        v-model:tr-format="trFormat"
+        :tr-format-options="trFormatOptions"
+        :tr-venue-options="trVenueOptions"
         :tr-team-slots-input="trTeamSlotsInput"
         :tr-team-slots-format-invalid="trTeamSlotsFormatInvalid"
         :on-tr-team-slots-input="onTrTeamSlotsInput"
@@ -236,7 +240,7 @@
 
 <script setup lang="ts">
 import { useConfirmCountdown } from '~/composables/useConfirmCountdown'
-import { useTournamentVkListStart } from '~/composables/useTournamentVkListStart'
+import { useTournamentVkListStart, type CreatedMatchMeta } from '~/composables/useTournamentVkListStart'
 
 const props = withDefaults(
   defineProps<{
@@ -247,6 +251,8 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   'cancel-tournament': []
+  /** Матч создан: дата, место и формат для мастера (шаг «Игроки»). */
+  'match-created': [meta: CreatedMatchMeta]
 }>()
 
 const {
@@ -263,6 +269,10 @@ const {
   vkEventDate,
   vkEventTime,
   trTeamSlotsInput,
+  trVenue,
+  trVenueOptions,
+  trFormat,
+  trFormatOptions,
   trTeamSlotsFormatInvalid,
   onTrTeamSlotsInput,
   vkBusy,
@@ -278,7 +288,7 @@ const {
   presetChipClass,
   selectPreset,
   submitCreateMatch,
-} = useTournamentVkListStart()
+} = useTournamentVkListStart({ onCreated: (meta) => emit('match-created', meta) })
 
 const vkCancelConfirmOpen = ref(false)
 const { secondsLeft: vkCancelSecondsLeft, start: startVkCancelCountdown, stop: stopVkCancelCountdown } = useConfirmCountdown()

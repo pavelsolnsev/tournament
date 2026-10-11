@@ -16,14 +16,31 @@
 
     <!-- Правая колонка: выбранные игроки + блок место/формат -->
     <div class="flex min-w-0 flex-col gap-4 lg:col-span-3">
-      <!-- Блок дата/место/формат — всё должно быть заполнено перед переходом к командам -->
+      <!-- Дата, место и формат обычно приходят из формы «Создать матч» — тогда показываем одну строку.
+           Полный блок — если чего-то не хватает (список создан командой в чате) или админ нажал «Изменить». -->
+      <div
+        v-if="!showVenueBlock"
+        class="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-200/90 bg-white/70 px-3 py-2.5 dark:border-slate-700/55 dark:bg-slate-800/35"
+      >
+        <p class="min-w-0 truncate text-sm text-slate-700 dark:text-slate-300">
+          {{ venueSummary }}
+        </p>
+        <button
+          type="button"
+          class="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:text-emerald-300"
+          @click="venueEditing = true"
+        >
+          Изменить
+        </button>
+      </div>
       <OrganismsTournamentStepPlayersVenueFormat
+        v-else
         :venue-label="venueLabel"
         :format-label="formatLabel"
         :tournament-date="tournamentDate"
-        @update:venue-label="emit('update:venueLabel', $event)"
-        @update:format-label="emit('update:formatLabel', $event)"
-        @update:tournament-date="emit('update:tournamentDate', $event)"
+        @update:venue-label="venueEditing = true; emit('update:venueLabel', $event)"
+        @update:format-label="venueEditing = true; emit('update:formatLabel', $event)"
+        @update:tournament-date="venueEditing = true; emit('update:tournamentDate', $event)"
       />
 
       <OrganismsTournamentStepPlayersSelectedPanel
@@ -54,6 +71,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed, ref, watch } from 'vue'
 import type { Player } from '~/types/tournament'
 
 // Этот шаг показывает игроков и даёт добавить новых.
@@ -101,6 +119,24 @@ const emit = defineEmits<{
   setVkListLimit: [limit: number | null]
   syncTournamentFromServer: []
 }>()
+
+// Всё заполнено — достаточно строки-сводки. Начали править руками — блок остаётся открытым, пока шаг на экране
+// (иначе он пропадал бы прямо во время ввода, как только заполнится последнее поле).
+const venueEditing = ref(false)
+const venueFilled = computed(
+  () => props.tournamentDate.trim() !== '' && props.venueLabel.trim() !== '' && props.formatLabel.trim() !== '',
+)
+const showVenueBlock = computed(() => venueEditing.value || !venueFilled.value)
+watch(venueFilled, (filled) => {
+  if (!filled) venueEditing.value = true
+})
+
+// Сводка: «11.10.2026 · Красное Знамя · Турнир 8x8».
+const venueSummary = computed(() => {
+  const [y, m, d] = props.tournamentDate.split('-')
+  const date = y && m && d ? `${d}.${m}.${y}` : props.tournamentDate
+  return [date, props.venueLabel, props.formatLabel].filter((v) => v.trim()).join(' · ')
+})
 
 // Переход к командам разрешён только если выбраны игроки, место и формат.
 const canGoToTeams = computed(
