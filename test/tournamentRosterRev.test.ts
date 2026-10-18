@@ -102,3 +102,43 @@ describe('mergeRosterIntoNextState', () => {
     expect(next.confirmedTeamNames).toEqual(['Красные', 'Синие', 'Жёлтые'])
   })
 })
+
+describe('mergeRosterIntoNextState: правки состава из вкладки (__rosterDelta)', () => {
+  it('отставшая вкладка с новой версией не выкидывает игрока, записавшегося из ВК', () => {
+    // В БД уже есть игрок 3 (записался кнопкой в ВК), вкладка о нём не знает и добавила игрока 4.
+    const next = judgePut({ rosterRev: 5, selectedIds: [1, 2, 4], __rosterDelta: { added: [4], removed: [] } })
+
+    mergeRosterIntoNextState(prevState(), next)
+
+    expect(next.selectedIds).toEqual([1, 2, 3, 4])
+    expect(next.__rosterDelta).toBeUndefined()
+  })
+
+  it('отставшая вкладка не возвращает того, кто вышел через ВК', () => {
+    // В БД игрока 2 уже нет (вышел кнопкой), вкладка всё ещё держит его в списке.
+    const prev = { ...prevState(), selectedIds: [1, 3] }
+    const next = judgePut({ rosterRev: 5, selectedIds: [1, 2, 3], __rosterDelta: { added: [], removed: [] } })
+
+    mergeRosterIntoNextState(prev, next)
+
+    expect(next.selectedIds).toEqual([1, 3])
+  })
+
+  it('убранного админом игрока убирает даже при устаревшей версии вкладки', () => {
+    const next = judgePut({ rosterRev: 2, __rosterDelta: { added: [], removed: [2] } })
+
+    mergeRosterIntoNextState(prevState(), next)
+
+    expect(next.selectedIds).toEqual([1, 3])
+    // Состав изменился — версия выросла, чтобы другие вкладки и бот его подтянули.
+    expect(next.rosterRev).toBe(5)
+  })
+
+  it('без __rosterDelta (старые клиенты, бот) — прежнее поведение', () => {
+    const next = judgePut({ rosterRev: 5, selectedIds: [1, 3] })
+
+    mergeRosterIntoNextState(prevState(), next)
+
+    expect(next.selectedIds).toEqual([1, 3])
+  })
+})

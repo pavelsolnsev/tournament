@@ -9,6 +9,7 @@ import { dedupeTeamNamesPreservingOrder, normalizeTeamColorsMap, normalizeTeamNa
 import type { SavedStandingsSnapshot, SavedTournamentContext } from '~/composables/tournament-wizard/savedContextTypes'
 import { applyEmptyTournamentContextLocal, applyLoadedContext } from '~/composables/tournament-wizard/applyServerContext'
 import { useRosterRevForSave } from '~/composables/tournament-wizard/useRosterRevForSave'
+import { useSelectedPlayersDelta } from '~/composables/tournament-wizard/useSelectedPlayersDelta'
 import { findMatchingSlot, useVkTeamSlots } from '~/composables/tournament-wizard/useVkTeamSlots'
 import { computeQueuedPlayerIds } from '~/utils/tournamentQueue'
 import { pruneTeamFromStandingsSnapshot } from '~/composables/tournament-standings/pruneTeamFromStandingsSnapshot'
@@ -97,21 +98,10 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     })
   })
 
-  function selectPlayer(id: number) {
-    const next = new Set(selectedIds.value)
-    next.add(id)
-    selectedIds.value = next
-  }
-
-  function removePlayer(id: number) {
-    assignment.removeFromTeam(id)
-    const next = new Set(selectedIds.value)
-    next.delete(id)
-    selectedIds.value = next
-    vkTeamLabelByPlayerId.value = Object.fromEntries(
-      Object.entries(vkTeamLabelByPlayerId.value).filter(([k]) => Number(k) !== id),
-    ) as Record<number, string>
-  }
+  // Добавить / убрать игрока + учёт правок состава для сервера (см. useSelectedPlayersDelta).
+  const { selectPlayer, removePlayer, rosterDelta } = useSelectedPlayersDelta({
+    selectedIds, vkTeamLabelByPlayerId, removeFromTeam: (id) => assignment.removeFromTeam(id), serverState: stateSync.serverState,
+  })
 
   const DEFAULT_AUTO_TEAM_NAME = /^Команда \d+$/i
 
@@ -307,6 +297,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     venueLabel: venueLabel.value,
     formatLabel: formatLabel.value,
     selectedIds: Array.from(selectedIds.value),
+    __rosterDelta: rosterDelta(),
     vkTeamLabelByPlayerId: serializeVkTeamLabelsForSave(),
     vkTeamSlots: [...vkTeamSlots.value],
     vkTeamLimits: { ...vkTeamLimits.value },

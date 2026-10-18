@@ -57,6 +57,8 @@ export type SavedTournamentContext = {
    * и отставшие вкладки не откатывают правку админа или запись игрока из ВК.
    */
   rosterRev?: number
+  /** Только в теле PUT: кого админ добавил / убрал в этой вкладке. Сервер применяет к своему составу. */
+  __rosterDelta?: { added: number[]; removed: number[] }
   assignmentByPlayerId: Record<number, string>
   confirmedTeamNames: string[]
   teamColors: Record<string, number>

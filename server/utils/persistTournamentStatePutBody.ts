@@ -79,6 +79,9 @@ export async function persistTournamentStatePutBody(
   // вкладка отстала) берём состав из БД — дальше всё считается уже от актуального состава.
   if (!fullResetAuthorized) {
     mergeRosterIntoNextState(prevJson, state)
+  } else {
+    // Полный сброс: служебное поле с правками состава в БД не пишем.
+    Reflect.deleteProperty(state, '__rosterDelta')
   }
   const newSelected = parseSelectedIds(state.selectedIds)
 
