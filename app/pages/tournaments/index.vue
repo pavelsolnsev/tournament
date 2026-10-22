@@ -83,14 +83,15 @@
         <button
           v-for="tab in tabs"
           :key="tab.id"
-          class="relative flex-1 px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          class="relative flex min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-2 py-2.5 text-sm font-medium transition-colors sm:px-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
           :class="activeTab === tab.id
             ? 'text-emerald-600 dark:text-emerald-400'
             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
           @click="activeTab = tab.id"
         >
-          {{ tab.label }}
-          <span class="ml-1.5 rounded-full bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-xs font-medium tabular-nums">{{ tab.count }}</span>
+          <!-- Название и счётчик всегда в одну строку: длинное название обрезается, счётчик не переносится. -->
+          <span class="min-w-0 truncate">{{ tab.label }}</span>
+          <span class="shrink-0 rounded-full bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-xs font-medium tabular-nums">{{ tab.count }}</span>
           <span v-if="activeTab === tab.id" class="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-emerald-500" />
         </button>
       </div>
