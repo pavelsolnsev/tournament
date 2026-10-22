@@ -231,17 +231,25 @@ export function useFinishTournament(params: FinishTournamentParams) {
     errorMessage.value = null
 
     try {
+      // Считаем один раз: эти же изменения рейтинга уходят и в базу игроков, и в архив.
+      const playersPayload = buildPlayersPayload()
       await $fetch('/api/tournament/finish', {
         method: 'POST',
         body: {
-          players: buildPlayersPayload(),
+          players: playersPayload,
           teams: buildTeamsPayload(),
           // Данные для архива — передаём вместе с основными данными в одной транзакции.
           tournamentName: params.tournamentName.value,
           tournamentDate: archiveTournamentDateForPayload(),
           venueLabel: params.venueLabel.value,
           formatLabel: params.formatLabel.value,
-          snapshot: params.standingsSnapshot.value,
+          // В архив кладём и полный итог рейтинга за турнир (с бонусами) — его показывают итоги в архиве.
+          snapshot: params.standingsSnapshot.value
+            ? {
+                ...params.standingsSnapshot.value,
+                tournamentRatingDeltas: Object.fromEntries(playersPayload.map((p) => [p.id, p.ratingDelta])),
+              }
+            : params.standingsSnapshot.value,
           allPlayers: params.players,
           assignmentByPlayerId: params.assignmentByPlayerId,
           teamColors: params.teamColors.value,

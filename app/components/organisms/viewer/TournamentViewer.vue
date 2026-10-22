@@ -316,6 +316,7 @@ const tournamentSummary = computed(() => {
     playedMatchesList: snap.playedMatchesList,
     standingsRows: snap.standingsRows,
     playerRatingDeltas: snap.playerRatingDeltas,
+    tournamentRatingDeltas: snap.tournamentRatingDeltas,
     teamColors: teamColors.value,
   });
 });

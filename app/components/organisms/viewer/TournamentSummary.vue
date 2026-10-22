@@ -51,7 +51,14 @@
       :top-scorers="props.summary.topScorers"
       :top-assisters="props.summary.topAssisters"
       :top-goalkeepers="props.summary.topGoalkeepers"
+      :top-goal-plus-assist="props.summary.topGoalPlusAssist"
     />
+
+    <!-- Рейтинг за турнир: показываем, если хоть у кого-то рейтинг изменился. -->
+    <template v-if="hasRatingChanges">
+      <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
+      <OrganismsViewerTournamentSummaryRatingChangeSection :rating-changes="props.summary.ratingChanges" />
+    </template>
 
     <div class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
 
@@ -159,6 +166,9 @@ const headerDateLabel = computed(() => {
 const { getMarkerByIndex, getMatchScorePillClass } = useTeamColors()
 
 const playedMatchesForResults = computed(() => props.playedMatchesList ?? [])
+const hasRatingChanges = computed(
+  () => props.summary.ratingChanges.up.length > 0 || props.summary.ratingChanges.down.length > 0,
+)
 const hasPlayedMatches = computed(() => playedMatchesForResults.value.length > 0)
 
 const hideBasePlayerRating = computed(() => playedMatchesForResults.value.length > 0)
@@ -260,6 +270,7 @@ const summaryNavItems = computed(() => {
   if (props.summary.standingsRows.length > 0) items.push({ href: '#summary-standings', label: 'Таблица' })
   if (props.summary.mvp.length > 0) items.push({ href: '#summary-mvp', label: 'MVP' })
   if (hasAnyStats.value) items.push({ href: '#summary-awards', label: 'Награды' })
+  if (hasRatingChanges.value) items.push({ href: '#summary-rating', label: 'Рейтинг' })
   if (props.summary.yellowCards.length > 0) items.push({ href: '#summary-yellows', label: 'Карточки' })
   if (hasRosterData.value) items.push({ href: '#summary-rosters', label: 'Составы' })
   if (props.summary.teamMvps.length > 0) items.push({ href: '#summary-team-mvps', label: 'MVP команд' })

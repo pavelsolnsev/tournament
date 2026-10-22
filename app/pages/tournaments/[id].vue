@@ -263,6 +263,7 @@ const tournamentSummary = computed(() => {
     playedMatchesList: t.snapshot.playedMatchesList,
     standingsRows: t.snapshot.standingsRows,
     playerRatingDeltas: t.snapshot.playerRatingDeltas,
+    tournamentRatingDeltas: t.snapshot.tournamentRatingDeltas,
     teamColors: teamColors.value,
   })
 })

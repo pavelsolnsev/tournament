@@ -1,4 +1,5 @@
 import type { Player } from '~/types/tournament'
+import type { RatingChanges } from '~/composables/tournament-summary/ratingAndGoalPlusAssist'
 import type { PlayedMatch, PlayerMatchStats } from '~/composables/tournament-standings/types'
 import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 
@@ -45,6 +46,10 @@ export type TournamentSummary = {
   topScorers: AwardWinner[]
   topAssisters: AwardWinner[]
   topGoalkeepers: AwardWinner[]
+  /** Лучшие по сумме голов и передач. */
+  topGoalPlusAssist: AwardWinner[]
+  /** Рейтинг за турнир: кто больше всех прибавил и потерял. */
+  ratingChanges: RatingChanges
   yellowCards: YellowCardPlayer[]
   teamMvps: TeamMvp[]
   stats: TournamentSummaryStats
@@ -58,5 +63,7 @@ export type SummaryParams = {
   playedMatchesList: PlayedMatch[]
   standingsRows: StandingsRow[]
   playerRatingDeltas: Record<number, number>
+  /** Полное изменение рейтинга за турнир (с бонусами) — есть только в архивах после этой правки. */
+  tournamentRatingDeltas?: Record<number, number>
   teamColors?: Record<string, number>
 }

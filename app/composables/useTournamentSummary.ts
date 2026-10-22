@@ -12,6 +12,11 @@ import {
   findTournamentMvp,
   resolveTeamMarker,
 } from '~/composables/tournament-summary/awardHelpers'
+import {
+  buildRatingChanges,
+  findTopGoalPlusAssist,
+  makeRowFactory,
+} from '~/composables/tournament-summary/ratingAndGoalPlusAssist'
 
 export type {
   AwardWinner,
@@ -67,6 +72,21 @@ export function useTournamentSummary(params: SummaryParams): TournamentSummary {
     params.standingsRows,
     effectiveTeamColors,
     getMarkerByIndex,
+  )
+
+  // «Гол + пас» и «Рейтинг за турнир» — строки с тем же маркером команды, что у остальных наград.
+  const toRow = makeRowFactory(
+    params.assignmentByPlayerId,
+    params.aggregatePlayerStats,
+    (teamName) => resolveTeamMarker(teamName, params.standingsRows, effectiveTeamColors, getMarkerByIndex),
+  )
+  const topGoalPlusAssist = findTopGoalPlusAssist(params.players, params.aggregatePlayerStats, toRow)
+  const ratingChanges = buildRatingChanges(
+    params.players,
+    params.assignmentByPlayerId,
+    params.playerRatingDeltas,
+    params.tournamentRatingDeltas,
+    toRow,
   )
 
   // Только команды, реально участвовавшие (есть в итоговой таблице). Иначе команда,
@@ -154,6 +174,8 @@ export function useTournamentSummary(params: SummaryParams): TournamentSummary {
     topScorers,
     topAssisters,
     topGoalkeepers,
+    topGoalPlusAssist,
+    ratingChanges,
     yellowCards,
     teamMvps,
     stats: {

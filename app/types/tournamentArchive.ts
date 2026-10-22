@@ -8,6 +8,8 @@ export type TournamentArchiveSnapshot = {
   playedMatchesList: PlayedMatch[]
   standingsRows: StandingsRow[]
   playerRatingDeltas: Record<number, number>
+  /** Полное изменение рейтинга за турнир (с бонусами) — есть только у архивов, завершённых после его появления. */
+  tournamentRatingDeltas?: Record<number, number>
 }
 
 /** Тело ответа GET /api/tournaments/:id — совпадает с server/api/tournaments/[id].get.ts. */

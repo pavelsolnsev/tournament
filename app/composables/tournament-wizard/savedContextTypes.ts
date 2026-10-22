@@ -14,6 +14,11 @@ export type SavedStandingsSnapshot = {
   lastMatchIndex: Record<string, Record<string, number>>
   playedSingleMatch: boolean
   playerRatingDeltas: Record<number, number>
+  /**
+   * Полное изменение рейтинга за турнир (матчи + бонусы за явку и звания) — пишется в архив при
+   * завершении турнира. В старых архивах его нет: там в итогах показываем изменение за матчи.
+   */
+  tournamentRatingDeltas?: Record<number, number>
   currentHomeTeam: string
   currentAwayTeam: string
   /** Итоговые отметки текущего матча (добавленное минус снятое) — их читают зритель и протокол. */

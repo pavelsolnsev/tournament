@@ -51,7 +51,7 @@ const props = defineProps<{
   icon: string
   label: string
   valueLabel: string
-  color: 'emerald' | 'sky' | 'violet'
+  color: 'emerald' | 'sky' | 'violet' | 'amber'
   winners: AwardWinner[]
 }>()
 
@@ -60,6 +60,7 @@ const borderClass = computed(() => ({
   emerald: 'border-emerald-300/35 bg-slate-50/90 dark:border-emerald-500/20 dark:bg-emerald-500/5',
   sky:     'border-sky-300/35 bg-slate-50/90 dark:border-sky-500/20 dark:bg-sky-500/5',
   violet:  'border-violet-300/35 bg-slate-50/90 dark:border-violet-500/20 dark:bg-violet-500/5',
+  amber:   'border-amber-300/35 bg-slate-50/90 dark:border-amber-500/20 dark:bg-amber-500/5',
 }[props.color]))
 
 // Иконка-бейдж.
@@ -67,6 +68,7 @@ const iconBgClass = computed(() => ({
   emerald: 'bg-emerald-400/15 ring-emerald-300/40 dark:bg-emerald-500/15 dark:ring-emerald-500/25',
   sky:     'bg-sky-400/15 ring-sky-300/40 dark:bg-sky-500/15 dark:ring-sky-500/25',
   violet:  'bg-violet-400/15 ring-violet-300/40 dark:bg-violet-500/15 dark:ring-violet-500/25',
+  amber:   'bg-amber-400/15 ring-amber-300/40 dark:bg-amber-500/15 dark:ring-amber-500/25',
 }[props.color]))
 
 // Цвет подписи категории.
@@ -74,6 +76,7 @@ const labelClass = computed(() => ({
   emerald: 'text-emerald-700/80 dark:text-emerald-500/80',
   sky:     'text-sky-700/80 dark:text-sky-500/80',
   violet:  'text-violet-700/80 dark:text-violet-500/80',
+  amber:   'text-amber-700/80 dark:text-amber-500/80',
 }[props.color]))
 
 // Цвет значения показателя — в светлой теме чуть темнее для контраста.
@@ -81,6 +84,7 @@ const valueClass = computed(() => ({
   emerald: 'text-emerald-700 dark:text-emerald-300',
   sky:     'text-sky-700 dark:text-sky-300',
   violet:  'text-violet-700 dark:text-violet-300',
+  amber:   'text-amber-700 dark:text-amber-300',
 }[props.color]))
 
 // Разделитель — того же цвета что и граница.
@@ -88,5 +92,6 @@ const dividerClass = computed(() => ({
   emerald: 'border-emerald-200/50 dark:border-emerald-500/15',
   sky:     'border-sky-200/50 dark:border-sky-500/15',
   violet:  'border-violet-200/50 dark:border-violet-500/15',
+  amber:   'border-amber-200/50 dark:border-amber-500/15',
 }[props.color]))
 </script>
