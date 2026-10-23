@@ -3,9 +3,10 @@ import { ensureTablesExist } from '../../utils/initDb'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
 import { getRequestIdempotencyKey, runIdempotent } from '../../utils/idempotency'
 import { bumpRosterRev } from '../../utils/tournamentRosterRev'
+import { removePlayerFromTournamentState } from '../../utils/tournamentPlayerRemoval'
 
 // API: POST /api/vk/leave — вызывается VK-ботом при «Выйти», «-», команде rN и т.п.
-// Только убирает из selectedIds (состояние турнира). Таблицу players не трогает.
+// Убирает игрока из турнира везде (участники, команда ВК, состав, оплата). Таблицу players не трогает.
 
 // Тип тела запроса от бота.
 interface VkLeaveBody {
@@ -107,26 +108,11 @@ export default defineEventHandler(async (event) => {
         return { ok: true, removed: false }
       }
 
-      const existingIds: number[] = Array.isArray(state.selectedIds) ? state.selectedIds : []
-      const newIds = existingIds.filter((id) => id !== playerId)
-      if (newIds.length === existingIds.length) {
+      // Вышел — убираем отовсюду: участники, команда ВК, состав команды на сайте, отметка оплаты.
+      if (!removePlayerFromTournamentState(state, playerId)) {
         return { ok: true, removed: false }
       }
-
-      state.selectedIds = newIds
       bumpRosterRev(state)
-      if (state.vkTeamLabelByPlayerId && typeof state.vkTeamLabelByPlayerId === 'object') {
-        const vk = { ...state.vkTeamLabelByPlayerId }
-        const k = String(playerId)
-        if (k in vk) {
-          Reflect.deleteProperty(vk, k)
-        }
-        if (Object.keys(vk).length === 0) {
-          delete state.vkTeamLabelByPlayerId
-        } else {
-          state.vkTeamLabelByPlayerId = vk
-        }
-      }
       const next = JSON.stringify(state)
       const ok = await persistTournamentStateCas(prev, next)
       if (ok) return { ok: true, removed: true, playerId }

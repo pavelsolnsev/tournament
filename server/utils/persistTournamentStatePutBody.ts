@@ -15,6 +15,7 @@ import {
 import { mergeLiveCurrentMatchStatsIntoNextState } from './mergeLiveCurrentMatchStatsForPersist'
 import { mergeStandingsHistoryIntoNextState } from './mergeStandingsHistoryForPersist'
 import { mergeRosterIntoNextState } from './tournamentRosterRev'
+import { pruneAssignmentToSelected } from './tournamentPlayerRemoval'
 
 const TOURNAMENT_KEY = 'tournament'
 
@@ -84,6 +85,8 @@ export async function persistTournamentStatePutBody(
     Reflect.deleteProperty(state, '__rosterDelta')
   }
   const newSelected = parseSelectedIds(state.selectedIds)
+  // В составах команд — только участники турнира (вышедший через ВК не вернётся из отставшей вкладки).
+  if (!fullResetAuthorized) pruneAssignmentToSelected(state)
 
   // Сброс настроек списка ВК (режим, слоты команд, лимиты) — только по явному __fullReset.
   // Раньше здесь была эвристика «нет игроков + step 0 + нет снимка». Она ложно срабатывала сразу
