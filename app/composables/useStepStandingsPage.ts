@@ -142,7 +142,8 @@ export function useStepStandingsPage(props: StepStandingsPageProps, emit: StepSt
   const playedMatchesToggleId = `played-matches-toggle-${standingsUid}`
   const playedMatchesPanelId = `played-matches-panel-${standingsUid}`
 
-  const isStandingsBlockOpen = ref(props.readonly === true)
+  // Таблица изначально открыта у всех — и у зрителя, и у админа с судьёй (свернуть можно вручную).
+  const isStandingsBlockOpen = ref(true)
   const isRosterTotalsOpen = ref(false)
   const isPlayedMatchesOpen = ref(false)
 

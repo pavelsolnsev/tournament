@@ -5,8 +5,10 @@
     <!-- ── Доска: «Свободные» отдельным блоком сверху, сетка команд под ними ── -->
     <div class="flex flex-col gap-3 md:gap-4">
 
-      <!-- «Свободные»: отдельный блок на всю ширину над командами -->
+      <!-- «Свободные»: отдельный блок на всю ширину над командами.
+           Пустой прячем, но показываем, когда выбран игрок: сюда его переносят, чтобы убрать из команды. -->
       <OrganismsPlayerTeamAssignmentKanbanColumn
+        v-if="freePlayers.length > 0 || selectedPlayer"
         team-name=""
         :players="freePlayers"
         marker=""
