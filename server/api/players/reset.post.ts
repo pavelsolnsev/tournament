@@ -27,6 +27,15 @@ export default defineEventHandler(async (event) => {
          yellow_cards = 0`,
     )
 
+    // Стрелки прогресса рейтинга на сайте rfoi (он сам ведёт rating_prev / rating_trend в этой же таблице):
+    // после сброса обнуляем и их, иначе у всех появились бы стрелки «вниз».
+    // Столбцы добавлены вручную только в боевой базе — где их нет, запрос просто пропускаем.
+    try {
+      await pool.query('UPDATE players SET rating_prev = 0, rating_trend = 0')
+    } catch (err) {
+      if ((err as { code?: string })?.code !== 'ER_BAD_FIELD_ERROR') throw err
+    }
+
     // Обнуляем накопленную статистику команд, чтобы тоже начать "с чистого листа".
     const [teamsResult] = await pool.query(
       `UPDATE teams
