@@ -48,10 +48,9 @@
       </video>
 
       <div class="relative z-10 flex flex-1 flex-col py-5 sm:py-8">
-        <!-- До начала турнира: афиша «Ближайшая игра» (кто записался, когда, где) или заглушка. -->
-        <OrganismsViewerUpcomingGameCard
+        <!-- До начала турнира: заглушка «Прошлые турниры» и топ-10 рейтинга. -->
+        <OrganismsViewerIdleScreen
           v-if="!hasViewerData"
-          :state="props.state"
           :players="props.players"
         />
 

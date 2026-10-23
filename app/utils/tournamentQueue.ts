@@ -7,7 +7,7 @@ import { normalizeTeamName } from '~/utils/teamNames'
 export const DEFAULT_TEAM_LIMIT = 8
 
 /** Каноничный слот по «сырой» метке (совпадение без регистра/лишних пробелов). */
-export function matchSlot(slots: string[], raw: string | undefined): string | null {
+function matchSlot(slots: string[], raw: string | undefined): string | null {
   const t = normalizeTeamName(String(raw ?? ''))
   if (!t) return null
   const low = t.toLowerCase()
@@ -18,7 +18,7 @@ export function matchSlot(slots: string[], raw: string | undefined): string | nu
 }
 
 /** Лимит команды из карты (ключ — нормализованное имя в нижнем регистре), иначе дефолт. */
-export function teamLimitFor(teamLimits: Record<string, number> | undefined, slot: string): number {
+function teamLimitFor(teamLimits: Record<string, number> | undefined, slot: string): number {
   const key = normalizeTeamName(slot).toLowerCase()
   const v = teamLimits?.[key]
   return typeof v === 'number' && Number.isFinite(v) && v >= 1 ? Math.floor(v) : DEFAULT_TEAM_LIMIT

@@ -41,10 +41,6 @@ export type SavedTournamentContext = {
   step: number
   tournamentName: string
   tournamentDate: string
-  /** Время начала ЧЧ:ММ (МСК) — пишет сервер при «Создать матч», для афиши у гостя. */
-  tournamentTime?: string
-  /** Сумма участия в рублях — так же, для афиши. */
-  tournamentSum?: number
   venueLabel: string
   formatLabel: string
   selectedIds: number[]

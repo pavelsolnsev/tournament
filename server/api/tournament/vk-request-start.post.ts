@@ -2,7 +2,6 @@ import { createError } from 'h3'
 import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 import { parseVkStartSum, parseVkStartVenue, setVkStartListRequested } from '../../utils/vkStartListRequest'
-import { saveUpcomingGameMeta } from '../../utils/upcomingGameMeta'
 
 const LINK_KEY = 'tournament_vk_link'
 
@@ -188,14 +187,6 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       statusMessage:
         'Нет peer_id беседы: привяжите чат через бота или укажите peer_id вручную (id чата ВК).',
-    })
-  }
-
-  // Время и сумма — для афиши «Ближайшая игра» на главной (бот их хранит у себя, сайт — нет).
-  if (presetKey === 'prof' || presetKey === 'kz' || presetKey === 'tr') {
-    const time = typeof body.time === 'string' ? normalizeHhMm(body.time) : null
-    await saveUpcomingGameMeta({ time, sum }).catch((err) => {
-      console.error('[vk-request-start] upcoming meta save failed:', err)
     })
   }
 
