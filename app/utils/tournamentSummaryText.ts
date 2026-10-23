@@ -165,6 +165,36 @@ function buildAwardsBlock(p: TournamentTextExportParams): string[] {
     for (const w of g.list) lines.push(awardLine(w, g.units, marker, nameById))
   }
 
+  // Гол + пас: сумма и из чего она сложилась (голы + передачи).
+  if (p.summary.topGoalPlusAssist.length > 0) {
+    lines.push('', 'ГОЛ + ПАС', '-'.repeat(40))
+    for (const w of p.summary.topGoalPlusAssist) {
+      const team = w.teamName ? ` (${marker(w.teamName)} ${teamDisplayNameByMarker(w.teamName, marker(w.teamName))})` : ''
+      const g = w.tournamentStats?.goals ?? 0
+      const a = w.tournamentStats?.assists ?? 0
+      lines.push(`${nameById[w.playerId] ?? w.name}${team} — ${w.value} (${withPlural(g, 'гол', 'гола', 'голов')} + ${withPlural(a, 'передача', 'передачи', 'передач')})`)
+    }
+  }
+
+  // Рейтинг за турнир: больше всех прибавили и потеряли.
+  const rc = p.summary.ratingChanges
+  if (rc.up.length > 0 || rc.down.length > 0) {
+    lines.push('', 'РЕЙТИНГ ЗА ТУРНИР', '-'.repeat(40))
+    if (!rc.withTournamentBonus) lines.push('(изменение за матчи, без бонусов за турнир)')
+    const ratingLine = (w: AwardWinner) => {
+      const team = w.teamName ? ` (${marker(w.teamName)} ${teamDisplayNameByMarker(w.teamName, marker(w.teamName))})` : ''
+      return `${nameById[w.playerId] ?? w.name}${team} — ${formatDelta(w.value)}`
+    }
+    if (rc.up.length > 0) {
+      lines.push('Больше всех прибавили:')
+      for (const w of rc.up) lines.push(`   ${ratingLine(w)}`)
+    }
+    if (rc.down.length > 0) {
+      lines.push('Больше всех потеряли:')
+      for (const w of rc.down) lines.push(`   ${ratingLine(w)}`)
+    }
+  }
+
   if (p.summary.yellowCards.length > 0) {
     lines.push('', 'ЖЁЛТЫЕ КАРТОЧКИ', '-'.repeat(40))
     for (const y of p.summary.yellowCards) {

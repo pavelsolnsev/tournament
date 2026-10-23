@@ -56,9 +56,9 @@ export function defaultProfDateTime() {
   return nextMoscowOccurrenceIso(1, 20, 0)
 }
 
-/** Красное Знамя: ближайший пн 20:00 МСК (дату и время можно поменять в форме). */
+/** Красное Знамя: ближайшая пт 20:00 МСК (дату и время можно поменять в форме). */
 export function defaultKzDateTime() {
-  return nextMoscowOccurrenceIso(1, 20, 0)
+  return nextMoscowOccurrenceIso(5, 20, 0)
 }
 
 /** Турнир: ближайшая пт 20:00 МСК. */
