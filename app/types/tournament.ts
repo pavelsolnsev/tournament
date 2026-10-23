@@ -11,6 +11,10 @@ export interface Player {
   /** Имя файла в public/player-photos/ (например ivan.jpg); null — показываем инициалы. */
   photo?: string | null
   rating?: number | null
+  /** Стрелка прогресса рейтинга после последнего обновления базы: 1 — вырос, -1 — упал, 0 — без изменений (ведёт сайт rfoi). */
+  ratingTrend?: number | null
+  /** Сколько игр сыграно — для топа рейтинга (новичков без игр не показываем). */
+  gamesPlayed?: number | null
   // Накопленная дельта рейтинга за текущий турнир — считается на клиенте, не хранится в БД.
   ratingDelta?: number
 }

@@ -16,6 +16,7 @@ import { mergeLiveCurrentMatchStatsIntoNextState } from './mergeLiveCurrentMatch
 import { mergeStandingsHistoryIntoNextState } from './mergeStandingsHistoryForPersist'
 import { mergeRosterIntoNextState } from './tournamentRosterRev'
 import { pruneAssignmentToSelected } from './tournamentPlayerRemoval'
+import { keepUpcomingGameMeta } from './upcomingGameMeta'
 
 const TOURNAMENT_KEY = 'tournament'
 
@@ -80,6 +81,8 @@ export async function persistTournamentStatePutBody(
   // вкладка отстала) берём состав из БД — дальше всё считается уже от актуального состава.
   if (!fullResetAuthorized) {
     mergeRosterIntoNextState(prevJson, state)
+    // Время и сумма ближайшей игры живут только в БД (их пишет «Создать матч») — не теряем их.
+    keepUpcomingGameMeta(prevJson, state)
   } else {
     // Полный сброс: служебное поле с правками состава в БД не пишем.
     Reflect.deleteProperty(state, '__rosterDelta')
