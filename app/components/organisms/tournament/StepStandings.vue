@@ -4,6 +4,16 @@
     class="min-w-0 space-y-4"
     :class="props.readonly !== true && !hideCountdownTimerBar && !isTimerCollapsed && 'pb-24'"
   >
+    <!-- Расписание: кто играет сейчас и следующим + все оставшиеся матчи (админ, судья и гость). -->
+    <OrganismsTournamentStepStandingsSchedule
+      :teams="teams"
+      :played-matches-list="playedMatchesList"
+      :home-team="homeTeam"
+      :away-team="awayTeam"
+      :has-current-match="canFinishMatch"
+      :team-marker="teamMarker"
+    />
+
     <!-- Блок 1: турнирная таблица -->
     <div
       class="overflow-hidden rounded-2xl border bg-slate-50 dark:bg-slate-900/60 transition-colors"

@@ -27,7 +27,7 @@ import type { StandingsRow } from '~/components/organisms/standings/Table.vue'
 import { normalizeTeamColorsMap, normalizeTeamName, resolveTeamColorIndex } from '~/utils/teamNames'
 
 import { extractMarkedPlayers } from './tournament-standings/events'
-import { pickNextMatchPair, recalibratePairingState, resetMatchHistoryIfBalanced } from './tournament-standings/pairing'
+import { orientForHomeBalance, pickNextMatchPair, recalibratePairingState, resetMatchHistoryIfBalanced } from './tournament-standings/pairing'
 import {
   isActivePlayer as isActivePlayerFn,
   incrementStat,
@@ -395,8 +395,10 @@ export function useTournamentStandings(params: TournamentStandingsParams, option
     )
     resetMatchHistoryIfBalanced(pairingState, params.teams)
 
-    const next = pickNextMatchPair(pairingState, params.teams)
-    if (!next) return
+    const picked = pickNextMatchPair(pairingState, params.teams)
+    if (!picked) return
+    // Хозяева — та команда, что реже играла дома (поровну домашних и гостевых за турнир).
+    const next = orientForHomeBalance(picked, playedMatchesList.value)
 
     homeTeam.value = next.home
     awayTeam.value = next.away

@@ -344,3 +344,17 @@ export function recordFinishedMatch(
   return matchNumber
 }
 
+
+/**
+ * Кто в паре хозяева: та команда, что реже играла дома (дома минус в гостях меньше).
+ * Так за турнир у каждой команды примерно поровну домашних и гостевых матчей.
+ * При равенстве порядок не меняем. played — уже сыгранные матчи (и для прогноза — предсказанные).
+ */
+export function orientForHomeBalance(
+  pair: { home: string; away: string },
+  played: { homeTeam: string; awayTeam: string }[],
+): { home: string; away: string } {
+  const balance = (team: string) =>
+    played.reduce((n, m) => n + (m.homeTeam === team ? 1 : 0) - (m.awayTeam === team ? 1 : 0), 0)
+  return balance(pair.away) < balance(pair.home) ? { home: pair.away, away: pair.home } : pair
+}
