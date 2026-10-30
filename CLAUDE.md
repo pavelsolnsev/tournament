@@ -160,7 +160,7 @@ ESLint enforces **400 lines max** per `.ts` / `.vue` file (blank lines and full-
 
 ### Comments
 
-After each logic block, add a short plain-language comment explaining **what** it does and **why** — written at a simple level so any developer can follow along ("Simple10" style). This applies to both Vue and JS/TS files.
+Do not add comments to code. This applies to both Vue and JS/TS files. Existing comments may stay as they are.
 
 ### Component structure (Atomic Design)
 

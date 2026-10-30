@@ -18,6 +18,10 @@ const TEAM_LOGO_PATH_BY_NORMALIZED_KEY: Record<string, string> = {
   вольт: '/team-photos/volt.webp',
   rych: '/team-photos/rych.webp',
   ручеёк: '/team-photos/rych.webp',
+  'ручеёк-2': '/team-photos/rych.webp',
+  'ручеёк 2': '/team-photos/rych.webp',
+  'ручеек-2': '/team-photos/rych.webp',
+  'ручеек 2': '/team-photos/rych.webp',
   engelbert: '/team-photos/Engelbert.png',
   ясность: '/team-photos/iasnostb.jpg',
   iasnostb: '/team-photos/iasnostb.jpg',
@@ -34,7 +38,6 @@ const TEAM_LOGO_PATH_BY_NORMALIZED_KEY: Record<string, string> = {
   микстим: '/team-photos/mixteam.webp',
   бронницы: '/team-photos/bronnitsy.webp',
   bronnitsy: '/team-photos/bronnitsy.webp',
-  // Старые ключи — чтобы логотип показывался в архивных турнирах до переименования.
   'uzb.фк.1956.пахтакор': '/team-photos/bronnitsy.webp',
   'фк.1956.пахтакор': '/team-photos/bronnitsy.webp',
   пахтакор: '/team-photos/bronnitsy.webp',
