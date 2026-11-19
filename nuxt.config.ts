@@ -33,8 +33,8 @@ export default defineNuxtConfig({
       bodyAttrs: {},
       // Подключаем фавиконки и PWA-иконки глобально для всех страниц сайта.
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'shortcut icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/x-icon', sizes: '16x16 32x32 48x48', href: '/favicon.ico?v=2' },
+        { rel: 'icon', type: 'image/svg+xml', sizes: 'any', href: '/favicon.svg?v=2' },
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
         { rel: 'manifest', href: '/site.webmanifest' },
 

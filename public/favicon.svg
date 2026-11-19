@@ -1,8 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#166534" />
-  <circle cx="32" cy="32" r="18" fill="#ffffff" />
-  <polygon points="32,24 36,27 34.5,32 29.5,32 28,27" fill="#16a34a" />
-  <polygon points="23,31 28,29 30,33 27,37 22.5,35.5" fill="#16a34a" />
-  <polygon points="41,31 41.5,35.5 37,37 34,33 36,29" fill="#16a34a" />
-  <rect x="28.5" y="36.5" width="7" height="4" rx="1" fill="#16a34a" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="#12663d">
+  <circle cx="16" cy="16" r="16" />
+  <circle cx="16" cy="16" r="14" fill="#fff" />
+  <path d="M16 10 22 14.5 19.7 21.5H12.3L10 14.5Z" />
+  <path id="panel" d="M10 2H22L20.5 5.5 16 8 11.5 5.5Z" />
+  <use href="#panel" transform="rotate(72 16 16)" />
+  <use href="#panel" transform="rotate(144 16 16)" />
+  <use href="#panel" transform="rotate(216 16 16)" />
+  <use href="#panel" transform="rotate(288 16 16)" />
 </svg>
