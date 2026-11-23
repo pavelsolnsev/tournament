@@ -18,7 +18,7 @@
           :class="i < 3 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'"
         >{{ i + 1 }}</span>
         <AtomsPlayerAvatar :photo="p.photo" :fallback-name="p.name" size="sm" class="shrink-0" />
-        <span class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{{ p.name }}</span>
+        <span class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{{ displayPlayerLabelWithoutRating(p) }}</span>
         <!-- Стрелка: вырос / упал с прошлого обновления рейтинга (как на сайте рейтингов) -->
         <span
           v-if="(p.ratingTrend ?? 0) > 0"
@@ -46,6 +46,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Player } from '~/types/tournament'
+import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 
 const TOP_SIZE = 10
 
