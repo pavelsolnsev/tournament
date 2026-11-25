@@ -6,7 +6,7 @@
   >
     <!-- Сначала добавление игрока, ниже поиск по списку — так порядок действий сверху вниз. -->
     <form class="flex w-full min-w-0 flex-col gap-2" @submit.prevent="onCreatePlayer">
-      <p class="text-xs font-medium text-slate-600 dark:text-slate-400">Добавьте игрока</p>
+      <p class="text-xs font-medium text-slate-600 dark:text-slate-400">Добавить игрока в базу</p>
 
       <AtomsTournamentTextInput
         v-model="newName"
@@ -43,6 +43,10 @@
     <!-- Разделитель между формой и поиском -->
     <div class="border-t border-slate-300 dark:border-slate-700/40" />
 
+    <div>
+      <h2 class="text-sm font-bold text-slate-900 dark:text-white">Игроки из базы</h2>
+      <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Здесь игроки, доступные для выбора. Нажмите «+», чтобы добавить игрока в состав этого турнира.</p>
+    </div>
     <AtomsTournamentTextInput
       v-model="localPlayerSearch"
       variant="search"
@@ -61,32 +65,55 @@
     <p v-else-if="availablePlayers.length === 0" class="text-xs text-slate-600 dark:text-slate-400">
       Все игроки уже выбраны.
     </p>
-    <AtomsPlayerListUl v-else list-class="lg:flex-1 lg:min-h-0 lg:max-h-none">
+    <AtomsPlayerListUl v-else list-class="gap-2 lg:flex-1 lg:min-h-0 lg:max-h-none">
       <li
         v-for="p in filteredAvailablePlayers"
         :key="p.id"
         class="flex min-w-0 flex-col gap-1"
       >
-        <!-- Строка игрока с двумя кнопками: добавить в турнир и удалить из базы. -->
-        <div class="flex min-w-0 items-center gap-1">
-          <MoleculesPlayerListRow
-            class="min-w-0 flex-1"
-            v-bind="libraryPlayerRowBind(p)"
-            action="add"
-            @activate="emit('selectPlayer', p.id)"
-          />
-          <!-- Кнопка удаления — маленькая, красная, справа от строки. -->
+        <div class="flex min-w-0 items-center rounded-xl border border-slate-200 bg-white dark:border-slate-700/60 dark:bg-slate-800/50">
           <button
             type="button"
-            class="shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-red-500/30 text-red-500 transition-colors hover:bg-red-500/10 active:bg-red-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
-            :title="`Удалить ${p.name} из базы`"
-            :disabled="!canManagePlayers"
-            @click="openDeleteConfirm(p.id)"
+            class="group flex h-14 min-w-0 flex-1 items-center gap-2 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-emerald-500 dark:hover:bg-emerald-500/10"
+            :title="`Добавить в турнир: ${getPlayerDisplayName(p) || 'Игрок'}`"
+            :aria-label="`Добавить в турнир: ${getPlayerDisplayName(p) || 'Игрок'}`"
+            @click="emit('selectPlayer', p.id)"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
+            <AtomsPlayerAvatar :photo="p.photo" :fallback-name="p.name" size="sm" />
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-sm font-semibold leading-5 text-slate-900 dark:text-slate-100">
+                {{ getPlayerDisplayName(p) || 'Игрок' }}
+              </span>
+              <AtomsPlayerRatingBadge :rating="playerLabelRatingParts(p).rating" class="mt-1 w-fit" />
+            </span>
+            <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-emerald-100 text-sm font-semibold leading-none text-emerald-800 transition-colors group-hover:bg-emerald-200 dark:bg-emerald-400/10 dark:text-emerald-300 dark:group-hover:bg-emerald-400/20" aria-hidden="true">+</span>
           </button>
+          <div v-if="canManagePlayers" class="flex shrink-0 items-center border-l border-slate-200 dark:border-slate-700/70">
+            <button
+              type="button"
+              class="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500 dark:text-slate-300 dark:hover:bg-slate-700"
+              :title="`Редактировать игрока: ${p.name}`"
+              :aria-label="`Редактировать игрока: ${p.name}`"
+              aria-haspopup="dialog"
+              @click="openEditor(p)"
+            >
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+                <path d="m10 3-.5 2.2-1.7 1L5.6 5.6l-2 3.5 1.6 1.6v2.6l-1.6 1.6 2 3.5 2.2-.6 1.7 1 .5 2.2h4l.5-2.2 1.7-1 2.2.6 2-3.5-1.6-1.6v-2.6l1.6-1.6-2-3.5-2.2.6-1.7-1L14 3z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="inline-flex h-11 w-11 items-center justify-center rounded-lg text-red-600 transition-colors hover:bg-red-500/10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-500 dark:text-red-400"
+              :title="`Удалить ${p.name} из базы`"
+              :aria-label="`Удалить ${p.name} из базы`"
+              @click="openDeleteConfirm(p.id)"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
         </div>
         <!-- Панель подтверждения удаления — появляется под строкой игрока. -->
         <MoleculesDangerConfirmInline
@@ -104,6 +131,13 @@
         />
       </li>
     </AtomsPlayerListUl>
+    <OrganismsPlayerEditDialog
+      v-if="editorPlayer && canManagePlayers"
+      :key="editorPlayer.id"
+      :player="editorPlayer"
+      @close="editorPlayer = null"
+      @saved="emit('refreshPlayers')"
+    />
     <p v-if="filteredAvailablePlayers.length === 0 && availablePlayers.length > 0" class="text-xs text-slate-600 dark:text-slate-400">
       Ничего не найдено.
     </p>
@@ -139,7 +173,7 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
-import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
+import { getPlayerDisplayName, playerLabelRatingParts } from '~/composables/usePlayerDisplay'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useConfirmCountdown } from '~/composables/useConfirmCountdown'
 import MoleculesDangerConfirmInline from '~/components/molecules/DangerConfirmInline.vue'
@@ -178,21 +212,14 @@ const newUsername = ref('')
 const creating = ref(false)
 const createError = ref('')
 
-const { displayPlayerLabel, playerLabelRatingParts } = usePlayerDisplay()
-
 // Simple10: Ограниченный админ (limited) не может создавать/удалять игроков и делать reset.
 const { adminRole } = useAdminAuth()
 const canManagePlayers = computed(() => adminRole.value === 'full')
+const editorPlayer = ref<Player | null>(null)
 
-function libraryPlayerRowBind(p: Player) {
-  const { name, rating } = playerLabelRatingParts(p)
-  return {
-    photo: p.photo,
-    avatarFallbackName: p.name,
-    label: name,
-    rating,
-    title: `Добавить в турнир: ${displayPlayerLabel(p)}`,
-  }
+function openEditor(player: Player) {
+  closeDeleteConfirm()
+  editorPlayer.value = player
 }
 
 const resetting = ref(false)

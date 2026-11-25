@@ -184,6 +184,7 @@
           :player-rating-deltas="tournament.snapshot.playerRatingDeltas"
           :played-matches-list="tournament.snapshot.playedMatchesList"
           :can-remove-player="canRemovePlayerFromArchive"
+          :update-archive-match="canRemovePlayerFromArchive ? saveArchiveMatch : undefined"
           @remove-player="handleRemovePlayerFromArchive"
         />
 
@@ -222,6 +223,7 @@ import type { Player } from '~/types/tournament'
 import { normalizeTeamColorsMap, normalizeTeamName, resolveTeamColorIndexFor } from '~/utils/teamNames'
 import { teamDisplayName } from '~/utils/teamDisplayName'
 import { useAdminAuth } from '~/composables/useAdminAuth'
+import { archiveMatchVersion, type UpdateArchiveMatch } from '~/utils/archiveMatchStats'
 
 const route = useRoute()
 const id = route.params.id as string
@@ -387,6 +389,14 @@ function onAdminEnter() {
 // Удаление игрока из состава архивного турнира — только показ, матчи и рейтинг не трогает.
 // Как и удаление игрока в живом турнире — доступно только полному админу.
 const canRemovePlayerFromArchive = computed(() => adminRole.value === 'full')
+
+const saveArchiveMatch: UpdateArchiveMatch = async (match, homeStats, awayStats) => {
+  const response = await $fetch<Pick<TournamentArchiveApiResponse, 'snapshot'>>(
+    `/api/tournaments/${id}/match-stats`,
+    { method: 'PATCH', body: { matchNumber: match.matchNumber, version: archiveMatchVersion(match), homeStats, awayStats } },
+  )
+  if (tournament.value) tournament.value = { ...tournament.value, snapshot: response.snapshot }
+}
 
 async function handleRemovePlayerFromArchive(playerId: number) {
   if (!tournament.value) return

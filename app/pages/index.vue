@@ -96,9 +96,20 @@
               </nav>
 
               <template v-if="!isLimitedAdmin && (wizard.step.value === 0 || wizard.step.value === 1)">
-                <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-50 sm:text-3xl">
-                  {{ wizard.step.value === 0 ? 'Выберите игроков' : 'Команды' }}
-                </h1>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-50 sm:text-3xl">
+                    {{ wizard.step.value === 0 ? 'Выберите игроков' : 'Команды' }}
+                  </h1>
+                  <NuxtLink
+                    to="/tournaments"
+                    class="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg border border-slate-300/80 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700"
+                  >
+                    <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                      <path d="M3 7h18M3 12h18M3 17h18" />
+                    </svg>
+                    Архив турниров
+                  </NuxtLink>
+                </div>
 
                 <OrganismsTournamentStepVkListStartPanel
                   v-if="wizard.step.value === 0"
@@ -129,7 +140,19 @@
                   @go-to-standings="goToStandings"
                   @auto-distribute="(count) => wizard.assignment.autoDistribute(wizard.selectedPlayers.value, count)"
                   @remove-player="wizard.removePlayer"
-                />
+                >
+                  <template #player-library>
+                    <OrganismsTournamentStepPlayersLibraryPanel
+                      :players="wizard.players.value ?? []"
+                      :available-players="wizard.availablePlayers.value"
+                      :filtered-available-players="wizard.filteredAvailablePlayers.value"
+                      :player-search="wizard.playerSearch.value"
+                      @select-player="wizard.selectPlayer"
+                      @update:player-search="(v) => { wizard.playerSearch.value = v }"
+                      @refresh-players="wizard.refreshPlayers()"
+                    />
+                  </template>
+                </OrganismsTournamentStepTeams>
 
                 <OrganismsTournamentStepPlayers
                   v-else

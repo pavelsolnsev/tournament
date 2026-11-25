@@ -8,6 +8,7 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
+    playerPhotosDir: '',
     public: {
       /** Peer чата ВК по умолчанию (форма «Список в ВК»). Переопределение: NUXT_PUBLIC_VK_DEFAULT_PEER_ID */
       vkDefaultPeerId: '2000000002',

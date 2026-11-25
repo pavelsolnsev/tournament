@@ -135,6 +135,7 @@ npm run selftest:team     # tests team mode
 ```
 DB_HOST, DB_USER, DB_PASSWORD, DB_NAME   # MySQL connection
 NUXT_PUBLIC_VK_DEFAULT_PEER_ID           # VK chat peer_id (dev default: 2000000001)
+NUXT_PLAYER_PHOTOS_DIR                  # Uploaded avatars (default: .data/player-photos relative to app cwd)
 ```
 
 ### Testing

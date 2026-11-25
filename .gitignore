@@ -5,6 +5,7 @@ package-lock.json
 .nuxt
 .output
 dist
+.data/
 
 # VK bot lives in its own git repo (nested .git) — ignore it in the main repo
 vk-bot/

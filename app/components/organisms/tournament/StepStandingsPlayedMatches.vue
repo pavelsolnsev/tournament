@@ -60,7 +60,7 @@
         </div>
 
         <!-- Панель кнопок: детали / редактировать / удалить -->
-        <div class="flex items-center gap-2 border-t border-slate-100 dark:border-slate-800/60 px-3 py-2">
+        <div class="flex flex-wrap items-center gap-2 border-t border-slate-100 dark:border-slate-800/60 px-3 py-2">
           <button
             type="button"
             class="inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-medium transition-colors
@@ -76,7 +76,7 @@
             Детали
           </button>
           <button
-            v-if="!props.readonly"
+            v-if="!props.readonly || props.updateArchiveMatch"
             type="button"
             class="inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-medium transition-colors
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
@@ -88,7 +88,7 @@
             <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
             </svg>
-            {{ editMatch === m.matchNumber ? 'Редактируется' : 'Редактировать' }}
+            {{ editMatch === m.matchNumber ? 'Редактируется' : props.updateArchiveMatch ? 'Редактировать статистику' : 'Редактировать' }}
           </button>
 
           <!-- Номер матча: закреплён справа -->
@@ -171,13 +171,14 @@
           @after-enter="scrollExpandedPanelIntoView"
         >
           <OrganismsTournamentPlayedMatchesPlayedMatchEditor
-            v-if="!props.readonly && editMatch === m.matchNumber"
+            v-if="(!props.readonly || props.updateArchiveMatch) && editMatch === m.matchNumber"
             :match="m"
             :team-marker="teamMarker"
             :team-color-by-name="props.teamColorByName"
             :players-by-team="playersByTeam"
             :display-player-label="displayPlayerLabel"
             :update-played-match="updatePlayedMatch"
+            :update-archive-match="props.updateArchiveMatch"
             @cancel="cancelEdit"
           />
         </Transition>
@@ -191,6 +192,7 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import type { PlayerMatchStats } from '~/composables/tournament-standings/types'
+import type { UpdateArchiveMatch } from '~/utils/archiveMatchStats'
 import { nextTick } from 'vue'
 import { useTeamColors } from '~/composables/useTeamColors'
 import OrganismsTournamentPlayedMatchesPlayedMatchDetails from '~/components/organisms/tournament/played-matches/PlayedMatchDetails.vue'
@@ -239,6 +241,7 @@ const props = withDefaults(
   showHeading?: boolean
   /** true — режим только просмотра, без редактирования и удаления. */
   readonly?: boolean
+  updateArchiveMatch?: UpdateArchiveMatch
 }>(),
   {
     teamColorByName: () => ({}),
@@ -295,7 +298,7 @@ function toggleDetails(matchNumber: number) {
 
 function toggleEdit(m: PlayedMatch) {
   // В режиме просмотра редактирование отключено.
-  if (props.readonly) return
+  if (props.readonly && !props.updateArchiveMatch) return
   if (editMatch.value === m.matchNumber) {
     cancelEdit()
     return

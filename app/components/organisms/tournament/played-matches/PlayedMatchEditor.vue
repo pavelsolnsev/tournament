@@ -174,6 +174,8 @@
       </div>
     </div>
 
+    <p v-if="props.updateArchiveMatch" class="px-3 pt-2 text-xs text-slate-600 dark:text-slate-300">Правка обновит протокол и итоги этого турнира. В общем рейтинге используются уже начисленные баллы.</p>
+    <p v-if="saveError" role="alert" class="px-3 pt-2 text-sm text-red-700 dark:text-red-300">{{ saveError }}</p>
     <!-- Сохранить / Отмена — h-11 = единая высота с основными кнопками сайта -->
     <div class="flex items-center gap-2 border-t border-slate-200 px-3 py-2.5 dark:border-slate-800/60">
       <button
@@ -182,9 +184,10 @@
                transition-colors md:hover:bg-emerald-600 active:bg-emerald-700
                focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50
                dark:text-slate-900 dark:md:hover:bg-emerald-400 dark:active:bg-emerald-600"
+        :disabled="saving"
         @click="save"
       >
-        Сохранить
+        {{ saving ? 'Сохраняем…' : 'Сохранить' }}
       </button>
       <button
         type="button"
@@ -192,6 +195,7 @@
                transition-colors md:hover:bg-slate-300
                focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/40
                dark:bg-slate-700 dark:text-slate-300 dark:md:hover:bg-slate-600 dark:focus-visible:ring-slate-500/40"
+        :disabled="saving"
         @click="emit('cancel')"
       >
         Отмена
@@ -206,6 +210,7 @@ import type { PlayerMatchStats, StatKey } from '~/composables/tournament-standin
 import { useTeamColors } from '~/composables/useTeamColors'
 import { resolveTeamColorIndex } from '~/utils/teamNames'
 import { teamDisplayNameByMarker } from '~/utils/teamDisplayName'
+import { archiveMatchScore, archiveSideStats, type UpdateArchiveMatch } from '~/utils/archiveMatchStats'
 import { computed, ref } from 'vue'
 
 type DraftState = {
@@ -239,6 +244,7 @@ const props = withDefaults(
     teamColorByName?: Record<string, number>
     playersByTeam: (teamName: string) => Player[]
     displayPlayerLabel: (player: Player) => string
+    updateArchiveMatch?: UpdateArchiveMatch
     updatePlayedMatch: (
       matchNumber: number,
       homeGoals: number,
@@ -317,16 +323,20 @@ const openEditPlayer = ref<string | null>(null)
 
 // Черновик матча — глубокая копия stats.
 const draft = ref<DraftState>({
-  homeStats: deepCopyStats(props.match.homeStats),
-  awayStats: deepCopyStats(props.match.awayStats),
+  homeStats: props.updateArchiveMatch ? archiveSideStats(props.match.homeStats, props.match.homePlayers) : deepCopyStats(props.match.homeStats),
+  awayStats: props.updateArchiveMatch ? archiveSideStats(props.match.awayStats, props.match.awayPlayers) : deepCopyStats(props.match.awayStats),
 })
 
 // Голы команд считаются автоматически из голов игроков — не нужно вводить вручную.
 const draftHomeGoals = computed(() =>
-  Object.values(draft.value.homeStats).reduce((s, st) => s + st.goals, 0),
+  props.updateArchiveMatch
+    ? archiveMatchScore(props.match.homeGoals, archiveSideStats(props.match.homeStats, props.match.homePlayers), draft.value.homeStats)
+    : Object.values(draft.value.homeStats).reduce((s, st) => s + st.goals, 0),
 )
 const draftAwayGoals = computed(() =>
-  Object.values(draft.value.awayStats).reduce((s, st) => s + st.goals, 0),
+  props.updateArchiveMatch
+    ? archiveMatchScore(props.match.awayGoals, archiveSideStats(props.match.awayStats, props.match.awayPlayers), draft.value.awayStats)
+    : Object.values(draft.value.awayStats).reduce((s, st) => s + st.goals, 0),
 )
 
 const { getMatchScorePillClass } = useTeamColors()
@@ -342,8 +352,26 @@ const draftScorePillClass = computed(() =>
   ),
 )
 
-const homePlayers = computed(() => props.playersByTeam(props.match.homeTeam))
-const awayPlayers = computed(() => props.playersByTeam(props.match.awayTeam))
+function editablePlayers(side: 'home' | 'away') {
+  const match = props.match
+  const team = props.playersByTeam(match[`${side}Team`])
+  if (!props.updateArchiveMatch) return team
+  const opposite = side === 'home' ? 'away' : 'home'
+  const own = archiveSideStats(match[`${side}Stats`], match[`${side}Players`])
+  const opponents = archiveSideStats(match[`${opposite}Stats`], match[`${opposite}Players`])
+  const result = new Map(team.filter(player => !Object.hasOwn(opponents, player.id) || Object.hasOwn(own, player.id))
+    .map(player => [player.id, player]))
+  for (const id of Object.keys(own).map(Number)) {
+    const marked = match[`${side}Players`]?.find(player => player.playerId === id)
+    if (!result.has(id)) result.set(id, { id, name: marked?.name ?? `Игрок #${id}`, username: null })
+  }
+  return [...result.values()]
+}
+
+const homePlayers = computed(() => editablePlayers('home'))
+const awayPlayers = computed(() => editablePlayers('away'))
+const saving = ref(false)
+const saveError = ref('')
 
 function editPlayerKey(side: string, playerId: number): string {
   return `${side}-${playerId}`
@@ -371,6 +399,7 @@ function getEditStat(statsRecord: Record<number, PlayerMatchStats>, playerId: nu
 // Это безопасно читает счётчик (если нет записи — 0).
 
 function changeStat(statsRecord: Record<number, PlayerMatchStats>, playerId: number, key: StatKey, delta: number) {
+  if (saving.value) return
   const current = statsRecord[playerId] ?? { goals: 0, assists: 0, saves: 0, yellows: 0, reds: 0 }
   statsRecord[playerId] = { ...current, [key]: Math.max(0, (current[key] ?? 0) + delta) }
 }
@@ -384,7 +413,22 @@ function hasAnyStat(statsRecord: Record<number, PlayerMatchStats>, playerId: num
 // Это проверяет: у игрока есть хоть одно событие.
 
 
-function save() {
+async function save() {
+  if (saving.value) return
+  if (props.updateArchiveMatch) {
+    saving.value = true
+    saveError.value = ''
+    try {
+      await props.updateArchiveMatch(props.match, draft.value.homeStats, draft.value.awayStats)
+      emit('cancel')
+    } catch (error) {
+      saveError.value = (error as { data?: { data?: { message?: string } } }).data?.data?.message
+        ?? 'Не удалось сохранить статистику. Попробуйте ещё раз.'
+    } finally {
+      saving.value = false
+    }
+    return
+  }
   props.updatePlayedMatch(
     props.match.matchNumber,
     draftHomeGoals.value,

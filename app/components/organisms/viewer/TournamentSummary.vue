@@ -96,6 +96,7 @@
       :team-color-by-name="effectiveTeamColors"
       :roster-players-by-team="rosterPlayersByTeam"
       :player-avatars-by-id="playerAvatarsById"
+      :update-archive-match="updateArchiveMatch"
     />
 
     <div v-if="hasPlayedMatches" class="border-t border-slate-300 dark:border-slate-700/50 sm:mx-6" />
@@ -122,6 +123,7 @@
 import type { Player } from '~/types/tournament'
 import type { TournamentSummary } from '~/composables/useTournamentSummary'
 import type { PlayedMatch, PlayerMatchStats } from '~/composables/tournament-standings/types'
+import type { UpdateArchiveMatch } from '~/utils/archiveMatchStats'
 import { useTeamColors } from '~/composables/useTeamColors'
 import { normalizeTeamName, resolveTeamColorIndex } from '~/utils/teamNames'
 import { buildEffectiveTeamColors } from '~/composables/tournament-summary/awardHelpers'
@@ -137,6 +139,7 @@ const props = defineProps<{
   aggregatePlayerStats?: Record<number, PlayerMatchStats>
   playerRatingDeltas?: Record<number, number>
   playedMatchesList?: PlayedMatch[]
+  updateArchiveMatch?: UpdateArchiveMatch
   /** true — показываем кнопку удаления игрока из состава (только архив, только полный админ). */
   canRemovePlayer?: boolean
 }>()

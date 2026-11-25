@@ -1,19 +1,27 @@
 <!-- Компонент StepTeams: шаг распределения выбранных игроков по командам. -->
 <template>
   <div class="min-w-0 flex flex-col gap-4">
+    <details class="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800/40">
+      <summary class="min-h-11 cursor-pointer list-inside rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 marker:text-emerald-600 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-emerald-500 dark:text-slate-100 dark:marker:text-emerald-400">
+        Добавить игрока из базы
+      </summary>
+      <div class="px-3 pb-3 sm:px-4 sm:pb-4">
+        <slot name="player-library" />
+      </div>
+    </details>
 
     <!-- Пустое состояние — нет выбранных игроков -->
     <p
       v-if="selectedPlayers.length === 0"
       class="rounded-xl border border-slate-200 dark:border-slate-700/40 bg-slate-50 dark:bg-slate-800/30 p-4 text-sm text-slate-600 dark:text-slate-400"
     >
-      Нет выбранных игроков.
+      Нет выбранных игроков. Добавьте их из базы выше или
       <button
         type="button"
         class="text-emerald-600 dark:text-emerald-400 underline transition hover:text-emerald-700 dark:hover:text-emerald-300 focus:outline-none rounded"
         @click="emit('backToPlayers')"
       >
-        Вернуться к выбору игроков
+        вернитесь к выбору игроков
       </button>.
     </p>
 

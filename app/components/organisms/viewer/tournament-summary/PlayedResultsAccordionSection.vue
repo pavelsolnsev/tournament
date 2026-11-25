@@ -70,6 +70,7 @@
             :display-player-label="displayPlayerLabelWithoutRating"
             :player-avatars-by-id="playerAvatarsById"
             :update-played-match="noopUpdatePlayedMatch"
+            :update-archive-match="updateArchiveMatch"
             :delete-played-match="noopDeletePlayedMatch"
             :show-heading="false"
             :readonly="true"
@@ -83,11 +84,13 @@
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
 import type { PlayedMatch, PlayerMatchStats } from '~/composables/tournament-standings/types'
+import type { UpdateArchiveMatch } from '~/utils/archiveMatchStats'
 import { displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
 import { scrollExpandedPanelIntoView } from '~/utils/scrollExpandedPanelIntoView'
 
 defineProps<{
   playedMatchesList: PlayedMatch[]
+  updateArchiveMatch?: UpdateArchiveMatch
   teamMarkerForRow: (teamName: string) => string
   teamColorByName: Record<string, number>
   rosterPlayersByTeam: (teamName: string) => Player[]

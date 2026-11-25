@@ -53,23 +53,20 @@ export function stripRatingFromDisplayLabel(label: string): string {
   return t
 }
 
+export function getPlayerDisplayName(p: Player): string {
+  const cleaned = p.username?.replace(/^@+/, '').trim()
+  return !cleaned || cleaned.toLowerCase() === 'unknown' ? (p.name || '').trim() : cleaned
+}
+
 /** Подпись игрока без рейтинга — для деталей сыгранного матча и похожих мест. */
 export function displayPlayerLabelWithoutRating(p: Player): string {
-  const cleaned = p.username?.replace(/^@+/, '').trim()
-  const raw =
-    !cleaned || cleaned.toLowerCase() === 'unknown'
-      ? (p.name || '').trim()
-      : cleaned
+  const raw = getPlayerDisplayName(p)
   return clipLongPlayerLabel(raw)
 }
 
 /** Части подписи для вёрстки: имя можно сжимать (truncate), рейтинг — всегда целиком справа. */
 export function playerLabelRatingParts(p: Player): { name: string; rating: string | null } {
-  const cleaned = p.username?.replace(/^@+/, '').trim()
-  const raw =
-    !cleaned || cleaned.toLowerCase() === 'unknown'
-      ? (p.name || '').trim()
-      : cleaned
+  const raw = getPlayerDisplayName(p)
   const ratingValue = Number(p.rating)
   const hasRating = Number.isFinite(ratingValue)
   if (!hasRating) {
