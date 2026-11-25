@@ -57,12 +57,27 @@ function mockDb(prev: Record<string, unknown> | null) {
     if (String(sql).trim().toUpperCase().startsWith('SELECT')) {
       return prev ? [{ value: JSON.stringify(prev) }] : []
     }
-    savedJson = JSON.parse(String(params[1])) as Record<string, unknown>
+    savedJson = JSON.parse(String(sql.startsWith('UPDATE') ? params[0] : params[1])) as Record<string, unknown>
     return { affectedRows: 1 }
   })
 }
 
 describe('persistTournamentStatePutBody — настройки списка ВК', () => {
+  it('preserves server-managed reserves and refuses changes that would invalidate them', async () => {
+    const reserve = { id: 'r', seats: 2, team: 'Красные', note: 'Гости' }
+    const state = { ...prevStateFreshVkTrList(), vkReserves: [reserve] }
+    mockDb(state)
+    await persistTournamentStatePutBody(putBodyFromWizard({ vkReserves: [] }))
+    expect(savedJson?.vkReserves).toEqual([reserve])
+    for (const change of [
+      { step: 1 }, { step: 2 }, { matchStatus: 'live' }, { matchStatus: 'finished' },
+      { __fullReset: true }, { vkTeamSlots: ['Синие'], rosterRev: 1 },
+    ]) {
+      mockDb(state)
+      await expect(persistTournamentStatePutBody(putBodyFromWizard(change))).rejects.toMatchObject({ statusCode: 409 })
+      expect(savedJson).toBeNull()
+    }
+  })
   beforeEach(() => {
     mockDb(prevStateFreshVkTrList())
   })

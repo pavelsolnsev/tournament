@@ -1,8 +1,8 @@
 import { queryWithRetry } from './db'
-import { filterPaidToSelected, parsePaidIds } from './tournamentPaidPlayers'
+import { readTournamentStateRow } from './tournamentPaidPlayers'
 import { bumpRosterRev } from './tournamentRosterRev'
-
-const TOURNAMENT_KEY = 'tournament'
+import { writeTournamentStateCas } from './tournamentStateCas'
+import { readTournamentReserves } from '../../app/utils/tournamentReserves'
 
 /** Строка в app_state: был unlink после закрытия списка в ВК (сохраняем вне JSON турнира, чтобы не потерялось от PUT /api/tournament/state). */
 export const VK_UNLINKED_EVENT_MARKER_KEY = 'tournament_vk_unlinked_event_id'
@@ -34,31 +34,18 @@ export async function clearSelectedIdsOnVkLinkIfAfterUnlink() {
   )
   if (mRows.length === 0 || !mRows[0]?.value?.trim()) return
 
-  await queryWithRetry('DELETE FROM app_state WHERE key_name = ?', [VK_UNLINKED_EVENT_MARKER_KEY])
-
-  const tRows = await queryWithRetry<Array<{ value: string }>>(
-    'SELECT value FROM app_state WHERE key_name = ?',
-    [TOURNAMENT_KEY],
-  )
-  if (tRows.length === 0 || !tRows[0]?.value) return
-
-  let state: Record<string, unknown>
-  try {
-    state = JSON.parse(tRows[0].value) as Record<string, unknown>
-  } catch {
-    state = {}
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const row = await readTournamentStateRow()
+    if (row && readTournamentReserves(row.json.vkReserves).length === 0) {
+      const state: Record<string, unknown> = { ...row.json, selectedIds: [], paidPlayerIds: [] }
+      delete state.vkReserveOrderRev
+      delete state.vkListDefaultLimit
+      delete state.vkTeamLabelByPlayerId
+      delete state.vkTeamSlots
+      bumpRosterRev(state)
+      if (!await writeTournamentStateCas(row.raw, state)) continue
+    }
+    await queryWithRetry('DELETE FROM app_state WHERE key_name = ? AND value = ?', [VK_UNLINKED_EVENT_MARKER_KEY, mRows[0].value])
+    return
   }
-  // Simple10: состав и оплаты только по текущему списку — как в state.put при пустом selected.
-  state.selectedIds = []
-  bumpRosterRev(state)
-  delete state.vkTeamLabelByPlayerId
-  delete state.vkTeamSlots
-  const paid = parsePaidIds(state.paidPlayerIds)
-  state.paidPlayerIds = filterPaidToSelected(paid, [])
-
-  await queryWithRetry(
-    `INSERT INTO app_state (key_name, value) VALUES (?, ?)
-     ON DUPLICATE KEY UPDATE value = VALUES(value)`,
-    [TOURNAMENT_KEY, JSON.stringify(state)],
-  )
 }

@@ -43,6 +43,7 @@
         @update:tournament-date="venueEditing = true; emit('update:tournamentDate', $event)"
       />
 
+      <slot name="reserves" />
       <OrganismsTournamentStepPlayersSelectedPanel
         :selected-players="selectedPlayers"
         :can-go-to-teams="canGoToTeams"
@@ -53,6 +54,7 @@
         :vk-team-slots="vkTeamSlots"
         :vk-team-limits="vkTeamLimits"
         :vk-list-limit="vkListLimit"
+        :reserves="reserves"
         :queued-players="queuedPlayers"
         :tournament-sync-busy="tournamentSyncBusy"
         @remove-player="emit('removePlayer', $event)"
@@ -65,7 +67,19 @@
         @go-to-standings="emit('goToStandings')"
         @toggle-player-paid="(id, paid) => emit('togglePlayerPaid', id, paid)"
         @sync-tournament-from-server="emit('syncTournamentFromServer')"
-      />
+      >
+        <template #reserve-row="{ reserve }">
+          <TournamentReserveSlot
+            :reserve="reserve"
+            :open="openReserveKey === reserve.key"
+            :available-players="availablePlayers"
+            :queued-players="queuedPlayers"
+            :update-reserve="updateReserve"
+            @toggle="openReserveKey = openReserveKey === reserve.key ? '' : reserve.key"
+            @close="closeReserve(reserve.key)"
+          />
+        </template>
+      </OrganismsTournamentStepPlayersSelectedPanel>
     </div>
   </div>
 </template>
@@ -73,6 +87,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { Player } from '~/types/tournament'
+import type { ReserveAction, TournamentReserve } from '~/utils/tournamentReserves'
+import TournamentReserveSlot from './TournamentReserveSlot.vue'
 
 // Этот шаг показывает игроков и даёт добавить новых.
 const props = defineProps<{
@@ -92,6 +108,8 @@ const props = defineProps<{
   vkTeamLimits: Record<string, number>
   /** Общий лимит списка (без команд); undefined = без лимита. */
   vkListLimit?: number
+  reserves?: TournamentReserve[]
+  updateReserve: (action: ReserveAction) => Promise<void>
   /** Игроки в очереди (скрыты с сайта): с командой — командная очередь, без — общая. */
   queuedPlayers: { player: Player, team: string }[]
   /** Список в ВК в режиме «есть слепок ВК» (s tr / s prof + эвристики). */
@@ -123,6 +141,10 @@ const emit = defineEmits<{
 // Всё заполнено — достаточно строки-сводки. Начали править руками — блок остаётся открытым, пока шаг на экране
 // (иначе он пропадал бы прямо во время ввода, как только заполнится последнее поле).
 const venueEditing = ref(false)
+const openReserveKey = ref('')
+function closeReserve(key: string) {
+  if (openReserveKey.value === key) openReserveKey.value = ''
+}
 const venueFilled = computed(
   () => props.tournamentDate.trim() !== '' && props.venueLabel.trim() !== '' && props.formatLabel.trim() !== '',
 )
@@ -140,7 +162,7 @@ const venueSummary = computed(() => {
 
 // Переход к командам разрешён только если выбраны игроки, место и формат.
 const canGoToTeams = computed(
-  () => props.selectedPlayers.length > 0 && props.venueLabel.trim() !== '' && props.formatLabel.trim() !== '',
+  () => !props.reserves?.length && props.selectedPlayers.length > 0 && props.venueLabel.trim() !== '' && props.formatLabel.trim() !== '',
 )
 // Этот компонент склеивает блоки UI и пробрасывает события наверх.
 </script>

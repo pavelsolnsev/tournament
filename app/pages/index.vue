@@ -114,6 +114,7 @@
                 <OrganismsTournamentStepVkListStartPanel
                   v-if="wizard.step.value === 0"
                   :clear-tournament-busy="clearTournamentBusy"
+                  :clear-tournament-error="vkCancelTournamentError"
                   @cancel-tournament="handleVkCancelTournament"
                   @match-created="(m) => { wizard.tournamentDate.value = m.dateIso; wizard.venueLabel.value = m.venueLabel; wizard.formatLabel.value = m.formatLabel }"
                 />
@@ -182,6 +183,8 @@
                   :vk-team-slots="wizard.vkTeamSlots.value"
                   :vk-team-limits="wizard.vkTeamLimits.value"
                   :vk-list-limit="wizard.vkListLimit.value"
+                  :reserves="wizard.vkReserves.value"
+                  :update-reserve="updateReserve"
                   :queued-players="wizard.queuedPlayers.value"
                   @set-player-vk-team="(id, t) => wizard.setPlayerVkTeam(id, t)"
                   @add-vk-team-slot="(n) => wizard.addVkTeamSlot(n)"
@@ -189,7 +192,15 @@
                   @set-vk-team-limit="(name, limit) => wizard.setVkTeamLimit(name, limit)"
                   @set-vk-list-limit="(limit) => wizard.setVkListLimit(limit)"
                   @toggle-player-paid="onTogglePlayerPaid"
-                />
+                >
+                  <template #reserves>
+                    <TournamentReserves
+                      :reserves="wizard.vkReserves.value"
+                      :team-slots="wizard.vkTeamSlots.value"
+                      :update-reserve="updateReserve"
+                    />
+                  </template>
+                </OrganismsTournamentStepPlayers>
               </template>
 
               <OrganismsTournamentStepStandings
@@ -274,6 +285,8 @@
 
 <script setup lang="ts">
 import type { Player } from '~/types/tournament'
+import { resolveReservesMessage, type ReserveAction } from '~/utils/tournamentReserves'
+import TournamentReserves from '~/components/organisms/tournament/TournamentReserves.vue'
 import { computed, ref, watch } from 'vue'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 import { useConfirmCountdown } from '~/composables/useConfirmCountdown'
@@ -322,9 +335,24 @@ async function fetchRemoteStandingsSnapshotForMerge() {
 
 const wizard = useTournamentWizard(tournamentState)
 
+let reserveUpdateBusy = false
+async function updateReserve(action: ReserveAction) {
+  if (reserveUpdateBusy) throw new Error('Reserve update in progress')
+  reserveUpdateBusy = true
+  try {
+    tournamentState.cancelPendingSave()
+    await wizard.saveCurrentTournamentStateNow()
+    await $fetch('/api/tournament/reserves', { method: 'POST', body: action })
+    await syncWizardFromServerAfterExternalChange()
+    broadcastAdminTournamentStateChanged()
+  } finally {
+    reserveUpdateBusy = false
+  }
+}
+
 /** Пустой мастер: без таймерных GET /api/tournament/state; после появления состава или vkListTournament — поллинг включается. */
 const rosterSyncRelevant = computed(
-  () => wizard.vkListTournament.value === true || wizard.selectedPlayers.value.length > 0,
+  () => wizard.vkListTournament.value === true || wizard.selectedPlayers.value.length > 0 || wizard.vkReserves.value.length > 0,
 )
 
 const viewerState = computed(() => tournamentState.serverState.value)
@@ -470,10 +498,15 @@ function cancelClearTournament() {
   showClearTournamentConfirm.value = false
 }
 
+const vkCancelTournamentError = ref('')
 async function handleVkCancelTournament() {
   if (!canClearTournament.value) return
+  if (wizard.vkReserves.value.length) {
+    vkCancelTournamentError.value = resolveReservesMessage
+    return
+  }
   clearTournamentBusy.value = true
-  clearTournamentError.value = null
+  vkCancelTournamentError.value = ''
   try {
     tournamentState.cancelPendingSave()
     await $fetch('/api/tournament/vk-unlink-and-reset', {
@@ -490,8 +523,9 @@ async function handleVkCancelTournament() {
     }
   } catch (e) {
     if (import.meta.dev) console.error('[vk-unlink-and-reset]', e)
-    clearTournamentError.value =
-      (e as { data?: { statusMessage?: string }; statusMessage?: string })?.data?.statusMessage
+    vkCancelTournamentError.value =
+      (e as { data?: { data?: { message?: string } } })?.data?.data?.message
+      ?? (e as { data?: { statusMessage?: string }; statusMessage?: string })?.data?.statusMessage
       ?? (e as { statusMessage?: string })?.statusMessage
       ?? 'Не удалось отменить матч. Попробуйте ещё раз.'
   } finally {
@@ -500,6 +534,10 @@ async function handleVkCancelTournament() {
 }
 
 async function confirmClearTournament() {
+  if (wizard.vkReserves.value.length) {
+    clearTournamentError.value = resolveReservesMessage
+    return
+  }
   clearTournamentBusy.value = true
   clearTournamentError.value = null
   const maxAttempts = 5

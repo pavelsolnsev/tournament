@@ -14,9 +14,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden: full admin only' })
   }
 
-  await setVkListCloseRequested()
-  await clearVkStartListRequest()
-
   const state: Record<string, unknown> = {
     step: 0,
     tournamentName: '',
@@ -38,6 +35,8 @@ export default defineEventHandler(async (event) => {
     __fullReset: true,
   }
   await persistTournamentStatePutBody(state)
+  await setVkListCloseRequested()
+  await clearVkStartListRequest()
 
   return { ok: true }
 })

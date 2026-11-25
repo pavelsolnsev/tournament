@@ -4,6 +4,7 @@ import { requireVkBotToken } from '../../utils/vkBotAuth'
 import { readVkListClosePending } from '../../utils/vkListCloseRequest'
 import { readVkStartListPending } from '../../utils/vkStartListRequest'
 import { parseVkTeamLabelMap, parseVkTeamSlots, parseVkTeamLimits, parseVkListLimit } from '../../utils/tournamentPaidPlayers'
+import { readTournamentReserves, type TournamentReserve } from '../../../app/utils/tournamentReserves'
 
 const LINK_KEY = 'tournament_vk_link'
 const TOURNAMENT_KEY = 'tournament'
@@ -30,6 +31,8 @@ interface LinkJson {
 }
 
 interface ParsedTournament {
+  reserves: Pick<TournamentReserve, 'seats' | 'team'>[]
+  reserveOrderRev: number
   selectedIds: number[]
   paidPlayerIds: number[]
   vkTeamLabelByPlayerId: Record<string, string>
@@ -44,6 +47,8 @@ interface ParsedTournament {
 
 function parseTournamentValue(value: string | undefined): ParsedTournament {
   const empty: ParsedTournament = {
+    reserves: [],
+    reserveOrderRev: 0,
     selectedIds: [],
     paidPlayerIds: [],
     vkTeamLabelByPlayerId: {},
@@ -70,13 +75,16 @@ function parseTournamentValue(value: string | undefined): ParsedTournament {
     const matchStatus: MatchStatus =
       ms === 'live' || ms === 'finished' || ms === 'upcoming' ? ms : 'upcoming'
     const vkMuted = st.vkMuted === true
+    const reserves = readTournamentReserves(st.vkReserves).map(({ seats, team }) => ({ seats, team }))
     return {
       selectedIds,
       paidPlayerIds,
       vkTeamLabelByPlayerId: parseVkTeamLabelMap(st.vkTeamLabelByPlayerId),
       vkTeamSlots: parseVkTeamSlots(st.vkTeamSlots),
       vkTeamLimits: parseVkTeamLimits(st.vkTeamLimits),
-      vkListLimit: parseVkListLimit(st.vkListLimit),
+      vkListLimit: parseVkListLimit(st.vkListLimit) ?? (reserves.length ? parseVkListLimit(st.vkListDefaultLimit) ?? 20 : undefined),
+      reserves,
+      reserveOrderRev: Number(st.vkReserveOrderRev) || 0,
       matchStatus,
       liveHomeTeam: typeof st.liveHomeTeam === 'string' ? st.liveHomeTeam : '',
       liveAwayTeam: typeof st.liveAwayTeam === 'string' ? st.liveAwayTeam : '',
@@ -205,6 +213,8 @@ export default defineEventHandler(async (event) => {
     closeVkListRequested,
     startVkRequested,
     ...rosterBlock,
+    vkReserves: parsed.reserves,
+    vkReserveOrderRev: parsed.reserveOrderRev,
   }
 
   if (linkRows.length === 0 || !linkRows[0]?.value) {

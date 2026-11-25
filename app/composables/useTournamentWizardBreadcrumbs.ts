@@ -1,5 +1,6 @@
 import { computed } from 'vue'
 import type { useTournamentWizard } from '~/composables/useTournamentWizard'
+import { resolveReservesMessage } from '~/utils/tournamentReserves'
 
 type Wizard = ReturnType<typeof useTournamentWizard>
 
@@ -27,6 +28,7 @@ export function useTournamentWizardBreadcrumbs(
 
   function isBreadcrumbStepEnabled(step: 0 | 1 | 2): boolean {
     if (step === wizard.step.value) return false
+    if (step !== 0 && wizard.vkReserves.value.length) return false
     if (step === 1) {
       return canGoToTeamsFromPlayersStep.value
     }
@@ -34,6 +36,7 @@ export function useTournamentWizardBreadcrumbs(
   }
 
   function breadcrumbDisabledTitle(step: 0 | 1 | 2): string | undefined {
+    if (step !== 0 && wizard.vkReserves.value.length) return resolveReservesMessage
     if (step === 1 && !canGoToTeamsFromPlayersStep.value) {
       return 'Выберите игроков и укажите место и формат'
     }

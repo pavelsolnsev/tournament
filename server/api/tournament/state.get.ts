@@ -2,7 +2,8 @@ import { queryWithRetry } from '../../utils/db'
 import { ensureTablesExist } from '../../utils/initDb'
 
 // API: GET /api/tournament/state — возвращает текущее состояние турнира из базы данных.
-export default defineEventHandler(async (_event) => {
+export default defineEventHandler(async (event) => {
+  setResponseHeader(event, 'Cache-Control', 'private, no-store')
   await ensureTablesExist()
 
   // Читаем сохранённое состояние турнира из базы (с retry при обрыве соединения).
@@ -19,6 +20,7 @@ export default defineEventHandler(async (_event) => {
     const rawValue = rows[0]?.value
     if (!rawValue) return { state: null }
     const state = JSON.parse(rawValue)
+    if (getCookie(event, 'admin_session') !== 'full') delete state?.vkReserves
     return { state }
   } catch {
     return { state: null }

@@ -2,6 +2,7 @@
 // Повторяет логику бота (splitRosterByTeams): с командами — пер-командные лимиты,
 // без команд — общий лимит списка. Очередные игроки прячутся с сайта.
 import { normalizeTeamName } from '~/utils/teamNames'
+import { reserveSeats, type TournamentReserve } from './tournamentReserves'
 
 /** Дефолтный лимит команды — совпадает с DEFAULT_TEAM_LIMIT в боте. */
 export const DEFAULT_TEAM_LIMIT = 8
@@ -18,7 +19,7 @@ function matchSlot(slots: string[], raw: string | undefined): string | null {
 }
 
 /** Лимит команды из карты (ключ — нормализованное имя в нижнем регистре), иначе дефолт. */
-function teamLimitFor(teamLimits: Record<string, number> | undefined, slot: string): number {
+export function teamLimitFor(teamLimits: Record<string, number> | undefined, slot: string): number {
   const key = normalizeTeamName(slot).toLowerCase()
   const v = teamLimits?.[key]
   return typeof v === 'number' && Number.isFinite(v) && v >= 1 ? Math.floor(v) : DEFAULT_TEAM_LIMIT
@@ -35,8 +36,9 @@ export function computeQueuedPlayerIds(input: {
   teamSlots: string[]
   teamLimits: Record<string, number>
   listLimit: number | null | undefined
+  reserves?: readonly TournamentReserve[]
 }): Set<number> {
-  const { orderedIds, teamLabelByPlayerId, teamSlots, teamLimits, listLimit } = input
+  const { orderedIds, teamLabelByPlayerId, teamSlots, teamLimits, listLimit, reserves = [] } = input
   const slots = Array.isArray(teamSlots) ? teamSlots.filter(Boolean) : []
 
   // Командный режим: на каждую команду первые limit — основа, остальные — очередь; «без команды» — всегда основа.
@@ -47,7 +49,7 @@ export function computeQueuedPlayerIds(input: {
       const canon = matchSlot(slots, teamLabelByPlayerId[id])
       if (!canon) continue
       const used = counts.get(canon) ?? 0
-      if (used >= teamLimitFor(teamLimits, canon)) {
+      if (used >= teamLimitFor(teamLimits, canon) - reserveSeats(reserves, canon)) {
         queued.add(id)
       } else {
         counts.set(canon, used + 1)
@@ -57,12 +59,13 @@ export function computeQueuedPlayerIds(input: {
   }
 
   // Без команд: общий лимит списка (первые listLimit — основа, остальные — очередь).
-  const limit = Math.floor(Number(listLimit))
+  const reserved = reserveSeats(reserves)
+  const limit = Math.floor(Number(listLimit ?? (reserved ? 20 : 0)))
   if (Number.isFinite(limit) && limit >= 1) {
     const queued = new Set<number>()
     let count = 0
     for (const id of orderedIds) {
-      if (count >= limit) {
+      if (count >= limit - reserved) {
         queued.add(id)
       } else {
         count += 1

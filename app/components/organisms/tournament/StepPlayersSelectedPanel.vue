@@ -6,7 +6,7 @@
       <div
         class="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-200/90 bg-white/70 px-3 py-2.5 dark:border-slate-700/55 dark:bg-slate-800/35"
         role="status"
-        :aria-label="`В игре: ${selectedPlayers.length}`"
+        :aria-label="`В игре: ${selectedPlayers.length}${reserveRows.length ? `, в резерве: ${reserveRows.length}` : ''}`"
       >
         <div class="flex min-w-0 items-center gap-2">
           <span
@@ -18,6 +18,9 @@
           </span>
         </div>
         <div class="flex shrink-0 items-center gap-1.5">
+          <span v-if="reserveRows.length" class="rounded-lg bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900 dark:bg-amber-400/15 dark:text-amber-200">
+            Резерв · {{ reserveRows.length }}
+          </span>
           <button
             type="button"
             class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-200/80 hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 disabled:pointer-events-none disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-700/60 dark:hover:text-slate-200"
@@ -114,7 +117,8 @@
             <button
               type="button"
               class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/40 dark:hover:bg-red-950/40 dark:hover:text-red-300"
-              :title="`Удалить «${name}»`"
+              :disabled="Boolean(reserves?.some(reserve => reserveTeamKey(reserve.team) === reserveTeamKey(name)))"
+              :title="reserves?.some(reserve => reserveTeamKey(reserve.team) === reserveTeamKey(name)) ? resolveReservesMessage : `Удалить «${name}»`"
               :aria-label="`Удалить команду ${name}`"
               @click="emit('removeVkTeamSlot', name, name)"
             >
@@ -151,18 +155,7 @@
         @set="(l) => emit('setVkListLimit', l)"
       />
 
-      <!-- Скрытая очередь: показываем кто именно ждёт (с командой — командная очередь, без — общая). -->
-      <div
-        v-if="queuedPlayers.length"
-        class="rounded-lg bg-amber-50 px-3 py-2 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100"
-      >
-        <p class="text-xs font-semibold">⏳ В очереди · {{ queuedPlayers.length }} (скрыты)</p>
-        <ul class="mt-1 space-y-0.5">
-          <li v-for="q in queuedPlayers" :key="q.player.id" class="truncate text-xs">
-            <span v-if="q.team" class="font-medium">{{ q.team }}</span><span v-if="q.team" class="opacity-60"> — </span>{{ displayPlayerLabelWithoutRating(q.player) }}
-          </li>
-        </ul>
-      </div>
+      <TournamentQueuePanel v-if="queuedPlayers.length" :players="queuedPlayers" @remove="emit('removePlayer', $event)" />
 
       <div
         v-if="selectedPlayers.length > 0"
@@ -199,7 +192,7 @@
 
       <!-- Поиск по игрокам, уже выбранным в турнир (по имени и нику). -->
       <AtomsTournamentTextInput
-        v-if="selectedPlayers.length > 0"
+        v-if="selectedPlayers.length > 0 || reserveRows.length > 0"
         v-model="selectedSearch"
         variant="search"
         size="xs"
@@ -207,10 +200,10 @@
         caret-at-end
       />
 
-      <AtomsEmptyStateBox v-if="selectedPlayers.length === 0">
+      <AtomsEmptyStateBox v-if="selectedPlayers.length === 0 && reserveRows.length === 0">
         Выберите игроков в списке доступных.
       </AtomsEmptyStateBox>
-      <AtomsEmptyStateBox v-else-if="displayedSelectedPlayers.length === 0">
+      <AtomsEmptyStateBox v-else-if="displayedSelectedPlayers.length === 0 && displayedReserveRows.length === 0">
         Никого не нашли.
       </AtomsEmptyStateBox>
 
@@ -229,14 +222,15 @@
           @toggle-paid="emit('togglePlayerPaid', p.id, !paidPlayerIds.has(p.id))"
           @update-vk-team="(t) => emit('setPlayerVkTeam', p.id, t)"
         />
+        <template v-for="reserve in displayedReserveRows" :key="reserve.key"><slot name="reserve-row" :reserve="reserve" /></template>
       </AtomsPlayerListUl>
 
       <!-- Подсказка почему кнопка заблокирована — показывается если нет места или формата -->
       <p
-        v-if="selectedPlayers.length > 0 && !canGoToTeams"
+        v-if="reserveRows.length || (selectedPlayers.length > 0 && !canGoToTeams)"
         class="text-center text-xs text-amber-600 dark:text-amber-400"
       >
-        Укажите место и формат
+        {{ reserveRows.length ? resolveReservesMessage : 'Укажите место и формат' }}
       </p>
 
       <AtomsPrimaryButton
@@ -251,9 +245,8 @@
       <!-- Сразу к таблице (как крошка «Таблица»): например, вернуться к идущему турниру, не трогая команды. -->
       <button
         type="button"
-        class="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors
-               hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:bg-slate-800
-               focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+        :disabled="reserveRows.length > 0"
+        class="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
         @click="emit('goToStandings')"
       >
         Перейти к таблице →
@@ -265,7 +258,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { Player } from '~/types/tournament'
-import { usePlayerDisplay, displayPlayerLabelWithoutRating } from '~/composables/usePlayerDisplay'
+import { filterReservePlayerRows, reservePlayerRows, reserveTeamKey, resolveReservesMessage, type TournamentReserve } from '~/utils/tournamentReserves'
+import { usePlayerDisplay } from '~/composables/usePlayerDisplay'
+import TournamentQueuePanel from './TournamentQueuePanel.vue'
 
 const sortByTeam = ref(false)
 const sortPaidFirst = ref(false)
@@ -296,6 +291,7 @@ const props = defineProps<{
   vkTeamLimits: Record<string, number>
   /** Общий лимит списка (без команд); undefined = без лимита. */
   vkListLimit?: number
+  reserves?: TournamentReserve[]
   /** Игроки в очереди (скрыты с сайта): с командой — командная очередь, без — общая. */
   queuedPlayers: { player: Player, team: string }[]
   vkListTournament: boolean
@@ -304,6 +300,9 @@ const props = defineProps<{
   /** Пока идёт ручной sync state с сервера — крутим иконку. */
   tournamentSyncBusy?: boolean
 }>()
+
+const reserveRows = computed(() => reservePlayerRows(props.reserves ?? []))
+const displayedReserveRows = computed(() => filterReservePlayerRows(reserveRows.value, selectedSearch.value))
 
 /** Есть ли смысл показывать сортировку по командам: слоты ВК или хотя бы одна подпись у выбранных. */
 const hasTeamsForFilter = computed(() => {

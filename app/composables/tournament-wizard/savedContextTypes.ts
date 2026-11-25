@@ -54,6 +54,8 @@ export type SavedTournamentContext = {
   vkTeamLimits?: Record<string, number>
   /** Общий лимит списка ВК (без команд). Если задан — игроки сверх него уходят в очередь. */
   vkListLimit?: number
+  vkListDefaultLimit?: number
+  vkReserves?: import('~/utils/tournamentReserves').TournamentReserve[]
   /** true только для списка турнира в боте (s tr) — на шаге «Игроки» показываются команды ВК. */
   vkListTournament?: boolean
   /**

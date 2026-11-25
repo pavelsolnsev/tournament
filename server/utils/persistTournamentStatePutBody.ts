@@ -1,5 +1,4 @@
 import { createError } from 'h3'
-import { queryWithRetry } from './db'
 import {
   filterPaidToSelected,
   mergeVkTeamLabelsForPut,
@@ -16,8 +15,9 @@ import { mergeLiveCurrentMatchStatsIntoNextState } from './mergeLiveCurrentMatch
 import { mergeStandingsHistoryIntoNextState } from './mergeStandingsHistoryForPersist'
 import { mergeRosterIntoNextState } from './tournamentRosterRev'
 import { pruneAssignmentToSelected } from './tournamentPlayerRemoval'
-
-const TOURNAMENT_KEY = 'tournament'
+import { writeTournamentStateCas } from './tournamentStateCas'
+import { readTournamentReserves } from '../../app/utils/tournamentReserves'
+import { reserveFitsTeamSlots, throwUnresolvedReserves } from './tournamentReservePolicy'
 
 function tournamentMetaPresent(s: Record<string, unknown>): boolean {
   return (
@@ -33,8 +33,17 @@ function tournamentMetaPresent(s: Record<string, unknown>): boolean {
  * Используется мастером в браузере и, при полном сбросе, ботом (e! / clear-tournament).
  */
 export async function persistTournamentStatePutBody(
-  state: Record<string, unknown>,
+  body: Record<string, unknown>,
 ) {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const previous = await readTournamentStateRow()
+    const next = mergeTournamentStatePutBody(structuredClone(body), previous?.json ?? {})
+    if (await writeTournamentStateCas(previous?.raw ?? null, next)) return
+  }
+  throw createError({ statusCode: 409, statusMessage: 'Concurrent update conflict on tournament state' })
+}
+
+function mergeTournamentStatePutBody(state: Record<string, unknown>, prevJson: Record<string, unknown>) {
   // __fullReset: только в теле PUT — явное разрешение полного сброса (сайт: emptyResetState; бот: clear-tournament).
   const withFlag = state as { __fullReset?: boolean }
   const fullResetAuthorized = withFlag.__fullReset === true
@@ -48,14 +57,16 @@ export async function persistTournamentStatePutBody(
 
   // vkMuted всегда false: и админ, и судья запускают матч — бот шлёт в ВК «Игра началась».
   state.vkMuted = false
-  const prev = await readTournamentStateRow()
-  const prevJson = (prev?.json && typeof prev.json === 'object' ? prev.json : {}) as Record<string, unknown>
 
   const preservedPaid = parsePaidIds(prevJson.paidPlayerIds)
 
   const stepRaw = (state as { step?: unknown }).step
   const stepIsInitial = stepRaw === undefined || stepRaw === null || Number(stepRaw) === 0
   const snapshotEmpty = (state as { standingsSnapshot?: unknown }).standingsSnapshot == null
+  const reserves = readTournamentReserves(prevJson.vkReserves)
+  if (reserves.length && (fullResetAuthorized || !stepIsInitial || state.matchStatus === 'live' || state.matchStatus === 'finished')) {
+    throwUnresolvedReserves()
+  }
   const looksLikeFullWipe =
     parseSelectedIds(state.selectedIds).length === 0
     && snapshotEmpty
@@ -128,7 +139,7 @@ export async function persistTournamentStatePutBody(
     ;(state as { vkTeamSlots: string[] }).vkTeamSlots = []
     ;(state as { vkTeamLimits: Record<string, number> }).vkTeamLimits = {}
   } else {
-    const prevVk = parseVkTeamLabelMap(prev?.json.vkTeamLabelByPlayerId)
+    const prevVk = parseVkTeamLabelMap(prevJson.vkTeamLabelByPlayerId)
     const clientVk = parseVkTeamLabelMapForPutBody(
       (state as { vkTeamLabelByPlayerId?: unknown }).vkTeamLabelByPlayerId,
     )
@@ -138,7 +149,7 @@ export async function persistTournamentStatePutBody(
       newSelected,
     )
     const clientSlots = parseVkTeamSlots((state as { vkTeamSlots?: unknown }).vkTeamSlots)
-    const prevSlots = parseVkTeamSlots(prev?.json.vkTeamSlots)
+    const prevSlots = parseVkTeamSlots(prevJson.vkTeamSlots)
     if (clientSlots.length > 0) {
       ;(state as { vkTeamSlots: string[] }).vkTeamSlots = clientSlots
     } else if (resetVkListConfig || vkTeamSlotsAuthoritative) {
@@ -150,7 +161,7 @@ export async function persistTournamentStatePutBody(
     if (resetVkListConfig) {
       ;(state as { vkTeamLimits: Record<string, number> }).vkTeamLimits = {}
     } else {
-      const prevLimits = parseVkTeamLimits(prev?.json.vkTeamLimits)
+      const prevLimits = parseVkTeamLimits(prevJson.vkTeamLimits)
       const clientLimits = parseVkTeamLimits((state as { vkTeamLimits?: unknown }).vkTeamLimits)
       ;(state as { vkTeamLimits: Record<string, number> }).vkTeamLimits = { ...prevLimits, ...clientLimits }
     }
@@ -165,11 +176,10 @@ export async function persistTournamentStatePutBody(
   mergeStandingsHistoryIntoNextState(prevJson, state)
   mergeLiveCurrentMatchStatsIntoNextState(prevJson, state)
 
-  const json = JSON.stringify(state)
-
-  await queryWithRetry(
-    `INSERT INTO app_state (key_name, value) VALUES (?, ?)
-     ON DUPLICATE KEY UPDATE value = VALUES(value)`,
-    [TOURNAMENT_KEY, json],
-  )
+  const slots = parseVkTeamSlots(state.vkTeamSlots)
+  if (reserves.some(reserve => !reserveFitsTeamSlots(reserve, slots))) throwUnresolvedReserves()
+  state.vkReserves = reserves
+  state.vkReserveOrderRev = fullResetAuthorized ? undefined : prevJson.vkReserveOrderRev
+  state.vkListDefaultLimit = fullResetAuthorized ? undefined : parseVkListLimit(prevJson.vkListDefaultLimit)
+  return state
 }

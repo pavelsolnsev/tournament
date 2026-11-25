@@ -1,4 +1,5 @@
 import { queryWithRetry } from './db'
+import { writeTournamentStateCas } from './tournamentStateCas'
 
 const TOURNAMENT_KEY = 'tournament'
 
@@ -137,9 +138,9 @@ export async function readTournamentStateRow(): Promise<{ json: TournamentJson, 
   if (!raw) return null
   try {
     const json = JSON.parse(raw) as TournamentJson
-    return { json, raw }
+    return { json: json && typeof json === 'object' && !Array.isArray(json) ? json : {}, raw }
   } catch {
-    return null
+    return { json: {}, raw }
   }
 }
 
@@ -148,31 +149,26 @@ export async function setPlayerPaidFlag(opts: {
   playerId: number
   paid: boolean
 }): Promise<{ ok: true, paidPlayerIds: number[] } | { ok: false, statusMessage: string }> {
-  const row = await readTournamentStateRow()
-  if (!row) {
-    return { ok: false, statusMessage: 'Tournament state is empty' }
+  return changePaidFlag(opts.playerId, opts.paid)
+}
+
+async function changePaidFlag(playerId: number, explicitPaid?: boolean): Promise<
+  { ok: true; paid: boolean; paidPlayerIds: number[]; playerId: number } | { ok: false; statusMessage: string }
+> {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const row = await readTournamentStateRow()
+    if (!row) return { ok: false, statusMessage: 'Tournament state is empty' }
+    if (!parseSelectedIds(row.json.selectedIds).includes(playerId)) {
+      return { ok: false, statusMessage: 'Player is not in the tournament list' }
+    }
+    const ids = new Set(parsePaidIds(row.json.paidPlayerIds))
+    const paid = explicitPaid ?? !ids.has(playerId)
+    if (paid) ids.add(playerId)
+    else ids.delete(playerId)
+    const paidPlayerIds = [...ids].sort((a, b) => a - b)
+    if (await writeTournamentStateCas(row.raw, { ...row.json, paidPlayerIds })) return { ok: true, paid, paidPlayerIds, playerId }
   }
-  const { json } = row
-  const selectedIds = parseSelectedIds(json.selectedIds)
-  const pid = opts.playerId
-  if (!selectedIds.includes(pid)) {
-    return { ok: false, statusMessage: 'Player is not in the tournament list' }
-  }
-  const paid = new Set(parsePaidIds(json.paidPlayerIds))
-  if (opts.paid) {
-    paid.add(pid)
-  }
-  else {
-    paid.delete(pid)
-  }
-  const paidPlayerIds = [...paid].sort((a, b) => a - b)
-  json.paidPlayerIds = paidPlayerIds
-  await queryWithRetry(
-    `INSERT INTO app_state (key_name, value) VALUES (?, ?)
-     ON DUPLICATE KEY UPDATE value = VALUES(value)`,
-    [TOURNAMENT_KEY, JSON.stringify(json)],
-  )
-  return { ok: true, paidPlayerIds }
+  return { ok: false, statusMessage: 'Concurrent update conflict on tournament state' }
 }
 
 async function resolvePlayerIdForVkUserId(
@@ -210,22 +206,7 @@ export async function setPlayerPaidByVkUserId(
   const selectedIds = parseSelectedIds(json.selectedIds)
   const resolved = await resolvePlayerIdForVkUserId(vkUserId, selectedIds)
   if (!resolved.ok) return resolved
-  const pid = resolved.playerId
-  const set = new Set(parsePaidIds(json.paidPlayerIds))
-  if (paid) {
-    set.add(pid)
-  }
-  else {
-    set.delete(pid)
-  }
-  const paidPlayerIds = [...set].sort((a, b) => a - b)
-  json.paidPlayerIds = paidPlayerIds
-  await queryWithRetry(
-    `INSERT INTO app_state (key_name, value) VALUES (?, ?)
-     ON DUPLICATE KEY UPDATE value = VALUES(value)`,
-    [TOURNAMENT_KEY, JSON.stringify(json)],
-  )
-  return { ok: true, paid, paidPlayerIds, playerId: pid }
+  return changePaidFlag(resolved.playerId, paid)
 }
 
 /** Переключить оплату по vk_user_id (игрок в текущем списке). */
@@ -241,21 +222,5 @@ export async function togglePlayerPaidByVkUserId(vkUserId: number): Promise<
   const selectedIds = parseSelectedIds(json.selectedIds)
   const resolved = await resolvePlayerIdForVkUserId(vkUserId, selectedIds)
   if (!resolved.ok) return resolved
-  const pid = resolved.playerId
-  const paid = new Set(parsePaidIds(json.paidPlayerIds))
-  const nextPaid = !paid.has(pid)
-  if (nextPaid) {
-    paid.add(pid)
-  }
-  else {
-    paid.delete(pid)
-  }
-  const paidPlayerIds = [...paid].sort((a, b) => a - b)
-  json.paidPlayerIds = paidPlayerIds
-  await queryWithRetry(
-    `INSERT INTO app_state (key_name, value) VALUES (?, ?)
-     ON DUPLICATE KEY UPDATE value = VALUES(value)`,
-    [TOURNAMENT_KEY, JSON.stringify(json)],
-  )
-  return { ok: true, paid: nextPaid, paidPlayerIds, playerId: pid }
+  return changePaidFlag(resolved.playerId)
 }

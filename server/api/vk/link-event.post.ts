@@ -3,11 +3,13 @@ import { ensureTablesExist } from '../../utils/initDb'
 import { requireVkBotToken } from '../../utils/vkBotAuth'
 import { clearVkListCloseRequest } from '../../utils/vkListCloseRequest'
 import { clearSelectedIdsOnVkLinkIfAfterUnlink } from '../../utils/vkUnlinkRelinkPolicy'
-import { parseVkTeamSlots, readTournamentStateRow } from '../../utils/tournamentPaidPlayers'
+import { parseVkListLimit, parseVkTeamSlots, readTournamentStateRow } from '../../utils/tournamentPaidPlayers'
 import { bumpRosterRev } from '../../utils/tournamentRosterRev'
+import { writeTournamentStateCas } from '../../utils/tournamentStateCas'
+import { reserveFitsTeamSlots } from '../../utils/tournamentReservePolicy'
+import { readTournamentReserves } from '../../../app/utils/tournamentReserves'
 
 const LINK_KEY = 'tournament_vk_link'
-const TOURNAMENT_KEY = 'tournament'
 
 // Бот вызывает после создания списка в чате — привязываем peer + id события к сайту (один глобальный турнир).
 
@@ -18,6 +20,7 @@ interface LinkBody {
   team_slots?: string[]
   /** true только для s tr — на сайте показываются команды ВК; false очищает слоты и подписи. */
   vk_list_tournament?: boolean
+  max_players?: number
 }
 
 export default defineEventHandler(async (event) => {
@@ -52,10 +55,13 @@ export default defineEventHandler(async (event) => {
     (('team_slots' in body && Array.isArray((body as LinkBody).team_slots)) ||
       'vk_list_tournament' in body)
 
-  if (patchTournament) {
+  if (!patchTournament) return { ok: true }
+  for (let attempt = 0; attempt < 8; attempt++) {
     const row = await readTournamentStateRow()
     const base = (row?.json && typeof row.json === 'object' ? (row.json as Record<string, unknown>) : null) ?? {}
     const next = { ...base } as Record<string, unknown>
+    const defaultLimit = parseVkListLimit(body.max_players)
+    if (defaultLimit) next.vkListDefaultLimit = defaultLimit
 
     if (body && typeof body === 'object' && 'vk_list_tournament' in body) {
       const vkList = (body as LinkBody).vk_list_tournament === true
@@ -83,13 +89,16 @@ export default defineEventHandler(async (event) => {
       next.vkListTournament = true
     }
 
+    const reserves = readTournamentReserves(base.vkReserves)
+    if (reserves.some(reserve => !reserveFitsTeamSlots(reserve, parseVkTeamSlots(next.vkTeamSlots)))) {
+      next.vkListTournament = base.vkListTournament
+      next.vkTeamSlots = base.vkTeamSlots
+      next.vkTeamLabelByPlayerId = base.vkTeamLabelByPlayerId
+      next.vkTeamLimits = base.vkTeamLimits
+    }
     bumpRosterRev(next)
-    await queryWithRetry(
-      `INSERT INTO app_state (key_name, value) VALUES (?, ?)
-       ON DUPLICATE KEY UPDATE value = VALUES(value)`,
-      [TOURNAMENT_KEY, JSON.stringify(next)],
-    )
+    if (await writeTournamentStateCas(row?.raw ?? null, next)) return { ok: true }
   }
 
-  return { ok: true }
+  throw createError({ statusCode: 409, statusMessage: 'Concurrent update conflict on tournament state' })
 })

@@ -171,6 +171,7 @@
           :seconds-left="vkCancelSecondsLeft"
           :busy="clearTournamentBusy"
           title="Отменить матч? Бот закроет список в чате (как e!), на сайте сбросится мастер турнира. Пока бот не ответит, привязка в статусе может оставаться."
+          :subtitle="clearTournamentError || undefined"
           cancel-text="Отмена"
           confirm-text="Отменить матч"
           busy-text="Отменяем…"
@@ -245,8 +246,9 @@ import { useTournamentVkListStart, type CreatedMatchMeta } from '~/composables/u
 const props = withDefaults(
   defineProps<{
     clearTournamentBusy?: boolean
+    clearTournamentError?: string
   }>(),
-  { clearTournamentBusy: false },
+  { clearTournamentBusy: false, clearTournamentError: '' },
 )
 
 const emit = defineEmits<{

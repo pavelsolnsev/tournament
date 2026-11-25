@@ -1,5 +1,6 @@
 // Мастер турнира: шаги, состав, сохранение в БД.
 import type { Player, Team, MatchStatus } from '~/types/tournament'
+import { readTournamentReserves } from '~/utils/tournamentReserves'
 import { useTeamAssignment } from '~/composables/useTeamAssignment'
 import type { TournamentStateSyncApi } from '~/composables/useTournamentState'
 import { useSyncAssignmentFromVkTeamLabels } from '~/composables/useSyncAssignmentFromVkTeamLabels'
@@ -45,6 +46,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
   const vkTeamLimits = ref<Record<string, number>>({})
   const vkListLimit = ref<number | undefined>(undefined)
   const vkListTournament = ref(false)
+  const vkReserves = computed(() => step.value === 0 ? readTournamentReserves(stateSync.serverState.value?.vkReserves) : [])
 
   // Игроки в очереди (по пер-командным лимитам или общему лимиту) — на сайте их прячем.
   const queuedPlayerIds = computed(() => computeQueuedPlayerIds({
@@ -52,7 +54,8 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     teamLabelByPlayerId: vkTeamLabelByPlayerId.value,
     teamSlots: vkTeamSlots.value,
     teamLimits: vkTeamLimits.value,
-    listLimit: vkListLimit.value ?? null,
+    listLimit: vkListLimit.value ?? (vkReserves.value.length ? stateSync.serverState.value?.vkListDefaultLimit : undefined),
+    reserves: vkReserves.value,
   }))
   // Кто именно в очереди (для показа на сайте): с командой — покажем команду + игрока, без команды — только игрока.
   const queuedPlayers = computed<{ player: Player, team: string }[]>(() => {
@@ -427,6 +430,7 @@ export function useTournamentWizard(stateSync: TournamentStateSyncApi) {
     availablePlayers,
     playerSearch,
     filteredAvailablePlayers,
+    vkReserves,
     selectPlayer,
     removePlayer,
     vkTeamLabelByPlayerId,
