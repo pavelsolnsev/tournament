@@ -35,6 +35,35 @@
     text-size-adjust: 100%;
   }
 
+  /* Каналы RGB без rgb(): светлая тема как была, тёмная — палитра fit. */
+  :root {
+    --slate-50: 242, 245, 248;
+    --slate-100: 230, 234, 239;
+    --slate-200: 213, 220, 229;
+    --slate-300: 203, 213, 225;
+    --slate-400: 148, 163, 184;
+    --slate-500: 100, 116, 139;
+    --slate-600: 71, 85, 105;
+    --slate-700: 51, 65, 85;
+    --slate-800: 30, 41, 59;
+    --slate-900: 15, 23, 42;
+    --slate-950: 2, 6, 23;
+  }
+
+  html.dark {
+    --slate-50: 245, 248, 253;
+    --slate-100: 234, 240, 249;
+    --slate-200: 215, 225, 239;
+    --slate-300: 185, 201, 223;
+    --slate-400: 148, 168, 197;
+    --slate-500: 101, 123, 156;
+    --slate-600: 76, 98, 130;
+    --slate-700: 52, 74, 106;
+    --slate-800: 27, 44, 73;
+    --slate-900: 16, 30, 54;
+    --slate-950: 9, 21, 43;
+  }
+
   /* iOS Safari: при font-size < 16px на input зумит при фокусе — убираем этот зум. */
   @media (max-width: 640px) {
     input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
@@ -82,7 +111,7 @@
   }
 
   html.dark * {
-    scrollbar-color: rgb(71 85 105) rgb(30 41 59);
+    scrollbar-color: #4c6282 #1b2c49;
   }
 
   *::-webkit-scrollbar {
@@ -96,7 +125,7 @@
   }
 
   html.dark *::-webkit-scrollbar-track {
-    background: rgb(30 41 59);
+    background: #1b2c49;
   }
 
   *::-webkit-scrollbar-thumb {
@@ -106,8 +135,8 @@
   }
 
   html.dark *::-webkit-scrollbar-thumb {
-    border-color: rgb(30 41 59);
-    background: rgb(71 85 105);
+    border-color: #1b2c49;
+    background: #4c6282;
   }
 
   *::-webkit-scrollbar-thumb:hover {

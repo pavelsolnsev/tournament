@@ -78,7 +78,7 @@ export default defineNuxtConfig({
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:image', content: 'https://tournament.pavelsolntsev.ru/seo-preview.png' },
         // Задаём поддержку обеих цветовых схем — браузер выберет нужный theme-color.
-        { name: 'theme-color', content: '#0f172a', media: '(prefers-color-scheme: dark)' },
+        { name: 'theme-color', content: '#09152b', media: '(prefers-color-scheme: dark)' },
         { name: 'theme-color', content: '#f8fafc', media: '(prefers-color-scheme: light)' },
         { name: 'color-scheme', content: 'dark light' },
         // viewport-fit=cover — safe-area. minimum/maximum-scale + user-scalable=no — зум жестами и двойным тапом (в т.ч. Safari iOS).
@@ -95,7 +95,7 @@ export default defineNuxtConfig({
         // position:fixed на body — единственный способ заблокировать rubber-band на iOS и Chrome.
         // Скролл живёт только в #scroll-root внутри app.vue.
         // По умолчанию светлый фон — скрипт выше добавит 'dark' если нужно.
-        { innerHTML: `*{box-sizing:border-box;touch-action:manipulation}#scroll-root{touch-action:pan-y}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%;}body{position:fixed;touch-action:none}html{background:#f8fafc;color:#0f172a;touch-action:manipulation}html.dark{background:#0f172a;color:#f8fafc;}` },
+        { innerHTML: `*{box-sizing:border-box;touch-action:manipulation}#scroll-root{touch-action:pan-y}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%;}body{position:fixed;touch-action:none}html{background:#f8fafc;color:#0f172a;touch-action:manipulation}html.dark{background:#101e36;color:#f5f8fd;}` },
       ],
       // Скрипт запускается ДО рендера: читает localStorage или системные настройки
       // и сразу ставит класс 'dark' на <html>, чтобы не было мигания при загрузке.
