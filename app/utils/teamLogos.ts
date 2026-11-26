@@ -47,6 +47,8 @@ const TEAM_LOGO_PATH_BY_NORMALIZED_KEY: Record<string, string> = {
   ламода: '/team-photos/lamoda.webp',
   acbi: '/team-photos/acbi.webp',
   асби: '/team-photos/acbi.webp',
+  солянка: '/team-photos/solyanka.png',
+  solyanka: '/team-photos/solyanka.png',
 }
 
 function logoLookupKey(teamName: string): string {
